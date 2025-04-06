@@ -957,7 +957,8 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            &na::HybridSynthesisMapper::evaluateSynthesisSteps,
            "Evaluates the synthesis steps proposed by the ZX extraction. "
            "Returns a list of fidelities of the mapped synthesis steps.",
-           "synthesis_steps"_a, "also_map"_a = false)
+           "synthesis_steps"_a, "complete_remap"_a = false,
+                                "also_map"_a = false)
       .def(
           "append_without_mapping",
           [](na::HybridSynthesisMapper& mapper, const py::object& circ) {
@@ -970,14 +971,16 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
           "qc"_a)
       .def(
           "append_with_mapping",
-          [](na::HybridSynthesisMapper& mapper, const py::object& circ) {
+          [](na::HybridSynthesisMapper& mapper, const py::object& circ,
+             bool completeRemap) {
             qc::QuantumComputation qc{};
             loadQC(qc, circ);
-            mapper.appendWithMapping(qc);
+            mapper.appendWithMapping(qc, completeRemap);
           },
           "Appends the given QuantumComputation to the synthesized "
           "QuantumComputation and maps the gates to the hardware.",
-          "qc"_a)
+          "qc"_a,
+          "complete_remap"_a = false)
       .def(
           "get_circuit_adjacency_matrix",
           [](na::HybridSynthesisMapper& mapper) {
@@ -995,21 +998,21 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def(
           "evaluate_synthesis_steps",
           [](na::HybridSynthesisMapper& mapper,
-             const std::vector<py::object>& circs, bool alsoMap) {
+             const std::vector<py::object>& circs, bool completeRemap,
+             bool alsoMap) {
             std::vector<qc::QuantumComputation> qcs;
             for (const auto& circ : circs) {
               qc::QuantumComputation qc{};
               loadQC(qc, circ);
               qcs.push_back(qc);
             }
-            return mapper.evaluateSynthesisSteps(qcs, alsoMap);
+            return mapper.evaluateSynthesisSteps(qcs, completeRemap, alsoMap);
           },
           "Evaluates the synthesis steps proposed by the ZX extraction. "
           "Returns index of the best synthesis step.",
-          "synthesis_steps"_a, "also_map"_a = false)
+          "synthesis_steps"_a, "complete_remap"_a = false, "also_map"_a = false)
       .def("complete_remap", &na::HybridSynthesisMapper::completeRemap,
-           "Remaps the QuantumComputation to the hardware.",
-           "initial_mapping"_a = na::InitialMapping::Identity)
+           "Remaps the QuantumComputation to the hardware.")
       .def(
           "schedule",
           [](na::HybridSynthesisMapper& mapper, bool verbose,
@@ -1026,6 +1029,7 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            "Saves the animation csv string to a file", "filename"_a)
       .def("get_max_gate_size", &na::HybridSynthesisMapper::getMaxGateSize,
            "Returns the maximum gate size of the neutral atom hardware");
+
 
   // Neutral Atom State Preparation
   py::class_<na::NASolver>(m, "NAStatePreparationSolver", R"(

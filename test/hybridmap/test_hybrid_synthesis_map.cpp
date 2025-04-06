@@ -13,14 +13,21 @@
 #include <vector>
 
 namespace na {
+
+struct TestParams {
+  std::string architecture;
+  bool completeRemap;
+  bool alsoMap;
+};
+
 class TestParametrizedHybridSynthesisMapper
-    : public ::testing::TestWithParam<std::string> {
+    : public ::testing::TestWithParam<TestParams> {
 protected:
   std::string testArchitecturePath = "architectures/";
   std::vector<qc::QuantumComputation> circuits;
 
   void SetUp() override {
-    testArchitecturePath += GetParam() + ".json";
+    testArchitecturePath += GetParam().architecture + ".json";
     qc::QuantumComputation qc1(3);
     qc1.x(0);
     qc1.cx(0, 1);
@@ -49,16 +56,27 @@ TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
   auto arch = NeutralAtomArchitecture(testArchitecturePath);
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
-  auto best = mapper.evaluateSynthesisSteps(circuits, false);
+  auto best = mapper.evaluateSynthesisSteps(circuits, GetParam().completeRemap,
+                                            GetParam().alsoMap);
   EXPECT_EQ(best.size(), 2);
   EXPECT_GE(best[0], 0);
   EXPECT_GE(best[1], 0);
 }
 
-INSTANTIATE_TEST_SUITE_P(HybridSynthesisMapperTestSuite,
-                         TestParametrizedHybridSynthesisMapper,
-                         ::testing::Values("rubidium", "rubidium_hybrid",
-                                           "rubidium_shuttling"));
+INSTANTIATE_TEST_SUITE_P(
+    HybridSynthesisMapperTestSuite, TestParametrizedHybridSynthesisMapper,
+    ::testing::Values(TestParams{"rubidium", false, false},
+                      TestParams{"rubidium", true, false},
+                      TestParams{"rubidium", false, true},
+                      TestParams{"rubidium", true, true},
+                      TestParams{"rubidium_hybrid", false, false},
+                      TestParams{"rubidium_hybrid", true, false},
+                      TestParams{"rubidium_hybrid", false, true},
+                      TestParams{"rubidium_hybrid", true, true},
+                      TestParams{"rubidium_shuttling", false, false},
+                      TestParams{"rubidium_shuttling", true, false},
+                      TestParams{"rubidium_shuttling", false, true},
+                      TestParams{"rubidium_shuttling", true, true}));
 
 class TestHybridSynthesisMapper : public ::testing::Test {
 protected:
@@ -96,7 +114,7 @@ TEST_F(TestHybridSynthesisMapper, completelyRemap) {
 }
 
 TEST_F(TestHybridSynthesisMapper, MapAppend) {
-  mapper.appendWithMapping(qc);
+  mapper.appendWithMapping(qc, true);
   auto synthesizedQc = mapper.getSynthesizedQc();
   EXPECT_EQ(synthesizedQc.getNqubits(), 3);
   EXPECT_GE(synthesizedQc.getNops(), 3);

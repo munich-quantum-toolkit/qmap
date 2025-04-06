@@ -17,16 +17,15 @@
 
 namespace na {
 
-std::vector<qc::fp>
-HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
-                                              bool alsoMap) {
+std::vector<qc::fp> HybridSynthesisMapper::evaluateSynthesisSteps(
+    qcs& synthesisSteps, const bool completeRemap, const bool alsoMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
   size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
     if (this->parameters->verbose) {
       std::cout << "Evaluating synthesis step number " << qcIndex++ << "\n";
     }
-    candidates.emplace_back(qc, this->evaluateSynthesisStep(qc));
+    candidates.emplace_back(qc, this->evaluateSynthesisStep(qc, completeRemap));
     if (this->parameters->verbose) {
       std::cout << "Fidelity: " << candidates.back().second << "\n";
     }
@@ -43,15 +42,26 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
     }
   }
   if (alsoMap) {
-    this->appendWithMapping(candidates[bestIndex].first);
+    this->appendWithMapping(candidates[bestIndex].first, completeRemap);
   }
   return fidelities;
 }
 
 qc::fp
-HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) {
-  NeutralAtomMapper tempMapper;
-  tempMapper.copyStateFrom(*this);
+HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
+                                             const bool completeRemap) const {
+  NeutralAtomMapper tempMapper(*this->arch, *this->parameters);
+  if (!completeRemap) {
+    // copy the current mapping to the temporary mapper
+    tempMapper.copyStateFrom(*this);
+  } else {
+    qc.reverse();
+    for (auto opPointer = synthesizedQc.rbegin();
+         opPointer != synthesizedQc.rend(); ++opPointer) {
+      qc.emplace_back((*opPointer)->clone());
+    }
+    qc.reverse();
+  }
   auto mappedQc = tempMapper.map(qc, mapping);
   tempMapper.convertToAod();
   const auto results = tempMapper.schedule();
@@ -66,13 +76,18 @@ void HybridSynthesisMapper::appendWithoutMapping(
   }
 }
 
-void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
+void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc,
+                                              const bool completeRemap) {
   if (mappedQc.empty()) {
     initMapping(qc.getNqubits());
   }
-  mapAppend(qc, this->mapping);
   for (const auto& op : qc) {
     this->synthesizedQc.emplace_back(op->clone());
+  }
+  if (completeRemap) {
+    this->completeRemap();
+  } else {
+    mapAppend(qc, this->mapping);
   }
 }
 

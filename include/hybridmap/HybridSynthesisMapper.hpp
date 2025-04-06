@@ -36,16 +36,18 @@ class HybridSynthesisMapper : public NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
   qc::QuantumComputation synthesizedQc;
-
+  Mapping originalMapping;
   /**
    * @brief Evaluates a single synthesis step proposed by the ZX extraction.
    * @details The effort is calculated by the NeutralAtomMapper, taking into
    * account the number of SWAP gates or shuttling moves and the time needed to
    * execute the mapped synthesis step.
    * @param qc The synthesis step to be evaluated.
+   * @param completeRemap
    * @return The cost/effort to map the synthesis step.
    */
-  qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc);
+  qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc,
+                               bool completeRemap = false) const;
 
 public:
   // Constructors
@@ -68,14 +70,15 @@ public:
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     synthesizedQc = qc::QuantumComputation(nQubits);
     mapping = Mapping(nQubits, initialMapping);
+    originalMapping = mapping;
   }
 
   /**
    * @brief Returns the mapped QuantumComputation.
    * @return The mapped QuantumComputation.
    */
-  void completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
-    this->map(synthesizedQc, initMapping);
+  void completeRemap() {
+    this->map(synthesizedQc, originalMapping);
     this->convertToAod();
   }
 
@@ -111,11 +114,13 @@ public:
   /**
    * @brief Evaluates the synthesis steps proposed by the ZX extraction.
    * @param synthesisSteps The synthesis steps proposed by the ZX extraction.
+   * @param completeRemap
    * @param alsoMap If true, the best synthesis step is directly mapped to the
    * hardware.
    * @return Returns a list of fidelities of the mapped synthesis steps.
    */
   std::vector<qc::fp> evaluateSynthesisSteps(qcs& synthesisSteps,
+                                             bool completeRemap = false,
                                              bool alsoMap = false);
 
   /**
@@ -129,8 +134,10 @@ public:
    * @brief Appends the given QuantumComputation to the synthesized
    * QuantumComputation and maps the gates to the hardware.
    * @param qc The gates (QuantumComputation) to be appended and mapped.
+   * @param completeRemap
    */
-  void appendWithMapping(qc::QuantumComputation& qc);
+  void appendWithMapping(qc::QuantumComputation& qc,
+                         bool completeRemap = false);
 
   /**
    * @brief Returns the current adjacency matrix of the neutral atom hardware.
