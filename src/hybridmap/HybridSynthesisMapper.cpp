@@ -54,14 +54,23 @@ HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
   if (!completeRemap) {
     // copy the current mapping to the temporary mapper
     tempMapper.copyStateFrom(*this);
-  } else {
-    qc.reverse();
+  }
+
+  qc.reverse();
+  // insert buffered operations
+  for (auto opPointer = bufferedQc.rbegin(); opPointer != bufferedQc.rend();
+       ++opPointer) {
+    qc.emplace_back((*opPointer)->clone());
+  }
+  // also insert synthesized operations if completeRemap is true
+  if (completeRemap) {
     for (auto opPointer = synthesizedQc.rbegin();
          opPointer != synthesizedQc.rend(); ++opPointer) {
       qc.emplace_back((*opPointer)->clone());
     }
-    qc.reverse();
   }
+  qc.reverse();
+
   auto mappedQc = tempMapper.map(qc, mapping);
   tempMapper.convertToAod();
   const auto results = tempMapper.schedule();
@@ -70,16 +79,31 @@ HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
 
 void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc,
                                               const bool completeRemap) {
-  if (mappedQc.empty()) {
+  if (mappedQc.empty() and bufferedQc.empty()) {
     initMapping(qc.getNqubits());
   }
+
+  // add circuit to buffer
   for (const auto& op : qc) {
-    this->synthesizedQc.emplace_back(op->clone());
+    this->bufferedQc.emplace_back(op->clone());
   }
+  qc::QuantumComputation toBeMappedQc(qc.getNqubits());
+  if (bufferedQc.size() > bufferSize) {
+    // move beginning of buffer to synthesized circuit
+    for (auto opPointer = bufferedQc.begin();
+         opPointer < bufferedQc.end() - bufferSize; ++opPointer) {
+      synthesizedQc.emplace_back((*opPointer)->clone());
+      toBeMappedQc.emplace_back((*opPointer)->clone());
+    }
+    // remove the operations from the buffer
+    bufferedQc.erase(bufferedQc.begin(),
+                     bufferedQc.end() - static_cast<long>(bufferSize));
+  }
+
   if (completeRemap) {
-    this->completeRemap();
+    this->completeRemap(false);
   } else {
-    mapAppend(qc, this->mapping);
+    mapAppend(toBeMappedQc, this->mapping);
   }
 }
 

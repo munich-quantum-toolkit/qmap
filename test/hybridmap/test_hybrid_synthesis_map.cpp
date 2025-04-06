@@ -82,7 +82,8 @@ class TestHybridSynthesisMapper : public ::testing::Test {
 protected:
   NeutralAtomArchitecture arch =
       NeutralAtomArchitecture("architectures/rubidium.json");
-  HybridSynthesisMapper mapper = HybridSynthesisMapper(arch);
+  HybridSynthesisMapper mapper =
+      HybridSynthesisMapper(arch, MapperParameters(), 100);
   qc::QuantumComputation qc;
 
   void SetUp() override {
@@ -90,13 +91,27 @@ protected:
     qc.x(0);
     qc.cx(0, 1);
     qc.cx(1, 2);
+    qc.cx(0, 2);
+    qc.cx(0, 1);
+    qc.cx(1, 2);
+    qc.cx(0, 2);
+    qc.cx(0, 2);
+    qc.cx(0, 1);
+    qc.cx(1, 2);
+    qc.cx(0, 2);
+    qc.cx(1, 2);
+    qc.cx(0, 2);
 
     mapper.initMapping(3);
   }
 };
 
 TEST_F(TestHybridSynthesisMapper, MapAppend) {
-  mapper.appendWithMapping(qc, true);
+  mapper.appendWithMapping(qc, false);
+  mapper.appendWithMapping(qc, false);
+  const auto res = mapper.schedule();
+  EXPECT_GE(res.totalFidelities, 0);
+  EXPECT_GE(res.nCZs, 0);
   auto synthesizedQc = mapper.getSynthesizedQc();
   EXPECT_EQ(synthesizedQc.getNqubits(), 3);
   EXPECT_GE(synthesizedQc.getNops(), 3);
