@@ -68,14 +68,6 @@ HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
   return results.totalFidelities;
 }
 
-void HybridSynthesisMapper::appendWithoutMapping(
-    const qc::QuantumComputation& qc) {
-  for (const auto& op : qc) {
-    this->synthesizedQc.emplace_back(op->clone());
-    this->mapGate(op.get());
-  }
-}
-
 void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc,
                                               const bool completeRemap) {
   if (mappedQc.empty()) {

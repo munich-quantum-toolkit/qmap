@@ -124,13 +124,6 @@ public:
                                              bool alsoMap = false);
 
   /**
-   * @brief Directly maps the given QuantumComputation to the hardware NOT
-   * inserting SWAP gates or shuttling move operations.
-   * @param qc The gates (QuantumComputation) to be mapped.
-   */
-  void appendWithoutMapping(const qc::QuantumComputation& qc);
-
-  /**
    * @brief Appends the given QuantumComputation to the synthesized
    * QuantumComputation and maps the gates to the hardware.
    * @param qc The gates (QuantumComputation) to be appended and mapped.

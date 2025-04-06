@@ -958,17 +958,7 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            "Evaluates the synthesis steps proposed by the ZX extraction. "
            "Returns a list of fidelities of the mapped synthesis steps.",
            "synthesis_steps"_a, "complete_remap"_a = false,
-                                "also_map"_a = false)
-      .def(
-          "append_without_mapping",
-          [](na::HybridSynthesisMapper& mapper, const py::object& circ) {
-            qc::QuantumComputation qc{};
-            loadQC(qc, circ);
-            mapper.appendWithoutMapping(qc);
-          },
-          "Directly maps the given QuantumComputation to the hardware NOT "
-          "inserting SWAP gates or shuttling move operations.",
-          "qc"_a)
+           "also_map"_a = false)
       .def(
           "append_with_mapping",
           [](na::HybridSynthesisMapper& mapper, const py::object& circ,
@@ -979,8 +969,7 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
           },
           "Appends the given QuantumComputation to the synthesized "
           "QuantumComputation and maps the gates to the hardware.",
-          "qc"_a,
-          "complete_remap"_a = false)
+          "qc"_a, "complete_remap"_a = false)
       .def(
           "get_circuit_adjacency_matrix",
           [](na::HybridSynthesisMapper& mapper) {
@@ -1029,7 +1018,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            "Saves the animation csv string to a file", "filename"_a)
       .def("get_max_gate_size", &na::HybridSynthesisMapper::getMaxGateSize,
            "Returns the maximum gate size of the neutral atom hardware");
-
 
   // Neutral Atom State Preparation
   py::class_<na::NASolver>(m, "NAStatePreparationSolver", R"(
