@@ -8,6 +8,7 @@
 #include "Definitions.hpp"
 #include "HybridNeutralAtomMapper.hpp"
 #include "NeutralAtomArchitecture.hpp"
+#include "NeutralAtomScheduler.hpp"
 #include "NeutralAtomUtils.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -87,19 +88,19 @@ public:
       auto synthesizedQc = this->getSynthesizedQc();
       this->map(synthesizedQc, originalMapping);
     } else {
-      this->map(synthesizedQc, originalMapping);
+      auto temp = synthesizedQc;
+      this->map(temp, originalMapping);
     }
-    this->convertToAod();
   }
 
   // override schedule
   [[nodiscard]] SchedulerResults schedule(bool verboseArg = false,
                                           bool createAnimationCsv = false,
                                           qc::fp shuttlingSpeedFactor = 1.0) {
-    mapAppend(bufferedQc, this->mapping);
     for (const auto& op : bufferedQc) {
       synthesizedQc.emplace_back(op->clone());
     }
+    mapAppend(bufferedQc, this->mapping);
     bufferedQc.clear();
     return NeutralAtomMapper::schedule(verboseArg, createAnimationCsv,
                                        shuttlingSpeedFactor);
