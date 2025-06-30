@@ -117,7 +117,6 @@ Ready to contribute to the project? This guide will get you started.
    ```
 
 6. Make sure to have the SMT Solver `Z3 >= 4.8.15 <https://github.com/Z3Prover/z3>`\_ installed. This can be accomplished in a multitude of ways:
-
    - Under Ubuntu 20.04 and newer: {code}`sudo apt-get install libz3-dev`
    - Under macOS: {code}`brew install z3`
    - Alternatively: {code}`pip install z3-solver` in the virtual environment
