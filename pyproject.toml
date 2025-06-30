@@ -11,7 +11,7 @@ requires = [
   "scikit-build-core>=0.11.2",
   "setuptools-scm>=8.3.1",
   "pybind11>=2.13.6",
-  "mqt.core~=3.0.0",
+  "mqt.core @ git+https://github.com/munich-quantum-toolkit/core.git@a06d0fd",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -51,7 +51,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "mqt.core>=3.0.0",
+    "mqt.core @ git+https://github.com/munich-quantum-toolkit/core.git@a06d0fd",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "importlib_resources>=5.0; python_version < '3.10'",
@@ -91,7 +91,13 @@ ninja.version = ">=1.10"
 build-dir = "build/{wheel_tag}/{build_type}"
 
 # Only build the Python bindings target
-build.targets = ["pyqmap", "mqt-qmap-na-zoned-bindings", "mqt-qmap-na-nasp-bindings"]
+build.targets = [
+  "mqt-qmap-clifford_synthesis-bindings",
+  "mqt-qmap-hybrid_mapper-bindings",
+  "mqt-qmap-na-zoned-bindings",
+  "mqt-qmap-na-nasp-bindings",
+  "mqt-qmap-sc-bindings",
+]
 
 # Only install the Python package component
 install.components = ["mqt-qmap_Python"]
@@ -262,7 +268,6 @@ ignore = [
     "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
 ]
 typing-modules = ["mqt.qmap._compat.typing"]
-isort.required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "typing.Callable".msg = "Use collections.abc.Callable instead."
@@ -276,6 +281,10 @@ isort.required-imports = ["from __future__ import annotations"]
 "typing_extensions.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
 "importlib.resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
 "importlib_resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
+
+[tool.ruff.lint.isort]
+known-first-party = ["mqt.qmap"]
+required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.per-file-ignores]
 "test/python/**" = ["T20", "ANN"]
@@ -376,7 +385,7 @@ build = [
   "pybind11>=2.13.6",
   "scikit-build-core>=0.11.2",
   "setuptools-scm>=8.3.1",
-  "mqt.core~=3.0.0",
+  "mqt.core @ git+https://github.com/munich-quantum-toolkit/core.git@a06d0fd",
 ]
 docs = [
   "networkx>=3.2.1",

@@ -6,7 +6,8 @@
 #
 # Licensed under the MIT License
 
-add_mqt_qmap_binding(
+add_mqt_python_binding(
+  QMAP
   ${MQT_QMAP_TARGET_NAME}-na-nasp-bindings
   nasp.cpp
   MODULE_NAME

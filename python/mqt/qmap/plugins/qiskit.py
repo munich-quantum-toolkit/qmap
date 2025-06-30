@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
     from qiskit.transpiler import Target
 
-from ..pyqmap import Architecture
+from mqt.qmap.sc.sc import Architecture
 
 __all__ = [
     "import_backend",

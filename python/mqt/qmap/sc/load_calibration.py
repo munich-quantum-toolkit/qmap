@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Module for loading calibration data."""
+"""Load a calibration for a super-conducting architecture."""
 
 from __future__ import annotations
 
@@ -15,19 +15,11 @@ from typing import TYPE_CHECKING
 from qiskit.transpiler.target import Target
 
 if TYPE_CHECKING:
-    from .pyqmap import Architecture
-
-__all__ = [
-    "load_calibration",
-]
-
-
-def __dir__() -> list[str]:
-    return __all__
+    from mqt.qmap.sc.sc import Architecture
 
 
 def load_calibration(architecture: Architecture, calibration: str | Target | None = None) -> None:
-    """Load a calibration from a string, BackendProperties, or Target.
+    """Load a super-conducting calibration from a string, BackendProperties, or Target.
 
     Args:
         architecture: The architecture to load the calibration into.

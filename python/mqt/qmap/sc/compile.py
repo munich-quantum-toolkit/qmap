@@ -6,31 +6,18 @@
 #
 # Licensed under the MIT License
 
-"""Main entry point for the compilation module."""
+"""Compile a circuit."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
-
-if TYPE_CHECKING:
-    from os import PathLike
-
-    from mqt.core.ir import QuantumComputation
-    from qiskit.circuit import QuantumCircuit
-    from qiskit.providers import Backend
-    from qiskit.providers.models import BackendProperties
-    from qiskit.transpiler.target import Target
-
-    from .visualization import SearchVisualizer
-
-    CircuitInputType = Union[QuantumComputation, str, PathLike[str], QuantumCircuit]
+from typing import TYPE_CHECKING
 
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 
-from .load_architecture import load_architecture
-from .load_calibration import load_calibration
-from .pyqmap import (
+from mqt.qmap.sc.load_architecture import load_architecture
+from mqt.qmap.sc.load_calibration import load_calibration
+from mqt.qmap.sc.sc import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -47,13 +34,14 @@ from .pyqmap import (
     map,  # noqa: A004
 )
 
-__all__ = [
-    "compile",
-]
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.providers import Backend
+    from qiskit.providers.models import BackendProperties
+    from qiskit.transpiler.target import Target
 
-
-def __dir__() -> list[str]:
-    return __all__
+    from mqt.qmap.types import CircuitInputType
+    from mqt.qmap.visualization import SearchVisualizer
 
 
 def compile(  # noqa: A001

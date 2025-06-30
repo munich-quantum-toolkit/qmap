@@ -56,7 +56,7 @@ Now assume this circuit shall be mapped to a $4$-qubit architecture defined by t
 In _QMAP_ this architecture can be manually defined as follows.
 
 ```{code-cell} ipython3
-from mqt.qmap.pyqmap import Architecture
+from mqt.qmap import Architecture
 
 arch = Architecture(
     4,

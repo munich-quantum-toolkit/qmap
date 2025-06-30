@@ -13,12 +13,16 @@ This file implements the methods presented in https://arxiv.org/abs/2210.09321.
 
 from __future__ import annotations
 
+import contextlib
 import pickle
 from itertools import combinations
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
-from ._compat.importlib import resources
+import rustworkx as rx
+import rustworkx.visualization as rxviz
+
+from .._compat.importlib import resources
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -26,23 +30,8 @@ if TYPE_CHECKING:
     from matplotlib import figure
     from qiskit.providers import BackendV1, BackendV2
 
-    from ._compat.typing import TypeAlias
-    from .pyqmap import Architecture
-
-import contextlib
-
-import rustworkx as rx
-import rustworkx.visualization as rxviz
-
-__all__ = [
-    "SubarchitectureOrder",
-    "ibm_guadalupe_subarchitectures",
-    "rigetti_16_subarchitectures",
-]
-
-
-def __dir__() -> list[str]:
-    return __all__
+    from mqt.qmap._compat.typing import TypeAlias
+    from mqt.qmap.sc.sc import Architecture
 
 
 with contextlib.suppress(TypeError):
@@ -50,7 +39,7 @@ with contextlib.suppress(TypeError):
 
 PartialOrder: TypeAlias = dict[tuple[int, int], set[tuple[int, int]]]
 
-#: Architectures for which precomputed orderings are available
+# Architectures for which precomputed orderings are available
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16"]
 
 

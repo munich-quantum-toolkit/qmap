@@ -15,10 +15,10 @@ from pathlib import Path
 import pytest
 from mqt.core import load
 
-from mqt.qmap.pyqmap import HybridMapperParameters, HybridNAMapper, NeutralAtomHybridArchitecture
+from mqt.qmap.hybrid_mapper import HybridMapperParameters, HybridNAMapper, NeutralAtomHybridArchitecture
 
-arch_dir = Path(__file__).parent.parent / "hybridmap" / "architectures"
-circuit_dir = Path(__file__).parent.parent / "hybridmap" / "circuits"
+arch_dir = Path(__file__).parent.parent.parent / "hybridmap" / "architectures"
+circuit_dir = Path(__file__).parent.parent.parent / "hybridmap" / "circuits"
 
 
 @pytest.mark.parametrize(

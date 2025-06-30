@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Main entry point for the Clifford synthesis module."""
+"""Utilities for Clifford synthesis."""
 
 from __future__ import annotations
 
@@ -15,27 +15,18 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
 
-    from .compile import CircuitInputType
+    from mqt.qmap.types import CircuitInputType
 
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 from qiskit.quantum_info import Clifford, PauliList
 
-from .pyqmap import (
+from . import (
     CliffordSynthesizer,
     SynthesisConfiguration,
     SynthesisResults,
     Tableau,
 )
-
-__all__ = [
-    "optimize_clifford",
-    "synthesize_clifford",
-]
-
-
-def __dir__() -> list[str]:
-    return __all__
 
 
 def _reverse_paulis(paulis: list[str]) -> list[str]:
