@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Load a super-conducting architecture."""
+"""Load a superconducting architecture."""
 
 from __future__ import annotations
 
