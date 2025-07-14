@@ -13,7 +13,7 @@ add_mqt_python_binding(
   MODULE_NAME
   clifford_synthesis
   INSTALL_DIR
-  ./clifford_synthesis
+  .
   LINK_LIBS
   MQT::QMapCliffordSynthesis
   MQT::CoreQASM
@@ -22,7 +22,7 @@ add_mqt_python_binding(
 # install the Python stub files in editable mode for better IDE support
 if(SKBUILD_STATE STREQUAL "editable")
   install(
-    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/clifford_synthesis/clifford_synthesis.pyi
+    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/clifford_synthesis.pyi
     DESTINATION ./clifford_synthesis
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()

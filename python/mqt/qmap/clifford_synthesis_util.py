@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
 
-    from ..types import CircuitInputType
+    from .types import CircuitInputType
 
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit

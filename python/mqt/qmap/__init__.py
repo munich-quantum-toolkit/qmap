@@ -47,7 +47,7 @@ if sys.platform == "win32":
 
 
 from ._version import version as __version__
-from .clifford_synthesis import optimize_clifford, synthesize_clifford
+from .clifford_synthesis_util import optimize_clifford, synthesize_clifford
 from .sc import (
     Architecture,
     SubarchitectureOrder,
