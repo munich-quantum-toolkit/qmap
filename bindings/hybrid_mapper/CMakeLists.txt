@@ -13,7 +13,7 @@ add_mqt_python_binding(
   MODULE_NAME
   hybrid_mapper
   INSTALL_DIR
-  ./hybrid_mapper
+  .
   LINK_LIBS
   MQT::QMapHybrid
   MQT::CoreQASM
@@ -22,7 +22,7 @@ add_mqt_python_binding(
 # install the Python stub files in editable mode for better IDE support
 if(SKBUILD_STATE STREQUAL "editable")
   install(
-    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/hybrid_mapper/hybrid_mapper.pyi
+    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/hybrid_mapper.pyi
     DESTINATION ./hybrid_mapper
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()
