@@ -56,14 +56,14 @@ wheels = [
 
 [[package]]
 name = "astroid"
-version = "3.3.10"
+version = "3.3.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/c2/9b2de9ed027f9fe5734a6c0c0a601289d796b3caaf1e372e23fa88a73047/astroid-3.3.10.tar.gz", hash = "sha256:c332157953060c6deb9caa57303ae0d20b0fbdb2e59b4a4f2a6ba49d0a7961ce", size = 398941, upload-time = "2025-05-10T13:33:10.405Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/74/dfb75f9ccd592bbedb175d4a32fc643cf569d7c218508bfbd6ea7ef9c091/astroid-3.3.11.tar.gz", hash = "sha256:1e5a5011af2920c7c67a53f65d536d65bfa7116feeaf2354d8b94f29573bb0ce", size = 400439, upload-time = "2025-07-13T18:04:23.177Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/58/5260205b9968c20b6457ed82f48f9e3d6edf2f1f95103161798b73aeccf0/astroid-3.3.10-py3-none-any.whl", hash = "sha256:104fb9cb9b27ea95e847a94c003be03a9e039334a8ebca5ee27dafaf5c5711eb", size = 275388, upload-time = "2025-05-10T13:33:08.391Z" },
+    { url = "https://files.pythonhosted.org/packages/af/0f/3b8fdc946b4d9cc8cc1e8af42c4e409468c84441b933d037e101b3d72d86/astroid-3.3.11-py3-none-any.whl", hash = "sha256:54c760ae8322ece1abd213057c4b5bba7c49818853fc901ef09719a60dbf9dec", size = 275612, upload-time = "2025-07-13T18:04:21.07Z" },
 ]
 
 [[package]]
@@ -1809,7 +1809,7 @@ test = [
 
 [[package]]
 name = "myst-nb"
-version = "1.2.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "importlib-metadata" },
@@ -1828,9 +1828,9 @@ dependencies = [
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/8f/71d983ed85b1aff17db25e447a9beb67b50a9116c7cff5cde26796d1ffd0/myst_nb-1.2.0.tar.gz", hash = "sha256:af459ec753b341952182b45b0a80b4776cebf80c9ee6aaca2a3f4027b440c9de", size = 79446, upload-time = "2025-02-07T18:27:02.176Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/83/a894bd8dea7a6e9f053502ee8413484dcbf75a219013d6a72e971c0fecfd/myst_nb-1.3.0.tar.gz", hash = "sha256:df3cd4680f51a5af673fd46b38b562be3559aef1475e906ed0f2e66e4587ce4b", size = 81963, upload-time = "2025-07-13T22:49:38.493Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/98/fa9dee0caf4e1f2e895d047952bf84a64eb95102df14c82c20594c0afa5f/myst_nb-1.2.0-py3-none-any.whl", hash = "sha256:0e09909877848c0cf45e1aecee97481512efa29a0c4caa37870a03bba11c56c1", size = 80303, upload-time = "2025-02-07T18:27:00.088Z" },
+    { url = "https://files.pythonhosted.org/packages/69/a6/03d410c114b8c4856579b3d294dafc27626a7690a552625eec42b16dfa41/myst_nb-1.3.0-py3-none-any.whl", hash = "sha256:1f36af3c19964960ec4e51ac30949b6ed6df220356ffa8d60dd410885e132d7d", size = 82396, upload-time = "2025-07-13T22:49:37.019Z" },
 ]
 
 [[package]]
