@@ -10,10 +10,10 @@
 
 from __future__ import annotations
 
-from mqt.qmap.sc.compile import compile  # noqa: A004
-from mqt.qmap.sc.load_architecture import load_architecture
-from mqt.qmap.sc.load_calibration import load_calibration
-from mqt.qmap.sc.sc import (
+from .compile import compile  # noqa: A004
+from .load_architecture import load_architecture
+from .load_calibration import load_calibration
+from .sc import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -29,7 +29,7 @@ from mqt.qmap.sc.sc import (
     SwapReduction,
     map,  # noqa: A004
 )
-from mqt.qmap.sc.subarchitectures import (
+from .subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,

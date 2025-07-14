@@ -10,13 +10,13 @@
 
 from __future__ import annotations
 
-from mqt.qmap.clifford_synthesis.clifford_synthesis import (
+from .clifford_synthesis import (
     CliffordSynthesizer,
     SynthesisConfiguration,
     SynthesisResults,
     Tableau,
 )
-from mqt.qmap.clifford_synthesis.util import optimize_clifford, synthesize_clifford
+from .util import optimize_clifford, synthesize_clifford
 
 __all__ = [
     "CliffordSynthesizer",

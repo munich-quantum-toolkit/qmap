@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from mqt.qmap.hybrid_mapper.hybrid_mapper import (
+from .hybrid_mapper import (
     HybridMapperParameters,
     HybridNAMapper,
     InitialCircuitMapping,

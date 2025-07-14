@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from matplotlib import figure
     from qiskit.providers import BackendV1, BackendV2
 
-    from mqt.qmap._compat.typing import TypeAlias
-    from mqt.qmap.sc.sc import Architecture
+    from .._compat.typing import TypeAlias
+    from .sc import Architecture
 
 
 with contextlib.suppress(TypeError):
