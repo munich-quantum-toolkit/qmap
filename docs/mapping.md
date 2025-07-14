@@ -130,7 +130,7 @@ On directional architectures, it can be significantly cheaper to surround a CNOT
 Using the exact mapper is as simple as:
 
 ```{code-cell} ipython3
-from mqt.qmap import compile
+from mqt.qmap.sc_util import compile
 
 qc_mapped, res = compile(qc, arch, method="exact", post_mapping_optimizations=False)
 
