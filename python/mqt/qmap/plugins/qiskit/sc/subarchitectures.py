@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Optional
 import rustworkx as rx
 import rustworkx.visualization as rxviz
 
-from .._compat.importlib import resources
+from ...._compat.importlib import resources
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from matplotlib import figure
     from qiskit.providers import BackendV1, BackendV2
 
-    from .._compat.typing import TypeAlias
-    from ..sc import Architecture
+    from ...._compat.typing import TypeAlias
+    from ....sc import Architecture
 
 
 with contextlib.suppress(TypeError):

@@ -17,6 +17,7 @@ import pytest
 from mqt.qcec import verify
 from qiskit import QuantumCircuit
 
+from mqt.qmap.plugins.qiskit.sc import compile  # noqa: A004
 from mqt.qmap.sc import (
     Arch,
     Architecture,
@@ -29,7 +30,6 @@ from mqt.qmap.sc import (
     Method,
     SwapReduction,
 )
-from mqt.qmap.sc_util import compile  # noqa: A004
 from mqt.qmap.visualization import SearchVisualizer
 
 

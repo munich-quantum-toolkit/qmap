@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from qiskit.providers import Backend
 
-from ..sc import Arch, Architecture
+from ....sc import Arch, Architecture
 
 
 def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
@@ -39,7 +39,7 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
         elif isinstance(arch, Architecture):
             architecture = arch
         elif isinstance(arch, Backend):
-            from ..plugins.qiskit import import_backend
+            from .import_backend import import_backend
 
             architecture = import_backend(arch)
         else:  # pragma: no cover

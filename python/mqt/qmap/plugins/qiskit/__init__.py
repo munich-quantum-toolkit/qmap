@@ -6,4 +6,6 @@
 #
 # Licensed under the MIT License
 
-"""Plugins for the QMAP package."""
+"""Qiskit plugins for the QMAP package."""
+
+from __future__ import annotations

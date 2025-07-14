@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 
-from ..sc import (
+from ....sc import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -40,8 +40,8 @@ if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
-    from ..types import CircuitInputType
-    from ..visualization import SearchVisualizer
+    from ....types import CircuitInputType
+    from ....visualization import SearchVisualizer
 
 
 def compile(  # noqa: A001

@@ -7,6 +7,8 @@ This document describes breaking changes and how to upgrade. For a complete list
 With this release, the Python package has been restructured.
 In particular, the `mqt.qmap.pyqmap` module has been discontinued.
 Classes and functions can now be imported from the more descriptive `mqt.qmap.clifford_synthesis`, `mqt.qmap.hybrid_mapper`, `mqt.qmap.na`, and `mqt.qmap.sc` modules.
+The superconduction module's `compile()` function has been moved to `mqt.qmap.plugins.qiskit.sc`.
+The entrypoints `synthesize_clifford()` and `optimize_clifford()` of the Clifford synthesis module have been moved to `mqt.qmap.plugins.qiskit.clifford_synthesis`.
 
 ## [3.1.0]
 

@@ -202,7 +202,7 @@ However, the heuristic still gives a good depth reduction in many cases.
 ### Starting from a functional description
 
 ```{code-cell} ipython3
-from mqt.qmapclifford_synthesis_util import synthesize_clifford
+from mqt.qmap.plugins.qiskit.clifford_synthesis import synthesize_clifford
 from mqt.qmap.clifford_synthesis import Tableau
 
 tableau = Tableau("['+ZZ', '+XX']")

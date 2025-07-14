@@ -18,12 +18,12 @@ import pytest
 import rustworkx as rx
 from qiskit.providers.fake_provider import GenericBackendV2
 
-from mqt.qmap.sc import Architecture
-from mqt.qmap.sc_util.subarchitectures import (
+from mqt.qmap.plugins.qiskit.sc import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,
 )
+from mqt.qmap.sc import Architecture
 
 if TYPE_CHECKING:
     from mqt.qmap._compat.typing import TypeAlias
