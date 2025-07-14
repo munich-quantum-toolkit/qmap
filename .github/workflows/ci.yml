@@ -14,13 +14,13 @@ concurrency:
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@v1.12
 
   cpp-tests:
     name: 🇨‌ Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.12
     with:
       # Runs to enable
       enable-ubuntu2404-gcc-release: true
@@ -72,7 +72,7 @@ jobs:
     name: 🇨‌ Test (Extensive)
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.12
     with:
       # Runs to enable
       enable-ubuntu2404-gcc-debug: true
@@ -123,7 +123,7 @@ jobs:
     name: 🇨‌ Coverage
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@v1.12
     with:
       setup-z3: true
     permissions:
@@ -135,7 +135,7 @@ jobs:
     name: 🇨‌ Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.12
     with:
       clang-version: 20
       cmake-args: -DBUILD_MQT_QMAP_BINDINGS=ON
@@ -149,7 +149,7 @@ jobs:
     name: 🐍 Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.12
     with:
       # Runs to enable
       enable-ubuntu2404: true
@@ -174,7 +174,7 @@ jobs:
     name: 🐍 Test (Extensive)
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-python-ci')
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.12
     with:
       # Runs to enable
       enable-ubuntu2204: true
@@ -199,7 +199,7 @@ jobs:
     name: 🐍 Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@v1.12
     with:
       setup-z3: true
 
@@ -207,7 +207,7 @@ jobs:
     name: 📝 CodeQL
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-code-ql)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-code-ql.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-code-ql.yml@v1.12
     with:
       setup-z3: true
 
@@ -215,7 +215,7 @@ jobs:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging.yml@v1.11
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging.yml@v1.12
     with:
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
