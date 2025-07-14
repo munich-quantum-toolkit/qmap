@@ -13,7 +13,7 @@ add_mqt_python_binding(
   MODULE_NAME
   sc
   INSTALL_DIR
-  ./sc
+  .
   LINK_LIBS
   MQT::QMapSCExact
   MQT::QMapSCHeuristic
@@ -24,7 +24,7 @@ target_compile_definitions(${MQT_QMAP_TARGET_NAME}-sc-bindings PRIVATE Z3_FOUND)
 # install the Python stub files in editable mode for better IDE support
 if(SKBUILD_STATE STREQUAL "editable")
   install(
-    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/sc/sc.pyi
+    FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/sc.pyi
     DESTINATION ./sc
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()

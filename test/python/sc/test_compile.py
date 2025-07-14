@@ -28,8 +28,8 @@ from mqt.qmap.sc import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
-    compile,  # noqa: A004
 )
+from mqt.qmap.sc_util import compile  # noqa: A004
 from mqt.qmap.visualization import SearchVisualizer
 
 

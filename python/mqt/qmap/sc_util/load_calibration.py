@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from qiskit.transpiler.target import Target
 
 if TYPE_CHECKING:
-    from .sc import Architecture
+    from ..sc import Architecture
 
 
 def load_calibration(architecture: Architecture, calibration: str | Target | None = None) -> None:

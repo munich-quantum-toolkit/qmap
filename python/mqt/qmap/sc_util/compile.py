@@ -15,9 +15,7 @@ from typing import TYPE_CHECKING
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 
-from .load_architecture import load_architecture
-from .load_calibration import load_calibration
-from .sc import (
+from ..sc import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -33,6 +31,8 @@ from .sc import (
     SwapReduction,
     map,  # noqa: A004
 )
+from .load_architecture import load_architecture
+from .load_calibration import load_calibration
 
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit

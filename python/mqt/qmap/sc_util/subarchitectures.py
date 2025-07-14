@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV1, BackendV2
 
     from .._compat.typing import TypeAlias
-    from .sc import Architecture
+    from ..sc import Architecture
 
 
 with contextlib.suppress(TypeError):

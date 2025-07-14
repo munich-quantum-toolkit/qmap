@@ -6,29 +6,13 @@
 #
 # Licensed under the MIT License
 
-"""Super conducting module."""
+"""Utilities for super conducting circuits."""
 
 from __future__ import annotations
 
 from .compile import compile  # noqa: A004
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration
-from .sc import (
-    Arch,
-    Architecture,
-    CommanderGrouping,
-    Configuration,
-    EarlyTermination,
-    Encoding,
-    Heuristic,
-    InitialLayout,
-    Layering,
-    LookaheadHeuristic,
-    MappingResults,
-    Method,
-    SwapReduction,
-    map,  # noqa: A004
-)
 from .subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
@@ -36,25 +20,11 @@ from .subarchitectures import (
 )
 
 __all__ = [
-    "Arch",
-    "Architecture",
-    "CommanderGrouping",
-    "Configuration",
-    "EarlyTermination",
-    "Encoding",
-    "Heuristic",
-    "InitialLayout",
-    "Layering",
-    "LookaheadHeuristic",
-    "MappingResults",
-    "Method",
     "SubarchitectureOrder",
-    "SwapReduction",
     "compile",
     "ibm_guadalupe_subarchitectures",
     "load_architecture",
     "load_calibration",
-    "map",
     "rigetti_16_subarchitectures",
 ]
 
