@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Python bindings module for superconducting module."""
+"""Python bindings module for superconducting circuits."""
 
 from typing import Any, ClassVar, overload
 

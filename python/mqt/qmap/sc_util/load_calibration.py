@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Load a calibration for a super-conducting architecture."""
+"""Load a calibration for a superconducting architecture."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 def load_calibration(architecture: Architecture, calibration: str | Target | None = None) -> None:
-    """Load a super-conducting calibration from a string, BackendProperties, or Target.
+    """Load a superconducting calibration from a string, BackendProperties, or Target.
 
     Args:
         architecture: The architecture to load the calibration into.
