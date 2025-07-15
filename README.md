@@ -46,7 +46,7 @@ QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macO
 Compiling a given quantum circuit to a certain device is as easy as
 
 ```python3
-from mqt import qmap
+from mqt.qmap.plugins.qiskit.sc import compile
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 
@@ -59,13 +59,13 @@ arch = GenericBackendV2(
     num_qubits=5,
     coupling_map=[[0, 1], [1, 0], [1, 2], [2, 1], [1, 3], [3, 1], [3, 4], [4, 3]],
 )
-circ_mapped, results = qmap.compile(circ, arch=arch)
+circ_mapped, results = compile(circ, arch=arch)
 ```
 
 Optimizing a Clifford circuit is as easy as
 
 ```python3
-from mqt import qmap
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 from qiskit import QuantumCircuit
 
 circ = QuantumCircuit(2)
@@ -74,7 +74,7 @@ circ.cx(0, 1)
 circ.h(0)
 circ.h(1)
 
-circ_opt, results = qmap.optimize_clifford(circ)
+circ_opt, results = optimize_clifford(circ)
 ```
 
 **Detailed documentation on all available methods, options, and input formats is available at [ReadTheDocs](https://mqt.readthedocs.io/projects/qmap).**

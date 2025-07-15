@@ -25,19 +25,8 @@ list(
   ${BASEPOINT}/../../core/lib
   ${BASEPOINT}/../../core/lib64)
 
-add_mqt_qmap_binding(
-  pyqmap
-  bindings.cpp
-  LINK_LIBS
-  MQT::QMapSCExact
-  MQT::QMapSCHeuristic
-  MQT::QMapCliffordSynthesis
-  MQT::QMapHybrid
-  MQT::NASP
-  MQT::QMapNAZoned
-  MQT::CoreQASM
-  pybind11_json)
-target_compile_definitions(pyqmap PRIVATE Z3_FOUND)
-
 # add all modules
+add_subdirectory(clifford_synthesis)
+add_subdirectory(hybrid_mapper)
 add_subdirectory(na)
+add_subdirectory(sc)

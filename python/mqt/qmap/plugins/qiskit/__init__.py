@@ -6,15 +6,6 @@
 #
 # Licensed under the MIT License
 
-add_mqt_python_binding(
-  QMAP
-  ${MQT_QMAP_TARGET_NAME}-na-zoned-bindings
-  zoned.cpp
-  MODULE_NAME
-  zoned
-  INSTALL_DIR
-  ./na
-  LINK_LIBS
-  MQT::QMapNAZoned
-  MQT::CoreQASM
-  pybind11_json)
+"""Qiskit plugins for the QMAP package."""
+
+from __future__ import annotations

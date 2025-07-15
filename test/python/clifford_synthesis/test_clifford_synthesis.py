@@ -18,7 +18,9 @@ import pytest
 from qiskit import QuantumCircuit, qasm2
 from qiskit.quantum_info import Clifford, PauliList
 
-from mqt import qcec, qmap
+from mqt import qcec
+from mqt.qmap.clifford_synthesis import Tableau
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford, synthesize_clifford
 
 
 @dataclass
@@ -39,7 +41,7 @@ class Configuration:
 
 def create_circuit_tests() -> list[Configuration]:
     """Create test cases for Clifford synthesis."""
-    path = Path(__file__).resolve().parent.parent / "cliffordsynthesis" / "circuits.json"
+    path = Path(__file__).resolve().parent.parent.parent / "cliffordsynthesis" / "circuits.json"
     with path.open() as f:
         circuits = json.load(f)
     return [Configuration(**c) for c in circuits]
@@ -47,7 +49,7 @@ def create_circuit_tests() -> list[Configuration]:
 
 def create_tableau_tests() -> list[Configuration]:
     """Create test cases for tableau synthesis."""
-    path = Path(__file__).resolve().parent.parent / "cliffordsynthesis" / "tableaus.json"
+    path = Path(__file__).resolve().parent.parent.parent / "cliffordsynthesis" / "tableaus.json"
     with path.open() as f:
         tableaus = json.load(f)
     return [Configuration(**t) for t in tableaus]
@@ -57,9 +59,7 @@ def create_tableau_tests() -> list[Configuration]:
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal Clifford synthesis."""
-    circ, results = qmap.optimize_clifford(
-        circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="gates"
-    )
+    circ, results = optimize_clifford(circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="gates")
 
     assert results.gates == test_config.expected_minimal_gates
     print("\n", circ)
@@ -69,9 +69,7 @@ def test_optimize_clifford_gates(test_config: Configuration, use_maxsat: bool) -
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test depth-optimal Clifford synthesis."""
-    circ, results = qmap.optimize_clifford(
-        circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="depth"
-    )
+    circ, results = optimize_clifford(circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="depth")
 
     assert results.depth == test_config.expected_minimal_depth
     print("\n", circ)
@@ -81,7 +79,7 @@ def test_optimize_clifford_depth(test_config: Configuration, use_maxsat: bool) -
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_gates_at_minimal_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal Clifford synthesis at minimal depth."""
-    circ, results = qmap.optimize_clifford(
+    circ, results = optimize_clifford(
         circuit=test_config.initial_circuit,
         use_maxsat=use_maxsat,
         target_metric="depth",
@@ -96,7 +94,7 @@ def test_optimize_clifford_gates_at_minimal_depth(test_config: Configuration, us
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_two_qubit_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test two-qubit gate-optimal Clifford synthesis."""
-    circ, results = qmap.optimize_clifford(
+    circ, results = optimize_clifford(
         circuit=test_config.initial_circuit,
         use_maxsat=use_maxsat,
         target_metric="two_qubit_gates",
@@ -111,7 +109,7 @@ def test_optimize_clifford_two_qubit_gates(test_config: Configuration, use_maxsa
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal Clifford synthesis at minimal two-qubit gate count."""
-    circ, results = qmap.optimize_clifford(
+    circ, results = optimize_clifford(
         circuit=test_config.initial_circuit,
         use_maxsat=use_maxsat,
         target_metric="two_qubit_gates",
@@ -126,7 +124,7 @@ def test_optimize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configu
 @pytest.mark.parametrize("test_config", create_circuit_tests())
 def test_heuristic(test_config: Configuration) -> None:
     """Test heuristic synthesis method."""
-    circ, _ = qmap.optimize_clifford(
+    circ, _ = optimize_clifford(
         circuit=test_config.initial_circuit,
         heuristic=True,
         split_size=10,
@@ -134,7 +132,7 @@ def test_heuristic(test_config: Configuration) -> None:
         include_destabilizers=True,
     )
 
-    circ_opt, _ = qmap.optimize_clifford(
+    circ_opt, _ = optimize_clifford(
         circuit=test_config.initial_circuit, heuristic=False, target_metric="depth", include_destabilizers=True
     )
 
@@ -147,7 +145,7 @@ def test_heuristic(test_config: Configuration) -> None:
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal tableau synthesis."""
-    circ, results = qmap.synthesize_clifford(
+    circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
@@ -162,7 +160,7 @@ def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool)
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_synthesize_clifford_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test depth-optimal tableau synthesis."""
-    circ, results = qmap.synthesize_clifford(
+    circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
@@ -177,7 +175,7 @@ def test_synthesize_clifford_depth(test_config: Configuration, use_maxsat: bool)
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_synthesize_clifford_gates_at_minimal_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal tableau synthesis at minimal depth."""
-    circ, results = qmap.synthesize_clifford(
+    circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
@@ -193,7 +191,7 @@ def test_synthesize_clifford_gates_at_minimal_depth(test_config: Configuration, 
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_synthesize_clifford_two_qubit_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test two-qubit gate-optimal tableau synthesis."""
-    circ, results = qmap.synthesize_clifford(
+    circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
@@ -209,7 +207,7 @@ def test_synthesize_clifford_two_qubit_gates(test_config: Configuration, use_max
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_synthesize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal tableau synthesis at minimal two-qubit gate count."""
-    circ, results = qmap.synthesize_clifford(
+    circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
@@ -238,51 +236,53 @@ def bell_circuit() -> QuantumCircuit:
 def test_optimize_from_qasm_file(bell_circuit: QuantumCircuit) -> None:
     """Test that we can optimize from a QASM file."""
     qasm2.dump(bell_circuit, Path("bell.qasm"))
-    circ, _ = qmap.optimize_clifford(circuit="bell.qasm")
+    circ, _ = optimize_clifford(circuit="bell.qasm")
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_optimize_qiskit_circuit(bell_circuit: QuantumCircuit) -> None:
     """Test that we can optimize a Qiskit QuantumCircuit."""
-    circ, _ = qmap.optimize_clifford(circuit=bell_circuit)
+    circ, _ = optimize_clifford(circuit=bell_circuit)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_optimize_with_initial_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can optimize a circuit with an initial tableau."""
-    circ, _ = qmap.optimize_clifford(circuit=bell_circuit, initial_tableau=qmap.pyqmap.Tableau(bell_circuit.num_qubits))
+    initial_tableau = Tableau(bell_circuit.num_qubits)
+    circ, _ = optimize_clifford(circuit=bell_circuit, initial_tableau=initial_tableau)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_synthesize_from_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from an MQT Tableau."""
-    tableau = qmap.pyqmap.Tableau("['XX', 'ZZ']")
-    circ, _ = qmap.synthesize_clifford(target_tableau=tableau)
+    target_tableau = Tableau("['XX', 'ZZ']")
+    circ, _ = synthesize_clifford(target_tableau=target_tableau)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_synthesize_from_qiskit_clifford(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from a Qiskit Clifford."""
     cliff = Clifford(bell_circuit)
-    circ, _ = qmap.synthesize_clifford(target_tableau=cliff)
+    circ, _ = synthesize_clifford(target_tableau=cliff)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_synthesize_from_qiskit_pauli_list(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from a Qiskit PauliList."""
     pauli_list = PauliList(["XX", "ZZ"])
-    circ, _ = qmap.synthesize_clifford(target_tableau=pauli_list)
+    circ, _ = synthesize_clifford(target_tableau=pauli_list)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_synthesize_from_string(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from a String."""
     pauli_str = "[XX,ZZ]"
-    circ, _ = qmap.synthesize_clifford(target_tableau=pauli_str)
+    circ, _ = synthesize_clifford(target_tableau=pauli_str)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_invalid_kwarg_to_synthesis() -> None:
     """Test that we raise an error if we pass an invalid kwarg to synthesis."""
+    target_tableau = Tableau("Z")
     with pytest.raises(ValueError, match="Invalid keyword argument"):
-        qmap.synthesize_clifford(target_tableau=qmap.pyqmap.Tableau("Z"), invalid_kwarg=True)
+        synthesize_clifford(target_tableau=target_tableau, invalid_kwarg=True)

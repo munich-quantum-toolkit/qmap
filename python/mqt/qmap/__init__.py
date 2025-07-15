@@ -45,15 +45,9 @@ if sys.platform == "win32":
     _dll_patch()
     del _dll_patch
 
+
 from ._version import version as __version__
-from .clifford_synthesis import optimize_clifford, synthesize_clifford
-from .compile import compile  # noqa: A004
-from .subarchitectures import SubarchitectureOrder
 
 __all__ = [
-    "SubarchitectureOrder",
     "__version__",
-    "compile",
-    "optimize_clifford",
-    "synthesize_clifford",
 ]

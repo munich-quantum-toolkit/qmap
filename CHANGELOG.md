@@ -1,3 +1,5 @@
+<!-- Entries in each category are sorted by merge time, with the latest PRs appearing first. -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -9,8 +11,14 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Changed
 
+- ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
+- ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
+
+### Removed
+
+- 🔥 Remove CMake function `add_mqt_qmap_binding` ([#665]) ([**@denialhaag**])
 
 ## [3.1.3] - 2025-05-28
 
@@ -85,6 +93,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#694]: https://github.com/munich-quantum-toolkit/qmap/pull/694
+[#665]: https://github.com/munich-quantum-toolkit/qmap/pull/665
 [#661]: https://github.com/munich-quantum-toolkit/qmap/pull/661
 [#660]: https://github.com/munich-quantum-toolkit/qmap/pull/660
 [#659]: https://github.com/munich-quantum-toolkit/qmap/pull/659

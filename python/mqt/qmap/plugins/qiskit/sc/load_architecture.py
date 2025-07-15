@@ -6,25 +6,19 @@
 #
 # Licensed under the MIT License
 
-"""Module for loading architectures."""
+"""Load a superconducting architecture."""
 
 from __future__ import annotations
 
 from qiskit.providers import Backend
 
-from .pyqmap import Arch, Architecture
-
-__all__ = [
-    "load_architecture",
-]
-
-
-def __dir__() -> list[str]:
-    return __all__
+from ....sc import Arch, Architecture
 
 
 def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
-    """Load an architecture from a string, Arch, Architecture, or Backend. If None is passed, no architecture is loaded.
+    """Load a superconducting architecture from a string, Arch, Architecture, or Backend.
+
+    If None is passed, no architecture is loaded.
 
     Args:
         arch: The architecture to load.
@@ -45,7 +39,7 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
         elif isinstance(arch, Architecture):
             architecture = arch
         elif isinstance(arch, Backend):
-            from mqt.qmap.plugins.qiskit import import_backend
+            from .import_backend import import_backend
 
             architecture = import_backend(arch)
         else:  # pragma: no cover

@@ -6,22 +6,23 @@
 #
 # Licensed under the MIT License
 
-"""Main entry point for the Clifford synthesis module."""
+"""Qiskit utilities for Clifford synthesis module."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
-    from qiskit.circuit import QuantumCircuit
-
-    from .compile import CircuitInputType
-
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 from qiskit.quantum_info import Clifford, PauliList
 
-from .pyqmap import (
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+
+    from ...types import CircuitInputType
+
+
+from ...clifford_synthesis import (
     CliffordSynthesizer,
     SynthesisConfiguration,
     SynthesisResults,
