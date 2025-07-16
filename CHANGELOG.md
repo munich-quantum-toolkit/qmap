@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.2.0] - 2025-07-16
+
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
+
 ### Changed
 
 - ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
@@ -82,7 +86,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.3...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.3...v3.2.0
 [3.1.3]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...v3.1.1
