@@ -4,6 +4,8 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+## [3.2.0]
+
 With this release, the Python package has been restructured.
 In particular, the `mqt.qmap.pyqmap` module has been discontinued.
 Classes and functions can now be imported from the more descriptive `mqt.qmap.clifford_synthesis`, `mqt.qmap.hybrid_mapper`, `mqt.qmap.na`, and `mqt.qmap.sc` modules.
@@ -48,7 +50,13 @@ MQT QMAP now requires CMake 3.24 or higher.
 Most modern operating systems should have this version available in their package manager.
 Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`](https://pypi.org/project/cmake/) package.
 
-[MQT SyReC]: https://github.com/cda-tum/mqt-syrec
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...HEAD
+<!-- Version links -->
+
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v2.8.0...v3.0.0
+
+<!-- Other links -->
+
+[MQT SyReC]: https://github.com/cda-tum/mqt-syrec
