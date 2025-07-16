@@ -59,4 +59,4 @@ Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`]
 
 <!-- Other links -->
 
-[MQT SyReC]: https://github.com/cda-tum/mqt-syrec
+[MQT SyReC]: https://github.com/munich-quantum-toolkit/syrec
