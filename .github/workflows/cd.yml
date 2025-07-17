@@ -34,6 +34,8 @@ jobs:
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-wheel-cibuildwheel.yml@v1.14
     with:
       runs-on: ${{ matrix.runs-on }}
+      setup-z3: true
+      z3-version: 4.12.6
 
   # Downloads the previously generated artifacts and deploys to PyPI on published releases.
   deploy:
