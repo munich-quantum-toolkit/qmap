@@ -103,10 +103,14 @@ jobs:
         compiler: [clang, clang-19, clang-20, gcc-14, gcc-15]
         config: [Release, Debug]
         exclude:
+          # see https://github.com/munich-quantum-toolkit/core/issues/979
           - runs-on: macos-15
             compiler: gcc-14
           - runs-on: macos-15
             compiler: gcc-15
+          # see https://github.com/munich-quantum-toolkit/qmap/issues/704
+          - compiler: gcc-15
+            config: Debug
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@v1.14
     with:
       runs-on: ${{ matrix.runs-on }}
@@ -190,6 +194,9 @@ jobs:
       fail-fast: false
       matrix:
         runs-on: [ubuntu-22.04, ubuntu-22.04-arm, macos-15, windows-2025]
+        exclude:
+          # see https://github.com/munich-quantum-toolkit/qmap/issues/703
+          - runs-on: macos-15
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@v1.14
     with:
       runs-on: ${{ matrix.runs-on }}
