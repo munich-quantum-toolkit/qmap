@@ -129,7 +129,7 @@ jobs:
       matrix:
         runs-on: [windows-2022, windows-2025, windows-11-arm]
         compiler: [msvc, clang]
-        config: [Release]
+        config: [Release, Debug]
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-windows.yml@v1.14
     with:
       runs-on: ${{ matrix.runs-on }}
@@ -244,6 +244,7 @@ jobs:
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
+      # 4.13.0 has incorrectly tagged manylinux wheels
       z3-version: 4.12.6
 
   # this job does nothing and is only used for branch protection
