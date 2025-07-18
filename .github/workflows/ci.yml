@@ -47,6 +47,10 @@ jobs:
         runs-on: [macos-13, macos-14]
         compiler: [clang]
         config: [Release]
+        include:
+          - runs-on: macos-14
+            compiler: clang
+            config: Debug
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@v1.14
     with:
       runs-on: ${{ matrix.runs-on }}
@@ -130,6 +134,9 @@ jobs:
         runs-on: [windows-2022, windows-2025, windows-11-arm]
         compiler: [msvc, clang]
         config: [Release, Debug]
+        exclude:
+          # see https://github.com/munich-quantum-toolkit/qmap/issues/704
+          - config: Debug
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-windows.yml@v1.14
     with:
       runs-on: ${{ matrix.runs-on }}
