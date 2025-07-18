@@ -22,8 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-15, windows-2025]
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-qiskit-upstream.yml@v1.12
+        os: [ubuntu-24.04, macos-14, windows-2022]
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-qiskit-upstream.yml@v1.14
     with:
       runs-on: ${{ matrix.os }}
       setup-z3: true
