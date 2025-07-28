@@ -711,9 +711,9 @@ auto VertexMatchingPlacer::place(
     if (config_.dynamicPlacement) {
       qubitPlacementWithoutReuse = placeAtomsInStorageZone(
           placement.front(), placement.back(),
-          reuseQubits.size() > layer ? reuseQubits[layer]
+          layer < reuseQubits.size() ? reuseQubits[layer]
                                      : std::unordered_set<qc::Qubit>{},
-          twoQubitGateLayers.size() > layer + 1 ? twoQubitGateLayers[layer + 1]
+          layer + 1 < twoQubitGateLayers.size() ? twoQubitGateLayers[layer + 1]
                                                 : TwoQubitGateLayer{},
           false);
     } else {
@@ -724,7 +724,7 @@ auto VertexMatchingPlacer::place(
       const auto& gatePlacementWithoutReuse = placeGatesInEntanglementZone(
           qubitPlacementWithoutReuse, reuseQubits[layer],
           twoQubitGateLayers[layer + 1],
-          twoQubitGateLayers.size() > layer + 2 ? twoQubitGateLayers[layer + 2]
+          layer + 2 < twoQubitGateLayers.size() ? twoQubitGateLayers[layer + 2]
                                                 : TwoQubitGateLayer{},
           false);
       // then compute the next qubit and gate placement with reusing atoms
@@ -733,7 +733,7 @@ auto VertexMatchingPlacer::place(
         if (config_.dynamicPlacement) {
           qubitPlacementWithReuse = placeAtomsInStorageZone(
               placement.front(), placement.back(), reuseQubits[layer],
-              twoQubitGateLayers.size() > layer + 1
+              layer + 1 < twoQubitGateLayers.size()
                   ? twoQubitGateLayers[layer + 1]
                   : TwoQubitGateLayer{},
               true);
@@ -747,7 +747,7 @@ auto VertexMatchingPlacer::place(
         const auto& gatePlacementWithReuse = placeGatesInEntanglementZone(
             qubitPlacementWithReuse, reuseQubits[layer],
             twoQubitGateLayers[layer + 1],
-            twoQubitGateLayers.size() > layer + 2
+            layer + 2 < twoQubitGateLayers.size()
                 ? twoQubitGateLayers[layer + 2]
                 : TwoQubitGateLayer{},
             true);
