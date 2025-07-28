@@ -20,20 +20,30 @@ namespace na::zoned {
  * The Abstract Base Class for the Placer of the MQT's Zoned Neutral Atom
  * Compiler.
  */
-class PlacerBase {
+class LayoutSynthsizerBase {
 public:
-  virtual ~PlacerBase() = default;
-
+  virtual ~LayoutSynthsizerBase() = default;
   /**
-   * This function defines the interface of the placer.
-   * @param nQubits denotes the number of qubits to be placed
-   * @param twoQubitGateLayers are the qubits that must be placed for each layer
-   * @param reuseQubits are the qubits that are reused in the next stage
+   * Collection of the placement and routing results.
+   */
+  struct Layout {
+    std::vector<Placement> placement; ///< The placement of the qubits
+    std::vector<Routing> routing;     ///< The routing of the qubits
+  };
+  /**
+   * This function defines the interface of the layout synthesizer.
+   * @param nQubits is the number of qubits in the quantum computation.
+   * @param twoQubitGateLayers is a vector of two-qubit gate layers,
+   * where each layer contains the two-qubit gates to be placed.
+   * @param reuseQubits is a vector of sets of qubits that can be reused
+   * during the synthesis process. Each set contains qubits that can be reused
+   * for the two-qubit gates in the corresponding layer.
+   * @returns A Layout object containing the placement and routing results.
    */
   [[nodiscard]] virtual auto
-  place(size_t nQubits,
-        const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
-        const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-      -> std::vector<Placement> = 0;
+  synthesize(size_t nQubits,
+             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
+             const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
+      -> Layout = 0;
 };
 } // namespace na::zoned

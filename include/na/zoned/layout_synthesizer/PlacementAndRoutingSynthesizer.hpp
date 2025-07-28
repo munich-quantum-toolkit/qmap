@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "LayoutSynthesizerBase.hpp"
 #include "na/zoned/Types.hpp"
 
 #include <nlohmann/json.hpp>
@@ -41,7 +42,9 @@ namespace na::zoned {
  * returns a vector of `Routing` objects.
  */
 template <class ConcreteType, class Placer, class Router>
-class PlacementAndRoutingSynthesizer : protected Placer, protected Router {
+class PlacementAndRoutingSynthesizer : public LayoutSynthsizerBase,
+                                       protected Placer,
+                                       protected Router {
   friend ConcreteType;
 
 public:
@@ -82,24 +85,6 @@ private:
       : Placer(config.placerConfig), Router(config.routerConfig) {}
 
 public:
-  /**
-   * Collection of the placement and routing results.
-   */
-  struct Layout {
-    std::vector<Placement> placement; ///< The placement of the qubits
-    std::vector<Routing> routing;     ///< The routing of the qubits
-  };
-  /**
-   * Synthesize a layout for a quantum computation by placing and routing
-   * the qubits using the specified placer and router.
-   * @param nQubits is the number of qubits in the quantum computation.
-   * @param twoQubitGateLayers is a vector of two-qubit gate layers,
-   * where each layer contains the two-qubit gates to be placed.
-   * @param reuseQubits is a vector of sets of qubits that can be reused
-   * during the synthesis process. Each set contains qubits that can be reused
-   * for the two-qubit gates in the corresponding layer.
-   * @returns A Layout object containing the placement and routing results.
-   */
   [[nodiscard]] auto synthesize(
       size_t nQubits, const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
       const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits) -> Layout {
