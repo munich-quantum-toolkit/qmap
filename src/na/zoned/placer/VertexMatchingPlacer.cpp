@@ -710,7 +710,9 @@ auto VertexMatchingPlacer::place(
     Placement qubitPlacementWithoutReuse;
     if (config_.dynamicPlacement) {
       qubitPlacementWithoutReuse = placeAtomsInStorageZone(
-          placement.front(), placement.back(), reuseQubits[layer],
+          placement.front(), placement.back(),
+          reuseQubits.size() > layer ? reuseQubits[layer]
+                                     : std::unordered_set<qc::Qubit>{},
           twoQubitGateLayers.size() > layer + 1 ? twoQubitGateLayers[layer + 1]
                                                 : TwoQubitGateLayer{},
           false);
