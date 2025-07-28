@@ -14,11 +14,11 @@
 #include "code_generator/CodeGenerator.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
+#include "layout_synthesizer/placer/AStarPlacer.hpp"
+#include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
+#include "layout_synthesizer/router/IndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
-#include "placer/AStarPlacer.hpp"
-#include "placer/VertexMatchingPlacer.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
-#include "router/IndependentSetRouter.hpp"
 #include "scheduler/ASAPScheduler.hpp"
 
 #include <cassert>
