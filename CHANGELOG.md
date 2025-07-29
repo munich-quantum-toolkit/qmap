@@ -15,7 +15,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Changed
 
-- ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
+- **Breaking**: ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
 - ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
 - ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
