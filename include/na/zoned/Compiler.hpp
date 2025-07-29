@@ -77,13 +77,16 @@ public:
    * different components.
    */
   struct Statistics {
-    int64_t schedulingTime;      ///< Time taken for scheduling in us
-    int64_t reuseAnalysisTime;   ///< Time taken for reuse analysis in us
+    int64_t schedulingTime;    ///< Time taken for scheduling in us
+    int64_t reuseAnalysisTime; ///< Time taken for reuse analysis in us
+    /// Statistics collected during layout synthesis.
+    typename LayoutSynthesizer::Statistics layoutSynthesizerStatistics;
     int64_t layoutSynthesisTime; ///< Time taken for layout synthesis in us
     int64_t codeGenerationTime;  ///< Time taken for code generation in us
     int64_t totalTime;           ///< Total time taken for the compilation in us
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
                                                   reuseAnalysisTime,
+                                                  layoutSynthesizerStatistics,
                                                   layoutSynthesisTime,
                                                   codeGenerationTime,
                                                   totalTime);
@@ -199,12 +202,14 @@ public:
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
 
     const auto& layoutSynthesisStart = std::chrono::system_clock::now();
-    const auto& [placement, routing] =
-        SELF.synthesize(qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+    const auto& [placement, routing] = LayoutSynthesizer::synthesize(
+        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - layoutSynthesisStart)
             .count();
+    statistics_.layoutSynthesizerStatistics =
+        SELF.getLayoutSynthesisStatistics();
     SPDLOG_INFO("Time for layout synthesis: {}us",
                 statistics_.layoutSynthesisTime);
 

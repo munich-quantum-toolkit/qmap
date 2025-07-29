@@ -117,10 +117,16 @@ public:
             .count();
     SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime);
 
+    statistics_.totalTime =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - placementStart)
+            .count();
+    SPDLOG_INFO("Total time: {}us", statistics_.totalTime);
+
     return {placement, routing};
   }
   /// @returns the statistics collected during the synthesis process.
-  [[nodiscard]] auto getStatistics() const -> const Statistics& {
+  [[nodiscard]] auto getLayoutSynthesisStatistics() const -> const Statistics& {
     return statistics_;
   }
 };
