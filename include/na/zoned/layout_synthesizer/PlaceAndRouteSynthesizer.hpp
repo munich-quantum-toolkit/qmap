@@ -100,8 +100,6 @@ public:
   [[nodiscard]] auto synthesize(
       size_t nQubits, const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
       const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits) -> Layout {
-    SPDLOG_INFO("*** Placement and Routing Layout Synthesizer ***");
-
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement =
         SELF.place(nQubits, twoQubitGateLayers, reuseQubits);
