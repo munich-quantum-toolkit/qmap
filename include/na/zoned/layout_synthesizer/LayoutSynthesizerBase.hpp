@@ -17,8 +17,8 @@
 
 namespace na::zoned {
 /**
- * The Abstract Base Class for the Placer of the MQT's Zoned Neutral Atom
- * Compiler.
+ * The Abstract Base Class for the Layout Synthesizer of the MQT's Zoned Neutral
+ * Atom Compiler.
  */
 class LayoutSynthsizerBase {
 public:
@@ -35,9 +35,8 @@ public:
    * @param nQubits is the number of qubits in the quantum computation.
    * @param twoQubitGateLayers is a vector of two-qubit gate layers,
    * where each layer contains the two-qubit gates to be placed.
-   * @param reuseQubits is a vector of sets of qubits that can be reused
-   * during the synthesis process. Each set contains qubits that can be reused
-   * for the two-qubit gates in the corresponding layer.
+   * @param reuseQubits is a vector of qubit sets that can be reused
+   * between layers.
    * @returns A Layout object containing the placement and routing results.
    */
   [[nodiscard]] virtual auto
