@@ -21,6 +21,10 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 - **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
 
+### Fixed
+
+- 🐛 Fix out-of-bounds access to the vector of reuse qubits ([#712]) ([**@ystade**])
+
 ### Removed
 
 - 🔥 Remove CMake function `add_mqt_qmap_binding` ([#665]) ([**@denialhaag**])
