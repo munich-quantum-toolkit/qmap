@@ -20,9 +20,9 @@ namespace na::zoned {
  * The Abstract Base Class for the Layout Synthesizer of the MQT's Zoned Neutral
  * Atom Compiler.
  */
-class LayoutSynthsizerBase {
+class LayoutSynthesizerBase {
 public:
-  virtual ~LayoutSynthsizerBase() = default;
+  virtual ~LayoutSynthesizerBase() = default;
   /**
    * Collection of the placement and routing results.
    */

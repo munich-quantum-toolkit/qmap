@@ -42,7 +42,7 @@ namespace na::zoned {
  * returns a vector of `Routing` objects.
  */
 template <class ConcreteType, class Placer, class Router>
-class PlaceAndRouteSynthesizer : public LayoutSynthsizerBase,
+class PlaceAndRouteSynthesizer : public LayoutSynthesizerBase,
                                  protected Placer,
                                  protected Router {
   friend ConcreteType;
