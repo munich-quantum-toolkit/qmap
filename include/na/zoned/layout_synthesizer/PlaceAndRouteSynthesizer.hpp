@@ -103,23 +103,23 @@ public:
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement =
         SELF.place(nQubits, twoQubitGateLayers, reuseQubits);
+    const auto& placementEnd = std::chrono::system_clock::now();
+    const auto& routing = SELF.route(placement);
+    const auto& routingEnd = std::chrono::system_clock::now();
+
     statistics_.placementTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - placementStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(placementEnd -
+                                                              placementStart)
             .count();
     SPDLOG_INFO("Time for placement: {}us", statistics_.placementTime);
-
-    const auto& routingStart = std::chrono::system_clock::now();
-    const auto& routing = SELF.route(placement);
     statistics_.routingTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - routingStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(routingEnd -
+                                                              placementEnd)
             .count();
     SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime);
-
     statistics_.totalTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - placementStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(routingEnd -
+                                                              placementStart)
             .count();
     SPDLOG_INFO("Total time: {}us", statistics_.totalTime);
 

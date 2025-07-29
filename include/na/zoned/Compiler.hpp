@@ -165,9 +165,20 @@ public:
     const auto& schedule = SELF.schedule(qComp);
     const auto& singleQubitGateLayers = schedule.first;
     const auto& twoQubitGateLayers = schedule.second;
+    const auto& schedulingEnd = std::chrono::system_clock::now();
+    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
+    const auto& reuseAnalysisEnd = std::chrono::system_clock::now();
+    const auto& [placement, routing] = LayoutSynthesizer::synthesize(
+        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+    const auto& layoutSynthesisEnd = std::chrono::system_clock::now();
+    NAComputation code =
+        SELF.generate(singleQubitGateLayers, placement, routing);
+    const auto& codeGenerationEnd = std::chrono::system_clock::now();
+    assert(code.validate().first);
+
     statistics_.schedulingTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - schedulingStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
+                                                              schedulingStart)
             .count();
     SPDLOG_INFO("Time for scheduling: {}us", statistics_.schedulingTime);
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
@@ -192,41 +203,28 @@ public:
           avg, max);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
-
-    const auto& reuseAnalysisStart = std::chrono::system_clock::now();
-    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - reuseAnalysisStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(reuseAnalysisEnd -
+                                                              schedulingEnd)
             .count();
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
-
-    const auto& layoutSynthesisStart = std::chrono::system_clock::now();
-    const auto& [placement, routing] = LayoutSynthesizer::synthesize(
-        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - layoutSynthesisStart)
+            layoutSynthesisEnd - reuseAnalysisEnd)
             .count();
     statistics_.layoutSynthesizerStatistics =
         SELF.getLayoutSynthesisStatistics();
     SPDLOG_INFO("Time for layout synthesis: {}us",
                 statistics_.layoutSynthesisTime);
-
-    const auto& codeGenerationStart = std::chrono::system_clock::now();
-    NAComputation code =
-        SELF.generate(singleQubitGateLayers, placement, routing);
-    assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - codeGenerationStart)
+            codeGenerationEnd - layoutSynthesisEnd)
             .count();
     SPDLOG_INFO("Time for code generation: {}us",
                 statistics_.codeGenerationTime);
-
     statistics_.totalTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - schedulingStart)
+            codeGenerationEnd - schedulingStart)
             .count();
     SPDLOG_INFO("Total time: {}us", statistics_.totalTime);
     return code;
