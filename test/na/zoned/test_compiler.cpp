@@ -110,7 +110,7 @@ constexpr std::string_view routingAwareConfiguration = R"({
     double timeSum = 0;                                                        \
     const nlohmann::json stats = this->compiler_.getStatistics();              \
     for (const auto& [key, value] : stats.items()) {                           \
-      if (key != "totalTime") {                                                \
+      if (key != "totalTime" && value.is_number()) {                           \
         timeSum += value.get<double>();                                        \
       }                                                                        \
     }                                                                          \
