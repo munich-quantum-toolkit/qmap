@@ -14,6 +14,7 @@
 #include "code_generator/CodeGenerator.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
+#include "layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
 #include "layout_synthesizer/placer/AStarPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
@@ -43,11 +44,10 @@ namespace na::zoned {
  * compiler and setting them at runtime.
  */
 template <class ConcreteType, class Scheduler, class ReuseAnalyzer,
-          class Placer, class Router, class CodeGenerator>
+          class LayoutSynthesizer, class CodeGenerator>
 class Compiler : protected Scheduler,
                  protected ReuseAnalyzer,
-                 protected Placer,
-                 protected Router,
+                 protected LayoutSynthesizer,
                  protected CodeGenerator {
   friend ConcreteType;
 
@@ -61,17 +61,15 @@ public:
     typename Scheduler::Config schedulerConfig{};
     /// Configuration for the reuse analyzer
     typename ReuseAnalyzer::Config reuseAnalyzerConfig{};
-    /// Configuration for the placer
-    typename Placer::Config placerConfig{};
-    /// Configuration for the router
-    typename Router::Config routerConfig{};
+    /// Configuration for the layout synthesizer
+    typename LayoutSynthesizer::Config layoutSynthesizerConfig{};
     /// Configuration for the code generator
     typename CodeGenerator::Config codeGeneratorConfig{};
     /// Log level for the compiler
     spdlog::level::level_enum logLevel = spdlog::level::info;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, schedulerConfig,
                                                 reuseAnalyzerConfig,
-                                                placerConfig, routerConfig,
+                                                layoutSynthesizerConfig,
                                                 codeGeneratorConfig, logLevel);
   };
   /**
@@ -79,15 +77,14 @@ public:
    * different components.
    */
   struct Statistics {
-    int64_t schedulingTime;     ///< Time taken for scheduling in us
-    int64_t reuseAnalysisTime;  ///< Time taken for reuse analysis in us
-    int64_t placementTime;      ///< Time taken for placement in us
-    int64_t routingTime;        ///< Time taken for routing in us
-    int64_t codeGenerationTime; ///< Time taken for code generation in us
-    int64_t totalTime;          ///< Total time taken for the compilation in us
+    int64_t schedulingTime;      ///< Time taken for scheduling in us
+    int64_t reuseAnalysisTime;   ///< Time taken for reuse analysis in us
+    int64_t layoutSynthesisTime; ///< Time taken for layout synthesis in us
+    int64_t codeGenerationTime;  ///< Time taken for code generation in us
+    int64_t totalTime;           ///< Total time taken for the compilation in us
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
                                                   reuseAnalysisTime,
-                                                  placementTime, routingTime,
+                                                  layoutSynthesisTime,
                                                   codeGenerationTime,
                                                   totalTime);
   };
@@ -107,8 +104,7 @@ private:
   Compiler(const Architecture& architecture, const Config& config)
       : Scheduler(architecture, config.schedulerConfig),
         ReuseAnalyzer(architecture, config.reuseAnalyzerConfig),
-        Placer(architecture, config.placerConfig),
-        Router(architecture, config.routerConfig),
+        LayoutSynthesizer(architecture, config.layoutSynthesizerConfig),
         CodeGenerator(architecture, config.codeGeneratorConfig),
         architecture_(architecture), config_(config) {
     spdlog::set_level(config.logLevel);
@@ -202,22 +198,15 @@ public:
             .count();
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
 
-    const auto& placementStart = std::chrono::system_clock::now();
-    const auto& placement =
-        SELF.place(qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
-    statistics_.placementTime =
+    const auto& layoutSynthesisStart = std::chrono::system_clock::now();
+    const auto& [placement, routing] =
+        SELF.synthesize(qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+    statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - placementStart)
+            std::chrono::system_clock::now() - layoutSynthesisStart)
             .count();
-    SPDLOG_INFO("Time for placement: {}us", statistics_.placementTime);
-
-    const auto& routingStart = std::chrono::system_clock::now();
-    const auto& routing = SELF.route(placement);
-    statistics_.routingTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - routingStart)
-            .count();
-    SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime);
+    SPDLOG_INFO("Time for layout synthesis: {}us",
+                statistics_.layoutSynthesisTime);
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
@@ -243,10 +232,18 @@ public:
   }
 };
 
+class RoutingAgnosticSynthesizer final
+    : public PlaceAndRouteSynthesizer<RoutingAgnosticSynthesizer,
+                                      VertexMatchingPlacer,
+                                      IndependentSetRouter> {
+  explicit RoutingAgnosticSynthesizer(const Config& config)
+      : PlaceAndRouteSynthesizer(config) {}
+  explicit RoutingAgnosticSynthesizer() {}
+};
 class RoutingAgnosticCompiler final
     : public Compiler<RoutingAgnosticCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, VertexMatchingPlacer,
-                      IndependentSetRouter, CodeGenerator> {
+                      VertexMatchingReuseAnalyzer, RoutingAgnosticSynthesizer,
+                      CodeGenerator> {
 public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const Config& config)
@@ -255,10 +252,17 @@ public:
       : Compiler(architecture) {}
 };
 
+class RoutingAwareSynthesizer final
+    : public PlaceAndRouteSynthesizer<RoutingAwareSynthesizer, AStarPlacer,
+                                      IndependentSetRouter> {
+  explicit RoutingAwareSynthesizer(const Config& config)
+      : PlaceAndRouteSynthesizer(config) {}
+  explicit RoutingAwareSynthesizer() {}
+};
 class RoutingAwareCompiler final
     : public Compiler<RoutingAwareCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, AStarPlacer,
-                      IndependentSetRouter, CodeGenerator> {
+                      VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
+                      CodeGenerator> {
 public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}

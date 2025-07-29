@@ -42,9 +42,9 @@ namespace na::zoned {
  * returns a vector of `Routing` objects.
  */
 template <class ConcreteType, class Placer, class Router>
-class PlacementAndRoutingSynthesizer : public LayoutSynthsizerBase,
-                                       protected Placer,
-                                       protected Router {
+class PlaceAndRouteSynthesizer : public LayoutSynthsizerBase,
+                                 protected Placer,
+                                 protected Router {
   friend ConcreteType;
 
 public:
@@ -76,13 +76,16 @@ private:
   /// The statistics collected during the synthesis process
   Statistics statistics_;
   /**
-   * Construct a PlacementAndRoutingSynthesizer instance with the given
+   * Construct a PlaceAndRouteSynthesizer instance with the given
    * configuration.
    *
    * @param config The configuration for the placer and router.
    */
-  explicit PlacementAndRoutingSynthesizer(const Config& config)
+  explicit PlaceAndRouteSynthesizer(const Config& config)
       : Placer(config.placerConfig), Router(config.routerConfig) {}
+
+  /// Construct a PlaceAndRouteSynthesizer instance with default configuration.
+  PlaceAndRouteSynthesizer() : PlaceAndRouteSynthesizer(Config{}) {}
 
 public:
   [[nodiscard]] auto synthesize(
