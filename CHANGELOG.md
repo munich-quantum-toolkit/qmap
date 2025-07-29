@@ -15,6 +15,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Changed
 
+- ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#712]) ([**@ystade**])
 - ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
 - ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
@@ -97,6 +98,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#712]: https://github.com/munich-quantum-toolkit/qmap/pull/712
 [#694]: https://github.com/munich-quantum-toolkit/qmap/pull/694
 [#665]: https://github.com/munich-quantum-toolkit/qmap/pull/665
 [#661]: https://github.com/munich-quantum-toolkit/qmap/pull/661
