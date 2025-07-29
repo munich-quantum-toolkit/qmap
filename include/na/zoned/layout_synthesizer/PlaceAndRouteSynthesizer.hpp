@@ -76,16 +76,25 @@ private:
   /// The statistics collected during the synthesis process
   Statistics statistics_;
   /**
-   * Construct a PlaceAndRouteSynthesizer instance with the given
+   * @brief Construct a PlaceAndRouteSynthesizer instance with the given
    * configuration.
-   *
-   * @param config The configuration for the placer and router.
+   * @param config is the configuration for the placer and router.
+   * @param architecture is the architecture for which the layout is
+   * synthesized.
    */
-  explicit PlaceAndRouteSynthesizer(const Config& config)
-      : Placer(config.placerConfig), Router(config.routerConfig) {}
+  PlaceAndRouteSynthesizer(const Architecture& architecture,
+                           const Config& config)
+      : Placer(architecture, config.placerConfig),
+        Router(architecture, config.routerConfig) {}
 
-  /// Construct a PlaceAndRouteSynthesizer instance with default configuration.
-  PlaceAndRouteSynthesizer() : PlaceAndRouteSynthesizer(Config{}) {}
+  /**
+   * @brief Construct a PlaceAndRouteSynthesizer instance with default
+   * configuration.
+   * @param architecture is the architecture for which the layout is
+   * synthesized.
+   */
+  explicit PlaceAndRouteSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture, Config{}) {}
 
 public:
   [[nodiscard]] auto synthesize(

@@ -232,13 +232,16 @@ public:
   }
 };
 
-class RoutingAgnosticSynthesizer final
+class RoutingAgnosticSynthesizer
     : public PlaceAndRouteSynthesizer<RoutingAgnosticSynthesizer,
                                       VertexMatchingPlacer,
                                       IndependentSetRouter> {
-  explicit RoutingAgnosticSynthesizer(const Config& config)
-      : PlaceAndRouteSynthesizer(config) {}
-  explicit RoutingAgnosticSynthesizer() {}
+public:
+  RoutingAgnosticSynthesizer(const Architecture& architecture,
+                             const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit RoutingAgnosticSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
 };
 class RoutingAgnosticCompiler final
     : public Compiler<RoutingAgnosticCompiler, ASAPScheduler,
@@ -252,12 +255,15 @@ public:
       : Compiler(architecture) {}
 };
 
-class RoutingAwareSynthesizer final
+class RoutingAwareSynthesizer
     : public PlaceAndRouteSynthesizer<RoutingAwareSynthesizer, AStarPlacer,
                                       IndependentSetRouter> {
-  explicit RoutingAwareSynthesizer(const Config& config)
-      : PlaceAndRouteSynthesizer(config) {}
-  explicit RoutingAwareSynthesizer() {}
+public:
+  RoutingAwareSynthesizer(const Architecture& architecture,
+                          const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit RoutingAwareSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
 };
 class RoutingAwareCompiler final
     : public Compiler<RoutingAwareCompiler, ASAPScheduler,
