@@ -23,6 +23,6 @@ add_mqt_python_binding(
 if(SKBUILD_STATE STREQUAL "editable")
   install(
     FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/clifford_synthesis.pyi
-    DESTINATION ./clifford_synthesis
+    DESTINATION .
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()

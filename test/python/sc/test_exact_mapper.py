@@ -16,6 +16,7 @@ from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 
 from mqt.qmap.plugins.qiskit.sc import compile  # noqa: A004
+from mqt.qmap.sc import Method
 
 
 @pytest.fixture
@@ -32,7 +33,7 @@ def test_exact_no_swaps_trivial_layout(backend: GenericBackendV2) -> None:
     qc.cx(1, 2)
     qc.measure_all()
 
-    qc_mapped, results = compile(qc, arch=backend, method="exact")
+    qc_mapped, results = compile(qc, arch=backend, method=Method.exact)
     assert results.timeout is False
     assert results.output.swaps == 0
 
@@ -49,7 +50,7 @@ def test_exact_no_swaps_non_trivial_layout(backend: GenericBackendV2) -> None:
     qc.cx(0, 3)
     qc.measure_all()
 
-    qc_mapped, results = compile(qc, arch=backend, method="exact")
+    qc_mapped, results = compile(qc, arch=backend, method=Method.exact)
 
     assert results.timeout is False
     assert results.output.swaps == 0
@@ -67,7 +68,7 @@ def test_exact_non_trivial_swaps(backend: GenericBackendV2) -> None:
     qc.cx(2, 0)
     qc.measure_all()
 
-    qc_mapped, results = compile(qc, arch=backend, method="exact")
+    qc_mapped, results = compile(qc, arch=backend, method=Method.exact)
 
     assert results.timeout is False
     assert results.output.swaps == 1
