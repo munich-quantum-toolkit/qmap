@@ -19,7 +19,7 @@ from qiskit import QuantumCircuit, qasm2
 from qiskit.quantum_info import Clifford, PauliList
 
 from mqt import qcec
-from mqt.qmap.clifford_synthesis import Tableau
+from mqt.qmap.clifford_synthesis import Tableau, TargetMetric
 from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford, synthesize_clifford
 
 
@@ -59,7 +59,11 @@ def create_tableau_tests() -> list[Configuration]:
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal Clifford synthesis."""
-    circ, results = optimize_clifford(circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="gates")
+    circ, results = optimize_clifford(
+        circuit=test_config.initial_circuit,
+        use_maxsat=use_maxsat,
+        target_metric=TargetMetric.gates,
+    )
 
     assert results.gates == test_config.expected_minimal_gates
     print("\n", circ)
@@ -69,7 +73,11 @@ def test_optimize_clifford_gates(test_config: Configuration, use_maxsat: bool) -
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test depth-optimal Clifford synthesis."""
-    circ, results = optimize_clifford(circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="depth")
+    circ, results = optimize_clifford(
+        circuit=test_config.initial_circuit,
+        use_maxsat=use_maxsat,
+        target_metric=TargetMetric.depth,
+    )
 
     assert results.depth == test_config.expected_minimal_depth
     print("\n", circ)
@@ -82,7 +90,7 @@ def test_optimize_clifford_gates_at_minimal_depth(test_config: Configuration, us
     circ, results = optimize_clifford(
         circuit=test_config.initial_circuit,
         use_maxsat=use_maxsat,
-        target_metric="depth",
+        target_metric=TargetMetric.depth,
         minimize_gates_after_depth_optimization=True,
     )
 
@@ -97,7 +105,7 @@ def test_optimize_clifford_two_qubit_gates(test_config: Configuration, use_maxsa
     circ, results = optimize_clifford(
         circuit=test_config.initial_circuit,
         use_maxsat=use_maxsat,
-        target_metric="two_qubit_gates",
+        target_metric=TargetMetric.two_qubit_gates,
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
     )
 
@@ -112,7 +120,7 @@ def test_optimize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configu
     circ, results = optimize_clifford(
         circuit=test_config.initial_circuit,
         use_maxsat=use_maxsat,
-        target_metric="two_qubit_gates",
+        target_metric=TargetMetric.two_qubit_gates,
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
         minimize_gates_after_two_qubit_gate_optimization=True,
     )
@@ -128,12 +136,15 @@ def test_heuristic(test_config: Configuration) -> None:
         circuit=test_config.initial_circuit,
         heuristic=True,
         split_size=10,
-        target_metric="depth",
+        target_metric=TargetMetric.depth,
         include_destabilizers=True,
     )
 
     circ_opt, _ = optimize_clifford(
-        circuit=test_config.initial_circuit, heuristic=False, target_metric="depth", include_destabilizers=True
+        circuit=test_config.initial_circuit,
+        heuristic=False,
+        target_metric=TargetMetric.depth,
+        include_destabilizers=True,
     )
 
     assert circ.depth() >= circ_opt.depth()
@@ -149,7 +160,7 @@ def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool)
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
-        target_metric="gates",
+        target_metric=TargetMetric.gates,
     )
 
     assert results.gates == test_config.expected_minimal_gates
@@ -164,7 +175,7 @@ def test_synthesize_clifford_depth(test_config: Configuration, use_maxsat: bool)
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
-        target_metric="depth",
+        target_metric=TargetMetric.depth,
     )
 
     assert results.depth == test_config.expected_minimal_depth
@@ -179,7 +190,7 @@ def test_synthesize_clifford_gates_at_minimal_depth(test_config: Configuration, 
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
-        target_metric="depth",
+        target_metric=TargetMetric.depth,
         minimize_gates_after_depth_optimization=True,
     )
 
@@ -195,7 +206,7 @@ def test_synthesize_clifford_two_qubit_gates(test_config: Configuration, use_max
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
-        target_metric="two_qubit_gates",
+        target_metric=TargetMetric.two_qubit_gates,
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
     )
 
@@ -211,7 +222,7 @@ def test_synthesize_clifford_gates_at_minimal_two_qubit_gates(test_config: Confi
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
-        target_metric="two_qubit_gates",
+        target_metric=TargetMetric.two_qubit_gates,
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
         minimize_gates_after_two_qubit_gate_optimization=True,
     )

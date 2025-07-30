@@ -18,10 +18,10 @@
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-// NOLINTNEXTLINE(misc-include-cleaner)
-#include <pybind11/stl.h>
+#include <pybind11/stl.h> // NOLINT(misc-include-cleaner)
 #include <string>
 
 namespace py = pybind11;
@@ -29,24 +29,21 @@ using namespace pybind11::literals;
 
 PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   // Neutral Atom Hybrid Mapper
-  py::enum_<na::InitialCoordinateMapping>(
-      m, "InitialCoordinateMapping",
+  py::native_enum<na::InitialCoordinateMapping>(
+      m, "InitialCoordinateMapping", "enum.Enum",
       "Initial mapping between hardware qubits hardware coordinates.")
       .value("trivial", na::InitialCoordinateMapping::Trivial,
              "Trivial identity mapping.")
       .value("random", na::InitialCoordinateMapping::Random, "Random mapping.")
       .export_values()
-      .def(py::init([](const std::string& name) {
-        return na::initialCoordinateMappingFromString(name);
-      }));
-  py::enum_<na::InitialMapping>(
-      m, "InitialCircuitMapping",
+      .finalize();
+
+  py::native_enum<na::InitialMapping>(
+      m, "InitialCircuitMapping", "enum.Enum",
       "Initial mapping between circuit qubits and hardware qubits.")
       .value("identity", na::InitialMapping::Identity, "Identity mapping.")
       .export_values()
-      .def(py::init([](const std::string& name) {
-        return na::initialMappingFromString(name);
-      }));
+      .finalize();
 
   py::class_<na::MapperParameters>(
       m, "HybridMapperParameters",

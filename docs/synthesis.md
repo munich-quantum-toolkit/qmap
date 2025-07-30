@@ -19,7 +19,7 @@ To this end, an algorithm's description first has to be _synthesized_ using the 
 In addition, circuits have to be _mapped_ to the target quantum device to satisfy its connectivity constraints.
 Even though Clifford circuits form a finite subgroup of all quantum circuits -- one that is not even universal for quantum computing -- the search space for these problems grows exponentially with respect to the number of considered qubits.
 
-The _Clifford synthesis approach_ in QMAP can be used to produce optimal Clifford circuits based on the methods proposed in {cite:p}`peham2023DepthOptimalSynthesis}.
+The _Clifford synthesis approach_ in QMAP can be used to produce optimal Clifford circuits based on the methods proposed in {cite:p}`peham2023DepthOptimalSynthesis`.
 To this end, it encodes the underlying task as a satisfiability (SAT) problem and solves it using the [SMT solver Z3](https://github.com/Z3Prover/z3) in conjunction with a binary search scheme.
 
 The following gives a brief overview on Clifford circuits and how QMAP can be used for their synthesis.
@@ -166,7 +166,11 @@ qc.cx(1, 0)
 qc.x(1)
 
 qc_opt, results = qmap.optimize_clifford(
-    circuit=qc, heuristic=True, split_size=3, include_destabilizers=True, target_metric="depth"
+    circuit=qc,
+    heuristic=True,
+    split_size=3,
+    include_destabilizers=True,
+    target_metric=TargetMetric.depth,
 )
 
 qc_opt.draw(output="mpl")
@@ -190,7 +194,12 @@ qc.x(1)
 qc.cx(1, 0)
 qc.x(1)
 
-qc_opt, results = qmap.optimize_clifford(circuit=qc, heuristic=False, include_destabilizers=True, target_metric="depth")
+qc_opt, results = qmap.optimize_clifford(
+    circuit=qc,
+    heuristic=False,
+    include_destabilizers=True,
+    target_metric=TargetMetric.depth,
+)
 
 qc_opt.draw(output="mpl")
 ```

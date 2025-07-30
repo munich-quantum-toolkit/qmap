@@ -25,6 +25,6 @@ target_compile_definitions(${MQT_QMAP_TARGET_NAME}-sc-bindings PRIVATE Z3_FOUND)
 if(SKBUILD_STATE STREQUAL "editable")
   install(
     FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/sc.pyi
-    DESTINATION ./sc
+    DESTINATION .
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()

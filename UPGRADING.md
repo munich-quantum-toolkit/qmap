@@ -10,6 +10,10 @@ By using the latest `pybind11` release (`v3`), the binary compatibility between 
 As such, it is no longer necessary to build `mqt-core` (and `mqt-qcec` for testing) from source and without build isolation when locally working on `mqt-qmap`.
 A simple `uv sync` is enough to successfully run `pytest`.
 
+All Python enums (e.g., `sc.Method`) are now exposed via `pybind11`'s new `py::native_enum`, which makes them compatible with Python's `enum.Enum` class (PEP 435).
+As a result, the enums can no longer be initialized using a string.
+Instead of `Method("exact")` or `"exact"`, use `Method.exact`.
+
 ## [3.2.0]
 
 With this release, the Python package has been restructured.
