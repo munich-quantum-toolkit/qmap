@@ -166,11 +166,11 @@ qc.cx(1, 0)
 qc.x(1)
 
 qc_opt, results = qmap.optimize_clifford(
-  circuit=qc,
-  heuristic=True,
-  split_size=3,
-  include_destabilizers=True,
-  target_metric=TargetMetric.depth,
+    circuit=qc,
+    heuristic=True,
+    split_size=3,
+    include_destabilizers=True,
+    target_metric=TargetMetric.depth,
 )
 
 qc_opt.draw(output="mpl")
@@ -195,10 +195,10 @@ qc.cx(1, 0)
 qc.x(1)
 
 qc_opt, results = qmap.optimize_clifford(
-  circuit=qc,
-  heuristic=False,
-  include_destabilizers=True,
-  target_metric=TargetMetric.depth,
+    circuit=qc,
+    heuristic=False,
+    include_destabilizers=True,
+    target_metric=TargetMetric.depth,
 )
 
 qc_opt.draw(output="mpl")
