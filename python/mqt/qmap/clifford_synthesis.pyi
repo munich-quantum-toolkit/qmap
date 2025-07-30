@@ -28,7 +28,7 @@ class Verbosity(Enum):
     verbose = ...
 
 class SynthesisConfiguration:
-    """Class representing the configuration for the Clifford synthesis tehcniques."""
+    """Class representing the configuration for the Clifford synthesis techniques."""
 
     dump_intermediate_results: bool
     gate_limit_factor: float

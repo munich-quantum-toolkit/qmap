@@ -86,7 +86,7 @@ def compile(  # noqa: A001
         iterative_bidirectional_routing_passes: Number of iterative bidirectional routing passes to perform or None to disable. Defaults to None.
         layering: The layering strategy to use. Defaults to :attr:`~Layering.individual_gates`.
         automatic_layer_splits_node_limit: The number of expanded nodes after which to split a layer or None to disable automatic layer splitting. Defaults to 5000.
-        early_termination: The early termination strategy to use, i.e. terminating the search after a goal node has been found, but before it is guarantueed to be optimal. Defaults to :attr:`~EarlyTermination.none`.
+        early_termination: The early termination strategy to use, i.e. terminating the search after a goal node has been found, but before it is guaranteed to be optimal. Defaults to :attr:`~EarlyTermination.none`.
         early_termination_limit: The number of nodes (counted according to the early termination strategy) after which to terminate the search early. Defaults to 0.
         lookahead_heuristic: The heuristic function to use as a lookahead penalty during search or None to disable lookahead. Defaults to :attr:`~LookaheadHeuristic.gate_count_max_distance`.
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
