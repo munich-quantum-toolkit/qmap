@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Fixed
+
+- 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`, and `mqt-qcec` ([#714]) ([**@denialhaag**])
+
 ## [3.2.0] - 2025-07-16
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
@@ -101,6 +105,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#714]: https://github.com/munich-quantum-toolkit/qmap/pull/714
 [#712]: https://github.com/munich-quantum-toolkit/qmap/pull/712
 [#694]: https://github.com/munich-quantum-toolkit/qmap/pull/694
 [#665]: https://github.com/munich-quantum-toolkit/qmap/pull/665
