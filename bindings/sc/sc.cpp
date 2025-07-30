@@ -101,14 +101,12 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
              "8 qubit, undirected ring layout")
       .value("Rigetti_Aspen", AvailableArchitecture::RigettiAspen,
              "16 qubit, undirected dumbbell layout")
-      .export_values()
       .finalize();
 
   // Mapping methodology to use
   py::native_enum<Method>(m, "Method", "enum.Enum")
       .value("heuristic", Method::Heuristic)
       .value("exact", Method::Exact)
-      .export_values()
       .finalize();
 
   // Initial layout strategy
@@ -116,7 +114,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("identity", InitialLayout::Identity)
       .value("static", InitialLayout::Static)
       .value("dynamic", InitialLayout::Dynamic)
-      .export_values()
       .finalize();
 
   // Heuristic function
@@ -128,7 +125,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("gate_count_max_distance_or_sum_distance_minus_shared_swaps",
              Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps)
       .value("fidelity_best_location", Heuristic::FidelityBestLocation)
-      .export_values()
       .finalize();
 
   // Lookahead heuristic function
@@ -138,7 +134,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
              LookaheadHeuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance",
              LookaheadHeuristic::GateCountSumDistance)
-      .export_values()
       .finalize();
 
   // Gate clustering / layering strategy
@@ -148,7 +143,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("odd_gates", Layering::OddGates)
       .value("qubit_triangle", Layering::QubitTriangle)
       .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks)
-      .export_values()
       .finalize();
 
   // Early termination strategy in heuristic mapper
@@ -162,7 +156,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("solution_nodes", EarlyTermination::SolutionNodes)
       .value("solution_nodes_after_current_optimal_solution",
              EarlyTermination::SolutionNodesAfterCurrentOptimalSolution)
-      .export_values()
       .finalize();
 
   // Encoding settings for at-most-one and exactly-one constraints
@@ -170,7 +163,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("naive", Encoding::Naive)
       .value("commander", Encoding::Commander)
       .value("bimander", Encoding::Bimander)
-      .export_values()
       .finalize();
 
   // Grouping settings if using the commander encoding
@@ -179,7 +171,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("fixed3", CommanderGrouping::Fixed3)
       .value("halves", CommanderGrouping::Halves)
       .value("logarithm", CommanderGrouping::Logarithm)
-      .export_values()
       .finalize();
 
   // Strategy for reducing the number of permutations/swaps considered in front
@@ -189,7 +180,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("coupling_limit", SwapReduction::CouplingLimit)
       .value("custom", SwapReduction::Custom)
       .value("increasing", SwapReduction::Increasing)
-      .export_values()
       .finalize();
 
   // All configuration options for QMAP
