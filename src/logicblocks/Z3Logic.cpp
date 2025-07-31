@@ -48,7 +48,7 @@ CType extractNumberType(
 
 z3::expr Z3Base::getExprTerm(const uint64_t id, const CType type,
                              Z3Base* z3base) {
-  if (z3base->variables.find(id) == z3base->variables.end() ||
+  if (!z3base->variables.contains(id) ||
       !z3base->variables.at(id)[static_cast<size_t>(type)].first) {
     const auto* const msg = "Variable not found";
     PLOG_FATAL << msg;
@@ -65,7 +65,7 @@ z3::expr Z3Base::convert(const LogicTerm& a, CType toType) {
   std::vector<std::pair<bool, z3::expr>> v;
 
   // First, try to find the expression in the cache
-  if (cache.find(a) != cache.end()) {
+  if (cache.contains(a)) {
     v = cache.at(a);
     if (v[static_cast<size_t>(toType)].first) {
       return v[static_cast<size_t>(toType)].second;
@@ -237,7 +237,7 @@ void Z3LogicBlock::internalReset() {
 
 z3::expr Z3Base::convertVariableTo(const LogicTerm& a, CType toType) {
   std::vector<std::pair<bool, z3::expr>> v;
-  if (variables.find(a.getID()) != variables.end()) {
+  if (variables.contains(a.getID())) {
     v = variables.at(a.getID());
     if (v[static_cast<size_t>(toType)].first) {
       return v[static_cast<size_t>(toType)].second;

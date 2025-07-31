@@ -208,12 +208,12 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
          const CouplingMap& rcm) {
   for (auto edge : rcm) {
     if (edge.first == current) {
-      if (visited.count(edge.second) == 0U) {
+      if (!visited.contains(edge.second)) {
         visited.insert(edge.second);
         dfs(edge.second, visited, rcm);
       }
     } else if (edge.second == current) {
-      if (visited.count(edge.first) == 0U) {
+      if (!visited.contains(edge.first)) {
         visited.insert(edge.first);
         dfs(edge.first, visited, rcm);
       }
@@ -277,17 +277,17 @@ void parseLine(const std::string& line, char separator,
   std::string word;
   bool inEscape = false;
   for (const char c : line) {
-    if (ignoredChars.find(c) != ignoredChars.end()) {
+    if (ignoredChars.contains(c)) {
       continue;
     }
     if (inEscape) {
-      if (escapeChars.find(c) != escapeChars.end()) {
+      if (escapeChars.contains(c)) {
         inEscape = false;
       } else {
         word += c;
       }
     } else {
-      if (escapeChars.find(c) != escapeChars.end()) {
+      if (escapeChars.contains(c)) {
         inEscape = true;
       } else if (c == separator) {
         result.push_back(word);

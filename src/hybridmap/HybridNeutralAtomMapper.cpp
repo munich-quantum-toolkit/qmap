@@ -408,10 +408,8 @@ qc::fp NeutralAtomMapper::swapCost(
   if (this->parameters.decay != 0) {
     uint32_t idxLastUsed = 0;
     for (uint32_t i = 0; i < this->lastBlockedQubits.size(); ++i) {
-      if (this->lastBlockedQubits[i].find(swap.first) !=
-              this->lastBlockedQubits[i].end() ||
-          this->lastBlockedQubits[i].find(swap.second) !=
-              this->lastBlockedQubits[i].end()) {
+      if (this->lastBlockedQubits[i].contains(swap.first) ||
+          this->lastBlockedQubits[i].contains(swap.second)) {
         idxLastUsed = i;
         break;
       }
@@ -554,7 +552,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPosition(const qc::Operation* op) {
 
     // remove selected qubit from the gate qubits
     auto tempGateHwQubits = gateHwQubits;
-    if (tempGateHwQubits.find(qubit) != tempGateHwQubits.end()) {
+    if (tempGateHwQubits.contains(qubit)) {
       tempGateHwQubits.erase(tempGateHwQubits.find(qubit));
     }
     auto bestPos = getBestMultiQubitPositionRec(
@@ -565,7 +563,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPosition(const qc::Operation* op) {
     // add nearby qubits to the priority queue
     for (const auto& nearbyQubit :
          this->hardwareQubits.getNearbyQubits(qubit)) {
-      if (visitedQubits.find(nearbyQubit) != visitedQubits.end()) {
+      if (visitedQubits.contains(nearbyQubit)) {
         continue;
       }
       // compute total distance to all other gate qubits
@@ -615,7 +613,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPositionRec(
       nearbyNextQubit.begin(), nearbyNextQubit.end(),
       std::inserter(newRemainingQubits, newRemainingQubits.begin()));
   for (const auto& qubit : selectedQubits) {
-    if (newRemainingQubits.find(qubit) != newRemainingQubits.end()) {
+    if (newRemainingQubits.contains(qubit)) {
       newRemainingQubits.erase(newRemainingQubits.find(qubit));
     }
   }
@@ -842,7 +840,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
     auto toMoveCircuitQubit = this->mapping.getCircQubit(toMoveHwQubit);
     for (const auto& gate : layer) {
       auto usedQubits = gate->getUsedQubits();
-      if (usedQubits.find(toMoveCircuitQubit) != usedQubits.end()) {
+      if (usedQubits.contains(toMoveCircuitQubit)) {
         // check distance reduction
         qc::fp distanceBefore = 0;
         for (const auto& qubit : usedQubits) {

@@ -182,8 +182,7 @@ bool NeutralAtomLayer::commuteAtQubit(const qc::Operation* op1,
   // commutes at qubit if at least one of the two gates does not use qubit
   auto usedQubits1 = op1->getUsedQubits();
   auto usedQubits2 = op2->getUsedQubits();
-  if (usedQubits1.find(qubit) == usedQubits1.end() ||
-      usedQubits2.find(qubit) == usedQubits2.end()) {
+  if (!usedQubits1.contains(qubit) || !usedQubits2.contains(qubit)) {
     return true;
   }
 

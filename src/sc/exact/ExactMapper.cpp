@@ -313,11 +313,9 @@ void ExactMapper::map(const Configuration& settings) {
         const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
 
-        if (architecture->getCouplingMap().find(cnot) ==
-            architecture->getCouplingMap().end()) {
+        if (!architecture->getCouplingMap().contains(cnot)) {
           const Edge reverse = {cnot.second, cnot.first};
-          if (architecture->getCouplingMap().find(reverse) ==
-              architecture->getCouplingMap().end()) {
+          if (!architecture->getCouplingMap().contains(reverse)) {
             throw QMAPException(
                 "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
                 std::to_string(reverse.second));
@@ -484,7 +482,7 @@ number of variables: (|L|-1) * m!
     y.emplace_back();
     piCount = 0;
     do {
-      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+      if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
         yName.str("");
         yName << "y_" << k << '_' << piCount;
         y.back().emplace_back(lb->makeVariable(yName.str(), CType::BOOL));
@@ -661,7 +659,7 @@ number of variables: (|L|-1) * m!
     auto& i = x[k - 1];
     auto& j = x[k];
     do {
-      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+      if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
         auto equal = LogicTerm(true);
         for (const auto qubit : qubitChoice) {
           for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
@@ -685,7 +683,7 @@ number of variables: (|L|-1) * m!
       piCount = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+        if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
           onlyOne = onlyOne + LogicTerm::ite(y[k - 1][internalPiCount],
                                              LogicTerm(1), LogicTerm(0));
           ++internalPiCount;
@@ -700,7 +698,7 @@ number of variables: (|L|-1) * m!
       piCount = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+        if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
           varIDs.push_back(y[k - 1][internalPiCount]);
           ++internalPiCount;
         }
@@ -732,7 +730,7 @@ number of variables: (|L|-1) * m!
   internalPiCount = 0;
   auto cost = LogicTerm(0);
   do {
-    if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+    if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
       auto picost = architecture->minimumNumberOfSwaps(pi);
       if (architecture->bidirectional()) {
         picost *= GATES_OF_BIDIRECTIONAL_SWAP;
@@ -830,7 +828,7 @@ number of variables: (|L|-1) * m!
         // sort the permutation of the qubits to start fresh
         std::sort(pi.begin(), pi.end());
         do {
-          if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+          if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
             if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
               break;
             }

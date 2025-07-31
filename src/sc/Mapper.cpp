@@ -259,8 +259,7 @@ void Mapper::createLayers() {
         if (gate.control >= gate.target) {
           const auto edge =
               std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
-          if (twoQubitMultiplicities[i].find(edge) ==
-              twoQubitMultiplicities[i].end()) {
+          if (!twoQubitMultiplicities[i].contains(edge)) {
             twoQubitMultiplicities[i][edge] = {0, 1};
           } else {
             twoQubitMultiplicities[i][edge].second++;
@@ -268,8 +267,7 @@ void Mapper::createLayers() {
         } else {
           const auto edge =
               std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
-          if (twoQubitMultiplicities[i].find(edge) ==
-              twoQubitMultiplicities[i].end()) {
+          if (!twoQubitMultiplicities[i].contains(edge)) {
             twoQubitMultiplicities[i][edge] = {1, 0};
           } else {
             twoQubitMultiplicities[i][edge].first++;
@@ -344,15 +342,13 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
     }
     // if a qubit is also acted on by a 2Q-gate, put it on the same layer as
     // the 2Q-gate
-    if (activeQubits2QGates0.find(static_cast<std::uint16_t>(q)) !=
-        activeQubits2QGates0.end()) {
+    if (activeQubits2QGates0.contains(static_cast<std::uint16_t>(q))) {
       singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
       activeQubits0.emplace(static_cast<std::uint16_t>(q));
       activeQubits1QGates0.emplace(static_cast<std::uint16_t>(q));
       continue;
     }
-    if (activeQubits2QGates1.find(static_cast<std::uint16_t>(q)) !=
-        activeQubits2QGates1.end()) {
+    if (activeQubits2QGates1.contains(static_cast<std::uint16_t>(q))) {
       singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
       activeQubits1.emplace(static_cast<std::uint16_t>(q));
       activeQubits1QGates1.emplace(static_cast<std::uint16_t>(q));
@@ -379,8 +375,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
         layer1.emplace_back(gate);
       }
     } else {
-      if (activeQubits2QGates0.find(gate.target) !=
-          activeQubits2QGates0.end()) {
+      if (activeQubits2QGates0.contains(gate.target)) {
         layer0.emplace_back(gate);
       } else {
         layer1.emplace_back(gate);
@@ -541,10 +536,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
         if (architecture->isFidelityAvailable()) {
           info.totalLogFidelity += architecture->getSwapFidelityCost(q1, q2);
         }
-        if (architecture->getCouplingMap().find({q1, q2}) !=
-                architecture->getCouplingMap().end() &&
-            architecture->getCouplingMap().find({q2, q1}) !=
-                architecture->getCouplingMap().end()) {
+        if (architecture->getCouplingMap().contains({q1, q2}) &&
+            architecture->getCouplingMap().contains({q2, q1})) {
           // bidirectional edge
           info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
           info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;

@@ -696,7 +696,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         // However, if a heuristic is both principally admissible and tight,
         // it is guaranteed to always find the same solution as any other such
         // heuristic.
-        if (OPTIMAL_SOLUTIONS.find(circuitName) == OPTIMAL_SOLUTIONS.end() ||
+        if (!OPTIMAL_SOLUTIONS.contains(circuitName) ||
             OPTIMAL_SOLUTIONS.at(circuitName).size() <= i) {
           throw std::runtime_error(
               "Missing precalculated optimal solution for circuit " +
@@ -1438,7 +1438,7 @@ TEST(Functionality, InitialLayoutDump) {
       const std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
       EXPECT_EQ(qubitSet.size(), qubits.size());
       for (std::uint32_t i = 0; i < qcMapped.getNqubits(); ++i) {
-        EXPECT_TRUE(qubitSet.count(i) > 0)
+        EXPECT_TRUE(qubitSet.contains(i))
             << "qubit " << std::to_string(i) << " not found in layout";
       }
       foundPermutation = true;
