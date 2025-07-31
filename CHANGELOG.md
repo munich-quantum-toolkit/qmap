@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Added
+
+- 🐍 Build Python 3.14 wheels ([#717]) ([**@denialhaag**])
+
 ### Fixed
 
 - 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`, and `mqt-qcec` ([#714]) ([**@denialhaag**])
@@ -106,6 +110,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#717]: https://github.com/munich-quantum-toolkit/qmap/pull/717
 [#715]: https://github.com/munich-quantum-toolkit/qmap/pull/715
 [#714]: https://github.com/munich-quantum-toolkit/qmap/pull/714
 [#712]: https://github.com/munich-quantum-toolkit/qmap/pull/712

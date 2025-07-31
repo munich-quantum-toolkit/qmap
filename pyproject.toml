@@ -46,6 +46,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Development Status :: 5 - Production/Stable",
     "Typing :: Typed",
 ]
@@ -339,6 +340,9 @@ manylinux-s390x-image = "manylinux_2_28"
 test-skip = [
   "cp3*t-*", # no freethreading qiskit wheels
   "cp*-win_arm64", # no numpy, qiskit, ... wheels
+  # TODO(denialhaag): Remove when all dependencies support Python 3.14
+  #   https://github.com/munich-quantum-toolkit/qmap/issues/718
+  "cp314-*",
 ]
 
 # The mqt-core shared libraries are provided by the mqt-core Python package.
@@ -350,7 +354,7 @@ environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3
 before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
-  """auditwheel repair -w {dest_dir} {wheel} \
+    """auditwheel repair -w {dest_dir} {wheel} \
 --exclude libmqt-core-ir.so.3.1 \
 --exclude libmqt-core-qasm.so.3.1 \
 --exclude libmqt-core-circuit-optimizer.so.3.1 \
