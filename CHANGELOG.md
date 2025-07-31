@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Fixed
 
-- 🚸 Make function to export architecture in `.namachine` format to Python ([#719]) ([**@ystade**])
+- 🚸 Make function to export architecture in `.namachine` format available from Python ([#719]) ([**@ystade**])
 - 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`, and `mqt-qcec` ([#714]) ([**@denialhaag**])
 
 ## [3.2.0] - 2025-07-16
