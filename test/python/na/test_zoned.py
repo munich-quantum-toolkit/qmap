@@ -44,6 +44,14 @@ architecture_specification = """{
 }"""
 
 
+def test_architecture_to_namachine_string() -> None:
+    """Test the Zoned Neutral Atom Architecture to namachine string conversion."""
+    architecture = ZonedNeutralAtomArchitecture.from_json_string(architecture_specification)
+    namachine_string = architecture.to_namachine_string()
+    assert isinstance(namachine_string, str)
+    assert len(namachine_string) > 0
+
+
 @pytest.fixture
 def compiler() -> RoutingAwareCompiler:
     """Return an MQT QMAP's Zoned Neutral Atom Compiler initialized with the above architecture and settings."""

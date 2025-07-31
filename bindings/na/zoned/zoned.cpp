@@ -39,6 +39,16 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                           &na::zoned::Architecture::fromJSONFile, "filename"_a);
   architecture.def_static("from_json_string",
                           &na::zoned::Architecture::fromJSONString, "json"_a);
+  architecture.def(
+      "to_namachine_file",
+      [](na::zoned::Architecture& self, const std::string& filename) -> void {
+        self.exportNAVizMachine(filename);
+      },
+      "filename"_a);
+  architecture.def("to_namachine_string",
+                   [](na::zoned::Architecture& self) -> std::string {
+                     return self.exportNAVizMachine();
+                   });
 
   py::class_<na::zoned::RoutingAgnosticCompiler> routingAgnosticCompiler(
       m, "RoutingAgnosticCompiler");
