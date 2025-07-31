@@ -179,7 +179,7 @@ TEST_F(TestNAGraph, SequenceOrdering) {
   // check that the order of moveable qubits is consistent
   auto order =
       std::accumulate(moveable[0].cbegin(), moveable[0].cend(),
-                      std::vector<qc::Qubit>{}, [](auto& acc, const auto& p) {
+                      std::vector<qc::Qubit>{}, [](auto acc, const auto& p) {
                         acc.push_back(p.first);
                         return acc;
                       });
