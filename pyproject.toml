@@ -421,7 +421,7 @@ test = [
   "pytest-cov>=6.1.1",
   "pytest-sugar>=1.0.0",
   "pytest-xdist>=3.7.0",
-  "mqt.qcec>=3.1.0",
+  "mqt.qcec @ git+https://github.com/munich-quantum-toolkit/qcec.git@daeea35ae12e3713db968e2f78fc1a857cc366bd",
 ]
 dev = [
   {include-group = "build"},
