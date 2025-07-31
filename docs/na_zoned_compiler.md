@@ -159,6 +159,7 @@ Now, the created compiler can be used to compile the circuit from above.
 The output is in the `.naviz` format that can be read by the `MQT NAViz` tool
 at [github.com/cda-tum/mqt-naviz](https://github.com/cda-tum/mqt-naviz).
 This tool allows visualizing the resulting quantum computation.
+To import the architecture used for the compilation into MQT NAViz, you can use the [`to_namachine_file`](#mqt.qmap.na.zoned.ZonedNeutralAtomArchitecture.to_namachine_file) method to export the architecture to the `.namachine` format accepted by MQT NAViz.
 
 ```{code-cell} ipython3
 from mqt.core import load

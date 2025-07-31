@@ -39,6 +39,18 @@ class ZonedNeutralAtomArchitecture:
         Raises:
             ValueError: if the string is not a valid JSON
         """
+    def to_namachine_file(self, filename: str) -> None:
+        """Write the architecture to a .namachine file.
+
+        Args:
+            filename: is the path to the .namachine file
+        """
+    def to_namachine_string(self) -> str:
+        """Get the architecture as a .namachine string.
+
+        Returns:
+            the architecture as a .namachine string
+        """
 
 class RoutingAgnosticCompiler:
     """MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler."""

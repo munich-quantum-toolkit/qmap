@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Fixed
 
+- 🚸 Make function to export architecture in `.namachine` format available from Python ([#719]) ([**@ystade**])
 - 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`, and `mqt-qcec` ([#714]) ([**@denialhaag**])
 
 ## [3.2.0] - 2025-07-16
@@ -111,6 +112,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#719]: https://github.com/munich-quantum-toolkit/qmap/pull/719
 [#717]: https://github.com/munich-quantum-toolkit/qmap/pull/717
 [#715]: https://github.com/munich-quantum-toolkit/qmap/pull/715
 [#714]: https://github.com/munich-quantum-toolkit/qmap/pull/714
