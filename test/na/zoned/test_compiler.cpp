@@ -41,10 +41,12 @@ constexpr std::string_view architectureSpecification = R"({
 })";
 constexpr std::string_view routingAgnosticConfiguration = R"({
   "logLevel" : 1,
-  "placerConfig" : {
-    "useWindow" : true,
-    "windowSize" : 10,
-    "dynamicPlacement" : true
+  "layoutSynthesizerConfig" : {
+    "placerConfig" : {
+      "useWindow" : true,
+      "windowSize" : 10,
+      "dynamicPlacement" : true
+    }
   },
   "codeGeneratorConfig" : {
     "parkingOffset" : 1,
@@ -57,15 +59,17 @@ constexpr std::string_view routingAwareConfiguration = R"({
     "parkingOffset" : 1,
     "warnUnsupportedGates" : false
   },
-  "placerConfig" : {
-    "useWindow" : true,
-    "windowMinWidth" : 4,
-    "windowRatio" : 1.5,
-    "windowShare" : 0.6,
-    "deepeningFactor" : 0.6,
-    "deepeningValue" : 0.2,
-    "lookaheadFactor": 0.2,
-    "reuseLevel": 5.0
+  "layoutSynthesizerConfig" : {
+    "placerConfig" : {
+      "useWindow" : true,
+      "windowMinWidth" : 4,
+      "windowRatio" : 1.5,
+      "windowShare" : 0.6,
+      "deepeningFactor" : 0.6,
+      "deepeningValue" : 0.2,
+      "lookaheadFactor": 0.2,
+      "reuseLevel": 5.0
+    }
   }
 })";
 #define COMPILER_TEST(compiler_type, config)                                   \
@@ -106,7 +110,7 @@ constexpr std::string_view routingAwareConfiguration = R"({
     double timeSum = 0;                                                        \
     const nlohmann::json stats = this->compiler_.getStatistics();              \
     for (const auto& [key, value] : stats.items()) {                           \
-      if (key != "totalTime") {                                                \
+      if (key != "totalTime" && value.is_number()) {                           \
         timeSum += value.get<double>();                                        \
       }                                                                        \
     }                                                                          \

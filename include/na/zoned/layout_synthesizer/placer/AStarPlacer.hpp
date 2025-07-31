@@ -13,7 +13,7 @@
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
-#include "na/zoned/placer/PlacerBase.hpp"
+#include "na/zoned/layout_synthesizer/placer/PlacerBase.hpp"
 
 #include <array>
 #include <cassert>

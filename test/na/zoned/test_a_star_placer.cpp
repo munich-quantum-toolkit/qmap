@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/placer/AStarPlacer.hpp"
+#include "na/zoned/layout_synthesizer/placer/AStarPlacer.hpp"
 
 #include <cstddef>
 #include <gmock/gmock-function-mocker.h>

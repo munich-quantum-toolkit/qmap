@@ -14,11 +14,12 @@
 #include "code_generator/CodeGenerator.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
+#include "layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
+#include "layout_synthesizer/placer/AStarPlacer.hpp"
+#include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
+#include "layout_synthesizer/router/IndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
-#include "placer/AStarPlacer.hpp"
-#include "placer/VertexMatchingPlacer.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
-#include "router/IndependentSetRouter.hpp"
 #include "scheduler/ASAPScheduler.hpp"
 
 #include <cassert>
@@ -43,11 +44,10 @@ namespace na::zoned {
  * compiler and setting them at runtime.
  */
 template <class ConcreteType, class Scheduler, class ReuseAnalyzer,
-          class Placer, class Router, class CodeGenerator>
+          class LayoutSynthesizer, class CodeGenerator>
 class Compiler : protected Scheduler,
                  protected ReuseAnalyzer,
-                 protected Placer,
-                 protected Router,
+                 protected LayoutSynthesizer,
                  protected CodeGenerator {
   friend ConcreteType;
 
@@ -61,17 +61,15 @@ public:
     typename Scheduler::Config schedulerConfig{};
     /// Configuration for the reuse analyzer
     typename ReuseAnalyzer::Config reuseAnalyzerConfig{};
-    /// Configuration for the placer
-    typename Placer::Config placerConfig{};
-    /// Configuration for the router
-    typename Router::Config routerConfig{};
+    /// Configuration for the layout synthesizer
+    typename LayoutSynthesizer::Config layoutSynthesizerConfig{};
     /// Configuration for the code generator
     typename CodeGenerator::Config codeGeneratorConfig{};
     /// Log level for the compiler
     spdlog::level::level_enum logLevel = spdlog::level::info;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, schedulerConfig,
                                                 reuseAnalyzerConfig,
-                                                placerConfig, routerConfig,
+                                                layoutSynthesizerConfig,
                                                 codeGeneratorConfig, logLevel);
   };
   /**
@@ -79,15 +77,17 @@ public:
    * different components.
    */
   struct Statistics {
-    int64_t schedulingTime;     ///< Time taken for scheduling in us
-    int64_t reuseAnalysisTime;  ///< Time taken for reuse analysis in us
-    int64_t placementTime;      ///< Time taken for placement in us
-    int64_t routingTime;        ///< Time taken for routing in us
-    int64_t codeGenerationTime; ///< Time taken for code generation in us
-    int64_t totalTime;          ///< Total time taken for the compilation in us
+    int64_t schedulingTime;    ///< Time taken for scheduling in us
+    int64_t reuseAnalysisTime; ///< Time taken for reuse analysis in us
+    /// Statistics collected during layout synthesis.
+    typename LayoutSynthesizer::Statistics layoutSynthesizerStatistics;
+    int64_t layoutSynthesisTime; ///< Time taken for layout synthesis in us
+    int64_t codeGenerationTime;  ///< Time taken for code generation in us
+    int64_t totalTime;           ///< Total time taken for the compilation in us
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
                                                   reuseAnalysisTime,
-                                                  placementTime, routingTime,
+                                                  layoutSynthesizerStatistics,
+                                                  layoutSynthesisTime,
                                                   codeGenerationTime,
                                                   totalTime);
   };
@@ -107,8 +107,7 @@ private:
   Compiler(const Architecture& architecture, const Config& config)
       : Scheduler(architecture, config.schedulerConfig),
         ReuseAnalyzer(architecture, config.reuseAnalyzerConfig),
-        Placer(architecture, config.placerConfig),
-        Router(architecture, config.routerConfig),
+        LayoutSynthesizer(architecture, config.layoutSynthesizerConfig),
         CodeGenerator(architecture, config.codeGeneratorConfig),
         architecture_(architecture), config_(config) {
     spdlog::set_level(config.logLevel);
@@ -166,9 +165,20 @@ public:
     const auto& schedule = SELF.schedule(qComp);
     const auto& singleQubitGateLayers = schedule.first;
     const auto& twoQubitGateLayers = schedule.second;
+    const auto& schedulingEnd = std::chrono::system_clock::now();
+    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
+    const auto& reuseAnalysisEnd = std::chrono::system_clock::now();
+    const auto& [placement, routing] = LayoutSynthesizer::synthesize(
+        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+    const auto& layoutSynthesisEnd = std::chrono::system_clock::now();
+    NAComputation code =
+        SELF.generate(singleQubitGateLayers, placement, routing);
+    const auto& codeGenerationEnd = std::chrono::system_clock::now();
+    assert(code.validate().first);
+
     statistics_.schedulingTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - schedulingStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
+                                                              schedulingStart)
             .count();
     SPDLOG_INFO("Time for scheduling: {}us", statistics_.schedulingTime);
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
@@ -193,46 +203,28 @@ public:
           avg, max);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
-
-    const auto& reuseAnalysisStart = std::chrono::system_clock::now();
-    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - reuseAnalysisStart)
+        std::chrono::duration_cast<std::chrono::microseconds>(reuseAnalysisEnd -
+                                                              schedulingEnd)
             .count();
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
-
-    const auto& placementStart = std::chrono::system_clock::now();
-    const auto& placement =
-        SELF.place(qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
-    statistics_.placementTime =
+    statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - placementStart)
+            layoutSynthesisEnd - reuseAnalysisEnd)
             .count();
-    SPDLOG_INFO("Time for placement: {}us", statistics_.placementTime);
-
-    const auto& routingStart = std::chrono::system_clock::now();
-    const auto& routing = SELF.route(placement);
-    statistics_.routingTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - routingStart)
-            .count();
-    SPDLOG_INFO("Time for routing: {}us", statistics_.routingTime);
-
-    const auto& codeGenerationStart = std::chrono::system_clock::now();
-    NAComputation code =
-        SELF.generate(singleQubitGateLayers, placement, routing);
-    assert(code.validate().first);
+    statistics_.layoutSynthesizerStatistics =
+        SELF.getLayoutSynthesisStatistics();
+    SPDLOG_INFO("Time for layout synthesis: {}us",
+                statistics_.layoutSynthesisTime);
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - codeGenerationStart)
+            codeGenerationEnd - layoutSynthesisEnd)
             .count();
     SPDLOG_INFO("Time for code generation: {}us",
                 statistics_.codeGenerationTime);
-
     statistics_.totalTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - schedulingStart)
+            codeGenerationEnd - schedulingStart)
             .count();
     SPDLOG_INFO("Total time: {}us", statistics_.totalTime);
     return code;
@@ -243,10 +235,21 @@ public:
   }
 };
 
+class RoutingAgnosticSynthesizer
+    : public PlaceAndRouteSynthesizer<RoutingAgnosticSynthesizer,
+                                      VertexMatchingPlacer,
+                                      IndependentSetRouter> {
+public:
+  RoutingAgnosticSynthesizer(const Architecture& architecture,
+                             const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit RoutingAgnosticSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
+};
 class RoutingAgnosticCompiler final
     : public Compiler<RoutingAgnosticCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, VertexMatchingPlacer,
-                      IndependentSetRouter, CodeGenerator> {
+                      VertexMatchingReuseAnalyzer, RoutingAgnosticSynthesizer,
+                      CodeGenerator> {
 public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const Config& config)
@@ -255,10 +258,20 @@ public:
       : Compiler(architecture) {}
 };
 
+class RoutingAwareSynthesizer
+    : public PlaceAndRouteSynthesizer<RoutingAwareSynthesizer, AStarPlacer,
+                                      IndependentSetRouter> {
+public:
+  RoutingAwareSynthesizer(const Architecture& architecture,
+                          const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit RoutingAwareSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
+};
 class RoutingAwareCompiler final
     : public Compiler<RoutingAwareCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, AStarPlacer,
-                      IndependentSetRouter, CodeGenerator> {
+                      VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
+                      CodeGenerator> {
 public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}

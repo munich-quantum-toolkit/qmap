@@ -14,6 +14,14 @@ All Python enums (e.g., `sc.Method`) are now exposed via `pybind11`'s new `py::n
 As a result, the enums can no longer be initialized using a string.
 Instead of `Method("exact")` or `"exact"`, use `Method.exact`.
 
+This release restructures the neutral atom compiler which has consequences for its configuration and the reporting of statistics.
+The placement and routing stages have been merged into a single layout synthesis stage.
+There is a new `PlaceAndRouteSynthesizer` that combines the previously separate placement and routing stages.
+Consequently, the configuration for the placement and routing stages must now be wrapped in a configuration for the layout synthesis stage when using the C++ API.
+The Python API did not change in this regard.
+Furthermore, when reporting the statistics of the neutral atom compiler, the statistics for placement and routing are now reported as part of the layout synthesis statistics.
+The latter affects both the C++ and Python APIs.
+
 ## [3.2.0]
 
 With this release, the Python package has been restructured.

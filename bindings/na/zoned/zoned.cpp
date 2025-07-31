@@ -12,8 +12,9 @@
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Compiler.hpp"
 #include "na/zoned/code_generator/CodeGenerator.hpp"
-#include "na/zoned/placer/AStarPlacer.hpp"
-#include "na/zoned/placer/VertexMatchingPlacer.hpp"
+#include "na/zoned/layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
+#include "na/zoned/layout_synthesizer/placer/AStarPlacer.hpp"
+#include "na/zoned/layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
 // The header <nlohmann/json.hpp> is used, but clang-tidy confuses it with the
@@ -50,7 +51,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                    -> na::zoned::RoutingAgnosticCompiler {
         na::zoned::RoutingAgnosticCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
-        config.placerConfig = {useWindow, windowSize, dynamicPlacement};
+        config.layoutSynthesizerConfig.placerConfig = {useWindow, windowSize,
+                                                       dynamicPlacement};
         config.codeGeneratorConfig = {parkingOffset, warnUnsupportedGates};
         return {arch, config};
       }),
@@ -93,9 +95,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                    -> na::zoned::RoutingAwareCompiler {
         na::zoned::RoutingAwareCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
-        config.placerConfig = {useWindow,       windowMinWidth,  windowRatio,
-                               windowShare,     deepeningFactor, deepeningValue,
-                               lookaheadFactor, reuseLevel,      maxNodes};
+        config.layoutSynthesizerConfig.placerConfig = {
+            useWindow,       windowMinWidth,  windowRatio,
+            windowShare,     deepeningFactor, deepeningValue,
+            lookaheadFactor, reuseLevel,      maxNodes};
         config.codeGeneratorConfig = {parkingOffset, warnUnsupportedGates};
         return {arch, config};
       }),

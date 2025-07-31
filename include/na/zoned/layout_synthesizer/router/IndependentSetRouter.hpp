@@ -13,7 +13,7 @@
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
-#include "na/zoned/router/RouterBase.hpp"
+#include "na/zoned/layout_synthesizer/router/RouterBase.hpp"
 
 #include <cstddef>
 #include <functional>
