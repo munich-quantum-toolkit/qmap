@@ -1,6 +1,6 @@
 # Installation
 
-MQT QMAP is mainly developed as a C++17 library with Python bindings.
+MQT QMAP is mainly developed as a C++20 library with Python bindings.
 The resulting Python package is available on [PyPI](https://pypi.org/project/mqt.qmap/) and can be installed on all major operating systems using all modern Python versions.
 
 :::::{tip}
@@ -96,7 +96,7 @@ $ uv pip install mqt.qmap --no-binary mqt.qmap --no-binary mqt.core
 :::
 ::::
 
-This requires a [C++ compiler supporting C++17](https://en.wikipedia.org/wiki/List_of_compilers#C++_compilers) and a minimum [CMake](https://cmake.org/) version of 3.24.
+This requires a [C++ compiler supporting C++20](https://en.wikipedia.org/wiki/List_of_compilers#C++_compilers) and a minimum [CMake](https://cmake.org/) version of 3.24.
 Additionally, the [SMT solver Z3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library.
 This can be accomplished in a multitude of ways:
 

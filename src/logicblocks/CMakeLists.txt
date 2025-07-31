@@ -33,7 +33,7 @@ target_link_libraries(
   PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
 # set required C++ standard
-target_compile_features(mqt-logic-blocks PUBLIC cxx_std_17)
+target_compile_features(mqt-logic-blocks PUBLIC cxx_std_20)
 
 # add MQT alias
 add_library(MQT::LogicBlocks ALIAS mqt-logic-blocks)
