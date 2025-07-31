@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Added
+
+- 🐍 Build Python 3.14 wheels ([#717]) ([**@denialhaag**])
+
 ### Fixed
 
 - 🚸 Make function to export architecture in `.namachine` format to Python ([#719]) ([**@ystade**])
@@ -107,7 +111,6 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#719]: https://github.com/munich-quantum-toolkit/qmap/pull/719
 [#715]: https://github.com/munich-quantum-toolkit/qmap/pull/715
 [#714]: https://github.com/munich-quantum-toolkit/qmap/pull/714
 [#712]: https://github.com/munich-quantum-toolkit/qmap/pull/712

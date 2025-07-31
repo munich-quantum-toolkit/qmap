@@ -26,6 +26,8 @@ nox.options.default_venv_backend = "uv"
 
 nox.options.sessions = ["lint", "tests", "minimums"]
 
+# TODO(denialhaag): Add 3.14 when all dependencies support it
+#   https://github.com/munich-quantum-toolkit/qmap/issues/718
 PYTHON_ALL_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 if os.environ.get("CI", None):
