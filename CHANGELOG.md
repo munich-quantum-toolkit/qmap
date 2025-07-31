@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Fixed
+
+- 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`, and `mqt-qcec` ([#714]) ([**@denialhaag**])
+
 ## [3.2.0] - 2025-07-16
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
@@ -16,6 +20,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 ### Changed
 
 - **Breaking**: ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
+- ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
 - ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
 - ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
@@ -102,6 +107,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#715]: https://github.com/munich-quantum-toolkit/qmap/pull/715
+[#714]: https://github.com/munich-quantum-toolkit/qmap/pull/714
 [#713]: https://github.com/munich-quantum-toolkit/qmap/pull/713
 [#712]: https://github.com/munich-quantum-toolkit/qmap/pull/712
 [#694]: https://github.com/munich-quantum-toolkit/qmap/pull/694

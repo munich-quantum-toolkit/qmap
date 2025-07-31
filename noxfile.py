@@ -66,16 +66,6 @@ def _run_tests(
         "build",
         "--only-group",
         "test",
-        # Build mqt-core from source to work around pybind believing that two
-        # compiled extensions might not be binary compatible.
-        # This will be fixed in a new pybind11 release that includes https://github.com/pybind/pybind11/pull/5439.
-        "--no-binary-package",
-        "mqt-core",
-        # Similarly to above, build mqt-qcec from source because otherwise there
-        # might be binary compatibility issues with the compiled extensions.
-        # This can be removed once the above is no longer necessary.
-        "--no-binary-package",
-        "mqt-qcec",
         *install_args,
         env=env,
     )
@@ -158,11 +148,6 @@ def docs(session: nox.Session) -> None:
         "build",
         "--only-group",
         "docs",
-        # Build mqt-core from source to work around pybind believing that two
-        # compiled extensions might not be binary compatible.
-        # This will be fixed in a new pybind11 release that includes https://github.com/pybind/pybind11/pull/5439.
-        "--no-binary-package",
-        "mqt-core",
         env=env,
     )
 

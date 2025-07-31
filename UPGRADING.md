@@ -4,6 +4,16 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+Testing previous versions of the `mqt-qmap` package built via `uv sync` or simple `(uv) pip install .` generally failed due to binary incompatibility of the `mqt-core` compiled extension packages and the `mqt-qmap` one.
+This required building `mqt-core` from source and without build isolation to get a working local setup.
+By using the latest `pybind11` release (`v3`), the binary compatibility between extension modules compiled under different circumstances (such as different compilers) has been greatly increased.
+As such, it is no longer necessary to build `mqt-core` (and `mqt-qcec` for testing) from source and without build isolation when locally working on `mqt-qmap`.
+A simple `uv sync` is enough to successfully run `pytest`.
+
+All Python enums (e.g., `sc.Method`) are now exposed via `pybind11`'s new `py::native_enum`, which makes them compatible with Python's `enum.Enum` class (PEP 435).
+As a result, the enums can no longer be initialized using a string.
+Instead of `Method("exact")` or `"exact"`, use `Method.exact`.
+
 This release restructures the neutral atom compiler which has consequences for its configuration and the reporting of statistics.
 The placement and routing stages have been merged into a single layout synthesis stage.
 There is a new `PlaceAndRouteSynthesizer` that combines the previously separate placement and routing stages.

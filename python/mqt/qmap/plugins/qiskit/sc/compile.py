@@ -48,20 +48,20 @@ def compile(  # noqa: A001
     circ: CircuitInputType,
     arch: str | Arch | Architecture | Backend | None,
     calibration: str | BackendProperties | Target | None = None,
-    method: str | Method = "heuristic",
-    heuristic: str | Heuristic = "gate_count_max_distance",
-    initial_layout: str | InitialLayout = "dynamic",
+    method: Method = Method.heuristic,
+    heuristic: Heuristic = Heuristic.gate_count_max_distance,
+    initial_layout: InitialLayout = InitialLayout.dynamic,
     iterative_bidirectional_routing_passes: int | None = None,
-    layering: str | Layering = "individual_gates",
+    layering: Layering = Layering.individual_gates,
     automatic_layer_splits_node_limit: int | None = 5000,
-    early_termination: str | EarlyTermination = "none",
+    early_termination: EarlyTermination = EarlyTermination.none,
     early_termination_limit: int = 0,
-    lookahead_heuristic: str | LookaheadHeuristic | None = "gate_count_max_distance",
+    lookahead_heuristic: LookaheadHeuristic | None = LookaheadHeuristic.gate_count_max_distance,
     lookaheads: int = 15,
     lookahead_factor: float = 0.5,
-    encoding: str | Encoding = "commander",
-    commander_grouping: str | CommanderGrouping = "fixed3",
-    swap_reduction: str | SwapReduction = "coupling_limit",
+    encoding: Encoding = Encoding.commander,
+    commander_grouping: CommanderGrouping = CommanderGrouping.fixed3,
+    swap_reduction: SwapReduction = SwapReduction.coupling_limit,
     swap_limit: int = 0,
     include_WCNF: bool = False,  # noqa: N803
     use_subsets: bool = True,
@@ -80,20 +80,20 @@ def compile(  # noqa: A001
         circ: The circuit to map.
         arch: The architecture to map to.
         calibration: The calibration to use.
-        method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
-        heuristic: The heuristic function to use for the routing search. Defaults to "gate_count_max_distance".
-        initial_layout: The initial layout to use. Defaults to "dynamic".
+        method: The mapping method to use. Defaults to :attr:`~Method.heuristic`.
+        heuristic: The heuristic function to use for the routing search. Defaults to :attr:`~Heuristic.gate_count_max_distance`.
+        initial_layout: The initial layout to use. Defaults to :attr:`~InitialLayout.dynamic`.
         iterative_bidirectional_routing_passes: Number of iterative bidirectional routing passes to perform or None to disable. Defaults to None.
-        layering: The layering strategy to use. Defaults to "individual_gates".
+        layering: The layering strategy to use. Defaults to :attr:`~Layering.individual_gates`.
         automatic_layer_splits_node_limit: The number of expanded nodes after which to split a layer or None to disable automatic layer splitting. Defaults to 5000.
-        early_termination: The early termination strategy to use, i.e. terminating the search after a goal node has been found, but before it is guarantueed to be optimal. Defaults to "none".
+        early_termination: The early termination strategy to use, i.e. terminating the search after a goal node has been found, but before it is guaranteed to be optimal. Defaults to :attr:`~EarlyTermination.none`.
         early_termination_limit: The number of nodes (counted according to the early termination strategy) after which to terminate the search early. Defaults to 0.
-        lookahead_heuristic: The heuristic function to use as a lookahead penalty during search or None to disable lookahead. Defaults to "gate_count_max_distance".
+        lookahead_heuristic: The heuristic function to use as a lookahead penalty during search or None to disable lookahead. Defaults to :attr:`~LookaheadHeuristic.gate_count_max_distance`.
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
         lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
-        encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
-        commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to "halves".
-        swap_reduction: The swap reduction strategy to use. Defaults to "coupling_limit".
+        encoding: The encoding to use for the AMO and exactly one constraints. Defaults to :attr:`~Encoding.naive`.
+        commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to :attr:`~CommanderGrouping.halves`.
+        swap_reduction: The swap reduction strategy to use. Defaults to :attr:`~SwapReduction.coupling_limit`.
         swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer. Defaults to 0.
         include_WCNF: Include WCNF file in the results. Defaults to False.
         use_subsets: Use qubit subsets, or consider all available physical qubits at once. Defaults to True.

@@ -50,28 +50,6 @@ def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
         compile(example_circuit, arch=None, calibration=None)
 
 
-@pytest.mark.parametrize(
-    "arch",
-    [
-        "IBM_QX4",
-        "IBM_QX5",
-        "IBMQ_Yorktown",
-        "IBMQ_London",
-        "IBMQ_Bogota",
-        "IBMQ_Tokyo",
-        "Rigetti_Agave",
-        "Rigetti_Aspen",
-    ],
-)
-def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str) -> None:
-    """Test that the available architectures can be properly used."""
-    example_circuit_mapped, results = compile(example_circuit, arch=arch)
-    assert results.timeout is False
-
-    result = verify(example_circuit, example_circuit_mapped)
-    assert result.considered_equivalent() is True
-
-
 # test that all available architecture enumerations can be properly used
 @pytest.mark.parametrize(
     "arch",
@@ -86,7 +64,7 @@ def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str)
         Arch.Rigetti_Aspen,
     ],
 )
-def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: Arch) -> None:
+def test_available_architectures(example_circuit: QuantumCircuit, arch: Arch) -> None:
     """Test that the available architecture enums can be properly used."""
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
@@ -146,10 +124,10 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     _, results = compile(
         example_circuit,
         arch=arch,
-        method="exact",
-        encoding="commander",
-        commander_grouping="fixed3",
-        swap_reduction="coupling_limit",
+        method=Method.exact,
+        encoding=Encoding.commander,
+        commander_grouping=CommanderGrouping.fixed3,
+        swap_reduction=SwapReduction.coupling_limit,
         include_WCNF=False,
         use_subsets=True,
         subgraph=None,
@@ -168,13 +146,13 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         _, results = compile(
             example_circuit,
             arch=arch,
-            method="heuristic",
-            heuristic="gate_count_max_distance",
-            initial_layout="dynamic",
+            method=Method.heuristic,
+            heuristic=Heuristic.gate_count_max_distance,
+            initial_layout=InitialLayout.dynamic,
             iterative_bidirectional_routing_passes=1,
-            layering="individual_gates",
+            layering=Layering.individual_gates,
             automatic_layer_splits_node_limit=5000,
-            lookahead_heuristic="gate_count_max_distance",
+            lookahead_heuristic=LookaheadHeuristic.gate_count_max_distance,
             lookaheads=15,
             lookahead_factor=0.5,
             pre_mapping_optimizations=True,
@@ -203,11 +181,11 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     _, results = compile(
         example_circuit,
         arch=arch,
-        method="heuristic",
-        heuristic="fidelity_best_location",
-        initial_layout="identity",
+        method=Method.heuristic,
+        heuristic=Heuristic.fidelity_best_location,
+        initial_layout=InitialLayout.identity,
         iterative_bidirectional_routing_passes=None,
-        layering="disjoint_qubits",
+        layering=Layering.disjoint_qubits,
         automatic_layer_splits_node_limit=None,
         lookahead_heuristic=None,
         pre_mapping_optimizations=False,

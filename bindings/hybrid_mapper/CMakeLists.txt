@@ -23,6 +23,6 @@ add_mqt_python_binding(
 if(SKBUILD_STATE STREQUAL "editable")
   install(
     FILES ${PROJECT_SOURCE_DIR}/python/mqt/qmap/hybrid_mapper.pyi
-    DESTINATION ./hybrid_mapper
+    DESTINATION .
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()

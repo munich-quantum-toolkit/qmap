@@ -21,10 +21,10 @@
 #include <plog/Severity.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-// NOLINTNEXTLINE(misc-include-cleaner)
-#include <pybind11/stl.h>
+#include <pybind11/stl.h> // NOLINT(misc-include-cleaner)
 #include <string>
 
 namespace py = pybind11;
@@ -32,18 +32,15 @@ using namespace pybind11::literals;
 
 PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   // Target metric for the Clifford synthesizer
-  py::enum_<cs::TargetMetric>(m, "TargetMetric")
+  py::native_enum<cs::TargetMetric>(m, "TargetMetric", "enum.Enum")
       .value("gates", cs::TargetMetric::Gates, "Optimize gate count.")
       .value("two_qubit_gates", cs::TargetMetric::TwoQubitGates,
              "Optimize two-qubit gate count.")
       .value("depth", cs::TargetMetric::Depth, "Optimize circuit depth.")
       .export_values()
-      .def(py::init([](const std::string& name) {
-        return cs::targetMetricFromString(name);
-      }));
-  py::implicitly_convertible<py::str, cs::TargetMetric>();
+      .finalize();
 
-  py::enum_<plog::Severity>(m, "Verbosity")
+  py::native_enum<plog::Severity>(m, "Verbosity", "enum.Enum")
       .value("none", plog::Severity::none, "No output.")
       .value("fatal", plog::Severity::fatal, "Only show fatal errors.")
       .value("error", plog::Severity::error, "Show errors.")
@@ -53,10 +50,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
              "Show additional debug information.")
       .value("verbose", plog::Severity::verbose, "Show all information.")
       .export_values()
-      .def(py::init([](const std::string& name) {
-        return plog::severityFromString(name.c_str());
-      }));
-  py::implicitly_convertible<py::str, plog::Severity>();
+      .finalize();
 
   // Configuration for the synthesis
   py::class_<cs::Configuration>(

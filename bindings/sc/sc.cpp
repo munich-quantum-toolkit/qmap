@@ -33,10 +33,10 @@
 #include <memory>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-// NOLINTNEXTLINE(misc-include-cleaner)
-#include <pybind11/stl.h>
+#include <pybind11/stl.h> // NOLINT(misc-include-cleaner)
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -82,7 +82,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
 
   // Pre-defined architecture available within QMAP
-  py::enum_<AvailableArchitecture>(m, "Arch")
+  py::native_enum<AvailableArchitecture>(m, "Arch", "enum.Enum")
       .value("IBM_QX4", AvailableArchitecture::IbmQx4,
              "5 qubit, directed bow tie layout")
       .value("IBM_QX5", AvailableArchitecture::IbmQx5,
@@ -101,35 +101,23 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
              "8 qubit, undirected ring layout")
       .value("Rigetti_Aspen", AvailableArchitecture::RigettiAspen,
              "16 qubit, undirected dumbbell layout")
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> AvailableArchitecture {
-        return architectureFromString(str);
-      }));
+      .finalize();
 
   // Mapping methodology to use
-  py::enum_<Method>(m, "Method")
+  py::native_enum<Method>(m, "Method", "enum.Enum")
       .value("heuristic", Method::Heuristic)
       .value("exact", Method::Exact)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> Method {
-        return methodFromString(str);
-      }));
+      .finalize();
 
   // Initial layout strategy
-  py::enum_<InitialLayout>(m, "InitialLayout")
+  py::native_enum<InitialLayout>(m, "InitialLayout", "enum.Enum")
       .value("identity", InitialLayout::Identity)
       .value("static", InitialLayout::Static)
       .value("dynamic", InitialLayout::Dynamic)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> InitialLayout {
-        return initialLayoutFromString(str);
-      }));
+      .finalize();
 
   // Heuristic function
-  py::enum_<Heuristic>(m, "Heuristic")
+  py::native_enum<Heuristic>(m, "Heuristic", "enum.Enum")
       .value("gate_count_max_distance", Heuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance", Heuristic::GateCountSumDistance)
       .value("gate_count_sum_distance_minus_shared_swaps",
@@ -137,40 +125,28 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("gate_count_max_distance_or_sum_distance_minus_shared_swaps",
              Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps)
       .value("fidelity_best_location", Heuristic::FidelityBestLocation)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> Heuristic {
-        return heuristicFromString(str);
-      }));
+      .finalize();
 
   // Lookahead heuristic function
-  py::enum_<LookaheadHeuristic>(m, "LookaheadHeuristic")
+  py::native_enum<LookaheadHeuristic>(m, "LookaheadHeuristic", "enum.Enum")
       .value("none", LookaheadHeuristic::None)
       .value("gate_count_max_distance",
              LookaheadHeuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance",
              LookaheadHeuristic::GateCountSumDistance)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> LookaheadHeuristic {
-        return lookaheadHeuristicFromString(str);
-      }));
+      .finalize();
 
   // Gate clustering / layering strategy
-  py::enum_<Layering>(m, "Layering")
+  py::native_enum<Layering>(m, "Layering", "enum.Enum")
       .value("individual_gates", Layering::IndividualGates)
       .value("disjoint_qubits", Layering::DisjointQubits)
       .value("odd_gates", Layering::OddGates)
       .value("qubit_triangle", Layering::QubitTriangle)
       .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> Layering {
-        return layeringFromString(str);
-      }));
+      .finalize();
 
   // Early termination strategy in heuristic mapper
-  py::enum_<EarlyTermination>(m, "EarlyTermination")
+  py::native_enum<EarlyTermination>(m, "EarlyTermination", "enum.Enum")
       .value("none", EarlyTermination::None)
       .value("expanded_nodes", EarlyTermination::ExpandedNodes)
       .value("expanded_nodes_after_first_solution",
@@ -180,47 +156,31 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("solution_nodes", EarlyTermination::SolutionNodes)
       .value("solution_nodes_after_current_optimal_solution",
              EarlyTermination::SolutionNodesAfterCurrentOptimalSolution)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> EarlyTermination {
-        return earlyTerminationFromString(str);
-      }));
+      .finalize();
 
   // Encoding settings for at-most-one and exactly-one constraints
-  py::enum_<Encoding>(m, "Encoding")
+  py::native_enum<Encoding>(m, "Encoding", "enum.Enum")
       .value("naive", Encoding::Naive)
       .value("commander", Encoding::Commander)
       .value("bimander", Encoding::Bimander)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> Encoding {
-        return encodingFromString(str);
-      }));
+      .finalize();
 
   // Grouping settings if using the commander encoding
-  py::enum_<CommanderGrouping>(m, "CommanderGrouping")
+  py::native_enum<CommanderGrouping>(m, "CommanderGrouping", "enum.Enum")
       .value("fixed2", CommanderGrouping::Fixed2)
       .value("fixed3", CommanderGrouping::Fixed3)
       .value("halves", CommanderGrouping::Halves)
       .value("logarithm", CommanderGrouping::Logarithm)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> CommanderGrouping {
-        return groupingFromString(str);
-      }));
+      .finalize();
 
   // Strategy for reducing the number of permutations/swaps considered in front
   // of every gate
-  py::enum_<SwapReduction>(m, "SwapReduction")
+  py::native_enum<SwapReduction>(m, "SwapReduction", "enum.Enum")
       .value("none", SwapReduction::None)
       .value("coupling_limit", SwapReduction::CouplingLimit)
       .value("custom", SwapReduction::Custom)
       .value("increasing", SwapReduction::Increasing)
-      .export_values()
-      // allow construction from string
-      .def(py::init([](const std::string& str) -> SwapReduction {
-        return swapReductionFromString(str);
-      }));
+      .finalize();
 
   // All configuration options for QMAP
   py::class_<Configuration>(

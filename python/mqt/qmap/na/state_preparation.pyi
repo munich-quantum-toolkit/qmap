@@ -105,7 +105,7 @@ class NAStatePreparationSolver:
         stage, atoms can be stored from AOD into SLM traps and loaded from SLM traps
         into AOD. At the end of each stage, the atoms are shuttled to their next
         position. The number of stages is specified by `num_stages`. The number of
-        transfers is fixed by `num_transfers` if give. If this parameter is not
+        transfers is fixed by `num_transfers` if given. If this parameter is not
         specified, then the solver will determine the optimal number of transfers. The
         parameter `mind_ops_order` specifies whether the order of the operations in the
         circuit should be preserved. The parameter `shield_idle_qubits` specifies
@@ -116,7 +116,7 @@ class NAStatePreparationSolver:
             :func:`get_ops_for_solver`.
 
 
-            The returned solver's result can either directly exported to the JSON format
+            The returned solver's result can either be directly exported to the JSON format
             by calling the method :func:`json` on the result object or the result object
             can be passed to the function :func:`generate_code` to generate code
             consisting of neutral atom operations.
