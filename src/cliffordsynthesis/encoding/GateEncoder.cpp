@@ -109,8 +109,8 @@ GateEncoder::collectGateTransformations(
 
   for (const auto& gate : SINGLE_QUBIT_GATES) {
     const auto& transformation = gateToTransformation(pos, qubit, gate);
-    const auto& it = std::find_if(
-        transformations.begin(), transformations.end(), [&](const auto& entry) {
+    const auto& it =
+        std::ranges::find_if(transformations, [&](const auto& entry) {
           return entry.first.deepEquals(transformation);
         });
     if (it != transformations.end()) {

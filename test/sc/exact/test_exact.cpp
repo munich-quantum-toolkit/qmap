@@ -80,7 +80,7 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84"),
     [](const testing::TestParamInfo<ExactTest::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 

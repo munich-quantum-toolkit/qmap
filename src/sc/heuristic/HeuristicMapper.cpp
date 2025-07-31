@@ -1211,7 +1211,7 @@ double HeuristicMapper::heuristicGateCountSumDistanceMinusSharedSwaps(
   }
 
   // sort number of swaps in descending order
-  std::sort(nSwaps.begin(), nSwaps.end(), std::greater<>());
+  std::ranges::sort(nSwaps, std::greater<>());
 
   // infer maximum number of shared swaps
   std::size_t maxSharedSwaps = 0;

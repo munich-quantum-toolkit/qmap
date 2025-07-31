@@ -160,10 +160,10 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
     }
   }
   // sort diagonal distances by distance
-  std::sort(diagonalDistances.begin(), diagonalDistances.end(),
-            [](const DiagonalDistance& a, const DiagonalDistance& b) {
-              return a.distance < b.distance;
-            });
+  std::ranges::sort(diagonalDistances,
+                    [](const DiagonalDistance& a, const DiagonalDistance& b) {
+                      return a.distance < b.distance;
+                    });
 
   // compute swap distances
   this->swapDistances =

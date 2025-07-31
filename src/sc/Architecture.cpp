@@ -501,12 +501,12 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
     d.resize(nQubits);
-    std::fill(d.begin(), d.end(), 0);
+    std::ranges::fill(d, 0);
     visited.clear();
     visited.resize(nQubits);
     std::fill(visited.begin(), visited.end(), false);
     findCouplingLimit(q, 0, connections, d, visited);
-    auto it = std::max_element(d.begin(), d.end());
+    auto it = std::ranges::max_element(d);
     maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
@@ -533,12 +533,12 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
     }
     d.clear();
     d.resize(nQubits);
-    std::fill(d.begin(), d.end(), 0);
+    std::ranges::fill(d, 0);
     visited.clear();
     visited.resize(nQubits);
     std::fill(visited.begin(), visited.end(), false);
     findCouplingLimit(q, 0, connections, d, visited);
-    auto it = std::max_element(d.begin(), d.end());
+    auto it = std::ranges::max_element(d);
     maxSum = std::max(maxSum, (*it));
   }
   return maxSum;

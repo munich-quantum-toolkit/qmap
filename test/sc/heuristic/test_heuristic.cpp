@@ -244,7 +244,7 @@ protected:
 
   void SetUp() override {
     std::string cn = std::get<1>(GetParam());
-    std::replace(cn.begin(), cn.end(), '-', '_');
+    std::ranges::replace(cn, '-', '_');
     std::stringstream ss{};
     ss << cn << "_" << toString(std::get<0>(GetParam()));
     const std::string testName = ss.str();
@@ -575,7 +575,7 @@ INSTANTIATE_TEST_SUITE_P(
                         )),
     [](const testing::TestParamInfo<TestHeuristics::ParamType>& inf) {
       std::string name = std::get<1>(inf.param);
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       std::stringstream ss{};
       ss << name << "_" << toString(std::get<0>(inf.param));
       return ss.str();
@@ -1575,7 +1575,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "4mod5-v0_20", "mod5d1_63"),
     [](const testing::TestParamInfo<HeuristicTest5Q::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 
@@ -1632,7 +1632,7 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values("ising_model_10", "rd73_140", "cnt3-5_179", "qft_16"),
     [](const testing::TestParamInfo<HeuristicTest16Q::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 
@@ -1679,7 +1679,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "z4_268"),
     [](const testing::TestParamInfo<HeuristicTest20Q::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 
@@ -1720,7 +1720,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "4mod5-v0_20", "mod5d1_63"),
     [](const testing::TestParamInfo<HeuristicTestFidelity::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 

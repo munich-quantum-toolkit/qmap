@@ -186,7 +186,7 @@ void Dijkstra::buildSingleEdgeSkipTable(const Matrix& distanceTable,
 /// \param pi permutation
 /// \return string representation of pi
 std::string printPi(std::vector<std::uint16_t>& pi) {
-  if (std::is_sorted(pi.begin(), pi.end())) {
+  if (std::ranges::is_sorted(pi)) {
     return "( )";
   }
 

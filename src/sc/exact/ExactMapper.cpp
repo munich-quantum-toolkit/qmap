@@ -442,7 +442,7 @@ void ExactMapper::coreMappingRoutine(
         skippedPi.insert(piCount);
       }
       ++piCount;
-    } while (std::next_permutation(pi.begin(), pi.end()));
+    } while (std::ranges::next_permutation(pi).found);
   }
   //////////////////////////////////////////
   /// 	Boolean Variable Definitions	//
@@ -488,7 +488,7 @@ number of variables: (|L|-1) * m!
         y.back().emplace_back(lb->makeVariable(yName.str(), CType::BOOL));
       }
       ++piCount;
-    } while (std::next_permutation(pi.begin(), pi.end()));
+    } while (std::ranges::next_permutation(pi).found);
   }
 
   //////////////////////////////////////////
@@ -673,7 +673,7 @@ number of variables: (|L|-1) * m!
         ++internalPiCount;
       }
       ++piCount;
-    } while (std::next_permutation(pi.begin(), pi.end()));
+    } while (std::ranges::next_permutation(pi).found);
   }
 
   // Allow only 1 y_k_pi to be true
@@ -689,7 +689,7 @@ number of variables: (|L|-1) * m!
           ++internalPiCount;
         }
         ++piCount;
-      } while (std::next_permutation(pi.begin(), pi.end()));
+      } while (std::ranges::next_permutation(pi).found);
       lb->assertFormula(onlyOne == LogicTerm(1));
     }
   } else {
@@ -703,7 +703,7 @@ number of variables: (|L|-1) * m!
           ++internalPiCount;
         }
         ++piCount;
-      } while (std::next_permutation(pi.begin(), pi.end()));
+      } while (std::ranges::next_permutation(pi).found);
       if (config.commanderGrouping == CommanderGrouping::Fixed2) {
         lb->assertFormula(encodings::exactlyOneCmdr(
             encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
@@ -744,7 +744,7 @@ number of variables: (|L|-1) * m!
       ++internalPiCount;
     }
     ++piCount;
-  } while (std::next_permutation(pi.begin(), pi.end()));
+  } while (std::ranges::next_permutation(pi).found);
 
   // cost for reversed directions
   if (!architecture->bidirectional()) {
@@ -826,7 +826,7 @@ number of variables: (|L|-1) * m!
         piCount = 0;
         internalPiCount = 0;
         // sort the permutation of the qubits to start fresh
-        std::sort(pi.begin(), pi.end());
+        std::ranges::sort(pi);
         do {
           if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
             if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
@@ -835,7 +835,7 @@ number of variables: (|L|-1) * m!
             ++internalPiCount;
           }
           ++piCount;
-        } while (std::next_permutation(pi.begin(), pi.end()));
+        } while (std::ranges::next_permutation(pi).found);
       }
 
       architecture->minimumNumberOfSwaps(pi, swaps.at(k));

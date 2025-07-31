@@ -141,8 +141,8 @@ void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
   this->mappedSingleQubitGates.clear();
   std::set<qc::Qubit> qubitsToUpdate;
   for (const auto& gate : gatesToRemove) {
-    if (std::find(gates.begin(), gates.end(), gate) != gates.end()) {
-      gates.erase(std::find(gates.begin(), gates.end(), gate));
+    if (std::ranges::find(gates, gate) != gates.end()) {
+      gates.erase(std::ranges::find(gates, gate));
       auto usedQubits = gate->getUsedQubits();
       qubitsToUpdate.insert(usedQubits.begin(), usedQubits.end());
     }
@@ -158,10 +158,10 @@ void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
 bool NeutralAtomLayer::commutesWithAtQubit(const GateList& layer,
                                            const qc::Operation* opPointer,
                                            const qc::Qubit& qubit) {
-  return std::all_of(layer.begin(), layer.end(),
-                     [&opPointer, &qubit](const auto& frontOpPointer) {
-                       return commuteAtQubit(opPointer, frontOpPointer, qubit);
-                     });
+  return std::ranges::all_of(
+      layer, [&opPointer, &qubit](const auto& frontOpPointer) {
+        return commuteAtQubit(opPointer, frontOpPointer, qubit);
+      });
 }
 
 bool NeutralAtomLayer::commuteAtQubit(const qc::Operation* op1,
