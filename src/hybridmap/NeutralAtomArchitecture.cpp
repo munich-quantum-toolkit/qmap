@@ -25,6 +25,7 @@
 #include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
