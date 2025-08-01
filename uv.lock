@@ -1838,7 +1838,7 @@ requires-dist = [
     { name = "distinctipy", marker = "extra == 'visualization'", specifier = ">=1.3.4" },
     { name = "importlib-resources", marker = "python_full_version < '3.10'", specifier = ">=5.0" },
     { name = "ipywidgets", marker = "extra == 'visualization'", specifier = ">=8.1.7" },
-    { name = "mqt-core", specifier = ">=3.2.1,<3.3" },
+    { name = "mqt-core", specifier = "~=3.2.1" },
     { name = "networkx", marker = "extra == 'visualization'", specifier = ">=3.2.1" },
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
@@ -1850,7 +1850,7 @@ provides-extras = ["visualization"]
 
 [package.metadata.requires-dev]
 build = [
-    { name = "mqt-core", specifier = ">=3.2.1,<3.3" },
+    { name = "mqt-core", specifier = "~=3.2.1" },
     { name = "pybind11", specifier = ">=3.0.0" },
     { name = "scikit-build-core", specifier = ">=0.11.2" },
     { name = "setuptools-scm", specifier = ">=8.3.1" },
@@ -1859,7 +1859,7 @@ dev = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "furo", specifier = ">=2024.8.6" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-    { name = "mqt-core", specifier = ">=3.2.1,<3.3" },
+    { name = "mqt-core", specifier = "~=3.2.1" },
     { name = "mqt-qcec", git = "https://github.com/munich-quantum-toolkit/qcec.git?rev=daeea35ae12e3713db968e2f78fc1a857cc366bd" },
     { name = "myst-nb", specifier = ">=1.2.0" },
     { name = "networkx", specifier = ">=3.2.1" },
