@@ -488,8 +488,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   }
 
   auto stabilizers = line;
-  stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
-                    stabilizers.end());
+  std::erase_if(stabilizers, isspace);
 
   if (stabilizers[0] == '[') {
     if (stabilizers[stabilizers.size() - 1] == ']') {
