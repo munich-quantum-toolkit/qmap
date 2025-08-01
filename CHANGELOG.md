@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Changed
 
-- **Breaking**: ⬆️ Bump minimum required `mqt-core` version to `3.2.0` ([#720]) ([**@denialhaag**])
+- **Breaking**: ⬆️ Bump minimum required `mqt-core` version to `3.2.1` ([#720]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Require C++20 ([#720]) ([**@denialhaag**])
 - **Breaking**: ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
 - **Breaking**: ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
