@@ -112,7 +112,7 @@ auto NAMapper::makeLogicalArrays() -> void {
       const auto& posPerRow =
           std::accumulate(allPositions.cbegin(), allPositions.cend(),
                           std::map<std::int64_t, std::set<std::int64_t>>(),
-                          [&](auto& acc, const auto& p) {
+                          [&](auto acc, const auto& p) {
                             acc[p->y].insert(p->x);
                             return acc;
                           });

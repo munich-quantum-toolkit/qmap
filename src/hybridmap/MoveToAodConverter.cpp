@@ -80,9 +80,8 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
       }
     } else if (op->getNqubits() > 1 && !currentMoveGroup.moves.empty()) {
       for (const auto& qubit : op->getUsedQubits()) {
-        if (std::find(currentMoveGroup.qubitsUsedByGates.begin(),
-                      currentMoveGroup.qubitsUsedByGates.end(),
-                      qubit) == currentMoveGroup.qubitsUsedByGates.end()) {
+        if (std::ranges::find(currentMoveGroup.qubitsUsedByGates, qubit) ==
+            currentMoveGroup.qubitsUsedByGates.end()) {
           currentMoveGroup.qubitsUsedByGates.emplace_back(qubit);
         }
       }
@@ -98,14 +97,14 @@ bool MoveToAodConverter::MoveGroup::canAdd(
     const AtomMove& move, const NeutralAtomArchitecture& archArg) {
   // if move would move a qubit that is used by a gate in this move group
   // return false
-  if (std::find(qubitsUsedByGates.begin(), qubitsUsedByGates.end(),
-                move.first) != qubitsUsedByGates.end()) {
+  if (std::ranges::find(qubitsUsedByGates, move.first) !=
+      qubitsUsedByGates.end()) {
     return false;
   }
   // checks if the op can be executed in parallel
   auto moveVector = archArg.getVector(move.first, move.second);
-  return std::all_of(
-      moves.begin(), moves.end(),
+  return std::ranges::all_of(
+      moves,
       [&moveVector, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
         auto moveGroup = opPair.first;
         auto opVector = archArg.getVector(moveGroup.first, moveGroup.second);
@@ -288,11 +287,10 @@ MoveToAodConverter::canAddActivation(
 
 void MoveToAodConverter::AodActivationHelper::reAssignOffsets(
     std::vector<std::shared_ptr<AodMove>>& aodMoves, int32_t sign) {
-  std::sort(
-      aodMoves.begin(), aodMoves.end(),
-      [](const std::shared_ptr<AodMove>& a, const std::shared_ptr<AodMove>& b) {
-        return std::abs(a->delta) < std::abs(b->delta);
-      });
+  std::ranges::sort(aodMoves, [](const std::shared_ptr<AodMove>& a,
+                                 const std::shared_ptr<AodMove>& b) {
+    return std::abs(a->delta) < std::abs(b->delta);
+  });
   int32_t offset = sign;
   for (auto& aodMove : aodMoves) {
     // same sign
@@ -518,12 +516,10 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<CoordIndex> qubitsMove;
   qubitsMove.reserve(activation.moves.size() * 2);
   for (const auto& move : activation.moves) {
-    if (std::find(qubitsMove.begin(), qubitsMove.end(), move.first) ==
-        qubitsMove.end()) {
+    if (std::ranges::find(qubitsMove, move.first) == qubitsMove.end()) {
       qubitsMove.emplace_back(move.first);
     }
-    if (std::find(qubitsMove.begin(), qubitsMove.end(), move.second) ==
-        qubitsMove.end()) {
+    if (std::ranges::find(qubitsMove, move.second) == qubitsMove.end()) {
       qubitsMove.emplace_back(move.second);
     }
   }

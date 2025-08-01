@@ -22,6 +22,9 @@ The Python API did not change in this regard.
 Furthermore, when reporting the statistics of the neutral atom compiler, the statistics for placement and routing are now reported as part of the layout synthesis statistics.
 The latter affects both the C++ and Python APIs.
 
+Finally, the minimum required C++ version has been raised from C++17 to C++20.
+The default compilers of our test systems support all relevant features of the standard.
+
 ## [3.2.0]
 
 With this release, the Python package has been restructured.

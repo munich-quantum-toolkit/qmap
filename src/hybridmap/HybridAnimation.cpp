@@ -61,7 +61,7 @@ std::string AnimationAtoms::getEndString(qc::fp endTime) {
 }
 
 AnimationAtoms::axesId AnimationAtoms::addAxis(HwQubit id) {
-  if (axesIds.find(id) == axesIds.end()) {
+  if (!axesIds.contains(id)) {
     axesIdCounter++;
     axesIds[id] = axesIdCounter;
   } else {
@@ -72,7 +72,7 @@ AnimationAtoms::axesId AnimationAtoms::addAxis(HwQubit id) {
   return axesIds[id];
 }
 AnimationAtoms::marginId AnimationAtoms::addMargin(HwQubit id) {
-  if (marginIds.find(id) == marginIds.end()) {
+  if (!marginIds.contains(id)) {
     marginIdCounter++;
     marginIds[id] = marginIdCounter;
   } else {
@@ -92,7 +92,7 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
   for (const auto& coordIdx : op->getUsedQubits()) {
     // if coordIdx unmapped -> continue except it is an AodDeactivate
     if (qc::OpType::AodDeactivate != op->getType() &&
-        coordIdxToId.find(coordIdx) == coordIdxToId.end()) {
+        !coordIdxToId.contains(coordIdx)) {
       continue;
     }
     if (op->getType() == qc::OpType::AodDeactivate) {
@@ -121,8 +121,8 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
         }
       }
     }
-    if (coordIdxToId.find(coordIdx) == coordIdxToId.end() ||
-        idToCoord.find(coordIdxToId.at(coordIdx)) == idToCoord.end()) {
+    if (!coordIdxToId.contains(coordIdx) ||
+        !idToCoord.contains(coordIdxToId.at(coordIdx))) {
       throw std::invalid_argument(
           "Tried to create csv line for qubit at coordIdx " +
           std::to_string(coordIdx) + " but there is no qubit at this coordIdx");
@@ -131,7 +131,7 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
     auto coord = idToCoord.at(id);
     if (op->getType() == qc::OpType::AodActivate) {
       addAxis(id);
-      if (axesIds.find(id) == axesIds.end()) {
+      if (!axesIds.contains(id)) {
         throw std::invalid_argument(
             "Tried to activate qubit at coordIdx " + std::to_string(coordIdx) +
             " but there is no axis for qubit " + std::to_string(id));
@@ -141,7 +141,7 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
                                colorAod, true, axesIds.at(id));
     } else if (op->getType() == qc::OpType::AodDeactivate) {
-      if (axesIds.find(id) == axesIds.end()) {
+      if (!axesIds.contains(id)) {
         throw std::invalid_argument("Tried to deactivate qubit at coordIdx " +
                                     std::to_string(coordIdx) +
                                     " but there is no axis for qubit " +
@@ -154,7 +154,7 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
       removeAxis(id);
 
     } else if (op->getType() == qc::OpType::AodMove) {
-      if (axesIds.find(id) == axesIds.end()) {
+      if (!axesIds.contains(id)) {
         throw std::invalid_argument(
             "Tried to move qubit at coordIdx " + std::to_string(coordIdx) +
             " but there is no axis for qubit " + std::to_string(id));

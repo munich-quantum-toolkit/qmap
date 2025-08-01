@@ -27,7 +27,7 @@ class TestEncodings
     : public testing::TestWithParam<std::pair<Encoding, CommanderGrouping>> {
 protected:
   qc::QuantumComputation qc;
-  Configuration settings{};
+  Configuration settings;
   Architecture arch;
   std::unique_ptr<ExactMapper> mapper;
 

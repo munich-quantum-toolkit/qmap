@@ -25,9 +25,11 @@
 #include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -104,8 +106,8 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     this->parameters.decoherenceTimes =
         NeutralAtomArchitecture::Parameters::DecoherenceTimes{
-            jsonDataParameters["decoherenceTimes"]["t1"],
-            jsonDataParameters["decoherenceTimes"]["t2"]};
+            .t1 = jsonDataParameters["decoherenceTimes"]["t1"],
+            .t2 = jsonDataParameters["decoherenceTimes"]["t2"]};
 
   } catch (std::exception& e) {
     throw std::runtime_error("Could not parse JSON file " + filename + ": " +
@@ -123,9 +125,9 @@ void NeutralAtomArchitecture::createCoordinates() {
   coordinates.reserve(properties.getNpositions());
   for (std::uint16_t i = 0; i < this->properties.getNpositions(); i++) {
     this->coordinates.emplace_back(
-        Location{static_cast<double>(i % this->properties.getNcolumns()),
+        Location{.x = static_cast<double>(i % this->properties.getNcolumns()),
                  // NOLINTNEXTLINE(bugprone-integer-division)
-                 static_cast<double>(i / this->properties.getNcolumns())});
+                 .y = static_cast<double>(i / this->properties.getNcolumns())});
   }
 }
 NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
@@ -144,15 +146,17 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
   for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
     for (uint32_t j = i; j < this->getNrows(); j++) {
       const auto dist = NeutralAtomArchitecture::getEuclideanDistance(
-          Location{0.0, 0.0},
-          Location{static_cast<double>(i), static_cast<double>(j)});
+          Location{.x = 0.0, .y = 0.0},
+          Location{.x = static_cast<double>(i), .y = static_cast<double>(j)});
       if (dist <= interactionRadius) {
         if (dist == 0) {
           continue;
         }
-        diagonalDistances.emplace_back(DiagonalDistance{i, j, dist});
+        diagonalDistances.emplace_back(
+            DiagonalDistance{.x = i, .y = j, .distance = dist});
         if (i != j) {
-          diagonalDistances.emplace_back(DiagonalDistance{j, i, dist});
+          diagonalDistances.emplace_back(
+              DiagonalDistance{.x = j, .y = i, .distance = dist});
         }
       } else {
         break;
@@ -160,10 +164,10 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
     }
   }
   // sort diagonal distances by distance
-  std::sort(diagonalDistances.begin(), diagonalDistances.end(),
-            [](const DiagonalDistance& a, const DiagonalDistance& b) {
-              return a.distance < b.distance;
-            });
+  std::ranges::sort(diagonalDistances,
+                    [](const DiagonalDistance& a, const DiagonalDistance& b) {
+                      return a.distance < b.distance;
+                    });
 
   // compute swap distances
   this->swapDistances =
@@ -177,9 +181,8 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
 
       // check if one can go diagonal to reduce the swap distance
       int32_t swapDistance = 0;
-      for (auto it = diagonalDistances.rbegin(); it != diagonalDistances.rend();
-           ++it) {
-        const auto& diagonalDistance = *it;
+      for (auto& diagonalDistance :
+           std::ranges::reverse_view(diagonalDistances)) {
         while (deltaX >= diagonalDistance.x && deltaY >= diagonalDistance.y) {
           swapDistance += 1;
           deltaX -= diagonalDistance.x;
@@ -219,8 +222,7 @@ std::vector<CoordIndex> NeutralAtomArchitecture::getNN(CoordIndex idx) const {
   if (idx >= this->getNcolumns()) {
     nn.emplace_back(idx - this->getNcolumns());
   }
-  if (idx <
-      static_cast<CoordIndex>(this->getNpositions() - this->getNcolumns())) {
+  if (std::cmp_less(idx, this->getNpositions() - this->getNcolumns())) {
     nn.emplace_back(idx + this->getNcolumns());
   }
   return nn;

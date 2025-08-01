@@ -61,9 +61,13 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                    -> na::zoned::RoutingAgnosticCompiler {
         na::zoned::RoutingAgnosticCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
-        config.layoutSynthesizerConfig.placerConfig = {useWindow, windowSize,
-                                                       dynamicPlacement};
-        config.codeGeneratorConfig = {parkingOffset, warnUnsupportedGates};
+        config.layoutSynthesizerConfig.placerConfig = {.useWindow = useWindow,
+                                                       .windowSize = windowSize,
+                                                       .dynamicPlacement =
+                                                           dynamicPlacement};
+        config.codeGeneratorConfig = {.parkingOffset = parkingOffset,
+                                      .warnUnsupportedGates =
+                                          warnUnsupportedGates};
         return {arch, config};
       }),
       py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
@@ -106,10 +110,18 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         na::zoned::RoutingAwareCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
         config.layoutSynthesizerConfig.placerConfig = {
-            useWindow,       windowMinWidth,  windowRatio,
-            windowShare,     deepeningFactor, deepeningValue,
-            lookaheadFactor, reuseLevel,      maxNodes};
-        config.codeGeneratorConfig = {parkingOffset, warnUnsupportedGates};
+            .useWindow = useWindow,
+            .windowMinWidth = windowMinWidth,
+            .windowRatio = windowRatio,
+            .windowShare = windowShare,
+            .deepeningFactor = deepeningFactor,
+            .deepeningValue = deepeningValue,
+            .lookaheadFactor = lookaheadFactor,
+            .reuseLevel = reuseLevel,
+            .maxNodes = maxNodes};
+        config.codeGeneratorConfig = {.parkingOffset = parkingOffset,
+                                      .warnUnsupportedGates =
+                                          warnUnsupportedGates};
         return {arch, config};
       }),
       py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",

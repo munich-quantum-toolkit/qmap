@@ -236,7 +236,7 @@ protected:
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
   Architecture ibmQX5; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
-  Configuration settings{};
+  Configuration settings;
 
   static const std::unordered_map<std::string,
                                   std::vector<std::vector<std::int16_t>>>
@@ -244,7 +244,7 @@ protected:
 
   void SetUp() override {
     std::string cn = std::get<1>(GetParam());
-    std::replace(cn.begin(), cn.end(), '-', '_');
+    std::ranges::replace(cn, '-', '_');
     std::stringstream ss{};
     ss << cn << "_" << toString(std::get<0>(GetParam()));
     const std::string testName = ss.str();
@@ -575,7 +575,7 @@ INSTANTIATE_TEST_SUITE_P(
                         )),
     [](const testing::TestParamInfo<TestHeuristics::ParamType>& inf) {
       std::string name = std::get<1>(inf.param);
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       std::stringstream ss{};
       ss << name << "_" << toString(std::get<0>(inf.param));
       return ss.str();
@@ -696,7 +696,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         // However, if a heuristic is both principally admissible and tight,
         // it is guaranteed to always find the same solution as any other such
         // heuristic.
-        if (OPTIMAL_SOLUTIONS.find(circuitName) == OPTIMAL_SOLUTIONS.end() ||
+        if (!OPTIMAL_SOLUTIONS.contains(circuitName) ||
             OPTIMAL_SOLUTIONS.at(circuitName).size() <= i) {
           throw std::runtime_error(
               "Missing precalculated optimal solution for circuit " +
@@ -1426,7 +1426,7 @@ TEST(Functionality, InitialLayoutDump) {
   std::string line;
   bool foundPermutation = false;
   while (std::getline(qasmStream, line)) {
-    if (line.rfind("// i ", 0) == 0) {
+    if (line.starts_with("// i ")) {
       std::stringstream lineStream(line.substr(5));
       std::string entry;
       std::vector<std::uint32_t> qubits{};
@@ -1438,7 +1438,7 @@ TEST(Functionality, InitialLayoutDump) {
       const std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
       EXPECT_EQ(qubitSet.size(), qubits.size());
       for (std::uint32_t i = 0; i < qcMapped.getNqubits(); ++i) {
-        EXPECT_TRUE(qubitSet.count(i) > 0)
+        EXPECT_TRUE(qubitSet.contains(i))
             << "qubit " << std::to_string(i) << " not found in layout";
       }
       foundPermutation = true;
@@ -1453,7 +1453,7 @@ protected:
   qc::QuantumComputation qc;
   Architecture arch;
   std::unique_ptr<HeuristicMapper> mapper;
-  Configuration settings{};
+  Configuration settings;
 
   void SetUp() override {
     qc = qc::QuantumComputation{4, 4};
@@ -1552,7 +1552,7 @@ protected:
   Architecture ibmqLondon;
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
-  Configuration settings{};
+  Configuration settings;
 
   void SetUp() override {
     qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
@@ -1575,7 +1575,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "4mod5-v0_20", "mod5d1_63"),
     [](const testing::TestParamInfo<HeuristicTest5Q::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 
@@ -1617,7 +1617,7 @@ protected:
   qc::QuantumComputation qc;
   Architecture ibmQX5;
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
-  Configuration settings{};
+  Configuration settings;
 
   void SetUp() override {
     qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
@@ -1632,7 +1632,7 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values("ising_model_10", "rd73_140", "cnt3-5_179", "qft_16"),
     [](const testing::TestParamInfo<HeuristicTest16Q::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 
@@ -1679,7 +1679,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "z4_268"),
     [](const testing::TestParamInfo<HeuristicTest20Q::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 
@@ -1720,7 +1720,7 @@ INSTANTIATE_TEST_SUITE_P(
                     "4mod5-v0_20", "mod5d1_63"),
     [](const testing::TestParamInfo<HeuristicTestFidelity::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 

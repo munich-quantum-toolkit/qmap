@@ -381,7 +381,7 @@ auto NAGraphAlgorithms::computeRestingPositions(
         const auto& overlappingPairs =
             std::accumulate(tResting.cbegin(), tResting.cend(),
                             std::vector<std::pair<std::size_t, std::size_t>>(),
-                            [&](auto& acc, const auto& value) {
+                            [&](auto acc, const auto& value) {
                               if (value.first.first < pair.second &&
                                   pair.first < value.first.second) {
                                 acc.emplace_back(value.first);

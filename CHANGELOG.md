@@ -13,6 +13,13 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 - 🐍 Build Python 3.14 wheels ([#717]) ([**@denialhaag**])
 
+### Changed
+
+- **Breaking**: ⬆️ Bump minimum required `mqt-core` version to `3.2.1` ([#720]) ([**@denialhaag**])
+- **Breaking**: ⬆️ Require C++20 ([#720]) ([**@denialhaag**])
+- **Breaking**: ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
+- **Breaking**: ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
+
 ### Fixed
 
 - 🚸 Make function to export architecture in `.namachine` format available from Python ([#719]) ([**@ystade**])
@@ -24,11 +31,9 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Changed
 
-- **Breaking**: ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
-- ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
-- ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
+- **Breaking**: ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
 - ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
-- **Breaking**: ⬆️ Bump minimum required MQT Core version to `3.1.0` ([#694]) ([**@denialhaag**])
+- **Breaking**: ⬆️ Bump minimum required `mqt-core` version to `3.1.0` ([#694]) ([**@denialhaag**])
 - **Breaking**: ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
 
 ### Fixed
@@ -112,6 +117,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#720]: https://github.com/munich-quantum-toolkit/qmap/pull/720
 [#719]: https://github.com/munich-quantum-toolkit/qmap/pull/719
 [#717]: https://github.com/munich-quantum-toolkit/qmap/pull/717
 [#715]: https://github.com/munich-quantum-toolkit/qmap/pull/715

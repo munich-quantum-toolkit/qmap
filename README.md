@@ -81,7 +81,7 @@ circ_opt, results = optimize_clifford(circ)
 
 ## System Requirements and Building
 
-The implementation is compatible with any C++17 compiler, a minimum CMake version of 3.24, and Python 3.9+.
+The implementation is compatible with any C++20 compiler, a minimum CMake version of 3.24, and Python 3.9+.
 Please refer to the [documentation](https://mqt.readthedocs.io/projects/qmap) on how to build the project.
 
 Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).

@@ -62,9 +62,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       [](const qc::QuantumComputation& qc, const std::string& operationType,
          const uint64_t numControls, const bool quiet) {
         auto opTypeLowerStr = operationType;
-        std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
-                       opTypeLowerStr.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+        std::ranges::transform(opTypeLowerStr, opTypeLowerStr.begin(),
+                               [](unsigned char c) { return std::tolower(c); });
         return na::NASolver::getOpsForSolver(
             qc, qc::opTypeFromString(operationType), numControls, quiet);
       },

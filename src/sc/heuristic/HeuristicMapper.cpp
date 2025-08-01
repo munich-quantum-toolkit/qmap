@@ -699,7 +699,7 @@ void HeuristicMapper::expandNode(Node& node, std::size_t layer) {
   const auto& consideredQubits = getConsideredQubits(layer);
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture->getNqubits());
-  for (int p = 0; p < architecture->getNqubits(); ++p) {
+  for (int p = 0; std::cmp_less(p, architecture->getNqubits()); ++p) {
     usedSwaps.emplace_back(architecture->getNqubits());
   }
 
@@ -707,8 +707,8 @@ void HeuristicMapper::expandNode(Node& node, std::size_t layer) {
   const auto& perms = architecture->getCouplingMap();
   for (const auto& q : consideredQubits) {
     for (const auto& edge : perms) {
-      if (edge.first == node.locations.at(q) ||
-          edge.second == node.locations.at(q)) {
+      if (std::cmp_equal(edge.first, node.locations.at(q)) ||
+          std::cmp_equal(edge.second, node.locations.at(q))) {
         const auto q1 = node.qubits.at(edge.first);
         const auto q2 = node.qubits.at(edge.second);
         if (q2 == -1 || q1 == -1) {
@@ -842,8 +842,7 @@ void HeuristicMapper::recalculateFixedCostFidelity(std::size_t layer,
   }
   // adding cost of two qubit gates that are already mapped next to each other
   for (const auto& [edge, mult] : twoQubitGateMultiplicity) {
-    if (node.validMappedTwoQubitGates.find(edge) ==
-        node.validMappedTwoQubitGates.end()) {
+    if (!node.validMappedTwoQubitGates.contains(edge)) {
       // 2-qubit-gates not yet validly mapped are handled in the heuristic
       continue;
     }
@@ -885,13 +884,14 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
   // check if swap created or destroyed any valid mappings of qubit pairs
   for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
     const auto [q3, q4] = edge;
-    if (q3 == q1 || q3 == q2 || q4 == q1 || q4 == q2) {
+    if (std::cmp_equal(q3, q1) || std::cmp_equal(q3, q2) ||
+        std::cmp_equal(q4, q1) || std::cmp_equal(q4, q2)) {
       const auto physQ3 = static_cast<std::uint16_t>(node.locations.at(q3));
       const auto physQ4 = static_cast<std::uint16_t>(node.locations.at(q4));
       if (architecture->isEdgeConnected({physQ3, physQ4}, false)) {
         // validly mapped now
-        if (fidelityAwareHeur && node.validMappedTwoQubitGates.find(edge) ==
-                                     node.validMappedTwoQubitGates.end()) {
+        if (fidelityAwareHeur &&
+            !node.validMappedTwoQubitGates.contains(edge)) {
           // not mapped validly before
           // add cost of newly validly mapped gates
           node.costFixed +=
@@ -903,8 +903,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
         node.validMappedTwoQubitGates.emplace(edge);
       } else {
         // not mapped validly now
-        if (fidelityAwareHeur && node.validMappedTwoQubitGates.find(edge) !=
-                                     node.validMappedTwoQubitGates.end()) {
+        if (fidelityAwareHeur && node.validMappedTwoQubitGates.contains(edge)) {
           // mapped validly before
           // remove cost of now no longer validly mapped gates
           auto prevPhysQ3 = physQ3;
@@ -980,10 +979,8 @@ void HeuristicMapper::updateSharedSwaps(const Edge& swap, std::size_t layer,
   const auto q1 = node.qubits.at(swap.first);
   const auto q2 = node.qubits.at(swap.second);
   if (q1 == -1 || q2 == -1 ||
-      consideredQubits.find(static_cast<std::uint16_t>(q1)) ==
-          consideredQubits.end() ||
-      consideredQubits.find(static_cast<std::uint16_t>(q2)) ==
-          consideredQubits.end()) {
+      !consideredQubits.contains(static_cast<std::uint16_t>(q1)) ||
+      !consideredQubits.contains(static_cast<std::uint16_t>(q2))) {
     // the given swap can only be a shared swap if both qubits are active in
     // the current layer
     return;
@@ -994,21 +991,22 @@ void HeuristicMapper::updateSharedSwaps(const Edge& swap, std::size_t layer,
   Edge logEdge1 = {q1, q1};
   Edge logEdge2 = {q2, q2};
   for (const auto& [edge, multiplicity] : twoQubitGateMultiplicity) {
-    if (edge.first == q1) {
+    if (std::cmp_equal(edge.first, q1)) {
       logEdge1.second = edge.second;
-    } else if (edge.second == q1) {
+    } else if (std::cmp_equal(edge.second, q1)) {
       logEdge1.second = edge.first;
     }
-    if (edge.first == q2) {
+    if (std::cmp_equal(edge.first, q2)) {
       logEdge2.second = edge.second;
-    } else if (edge.second == q2) {
+    } else if (std::cmp_equal(edge.second, q2)) {
       logEdge2.second = edge.first;
     }
   }
   if ( // if both swapped qubits are acted on by a 2q gate
-      logEdge1.second != q1 && logEdge2.second != q2 &&
+      std::cmp_not_equal(logEdge1.second, q1) &&
+      std::cmp_not_equal(logEdge2.second, q2) &&
       // if it is not the same 2q gate acting on both qubits
-      logEdge1.second != q2) {
+      std::cmp_not_equal(logEdge1.second, q2)) {
     auto physQ3 =
         static_cast<std::uint16_t>(node.locations.at(logEdge1.second));
     auto physQ4 =
@@ -1093,8 +1091,7 @@ double HeuristicMapper::heuristicGateCountMaxDistance(std::size_t layer,
     const auto physQ2 = static_cast<std::uint16_t>(node.locations.at(q2));
 
     if (!architecture->bidirectional() &&
-        node.validMappedTwoQubitGates.find(edge) !=
-            node.validMappedTwoQubitGates.end()) {
+        node.validMappedTwoQubitGates.contains(edge)) {
       // validly mapped 2-qubit-gates
       if (!architecture->isEdgeConnected({physQ1, physQ2})) {
         costHeur =
@@ -1133,8 +1130,7 @@ double HeuristicMapper::heuristicGateCountSumDistance(std::size_t layer,
     const auto physQ2 = static_cast<std::uint16_t>(node.locations.at(q2));
 
     if (!architecture->bidirectional() &&
-        node.validMappedTwoQubitGates.find(edge) !=
-            node.validMappedTwoQubitGates.end()) {
+        node.validMappedTwoQubitGates.contains(edge)) {
       // validly mapped 2-qubit-gates
       if (!architecture->isEdgeConnected({physQ1, physQ2})) {
         costHeur += forwardMult * COST_DIRECTION_REVERSE;
@@ -1187,8 +1183,7 @@ double HeuristicMapper::heuristicGateCountSumDistanceMinusSharedSwaps(
           std::min(forwardMult, reverseMult) * COST_DIRECTION_REVERSE;
     }
 
-    if (node.validMappedTwoQubitGates.find(edge) !=
-        node.validMappedTwoQubitGates.end()) {
+    if (node.validMappedTwoQubitGates.contains(edge)) {
       // validly mapped 2-qubit-gates
       continue;
     }
@@ -1218,7 +1213,7 @@ double HeuristicMapper::heuristicGateCountSumDistanceMinusSharedSwaps(
   }
 
   // sort number of swaps in descending order
-  std::sort(nSwaps.begin(), nSwaps.end(), std::greater<>());
+  std::ranges::sort(nSwaps, std::greater<>());
 
   // infer maximum number of shared swaps
   std::size_t maxSharedSwaps = 0;
@@ -1301,10 +1296,8 @@ double HeuristicMapper::heuristicFidelityBestLocation(std::size_t layer,
     const auto [q1, q2] = edge;
     const auto [forwardMult, reverseMult] = mult;
 
-    const bool edgeDone = (node.validMappedTwoQubitGates.find(edge) !=
-                               node.validMappedTwoQubitGates.end() ||
-                           node.validMappedTwoQubitGates.find({q1, q2}) !=
-                               node.validMappedTwoQubitGates.end());
+    const bool edgeDone = (node.validMappedTwoQubitGates.contains(edge) ||
+                           node.validMappedTwoQubitGates.contains({q1, q2}));
 
     // find the optimal edge, to which to remap the given virtual qubit
     // pair and take the cost of moving it there via swaps plus the

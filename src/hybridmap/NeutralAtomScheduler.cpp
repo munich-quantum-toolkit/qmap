@@ -167,8 +167,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
     std::cout << "nAodActivate: " << nAodActivate << "\n";
   }
 
-  const auto maxExecutionTime =
-      *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
+  const auto maxExecutionTime = *std::ranges::max_element(totalExecutionTimes);
   const auto totalIdleTime =
       maxExecutionTime * arch.getNqubits() - totalGateTime;
   const auto totalFidelities =
@@ -189,8 +188,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
 void na::NeutralAtomScheduler::printSchedulerResults(
     std::vector<qc::fp>& totalExecutionTimes, qc::fp totalIdleTime,
     qc::fp totalGateFidelities, qc::fp totalFidelities, uint32_t nCZs) {
-  auto totalExecutionTime =
-      *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
+  auto totalExecutionTime = *std::ranges::max_element(totalExecutionTimes);
   std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
   std::cout << "totalIdleTime: " << totalIdleTime << "\n";
   std::cout << "totalGateFidelities: " << totalGateFidelities << "\n";
