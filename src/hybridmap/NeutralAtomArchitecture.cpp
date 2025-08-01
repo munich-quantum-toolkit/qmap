@@ -221,8 +221,7 @@ std::vector<CoordIndex> NeutralAtomArchitecture::getNN(CoordIndex idx) const {
   if (idx >= this->getNcolumns()) {
     nn.emplace_back(idx - this->getNcolumns());
   }
-  if (idx <
-      static_cast<CoordIndex>(this->getNpositions() - this->getNcolumns())) {
+  if (std::cmp_less(idx, this->getNpositions() - this->getNcolumns())) {
     nn.emplace_back(idx + this->getNcolumns());
   }
   return nn;

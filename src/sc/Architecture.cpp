@@ -354,8 +354,7 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
 
     // in case no solution has been found using less than `limit` swaps, search
     // can be aborted
-    if (tryToAbortEarly &&
-        current.nswaps >= static_cast<std::uint64_t>(limit)) {
+    if (tryToAbortEarly && std::cmp_greater_equal(current.nswaps, limit)) {
       return static_cast<std::uint64_t>(limit + 1U);
     }
 

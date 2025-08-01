@@ -699,7 +699,7 @@ void HeuristicMapper::expandNode(Node& node, std::size_t layer) {
   const auto& consideredQubits = getConsideredQubits(layer);
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture->getNqubits());
-  for (int p = 0; p < architecture->getNqubits(); ++p) {
+  for (int p = 0; std::cmp_less(p, architecture->getNqubits()); ++p) {
     usedSwaps.emplace_back(architecture->getNqubits());
   }
 
@@ -707,8 +707,8 @@ void HeuristicMapper::expandNode(Node& node, std::size_t layer) {
   const auto& perms = architecture->getCouplingMap();
   for (const auto& q : consideredQubits) {
     for (const auto& edge : perms) {
-      if (edge.first == node.locations.at(q) ||
-          edge.second == node.locations.at(q)) {
+      if (std::cmp_equal(edge.first, node.locations.at(q)) ||
+          std::cmp_equal(edge.second, node.locations.at(q))) {
         const auto q1 = node.qubits.at(edge.first);
         const auto q2 = node.qubits.at(edge.second);
         if (q2 == -1 || q1 == -1) {
@@ -884,7 +884,8 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
   // check if swap created or destroyed any valid mappings of qubit pairs
   for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
     const auto [q3, q4] = edge;
-    if (q3 == q1 || q3 == q2 || q4 == q1 || q4 == q2) {
+    if (std::cmp_equal(q3, q1) || std::cmp_equal(q3, q2) ||
+        std::cmp_equal(q4, q1) || std::cmp_equal(q4, q2)) {
       const auto physQ3 = static_cast<std::uint16_t>(node.locations.at(q3));
       const auto physQ4 = static_cast<std::uint16_t>(node.locations.at(q4));
       if (architecture->isEdgeConnected({physQ3, physQ4}, false)) {
@@ -990,21 +991,22 @@ void HeuristicMapper::updateSharedSwaps(const Edge& swap, std::size_t layer,
   Edge logEdge1 = {q1, q1};
   Edge logEdge2 = {q2, q2};
   for (const auto& [edge, multiplicity] : twoQubitGateMultiplicity) {
-    if (edge.first == q1) {
+    if (std::cmp_equal(edge.first, q1)) {
       logEdge1.second = edge.second;
-    } else if (edge.second == q1) {
+    } else if (std::cmp_equal(edge.second, q1)) {
       logEdge1.second = edge.first;
     }
-    if (edge.first == q2) {
+    if (std::cmp_equal(edge.first, q2)) {
       logEdge2.second = edge.second;
-    } else if (edge.second == q2) {
+    } else if (std::cmp_equal(edge.second, q2)) {
       logEdge2.second = edge.first;
     }
   }
   if ( // if both swapped qubits are acted on by a 2q gate
-      logEdge1.second != q1 && logEdge2.second != q2 &&
+      std::cmp_not_equal(logEdge1.second, q1) &&
+      std::cmp_not_equal(logEdge2.second, q2) &&
       // if it is not the same 2q gate acting on both qubits
-      logEdge1.second != q2) {
+      std::cmp_not_equal(logEdge1.second, q2)) {
     auto physQ3 =
         static_cast<std::uint16_t>(node.locations.at(logEdge1.second));
     auto physQ4 =

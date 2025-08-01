@@ -111,8 +111,10 @@ void Mapper::processDisjoint2qBlockLayer(
 
       if (*lastLayer.at(*control) == *lastLayer.at(target)) {
         for (auto& g : layers.at(layer - 1)) {
-          if ((g.control == *control && g.target == target) ||
-              (g.control == target && g.target == *control)) {
+          if ((std::cmp_equal(g.control, *control) &&
+               std::cmp_equal(g.target, target)) ||
+              (std::cmp_equal(g.control, target) &&
+               std::cmp_equal(g.target, *control))) {
             // if last layer contained gate with equivalent qubit set, use that
             // layer
             --layer;
@@ -256,7 +258,7 @@ void Mapper::createLayers() {
         activeQubits[i].emplace(gate.target);
         activeQubits2QGates[i].emplace(gate.control);
         activeQubits2QGates[i].emplace(gate.target);
-        if (gate.control >= gate.target) {
+        if (std::cmp_greater_equal(gate.control, gate.target)) {
           const auto edge =
               std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
           if (!twoQubitMultiplicities[i].contains(edge)) {
