@@ -179,9 +179,8 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
 
       // check if one can go diagonal to reduce the swap distance
       int32_t swapDistance = 0;
-      for (auto it = diagonalDistances.rbegin(); it != diagonalDistances.rend();
-           ++it) {
-        const auto& diagonalDistance = *it;
+      for (auto& diagonalDistance :
+           std::ranges::reverse_view(diagonalDistances)) {
         while (deltaX >= diagonalDistance.x && deltaY >= diagonalDistance.y) {
           swapDistance += 1;
           deltaX -= diagonalDistance.x;

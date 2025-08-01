@@ -34,6 +34,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <string>
@@ -347,9 +348,7 @@ void ExactMapper::map(const Configuration& settings) {
     if (!mappingSwaps.empty() && swapsIterator != mappingSwaps.end() &&
         layerIterator != reducedLayerIndices.end() && i == *layerIterator) {
       // apply swaps before layer
-      for (auto it = (*swapsIterator).rbegin(); it != (*swapsIterator).rend();
-           ++it) {
-        const auto& [q0, q1] = *it;
+      for (auto [q0, q1] : std::ranges::reverse_view(*swapsIterator)) {
         const auto logical0 = static_cast<qc::Qubit>(qubits.at(q0));
         const auto logical1 = static_cast<qc::Qubit>(qubits.at(q1));
         qcMapped.swap(q0, q1);
