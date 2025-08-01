@@ -1426,7 +1426,7 @@ TEST(Functionality, InitialLayoutDump) {
   std::string line;
   bool foundPermutation = false;
   while (std::getline(qasmStream, line)) {
-    if (line.rfind("// i ", 0) == 0) {
+    if (line.starts_with("// i ")) {
       std::stringstream lineStream(line.substr(5));
       std::string entry;
       std::vector<std::uint32_t> qubits{};
