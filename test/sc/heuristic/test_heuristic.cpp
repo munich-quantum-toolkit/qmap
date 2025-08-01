@@ -236,7 +236,7 @@ protected:
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
   Architecture ibmQX5; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
-  Configuration settings{};
+  Configuration settings;
 
   static const std::unordered_map<std::string,
                                   std::vector<std::vector<std::int16_t>>>
@@ -1453,7 +1453,7 @@ protected:
   qc::QuantumComputation qc;
   Architecture arch;
   std::unique_ptr<HeuristicMapper> mapper;
-  Configuration settings{};
+  Configuration settings;
 
   void SetUp() override {
     qc = qc::QuantumComputation{4, 4};
@@ -1552,7 +1552,7 @@ protected:
   Architecture ibmqLondon;
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
-  Configuration settings{};
+  Configuration settings;
 
   void SetUp() override {
     qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
@@ -1617,7 +1617,7 @@ protected:
   qc::QuantumComputation qc;
   Architecture ibmQX5;
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
-  Configuration settings{};
+  Configuration settings;
 
   void SetUp() override {
     qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");

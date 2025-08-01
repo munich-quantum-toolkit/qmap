@@ -40,7 +40,7 @@ protected:
   std::string testCalibrationDir = "../../../extern/calibration/";
 
   qc::QuantumComputation qc;
-  Configuration settings{};
+  Configuration settings;
   Architecture ibmqYorktown;
   Architecture ibmqLondon;
   Architecture ibmQX4;
