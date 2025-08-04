@@ -64,17 +64,17 @@ void parseLine(const std::string& line, char separator,
   std::string word;
   bool inEscape = false;
   for (const char c : line) {
-    if (ignoredChars.find(c) != ignoredChars.end()) {
+    if (ignoredChars.contains(c)) {
       continue;
     }
     if (inEscape) {
-      if (escapeChars.find(c) != escapeChars.end()) {
+      if (escapeChars.contains(c)) {
         inEscape = false;
       } else {
         word += c;
       }
     } else {
-      if (escapeChars.find(c) != escapeChars.end()) {
+      if (escapeChars.contains(c)) {
         inEscape = true;
       } else if (c == separator) {
         result.emplace_back(word);
@@ -488,8 +488,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   }
 
   auto stabilizers = line;
-  stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
-                    stabilizers.end());
+  std::erase_if(stabilizers, isspace);
 
   if (stabilizers[0] == '[') {
     if (stabilizers[stabilizers.size() - 1] == ']') {

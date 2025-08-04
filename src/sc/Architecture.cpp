@@ -204,7 +204,7 @@ void Architecture::createDistanceTable() {
   Matrix edgeWeights(nqubits, std::vector<double>(
                                   nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
-    if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
+    if (!couplingMap.contains({edge.second, edge.first})) {
       // unidirectional edge
       isBidirectional = false;
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
@@ -258,7 +258,7 @@ void Architecture::createFidelityTable() {
           1.0 - properties.getTwoQubitErrorRate(first, second);
       twoQubitFidelityCosts[first][second] =
           -std::log2(fidelityTable[first][second]);
-      if (couplingMap.find({second, first}) == couplingMap.end()) {
+      if (!couplingMap.contains({second, first})) {
         // CNOT reversal (unidirectional edge q1 -> q2):
         // CX(q2,q1) = H(q1) H(q2) CX(q1,q2) H(q1) H(q2)
         twoQubitFidelityCosts[second][first] =
@@ -324,13 +324,13 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
   std::set<Edge> possibleSwaps{};
   for (const auto& edge : couplingMap) {
     // only use SWAPs between qubits that are currently being considered
-    if (qubits.count(edge.first) == 0 || qubits.count(edge.second) == 0) {
+    if (!qubits.contains(edge.first) || !qubits.contains(edge.second)) {
       continue;
     }
 
     if (!bidirectional() ||
-        (possibleSwaps.count(edge) == 0 &&
-         possibleSwaps.count({edge.second, edge.first}) == 0)) {
+        (!possibleSwaps.contains(edge) &&
+         !possibleSwaps.contains({edge.second, edge.first}))) {
       possibleSwaps.emplace(edge);
     }
   }
@@ -354,8 +354,7 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
 
     // in case no solution has been found using less than `limit` swaps, search
     // can be aborted
-    if (tryToAbortEarly &&
-        current.nswaps >= static_cast<std::uint64_t>(limit)) {
+    if (tryToAbortEarly && std::cmp_greater_equal(current.nswaps, limit)) {
       return static_cast<std::uint64_t>(limit + 1U);
     }
 
@@ -417,13 +416,13 @@ void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
   std::set<Edge> possibleSwaps{};
   for (const auto& edge : couplingMap) {
     // only use SWAPs between qubits that are currently being considered
-    if (qubits.count(edge.first) == 0 || qubits.count(edge.second) == 0) {
+    if (!qubits.contains(edge.first) || !qubits.contains(edge.second)) {
       continue;
     }
 
     if (!bidirectional() ||
-        (possibleSwaps.count(edge) == 0 &&
-         possibleSwaps.count({edge.second, edge.first}) == 0)) {
+        (!possibleSwaps.contains(edge) &&
+         !possibleSwaps.contains({edge.second, edge.first}))) {
       possibleSwaps.emplace(edge);
     }
   }
@@ -501,12 +500,11 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
     d.resize(nQubits);
-    std::fill(d.begin(), d.end(), 0);
+    std::ranges::fill(d, 0);
     visited.clear();
-    visited.resize(nQubits);
-    std::fill(visited.begin(), visited.end(), false);
+    visited.resize(nQubits, false);
     findCouplingLimit(q, 0, connections, d, visited);
-    auto it = std::max_element(d.begin(), d.end());
+    auto it = std::ranges::max_element(d);
     maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
@@ -521,7 +519,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& [q0, q1] : cm) {
-    if ((qubitChoice.count(q0) != 0U) && (qubitChoice.count(q1) != 0U)) {
+    if ((qubitChoice.contains(q0)) && (qubitChoice.contains(q1))) {
       connections.at(q0).emplace(q1);
       // make sure that the connections are bidirectional
       connections.at(q1).emplace(q0);
@@ -533,12 +531,11 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
     }
     d.clear();
     d.resize(nQubits);
-    std::fill(d.begin(), d.end(), 0);
+    std::ranges::fill(d, 0);
     visited.clear();
-    visited.resize(nQubits);
-    std::fill(visited.begin(), visited.end(), false);
+    visited.resize(nQubits, false);
     findCouplingLimit(q, 0, connections, d, visited);
-    auto it = std::max_element(d.begin(), d.end());
+    auto it = std::ranges::max_element(d);
     maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
@@ -633,8 +630,7 @@ void Architecture::getReducedCouplingMap(const QubitSubset& qubitChoice,
         getFullyConnectedMap(static_cast<std::uint16_t>(qubitChoice.size()));
   } else {
     for (const auto& [q0, q1] : couplingMap) {
-      if (qubitChoice.find(q0) != qubitChoice.end() &&
-          qubitChoice.find(q1) != qubitChoice.end()) {
+      if (qubitChoice.contains(q0) && qubitChoice.contains(q1)) {
         reducedMap.emplace(q0, q1);
       }
     }

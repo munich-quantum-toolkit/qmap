@@ -20,6 +20,7 @@
 #include <iterator>
 #include <limits>
 #include <queue>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <vector>
@@ -218,11 +219,11 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
     queue.pop();
     auto nearbyCoords = this->arch->getNN(currentCoord);
     for (const auto& nearbyCoord : nearbyCoords) {
-      if (std::find(visited.rbegin(), visited.rend(), nearbyCoord) ==
+      if (std::ranges::find(std::ranges::reverse_view(visited), nearbyCoord) ==
           visited.rend()) {
         visited.emplace(nearbyCoord);
         if (!this->isMapped(nearbyCoord) &&
-            std::find(excludeCoord.begin(), excludeCoord.end(), nearbyCoord) ==
+            std::ranges::find(excludeCoord, nearbyCoord) ==
                 excludeCoord.end()) {
           if (!foundClosest) {
             closestFreeCoords.emplace_back(nearbyCoord);
