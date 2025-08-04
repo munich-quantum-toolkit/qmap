@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.3.0] - 2025-08-04
+
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#330)._
+
 ### Added
 
 - 🐍 Build Python 3.14 wheels ([#717]) ([**@denialhaag**])
@@ -106,13 +110,14 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.2.0...HEAD
-[3.2.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.3...v3.2.0
-[3.1.3]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.2...v3.1.3
-[3.1.2]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.1...v3.1.2
-[3.1.1]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...v3.1.1
-[3.1.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.0.0...v3.1.0
-[3.0.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v2.8.0...v3.0.0
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.3.0
+[3.2.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.2.0
+[3.1.3]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.1.3
+[3.1.2]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.1.2
+[3.1.1]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.1.1
+[3.1.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.1.0
+[3.0.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.0.0
 [2.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v2.8.0
 
 <!-- PR links -->
