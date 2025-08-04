@@ -445,11 +445,12 @@ NeutralAtomMapper::initSwaps(const GateList& layer) {
     }
   }
   // sort and remove duplicates from moveExact
-  swapExact.erase(std::unique(swapExact.begin(), swapExact.end(),
-                              [](const auto& swap1, const auto& swap2) {
-                                return swap1.first == swap2.first;
-                              }),
-                  swapExact.end());
+  std::ranges::sort(swapExact, [](const auto& a, const auto& b) {
+    return a.first < b.first;
+  });
+  auto newEnd = std::ranges::unique(swapExact, {},
+                                    &decltype(swapExact)::value_type::first);
+  swapExact.erase(newEnd.begin(), newEnd.end());
   return {swapCloseBy, swapExact};
 }
 
