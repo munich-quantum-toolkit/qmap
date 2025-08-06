@@ -38,6 +38,15 @@ public:
      * used
      */
     bool warnUnsupportedGates = true;
+    /**
+     * Allow reordering of the atoms in the computation.
+     * @details While loading the atoms, the atoms are loaded row-wise. If this
+     * flag is set to true, the already loaded rows of atom can move before the
+     * next row is loaded. This allows the reordering of rows atoms during the
+     * loading. Analogously, the reordering of columns is performed while
+     * storing the atoms.
+     */
+    bool allowReordering = false;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, parkingOffset,
                                                 warnUnsupportedGates);
   };
