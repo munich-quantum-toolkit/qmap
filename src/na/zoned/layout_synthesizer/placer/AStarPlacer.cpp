@@ -837,7 +837,8 @@ auto AStarPlacer::placeAtomsInStorageZone(
         architecture_.get().nearestStorageSite(previousSLM, previousRow,
                                                previousCol);
     uint8_t discreteColumnOfNearestSite = 0;
-    const auto& it = discreteTargetColumns.find(std::pair{std::cref(nearestSLM), nearestCol});
+    const auto& it = discreteTargetColumns.find(
+        std::pair{std::cref(nearestSLM), nearestCol});
     if (it != discreteTargetColumns.end()) {
       discreteColumnOfNearestSite = it->second;
     } else {
@@ -847,10 +848,11 @@ auto AStarPlacer::placeAtomsInStorageZone(
       for (const auto& [SlmColumn, discreteColumn] : discreteTargetColumns) {
         const auto& [slm, column] = SlmColumn;
         if (slm.get() == nearestSLM.get()) {
-          if (std::abs(static_cast<int64_t>(column) - static_cast<int64_t>(nearestCol)) <
-              distance) {
+          if (std::abs(static_cast<int64_t>(column) -
+                       static_cast<int64_t>(nearestCol)) < distance) {
             discreteColumnOfNearestSite = discreteColumn;
-            distance = std::abs(static_cast<int64_t>(column) - static_cast<int64_t>(nearestCol));
+            distance = std::abs(static_cast<int64_t>(column) -
+                                static_cast<int64_t>(nearestCol));
           }
         }
       }

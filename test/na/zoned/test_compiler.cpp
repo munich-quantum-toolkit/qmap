@@ -195,8 +195,7 @@ constexpr std::string_view architectureSpecification727 = R"({
 TEST(RoutingAwareCompilerTest, Issue727) {
   qc::QuantumComputation circ(50);
   circ.cz(0, 3);
-  const auto arch = Architecture::fromJSONString(
-                                       architectureSpecification727);
+  const auto arch = Architecture::fromJSONString(architectureSpecification727);
   RoutingAwareCompiler compiler(arch);
   const auto& code = compiler.compile(circ);
   EXPECT_TRUE(code.validate().first);
