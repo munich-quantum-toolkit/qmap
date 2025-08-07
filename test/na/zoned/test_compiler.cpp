@@ -129,4 +129,76 @@ constexpr std::string_view routingAwareConfiguration = R"({
 /*============================== INSTANTIATIONS ==============================*/
 COMPILER_TEST(RoutingAgnosticCompiler, routingAgnosticConfiguration);
 COMPILER_TEST(RoutingAwareCompiler, routingAwareConfiguration);
+
+// Tests that the bug described in issue
+// https://github.com/munich-quantum-toolkit/qmap/issues/727 is fixed.
+constexpr std::string_view architectureSpecification727 = R"({
+  "name": "Architecture with one entanglement and one storage zone",
+  "operation_duration": {
+    "rydberg_gate": 0.36,
+    "single_qubit_gate": 52,
+    "atom_transfer": 15
+  },
+  "operation_fidelity": {
+    "rydberg_gate": 0.995,
+    "single_qubit_gate": 0.9997,
+    "atom_transfer": 0.999
+  },
+  "qubit_spec": { "T": 1.5e6 },
+  "storage_zones": [
+    {
+      "zone_id": 0,
+      "slms": [
+        {
+          "id": 0,
+          "site_separation": [3, 3],
+          "r": 5,
+          "c": 10,
+          "location": [42, 30]
+        }
+      ],
+      "offset": [0, 0],
+      "dimension": [297, 57]
+    }
+  ],
+  "entanglement_zones": [
+    {
+      "zone_id": 0,
+      "slms": [
+        {
+          "id": 1,
+          "site_separation": [12, 10],
+          "r": 2,
+          "c": 4,
+          "location": [35, 67]
+        },
+        {
+          "id": 2,
+          "site_separation": [12, 10],
+          "r": 2,
+          "c": 4,
+          "location": [37, 67]
+        }
+      ],
+      "offset": [35, 67],
+      "dimension": [230, 60]
+    }
+  ],
+  "aods": [{ "id": 0, "site_separation": 2, "r": 100, "c": 100 }],
+  "rydberg_range": [
+    [
+      [30, 62],
+      [80, 82]
+    ]
+  ]
+})";
+
+TEST(RoutingAwareCompilerTest, Issue727) {
+  qc::QuantumComputation circ(50);
+  circ.cz(0, 3);
+  const auto arch = Architecture::fromJSONString(architectureSpecification727);
+  RoutingAwareCompiler compiler(arch);
+  const auto& code = compiler.compile(circ);
+  EXPECT_TRUE(code.validate().first);
+}
 } // namespace na::zoned

@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Fixed
+
+- 🐛 Fix lookup of discrete columns in routing-aware compiler ([#728]) ([**@ystade**])
+
 ## [3.3.0] - 2025-08-04
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#330)._
@@ -122,6 +126,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728
 [#720]: https://github.com/munich-quantum-toolkit/qmap/pull/720
 [#719]: https://github.com/munich-quantum-toolkit/qmap/pull/719
 [#717]: https://github.com/munich-quantum-toolkit/qmap/pull/717
