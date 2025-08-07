@@ -130,7 +130,8 @@ constexpr std::string_view routingAwareConfiguration = R"({
 COMPILER_TEST(RoutingAgnosticCompiler, routingAgnosticConfiguration);
 COMPILER_TEST(RoutingAwareCompiler, routingAwareConfiguration);
 
-// Tests that the bug described in issue https://github.com/munich-quantum-toolkit/qmap/issues/727 is fixed.
+// Tests that the bug described in issue
+// https://github.com/munich-quantum-toolkit/qmap/issues/727 is fixed.
 constexpr std::string_view architectureSpecification727 = R"({
   "name": "Architecture with one entanglement and one storage zone",
   "operation_duration": {
