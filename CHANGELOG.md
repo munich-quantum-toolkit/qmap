@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Fixed
 
-- 🐛 Fix Lookup of Discrete Columns in routing-aware Compiler ([#728]) ([**@ystade**])
+- 🐛 Fix lookup of discrete columns in routing-aware compiler ([#728]) ([**@ystade**])
 
 ## [3.3.0] - 2025-08-04
 
