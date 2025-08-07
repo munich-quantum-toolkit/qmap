@@ -848,8 +848,9 @@ auto AStarPlacer::placeAtomsInStorageZone(
       for (const auto& [SlmColumn, discreteColumn] : discreteTargetColumns) {
         const auto& [slm, column] = SlmColumn;
         if (slm.get() == nearestSLM.get()) {
-          if (const auto currentDistance = std::abs(static_cast<int64_t>(column) -
-                       static_cast<int64_t>(nearestCol)) < minDistance) {
+          if (const auto currentDistance =
+                  std::abs(static_cast<int64_t>(column) -
+                           static_cast<int64_t>(nearestCol)) < minDistance) {
             discreteColumnOfNearestSite = discreteColumn;
             minDistance = currentDistance;
           }
