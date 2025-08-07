@@ -844,15 +844,14 @@ auto AStarPlacer::placeAtomsInStorageZone(
     } else {
       // distance of the actual (occupied) nearest column and a column with free
       // sites
-      int64_t distance = std::numeric_limits<int64_t>::max();
+      int64_t minDistance = std::numeric_limits<int64_t>::max();
       for (const auto& [SlmColumn, discreteColumn] : discreteTargetColumns) {
         const auto& [slm, column] = SlmColumn;
         if (slm.get() == nearestSLM.get()) {
-          if (std::abs(static_cast<int64_t>(column) -
-                       static_cast<int64_t>(nearestCol)) < distance) {
+          if (const auto currentDistance = std::abs(static_cast<int64_t>(column) -
+                       static_cast<int64_t>(nearestCol)) < minDistance) {
             discreteColumnOfNearestSite = discreteColumn;
-            distance = std::abs(static_cast<int64_t>(column) -
-                                static_cast<int64_t>(nearestCol));
+            minDistance = currentDistance;
           }
         }
       }
