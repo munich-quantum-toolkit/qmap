@@ -73,10 +73,8 @@ api/mqt/qmap/index
 ````{only} html
 ## Contributors and Supporters
 
-The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/)
-and supported by the [Munich Quantum Software Company (MQSC)](https://munichquantum.software).
-Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem,
-which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
+The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) and supported by the [Munich Quantum Software Company (MQSC)](https://munichquantum.software).
+Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem, which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
 
 <div style="margin-top: 0.5em">
 <div class="only-light" align="center">
@@ -87,11 +85,11 @@ which is being developed as part of the [Munich Quantum Valley (MQV)](https://ww
 </div>
 </div>
 
-Thank you to all the contributors who have helped make MQT Core a reality!
+Thank you to all the contributors who have helped make MQT QMAP a reality!
 
 <p align="center">
-<a href="https://github.com/munich-quantum-toolkit/core/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/core" />
+<a href="https://github.com/munich-quantum-toolkit/qmap/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/qmap" />
 </a>
 </p>
 
