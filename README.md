@@ -73,12 +73,6 @@ To support this endeavor, please consider:
 
 ## Getting Started
 
-<p align="center">
-  <a href="https://arxiv.org/abs/2301.11935">
-  <img width=30% src="https://img.shields.io/badge/overview paper-blue?style=for-the-badge&logo=arxiv" alt="Overview Paper" />
-  </a>
-</p>
-
 QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.9 to 3.14.
 
 ```console
@@ -129,6 +123,23 @@ Please refer to the [documentation](https://mqt.readthedocs.io/projects/qmap) on
 Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
 
 ## Cite This
+
+If you want to cite MQT QMAP, please use the following BibTeX entry:
+
+```bibtex
+@inproceedings{wille2023MQTQMAP,
+    title     = {{{MQT QMAP}}: {{Efficient}} Quantum Circuit Mapping},
+    author    = {Robert Wille and Lukas Burgholzer},
+    year      = {2023},
+    publisher = {Association for Computing Machinery},
+    series    = {ISPD '23},
+    pages     = {198–204},
+    doi       = {10.1145/3569052.3578928},
+    url       = {https://doi.org/10.1145/3569052.3578928},
+}
+```
+
+## References
 
 QMAP has been developed based on methods proposed in the following papers:
 

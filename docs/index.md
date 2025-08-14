@@ -70,7 +70,7 @@ development_guide
 api/mqt/qmap/index
 ```
 
-```{only} html
+````{only} html
 ## Contributors and Supporters
 
 The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/)
@@ -109,4 +109,21 @@ To support this endeavor, please consider:
 <p align="center">
 <iframe src="https://github.com/sponsors/munich-quantum-toolkit/button" title="Sponsor munich-quantum-toolkit" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
 </p>
+
+## Cite This
+
+If you want to cite MQT QMAP, please use the following BibTeX entry:
+
+```bibtex
+@inproceedings{wille2023MQTQMAP,
+    title     = {{{MQT QMAP}}: {{Efficient}} Quantum Circuit Mapping},
+    author    = {Robert Wille and Lukas Burgholzer},
+    year      = {2023},
+    publisher = {Association for Computing Machinery},
+    series    = {ISPD '23},
+    pages     = {198–204},
+    doi       = {10.1145/3569052.3578928},
+    url       = {https://doi.org/10.1145/3569052.3578928},
+}
 ```
+````
