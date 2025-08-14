@@ -8,16 +8,16 @@
 
 <p align="center">
   <a href="https://mqt.readthedocs.io">
-   <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/munich-quantum-toolkit/.github/refs/heads/main/docs/_static/mqt-banner-dark.svg" width="90%">
-     <img src="https://raw.githubusercontent.com/munich-quantum-toolkit/.github/refs/heads/main/docs/_static/mqt-banner-light.svg" width="90%" alt="MQT Banner">
-   </picture>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/munich-quantum-toolkit/.github/refs/heads/main/docs/_static/mqt-banner-dark.svg" width="90%">
+      <img src="https://raw.githubusercontent.com/munich-quantum-toolkit/.github/refs/heads/main/docs/_static/mqt-banner-light.svg" width="90%" alt="MQT Banner">
+    </picture>
   </a>
 </p>
 
 # MQT QMAP - A tool for Quantum Circuit Compilation
 
-A tool for quantum circuit compilation developed as part of the [_Munich Quantum Toolkit (MQT)_](https://mqt.readthedocs.io) [^1].
+A tool for quantum circuit compilation developed as part of the [_Munich Quantum Toolkit (MQT)_](https://mqt.readthedocs.io).
 It builds upon [MQT Core](https://github.com/munich-quantum-toolkit/core), which forms the backbone of the MQT.
 
 <p align="center">
@@ -26,8 +26,50 @@ It builds upon [MQT Core](https://github.com/munich-quantum-toolkit/core), which
   </a>
 </p>
 
-If you have any questions,
-feel free to create a [discussion](https://github.com/munich-quantum-toolkit/qmap/discussions) or an [issue](https://github.com/munich-quantum-toolkit/qmap/issues) on [GitHub](https://github.com/munich-quantum-toolkit/qmap).
+## Key Features
+
+- Point 1
+- Point 2
+- Point 3
+
+If you have any questions, feel free to create a [discussion](https://github.com/munich-quantum-toolkit/qmap/discussions) or an [issue](https://github.com/munich-quantum-toolkit/qmap/issues) on [GitHub](https://github.com/munich-quantum-toolkit/qmap).
+
+## Contributors and Supporters
+
+The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) and supported by the [Munich Quantum Software Company (MQSC)](https://munichquantum.software).
+Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem, which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/munich-quantum-toolkit/.github/refs/heads/main/docs/_static/mqt-logo-banner-dark.svg" width="90%">
+    <img src="https://raw.githubusercontent.com/munich-quantum-toolkit/.github/refs/heads/main/docs/_static/mqt-logo-banner-light.svg" width="90%" alt="MQT Partner Logos">
+  </picture>
+</p>
+
+Thank you to all the contributors who have helped make MQT Core a reality!
+
+<p align="center">
+  <a href="https://github.com/munich-quantum-toolkit/qmap/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/qmap" />
+  </a>
+</p>
+
+The MQT will remain free, open-source, and permissively licensed—now and in the future.
+We are firmly committed to keeping it open and actively maintained for the quantum computing community.
+
+To support this endeavor, please consider:
+
+- Sponsoring us on GitHub: https://github.com/sponsors/munich-quantum-toolkit
+- Starring and sharing our repositories: https://github.com/munich-quantum-toolkit
+- Contributing code, documentation, tests, or examples via issues and pull requests
+- Citing the MQT in your publications (see [Cite This](#cite-this))
+- Using the MQT in research and teaching, and sharing feedback and use cases
+
+<p align="center">
+  <a href="https://github.com/sponsors/munich-quantum-toolkit">
+  <img width=20% src="https://img.shields.io/badge/Sponsor-white?style=for-the-badge&logo=githubsponsors&labelColor=black&color=blue" alt="Sponsor the MQT" />
+  </a>
+</p>
 
 ## Getting Started
 
@@ -37,7 +79,7 @@ feel free to create a [discussion](https://github.com/munich-quantum-toolkit/qma
   </a>
 </p>
 
-QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.9 to 3.13.
+QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.9 to 3.14.
 
 ```console
 (venv) $ pip install mqt.qmap
@@ -86,7 +128,7 @@ Please refer to the [documentation](https://mqt.readthedocs.io/projects/qmap) on
 
 Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
 
-## References
+## Cite This
 
 QMAP has been developed based on methods proposed in the following papers:
 
@@ -141,8 +183,6 @@ In _Design, Automation and Test in Europe_, 2024.
 [[13]](https://www.cda.cit.tum.de/files/eda/2025_iccad_routing-aware_placement_zoned_neutral_atom.pdf)
 Y. Stade, W.-H. Lin, J. Cong, and R. Wille. Routing-Aware Placement for Zoned Neutral Atom-based Quantum Computing.
 In _Int'l Conference on CAD_, 2025.
-
-[^1]: The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is a collection of software tools for quantum computing developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) as well as the [Munich Quantum Software Company (MQSC)](https://munichquantum.software). Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem, which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
 
 ---
 
