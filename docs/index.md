@@ -12,10 +12,10 @@ MQT QMAP is fully compatible with Qiskit 1.0 and above.
 
 We recommend you to start with the {doc}`installation instructions <installation>` or by reading our overview paper {cite:p}`wille2023qmap`.
 Then proceed to the {doc}`mapping page <mapping>`, the {doc}`synthesis/optimization page <synthesis>`, the {doc}`neutral atom state preparation page <na_state_prep>`, or the {doc}`zoned neutral atom compiler <na_zoned_compiler>`, and read the {doc}`reference documentation <api/mqt/qmap/index>`.
-If you are interested in the theory behind QMAP, have a look at the publications in the {doc}`publication list <references>`.
+If you are interested in the theory behind MQT QMAP, have a look at the publications in the {doc}`publication list <references>`.
 
 We appreciate any feedback and contributions to the project. If you want to contribute, you can find more information in the {doc}`Contribution <contributing>` guide.
-If you are having trouble with the installation or the usage of QMAP, please let us know at our {doc}`Support <support>` page or by reaching out to us at [quantum.cda@xcit.tum.de](mailto:quantum.cda@xcit.tum.de).
+If you are having trouble with the installation or the usage of MQT QMAP, please let us know at our {doc}`Support <support>` page or by reaching out to us at [quantum.cda@xcit.tum.de](mailto:quantum.cda@xcit.tum.de).
 
 ````{only} latex
 ```{note}
@@ -70,7 +70,7 @@ development_guide
 api/mqt/qmap/index
 ```
 
-````{only} html
+```{only} html
 ## Contributors and Supporters
 
 The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) and supported by the [Munich Quantum Software Company (MQSC)](https://munichquantum.software).
@@ -93,35 +93,18 @@ Thank you to all the contributors who have helped make MQT QMAP a reality!
 </a>
 </p>
 
-The MQT will remain free, open-source, and permissively licensednow—and in the future.
+The MQT will remain free, open-source, and permissively licensed—now and in the future.
 We are firmly committed to keeping it open and actively maintained for the quantum computing community.
 
 To support this endeavor, please consider:
 
-- [Sponsoring us on GitHub](https://github.com/sponsors/munich-quantum-toolkit)
-- [Starring and sharing our repositories](https://github.com/munich-quantum-toolkit)
+- Starring and sharing our repositories: [https://github.com/munich-quantum-toolkit](https://github.com/munich-quantum-toolkit)
 - Contributing code, documentation, tests, or examples via issues and pull requests
-- Citing the MQT in your publications (see [Cite This](#cite-this))
+- Citing the MQT in your publications (see {doc}`References <references>`)
 - Using the MQT in research and teaching, and sharing feedback and use cases
+- Sponsoring us on GitHub: [https://github.com/sponsors/munich-quantum-toolkit](https://github.com/sponsors/munich-quantum-toolkit)
 
 <p align="center">
 <iframe src="https://github.com/sponsors/munich-quantum-toolkit/button" title="Sponsor munich-quantum-toolkit" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
 </p>
-
-## Cite This
-
-If you want to cite MQT QMAP, please use the following BibTeX entry:
-
-```bibtex
-@inproceedings{wille2023MQTQMAP,
-    title     = {{{MQT QMAP}}: {{Efficient}} Quantum Circuit Mapping},
-    author    = {Robert Wille and Lukas Burgholzer},
-    year      = {2023},
-    publisher = {Association for Computing Machinery},
-    series    = {ISPD '23},
-    pages     = {198–204},
-    doi       = {10.1145/3569052.3578928},
-    url       = {https://doi.org/10.1145/3569052.3578928},
-}
 ```
-````
