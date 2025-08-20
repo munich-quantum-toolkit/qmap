@@ -13,7 +13,7 @@ See {cite:p}`wille2023qmap` for a general overview of *MQT QMAP* and its feature
 If you want to cite this article, please use the following BibTeX entry:
 
 ```bibtex
-@inproceedings{qmap,
+@inproceedings{wille2023qmap,
     title        = {{{MQT QMAP}}: {{Efficient}} Quantum Circuit Mapping},
     author       = {Wille, Robert and Burgholzer, Lukas},
     year         = 2023,

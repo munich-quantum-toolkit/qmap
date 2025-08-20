@@ -133,7 +133,7 @@ If both apply, include both references.
 When citing the software itself or results produced with it, cite the MQT QMAP paper:
 
 ```bibtex
-@inproceedings{qmap,
+@inproceedings{wille2023qmap,
     title        = {{{MQT QMAP}}: {{Efficient}} Quantum Circuit Mapping},
     author       = {Wille, Robert and Burgholzer, Lukas},
     year         = 2023,
