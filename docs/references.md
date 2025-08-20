@@ -7,7 +7,8 @@
 ````{only} html
 # References
 
-*MQT QMAP* is academic software. Thus, many of its built-in algorithms have been published as scientific papers.
+*MQT QMAP* is academic software.
+Thus, many of its built-in algorithms have been published as scientific papers.
 See {cite:p}`wille2023qmap` for a general overview of *MQT QMAP* and its features.
 If you want to cite this article, please use the following BibTeX entry:
 
