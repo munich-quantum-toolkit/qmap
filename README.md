@@ -28,9 +28,13 @@ It builds upon [MQT Core](https://github.com/munich-quantum-toolkit/core), which
 
 ## Key Features
 
-- Point 1
-- Point 2
-- Point 3
+- Exact and heuristic circuit mapping to superconducting devices: gate-optimal MaxSAT/SMT-based mapping with Z3 for small circuits and scalable A\*-search–based mapping for larger ones. [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/mapping.html) • [Exact](https://mqt.readthedocs.io/projects/qmap/en/latest/mapping.html#exact-mapping) • [Heuristic](https://mqt.readthedocs.io/projects/qmap/en/latest/mapping.html#heuristic-mapping)
+- Clifford circuit synthesis and optimization: SAT-based depth/gate-optimal Clifford synthesis with optional destabilizer preservation, plus a fast heuristic splitter for larger circuits. [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/synthesis.html)
+- Zoned neutral-atom compilers: routing-agnostic and routing-aware flows that place, route, and schedule atom transfers between storage/entanglement zones. [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_zoned_compiler.html)
+- Neutral-atom logical state preparation (NASP): SMT-based generator for optimal preparation schedules of logical graph states on zoned architectures. [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_state_prep.html)
+- Hybrid circuit mapper for neutral atom quantum computers: a hybrid approach combining superconducting mapping techniques with atom shuttling.
+- Python-first API with Qiskit integration: pass QuantumCircuit or OpenQASM; one-call compile or optimize_clifford via plugin wrappers. [API](https://mqt.readthedocs.io/projects/qmap/en/latest/api/mqt/qmap/index.html)
+- Efficient and portable: C++20 core with Z3-backed solvers, prebuilt wheels for Linux/macOS/Windows via [PyPI](https://pypi.org/project/mqt.qmap/).
 
 If you have any questions, feel free to create a [discussion](https://github.com/munich-quantum-toolkit/qmap/discussions) or an [issue](https://github.com/munich-quantum-toolkit/qmap/issues) on [GitHub](https://github.com/munich-quantum-toolkit/qmap).
 
