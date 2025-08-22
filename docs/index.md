@@ -89,7 +89,7 @@ Thank you to all the contributors who have helped make MQT QMAP a reality!
 
 <p align="center">
 <a href="https://github.com/munich-quantum-toolkit/qmap/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/qmap" />
+  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/qmap" alt="Contributors to munich-quantum-toolkit/qmap" />
 </a>
 </p>
 

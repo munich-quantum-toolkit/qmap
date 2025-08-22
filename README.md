@@ -50,7 +50,7 @@ Thank you to all the contributors who have helped make MQT Core a reality!
 
 <p align="center">
   <a href="https://github.com/munich-quantum-toolkit/qmap/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/qmap" />
+  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/qmap" alt="Contributors to munich-quantum-toolkit/qmap" />
   </a>
 </p>
 
@@ -126,7 +126,6 @@ Building (and running) is continuously tested under Linux, macOS, and Windows us
 ## Cite This
 
 Please cite the work that best fits your use case.
-If both apply, include both references.
 
 ### MQT QMAP (the tool)
 
@@ -134,14 +133,11 @@ When citing the software itself or results produced with it, cite the MQT QMAP p
 
 ```bibtex
 @inproceedings{wille2023qmap,
-    title        = {{{MQT QMAP}}: {{Efficient}} Quantum Circuit Mapping},
-    author       = {Wille, Robert and Burgholzer, Lukas},
-    year         = 2023,
-    publisher    = {Association for Computing Machinery},
-    series       = {ISPD '23},
-    pages        = {198–204},
-    doi          = {10.1145/3569052.3578928},
-    url          = {https://doi.org/10.1145/3569052.3578928},
+    title               = {{{MQT QMAP}}: {{Efficient}} quantum circuit mapping},
+    author              = {Wille, Robert and Burgholzer, Lukas},
+    year                = {2023},
+    booktitle           = {International Symp. on Physical Design},
+    doi                 = {10.1145/3569052.3578928},
 }
 ```
 
@@ -156,12 +152,68 @@ When discussing the overall MQT project or its ecosystem, cite the MQT Handbook:
     author       = {Wille, Robert and Berent, Lucas and Forster, Tobias and Kunasaikaran, Jagatheesan and Mato, Kevin and Peham, Tom and Quetschlich, Nils and Rovara, Damian and Sander, Aaron and Schmid, Ludwig and Schoenberger, Daniel and Stade, Yannick and Burgholzer, Lukas},
     booktitle    = {IEEE International Conference on Quantum Software (QSW)},
     doi          = {10.1109/QSW62656.2024.00013},
-    date         = 2024,
+    year         = 2024,
     eprint       = {2405.17543},
     eprinttype   = {arxiv},
     addendum     = {A live version of this document is available at \url{https://mqt.readthedocs.io}},
 }
 ```
+
+### Peer-Reviewed Research
+
+When citing the underlying methods and research, please reference the most relevant peer-reviewed publications from the list below:
+
+[[1]](https://www.cda.cit.tum.de/files/eda/2023_ispd_mqt_qmap_efficient_quantum_circuit_mapping.pdf)
+R. Wille and L. Burgholzer. MQT QMAP: Efficient Quantum Circuit Mapping.
+In _International Symposium on Physical Design (ISPD)_, 2023.
+
+[[2]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
+A. Zulehner, A. Paler, and R. Wille. An Efficient Methodology for Mapping Quantum Circuits to the IBM QX Architectures.
+_IEEE Transactions on Computer Aided Design of Integrated Circuits and Systems (TCAD)_, 2018.
+
+[[3]](https://www.cda.cit.tum.de/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
+R. Wille, L. Burgholzer, and A. Zulehner. Mapping Quantum Circuits to IBM QX Architectures Using the Minimal Number of SWAP and H Operations.
+In _Design Automation Conference (DAC)_, 2019.
+
+[[4]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
+S. Hillmich, A. Zulehner, and R. Wille. Exploiting Quantum Teleportation in Quantum Circuit Mapping.
+In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2021.
+
+[[5]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
+L. Burgholzer, S. Schneider, and R. Wille. Limiting the Search Space in Optimal Quantum Circuit Mapping.
+In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
+
+[[6]](https://arxiv.org/pdf/2210.09321.pdf)
+T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
+_ACM Transactions on Quantum Computing (TQC)_, 2023.
+
+[[7]](https://arxiv.org/pdf/2208.11713.pdf)
+S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
+In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
+
+[[8]](https://arxiv.org/pdf/2305.01674.pdf)
+T. Peham, N. Brandl, R. Kueng, R. Wille, and L. Burgholzer. Depth-Optimal Synthesis of Clifford Circuits with SAT Solvers.
+In _IEEE International Conference on Quantum Computing and Engineering (QCE)_, 2023.
+
+[[9]](https://arxiv.org/pdf/2309.08656.pdf)
+L. Schmid, D. F. Locher, M. Rispler, S. Blatt, J. Zeiher, M. Müller, and R. Wille. Computational Capabilities and Compiler Development for Neutral Atom Quantum Processors: Connecting Tool Developers and Hardware Experts.
+_Quantum Science and Technology_, 2024.
+
+[[10]](https://arxiv.org/pdf/2311.14164.pdf)
+L. Schmid, S. Park, S. Kang, and R. Wille. Hybrid Circuit Mapping: Leveraging the Full Spectrum of Computational Capabilities of Neutral Atom Quantum Computers.
+In _Design Automation Conference (DAC)_, 2024.
+
+[[11]](https://www.cda.cit.tum.de/files/eda/2024_qce_an_abstract_model_and_efficient_routing_for_logical_entangling_gates_on_Zoned_neutral_atom_architectures.pdf)
+Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. An Abstract Model and Efficient Routing for Logical Entangling Gates on Zoned Neutral Atom Architectures.
+In _Int'l Conf. on Quantum Computing and Engineering_, 2024.
+
+[[12]](https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf)
+Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. Optimal State Preparation for Logical Arrays on Zoned Neutral Atom Quantum Computers.
+In _Design, Automation and Test in Europe_, 2024.
+
+[[13]](https://www.cda.cit.tum.de/files/eda/2025_iccad_routing-aware_placement_zoned_neutral_atom.pdf)
+Y. Stade, W.-H. Lin, J. Cong, and R. Wille. Routing-Aware Placement for Zoned Neutral Atom-based Quantum Computing.
+In _Int'l Conference on CAD_, 2025.
 
 ---
 
