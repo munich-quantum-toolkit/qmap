@@ -14,11 +14,11 @@ If you want to cite this article, please use the following BibTeX entry:
 
 ```bibtex
 @inproceedings{wille2023qmap,
-	title        = {{{MQT QMAP}}: {{Efficient}} quantum circuit mapping},
-	author       = {Wille, Robert and Burgholzer, Lukas},
-	year         = 2023,
-	booktitle    = {International Symp. on Physical Design},
-	doi          = {10.1145/3569052.3578928}
+  title        = {{{MQT QMAP}}: {{Efficient}} quantum circuit mapping},
+  author       = {Wille, Robert and Burgholzer, Lukas},
+  year         = 2023,
+  booktitle    = {International Symp. on Physical Design},
+  doi          = {10.1145/3569052.3578928}
 }
 ```
 
@@ -27,15 +27,15 @@ If you want to cite the Munich Quantum Toolkit, please use the following BibTeX 
 
 ```bibtex
 @inproceedings{mqt,
-	title        = {The {{MQT}} Handbook: {{A}} Summary of Design Automation Tools and Software for Quantum Computing},
-	shorttitle   = {{The MQT Handbook}},
-	author       = {Wille, Robert and Berent, Lucas and Forster, Tobias and Kunasaikaran, Jagatheesan and Mato, Kevin and Peham, Tom and Quetschlich, Nils and Rovara, Damian and Sander, Aaron and Schmid, Ludwig and Schoenberger, Daniel and Stade, Yannick and Burgholzer, Lukas},
-	year         = 2024,
-	booktitle    = {IEEE International Conference on Quantum Software (QSW)},
-	doi          = {10.1109/QSW62656.2024.00013},
-	eprint       = {2405.17543},
-	eprinttype   = {arxiv},
-	addendum     = {A live version of this document is available at \url{https://mqt.readthedocs.io}}
+  title        = {The {{MQT}} Handbook: {{A}} Summary of Design Automation Tools and Software for Quantum Computing},
+  shorttitle   = {{The MQT Handbook}},
+  author       = {Wille, Robert and Berent, Lucas and Forster, Tobias and Kunasaikaran, Jagatheesan and Mato, Kevin and Peham, Tom and Quetschlich, Nils and Rovara, Damian and Sander, Aaron and Schmid, Ludwig and Schoenberger, Daniel and Stade, Yannick and Burgholzer, Lukas},
+  year         = 2024,
+  booktitle    = {IEEE International Conference on Quantum Software (QSW)},
+  doi          = {10.1109/QSW62656.2024.00013},
+  eprint       = {2405.17543},
+  eprinttype   = {arxiv},
+  addendum     = {A live version of this document is available at \url{https://mqt.readthedocs.io}}
 }
 ```
 
