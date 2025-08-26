@@ -33,7 +33,7 @@ It builds upon [MQT Core](https://github.com/munich-quantum-toolkit/core), which
 - Zoned neutral-atom compilers: routing-agnostic and routing-aware flows that place, route, and schedule atom transfers between storage/entanglement zones. [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_zoned_compiler.html)
 - Neutral-atom logical state preparation (NASP): SMT-based generator for optimal preparation schedules of logical graph states on zoned architectures. [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_state_prep.html)
 - Hybrid circuit mapper for neutral atom quantum computers: a hybrid approach combining superconducting mapping techniques with atom shuttling.
-- Python-first API with Qiskit integration: pass QuantumCircuit or OpenQASM; one-call compile or optimize_clifford via plugin wrappers. [API](https://mqt.readthedocs.io/projects/qmap/en/latest/api/mqt/qmap/index.html)
+- Python-first API with Qiskit integration: pass `QuantumCircuit` or OpenQASM; one-call `compile()` or `optimize_clifford()` via plugin wrappers. [API](https://mqt.readthedocs.io/projects/qmap/en/latest/api/mqt/qmap/index.html)
 - Efficient and portable: C++20 core with Z3-backed solvers, prebuilt wheels for Linux/macOS/Windows via [PyPI](https://pypi.org/project/mqt.qmap/).
 
 If you have any questions, feel free to create a [discussion](https://github.com/munich-quantum-toolkit/qmap/discussions) or an [issue](https://github.com/munich-quantum-toolkit/qmap/issues) on [GitHub](https://github.com/munich-quantum-toolkit/qmap).
