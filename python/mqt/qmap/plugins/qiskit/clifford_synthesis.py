@@ -102,19 +102,19 @@ def synthesize_clifford(
         target_tableau:
             The target tableau to synthesize.
             If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. The Pauli strings follow the same format as in `Stim <https://github.com/quantumlib/Stim>`_.
-            If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
-            If a :class:`Tableau` is given, it is used directly.
+            If a :class:`~qiskit.quantum_info.Clifford` or a :class:`~qiskit.quantum_info.PauliList` is given, it is converted to a :class:`~mqt.qmap.clifford_synthesis.Tableau`.
+            If a :class:`~mqt.qmap.clifford_synthesis.Tableau` is given, it is used directly.
         initial_tableau:
             The initial tableau to start from.
             If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
-            If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
-            If a :class:`Tableau` is given, it is used directly.
+            If a :class:`~qiskit.quantum_info.Clifford` or a :class:`~qiskit.quantum_info.PauliList` is given, it is converted to a :class:`~mqt.qmap.clifford_synthesis.Tableau`.
+            If a :class:`~mqt.qmap.clifford_synthesis.Tableau` is given, it is used directly.
             If no initial tableau is given, the synthesis starts from the identity tableau.
         include_destabilizers:
             Flag to set whether destabilizers should be considered in the synthesis
         **kwargs:
             Additional keyword arguments to configure the synthesis.
-            See :class:`SynthesisConfiguration` for a list of available options.
+            See :class:`~mqt.qmap.clifford_synthesis.SynthesisConfiguration` for a list of available options.
 
     Returns:
         A tuple containing the synthesized circuit and the synthesis results.
@@ -143,19 +143,19 @@ def optimize_clifford(
         circuit:
             The circuit to optimize.
             If a string is given, it is interpreted as a QASM string or a filename.
-            If a :class:`QuantumCircuit` is given, it is converted to a :class:`QuantumComputation`.
-            If a :class:`QuantumComputation` is given, it is used as is.
+            If a :class:`~qiskit.circuit.QuantumCircuit` is given, it is converted to a :class:`~mqt.core.ir.QuantumComputation`.
+            If a :class:`~mqt.core.ir.QuantumComputation` is given, it is used as is.
         initial_tableau:
             The initial tableau to start from.
             If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
-            If a :class:`Clifford` is given or a :class:`PauliList` is given, it is converted to a Tableau.
-            If a :class:`Tableau` is given, it is used directly.
+            If a :class:`~qiskit.quantum_info.Clifford` is given or a :class:`~qiskit.quantum_info.PauliList` is given, it is converted to a Tableau.
+            If a :class:`~mqt.qmap.clifford_synthesis.Tableau` is given, it is used directly.
             If no initial tableau is given, the synthesis starts from the identity tableau.
         include_destabilizers:
             Flag to set whether destabilizers should be considered in the synthesis
         **kwargs:
             Additional keyword arguments to configure the synthesis.
-            See :class:`SynthesisConfiguration` for a list of available options.
+            See :class:`~mqt.qmap.clifford_synthesis.SynthesisConfiguration` for a list of available options.
 
     Returns:
         A tuple containing the optimized circuit and the synthesis results.

@@ -129,7 +129,7 @@ _QMAP_ can be used in a multitude of ways to efficiently synthesize Clifford cir
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
 
-from mqt import qmap
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 
 qc = QuantumCircuit(2)
 qc.h(0)
@@ -137,7 +137,7 @@ qc.cx(0, 1)
 qc.h(0)
 qc.h(1)
 
-qc_opt, results = qmap.optimize_clifford(circuit=qc, use_maxsat=True, include_destabilizers=True)
+qc_opt, results = optimize_clifford(circuit=qc, use_maxsat=True, include_destabilizers=True)
 
 qc_opt.draw(output="mpl")
 ```
@@ -154,7 +154,8 @@ The heuristic synthesizer can be used as follows:
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
 
-from mqt import qmap
+from mqt.qmap.clifford_synthesis import TargetMetric
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 
 qc = QuantumCircuit(2)
 qc.x(0)
@@ -165,7 +166,7 @@ qc.x(1)
 qc.cx(1, 0)
 qc.x(1)
 
-qc_opt, results = qmap.optimize_clifford(
+qc_opt, results = optimize_clifford(
     circuit=qc,
     heuristic=True,
     split_size=3,
@@ -183,7 +184,7 @@ In this example the synthesized circuit does not have optimal depth as can be ch
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
 
-from mqt import qmap
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 
 qc = QuantumCircuit(2)
 qc.x(0)
@@ -194,7 +195,7 @@ qc.x(1)
 qc.cx(1, 0)
 qc.x(1)
 
-qc_opt, results = qmap.optimize_clifford(
+qc_opt, results = optimize_clifford(
     circuit=qc,
     heuristic=False,
     include_destabilizers=True,
@@ -222,4 +223,4 @@ qc_synth.draw(output="mpl")
 
 The synthesis method offers lots of configuration options to fine-tune the synthesis procedure, e.g., changing the target metric.
 
-See {func}`~mqt.qmap.clifford_synthesis.synthesize_clifford` and {func}`~mqt.qmap.clifford_synthesis.optimize_clifford` for more information.
+See {func}`~mqt.qmap.plugins.qiskit.clifford_synthesis.synthesize_clifford` and {func}`~mqt.qmap.plugins.qiskit.clifford_synthesis.optimize_clifford` for more information.
