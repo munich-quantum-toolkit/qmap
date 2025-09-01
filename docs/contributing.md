@@ -487,8 +487,8 @@ This will ensure that the respective PR does not influence the type of an upcomi
 
 :::
 
-Once everything is in order and the release draft looks good, you can merge the PR preparing the release.
-Afterward, navigate to the [Releases page](https://github.com/munich-quantum-toolkit/qmap/releases) on GitHub, edit the created draft, and publish the release.
+Once everything is in order, you can merge the PR preparing the release.
+Afterward, navigate to the [Releases page](https://github.com/munich-quantum-toolkit/qmap/releases) on GitHub, edit the release draft if necessary, and publish the release.
 
 <!--- Links --->
 
