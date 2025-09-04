@@ -8,7 +8,6 @@
   },
   lockFileMaintenance: {
     enabled: true,
-    commitMessagePrefix: "⬆\uFE0F\uD83D\uDD12\uFE0F",
     automerge: true
   },
   configMigration: true,
@@ -39,6 +38,10 @@
       matchManagers: ["pre-commit"],
       addLabels: ["pre-commit"],
       commitMessagePrefix: "⬆\uFE0F\uD83E\uDE9D"
+    },
+    {
+      matchUpdateTypes: ["lockFileMaintenance"],
+      commitMessagePrefix: "⬆\uFE0F\uD83D\uDD12\uFE0F",
     },
     {
       description: "Automerge patch updates",

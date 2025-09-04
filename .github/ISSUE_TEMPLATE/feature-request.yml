@@ -18,9 +18,9 @@ body:
     attributes:
       label: Problem Statement
       description: >-
-        Describe the problem you're facing and why it needs to be solved. What limitations are you encountering?
+        Describe the problem you are facing and why it needs to be solved. What limitations are you encountering?
       placeholder: >-
-        Currently, when I try to [action/task], I'm unable to [blockers/limitations].
+        Currently, when I try to [action/task], I am unable to [blockers/limitations].
         This creates problems because [impact/consequences].
     validations:
       required: true
