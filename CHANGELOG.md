@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Changed
+
+- 🔥 Stop testing on and shipping wheels for x86 macOS systems ([#1165]) ([**@denialhaag**])
+
 ## [3.3.1] - 2025-08-07
 
 ### Fixed
@@ -129,6 +133,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#760]: https://github.com/munich-quantum-toolkit/qmap/pull/760
 [#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728
 [#720]: https://github.com/munich-quantum-toolkit/qmap/pull/720
 [#719]: https://github.com/munich-quantum-toolkit/qmap/pull/719

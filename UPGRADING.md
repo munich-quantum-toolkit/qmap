@@ -4,6 +4,13 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+### End of support for x86 macOS systems
+
+Starting with this release, MQT QMAP no longer ships Python wheels for x86 macOS systems.
+This comes as a result of GitHub removing the `macos-13` runners from their infrastructure.
+Users on x86 macOS systems can still install MQT QMAP from source as we continue to ship a source distribution.
+However, these systems are no longer tested in our CI and we can no longer guarantee that MQT QMAP builds and runs correctly.
+
 ## [3.3.0]
 
 Testing previous versions of the `mqt-qmap` package built via `uv sync` or simple `(uv) pip install .` generally failed due to binary incompatibility of the `mqt-core` compiled extension packages and the `mqt-qmap` one.
