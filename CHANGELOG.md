@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Changed
 
-- 🔥 Stop testing on and shipping wheels for x86 macOS systems ([#1165]) ([**@denialhaag**])
+- 🔥 Stop testing on and shipping wheels for x86 macOS systems ([#760]) ([**@denialhaag**])
 
 ## [3.3.1] - 2025-08-07
 
