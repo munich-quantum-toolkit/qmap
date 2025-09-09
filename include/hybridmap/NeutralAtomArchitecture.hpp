@@ -439,10 +439,10 @@ public:
   }
 
   [[nodiscard]] qc::fp
-  getPassByEuclideanDistance(const FlyingAncillaComb& faComb) const {
+  getPassByEuclideanDistance(const PassByComb& pbComb) const {
     qc::fp dist = 0;
-    for (const auto& fa : faComb.moves) {
-      dist += getEuclideanDistance(fa.q1, fa.q2) * 2;
+    for (const auto& fa : pbComb.moves) {
+      dist += getEuclideanDistance(fa.c1, fa.c2) * 2;
     }
     return dist;
   }

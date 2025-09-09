@@ -240,6 +240,8 @@ protected:
 
   [[nodiscard]] FlyingAncillaComb
   convertMoveCombToFlyingAncillaComb(const MoveComb& moveComb) const;
+  [[nodiscard]] PassByComb
+  convertMoveCombToPassByComb(const MoveComb& moveComb) const;
 
   // std::vector<std::pair<const qc::Operation*, Bridge>>
   // findAllBridges(qc::QuantumComputation& qc);
@@ -303,7 +305,8 @@ protected:
                                                    const Bridge& bestBridge);
   [[nodiscard]] MappingMethod
   compareShuttlingAndFlyingAncilla(const MoveComb& bestMoveComb,
-                                   const FlyingAncillaComb& bestFaComb) const;
+                                   const FlyingAncillaComb& bestFaComb,
+                                   const PassByComb& bestPbComb) const;
 
   // Helper methods
   /**

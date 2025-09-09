@@ -145,6 +145,11 @@ struct FlyingAncillaComb {
   const qc::Operation* op;
 };
 
+struct PassByComb {
+  std::vector<AtomMove> moves;
+  const qc::Operation* op;
+};
+
 /**
  * @brief Helper class to manage multiple atom moves which belong together.
  * @details E.g. a move-away combined with the actual move. These are combined
