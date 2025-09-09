@@ -137,21 +137,22 @@ protected:
         na::InitialCoordinateMapping::Trivial;
     mapperParameters.lookaheadDepth = 1;
     mapperParameters.lookaheadWeightSwaps = 0.1;
-    mapperParameters.lookaheadWeightMoves = 0.1;
+    mapperParameters.lookaheadWeightMoves = 0.5;
     mapperParameters.decay = 0;
     mapperParameters.shuttlingTimeWeight = 0.1;
     mapperParameters.gateWeight = 1;
-    mapperParameters.shuttlingWeight = 1;
+    mapperParameters.shuttlingWeight = 0;
     mapperParameters.seed = 43;
-    mapperParameters.verbose = true;
+    mapperParameters.verbose = false;
     mapperParameters.numFlyingAncillas = 2;
-    mapperParameters.limitShuttlingLayer = 2;
-    mapperParameters.useBridge = true;
+    mapperParameters.limitShuttlingLayer = 1;
+    // mapperParameters.useBridge = true;
     mapperParameters.usePassBy = true;
     mapper.setParameters(mapperParameters);
     qc = qc::QuantumComputation(
-        // "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
-        "circuits/modulo_2.qasm");
+        "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
+    // "circuits/modulo_2.qasm");
+    // "circuits/random_nativegates_ibm_qiskit_opt3_50.qasm");
   }
 };
 
