@@ -125,7 +125,7 @@ circ_opt, results = optimize_clifford(circ)
 Building the project requires a C++ compiler with support for C++20 and CMake 3.24 or newer.
 For detail on how to build the project, please refer to the [documentation](https://mqt.readthedocs.io/projects/qmap).
 Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/runner-images).
-MQT SyReC Synthesizer is compatible with all [officially supported Python versions](https://devguide.python.org/versions/).
+MQT QMAP is compatible with all [officially supported Python versions](https://devguide.python.org/versions/).
 
 ## Cite This
 
