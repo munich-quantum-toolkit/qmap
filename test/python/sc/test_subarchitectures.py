@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import contextlib
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pytest
 import rustworkx as rx
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from mqt.qmap._compat.typing import TypeAlias
 
 with contextlib.suppress(TypeError):
-    Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
+    Graph: TypeAlias = rx.PyGraph[int, int | None]
 
 
 @pytest.fixture
@@ -211,7 +211,7 @@ def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
     opt_loaded = loaded_tmp.optimal_candidates(8)
 
     assert len(opt_origin) == len(opt_loaded)
-    for opt_cand_orig, opt_cand_load in zip(opt_origin, opt_loaded):
+    for opt_cand_orig, opt_cand_load in zip(opt_origin, opt_loaded, strict=False):
         assert rx.is_isomorphic(opt_cand_load, opt_cand_orig)
 
 

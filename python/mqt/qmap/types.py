@@ -11,9 +11,8 @@
 from __future__ import annotations
 
 from os import PathLike
-from typing import Union
 
 from mqt.core.ir import QuantumComputation
 from qiskit.circuit import QuantumCircuit
 
-CircuitInputType = Union[QuantumComputation, str, PathLike[str], QuantumCircuit]
+CircuitInputType = QuantumComputation | str | PathLike[str] | QuantumCircuit

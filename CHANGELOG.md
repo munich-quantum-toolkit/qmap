@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Changed
 
+- 🔥 Drop support for Python 3.9 ([#762]) ([**@denialhaag**])
 - 🔥 Stop testing on and shipping wheels for x86 macOS systems ([#760]) ([**@denialhaag**])
 
 ## [3.3.1] - 2025-08-07
@@ -133,6 +134,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#762]: https://github.com/munich-quantum-toolkit/qmap/pull/762
 [#760]: https://github.com/munich-quantum-toolkit/qmap/pull/760
 [#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728
 [#720]: https://github.com/munich-quantum-toolkit/qmap/pull/720

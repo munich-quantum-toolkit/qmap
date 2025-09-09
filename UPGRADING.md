@@ -11,6 +11,12 @@ This comes as a result of GitHub removing the `macos-13` runners from their infr
 Users on x86 macOS systems can still install MQT QMAP from source as we continue to ship a source distribution.
 However, these systems are no longer tested in our CI and we can no longer guarantee that MQT QMAP builds and runs correctly.
 
+### End of support for Python 3.9
+
+Starting with this release, MQT QMAP no longer supports Python 3.9.
+This is in line with the scheduled end of life of the version.
+As a result, MQT QMAP is no longer tested under Python 3.9 and no longer ships Python 3.9 wheels.
+
 ## [3.3.0]
 
 Testing previous versions of the `mqt-qmap` package built via `uv sync` or simple `(uv) pip install .` generally failed due to binary incompatibility of the `mqt-core` compiled extension packages and the `mqt-qmap` one.

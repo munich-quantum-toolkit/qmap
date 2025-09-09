@@ -78,7 +78,7 @@ To support this endeavor, please consider:
 
 ## Getting Started
 
-MQT QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.9 to 3.14.
+MQT QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/).
 
 ```console
 (venv) $ pip install mqt.qmap
@@ -118,14 +118,14 @@ circ.h(1)
 circ_opt, results = optimize_clifford(circ)
 ```
 
-**Detailed documentation on all available methods, options, and input formats is available at [ReadTheDocs](https://mqt.readthedocs.io/projects/qmap).**
+**Detailed documentation and examples are available at [ReadTheDocs](https://mqt.readthedocs.io/projects/qmap).**
 
 ## System Requirements and Building
 
-The implementation is compatible with any C++20 compiler, a minimum CMake version of 3.24, and Python 3.9+.
-Please refer to the [documentation](https://mqt.readthedocs.io/projects/qmap) on how to build the project.
-
-Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
+Building the project requires a C++ compiler with support for C++20 and CMake 3.24 or newer.
+For detail on how to build the project, please refer to the [documentation](https://mqt.readthedocs.io/projects/qmap).
+Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/runner-images).
+MQT SyReC Synthesizer is compatible with all [officially supported Python versions](https://devguide.python.org/versions/).
 
 ## Cite This
 

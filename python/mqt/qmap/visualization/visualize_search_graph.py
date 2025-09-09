@@ -17,13 +17,13 @@ from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from random import shuffle
-from typing import TYPE_CHECKING, Literal, TypedDict, Union
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 if TYPE_CHECKING:
     from .._compat.typing import TypeAlias
 
     Position: TypeAlias = tuple[float, float]
-    Colorscale: TypeAlias = Union[str, Sequence[str], Sequence[tuple[float, str]]]
+    Colorscale: TypeAlias = str | Sequence[str] | Sequence[tuple[float, str]]
 
     class _ActiveTraceIndices(TypedDict):
         search_edges: list[int]
