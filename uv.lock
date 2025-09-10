@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1440,6 +1440,7 @@ dependencies = [
     { name = "mqt-core" },
     { name = "qiskit", extra = ["qasm3-import"] },
     { name = "rustworkx", extra = ["all"] },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 
 [package.optional-dependencies]
@@ -1530,6 +1531,7 @@ requires-dist = [
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
     { name = "rustworkx", extras = ["all"], specifier = ">=0.16.0" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'", specifier = ">=4.6" },
     { name = "walkerlayout", marker = "extra == 'visualization'", specifier = ">=1.0.2" },
 ]
 provides-extras = ["visualization"]
