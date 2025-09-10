@@ -26,7 +26,7 @@ from mqt.qmap.plugins.qiskit.sc import (
 from mqt.qmap.sc import Architecture
 
 if TYPE_CHECKING:
-    from mqt.qmap._compat.typing import TypeAlias
+    from typing import TypeAlias
 
 with contextlib.suppress(TypeError):
     Graph: TypeAlias = rx.PyGraph[int, int | None]

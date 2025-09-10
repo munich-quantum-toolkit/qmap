@@ -20,7 +20,7 @@ from random import shuffle
 from typing import TYPE_CHECKING, Literal, TypedDict
 
 if TYPE_CHECKING:
-    from .._compat.typing import TypeAlias
+    from typing import TypeAlias
 
     Position: TypeAlias = tuple[float, float]
     Colorscale: TypeAlias = str | Sequence[str] | Sequence[tuple[float, str]]

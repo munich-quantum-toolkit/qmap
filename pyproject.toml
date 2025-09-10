@@ -272,10 +272,6 @@ typing-modules = ["mqt.qmap._compat.typing"]
 "typing.Set".msg = "Use collections.abc.Set instead."
 "typing.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
 "typing_extensions.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
-"typing.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
-"typing_extensions.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
-"importlib.resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
-"importlib_resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
 
 [tool.ruff.lint.isort]
 known-first-party = ["mqt.qmap"]

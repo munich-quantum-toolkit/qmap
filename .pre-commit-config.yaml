@@ -86,13 +86,12 @@ repos:
         files: ^(src/mqt|test/python|noxfile.py)
         args: []
         additional_dependencies:
-          - importlib_resources
           - nox
           - numpy
           - pytest
           - rustworkx
           - mqt.qcec
-          - mqt.core>=3.0.0rc2
+          - mqt.core>=3.2.1
 
   # Check for spelling
   - repo: https://github.com/crate-ci/typos
