@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable, Iterable, MutableMapping, Sequence
+from collections.abc import Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,7 +20,11 @@ from random import shuffle
 from typing import TYPE_CHECKING, Literal, TypedDict
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, MutableMapping
     from typing import TypeAlias
+
+    import plotly
+    from ipywidgets import Widget
 
     Position: TypeAlias = tuple[float, float]
     Colorscale: TypeAlias = str | Sequence[str] | Sequence[tuple[float, str]]
@@ -61,11 +65,10 @@ import locale
 import operator
 
 import networkx as nx
-import plotly
 import plotly.graph_objects as go
 from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator  # noqa: PLC2701
 from distinctipy import distinctipy
-from ipywidgets import HBox, IntSlider, Layout, Play, VBox, Widget, interactive, jslink
+from ipywidgets import HBox, IntSlider, Layout, Play, VBox, interactive, jslink
 from networkx.drawing.nx_pydot import graphviz_layout
 from plotly.subplots import make_subplots
 from walkerlayout import WalkerLayouting

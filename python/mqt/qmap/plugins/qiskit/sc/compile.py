@@ -16,8 +16,6 @@ from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
 
 from ....sc import (
-    Arch,
-    Architecture,
     CommanderGrouping,
     Configuration,
     EarlyTermination,
@@ -26,7 +24,6 @@ from ....sc import (
     InitialLayout,
     Layering,
     LookaheadHeuristic,
-    MappingResults,
     Method,
     SwapReduction,
     map,  # noqa: A004
@@ -40,6 +37,11 @@ if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
+    from ....sc import (
+        Arch,
+        Architecture,
+        MappingResults,
+    )
     from ....types import CircuitInputType
     from ....visualization import SearchVisualizer
 

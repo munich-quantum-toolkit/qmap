@@ -18,8 +18,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, MutableMapping
 
     from .._compat.typing import Self
+    from .visualize_search_graph import SearchNode
 
-from .visualize_search_graph import SearchNode, visualize_search_graph
+from .visualize_search_graph import visualize_search_graph
 
 if TYPE_CHECKING:
     from ipywidgets import Widget

@@ -19,13 +19,15 @@ from qiskit.quantum_info import Clifford, PauliList
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
 
+    from ...clifford_synthesis import (
+        SynthesisResults,
+    )
     from ...types import CircuitInputType
 
 
 from ...clifford_synthesis import (
     CliffordSynthesizer,
     SynthesisConfiguration,
-    SynthesisResults,
     Tableau,
 )
 
