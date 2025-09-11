@@ -65,7 +65,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.12
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: ["--fix", "--show-fixes"]
         types_or: [python, pyi, jupyter]
       - id: ruff-format
@@ -148,7 +148,7 @@ repos:
 
   # Check the pyproject.toml file
   - repo: https://github.com/henryiii/validate-pyproject-schema-store
-    rev: 2025.06.23
+    rev: 2025.09.11
     hooks:
       - id: validate-pyproject
 

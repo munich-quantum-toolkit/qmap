@@ -263,20 +263,14 @@ ignore = [
     "S101",    # Use of assert detected
     "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
 ]
+future-annotations = true
 typing-modules = ["mqt.qmap._compat.typing"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"typing.Callable".msg = "Use collections.abc.Callable instead."
-"typing.Iterator".msg = "Use collections.abc.Iterator instead."
-"typing.Mapping".msg = "Use collections.abc.Mapping instead."
-"typing.Sequence".msg = "Use collections.abc.Sequence instead."
-"typing.Set".msg = "Use collections.abc.Set instead."
-"typing.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
 "typing_extensions.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
 
 [tool.ruff.lint.isort]
 known-first-party = ["mqt.qmap"]
-required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.per-file-ignores]
 "test/python/**" = ["T20", "ANN"]
