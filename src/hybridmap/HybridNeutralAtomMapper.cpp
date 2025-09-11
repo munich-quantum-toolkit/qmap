@@ -160,11 +160,11 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
 }
 
 void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
-                                    const FlyingAncillaComb& faComb) {
-  auto opTargets = faComb.op->getTargets();
+                                    const PassByComb& pbComb) {
+  auto opTargets = pbComb.op->getTargets();
   auto targetHwQubits = mapping.getHwQubits(opTargets);
   auto targetCoords = hardwareQubits.getCoordIndices(targetHwQubits);
-  auto opControls = faComb.op->getControls();
+  auto opControls = pbComb.op->getControls();
   HwQubitsVector controlQubits;
   for (const auto& control : opControls) {
     controlQubits.emplace_back(control.qubit);
@@ -172,21 +172,21 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
   auto controlHwQubits = mapping.getHwQubits(controlQubits);
   auto controlCoords = hardwareQubits.getCoordIndices(controlHwQubits);
 
-  for (const auto& passBy : faComb.moves) {
-    mappedQc.move(passBy.q1, passBy.q2 + arch->getNpositions());
+  for (const auto& passBy : pbComb.moves) {
+    mappedQc.move(passBy.c1, passBy.c2 + arch->getNpositions());
     if (this->parameters->verbose) {
-      std::cout << "passby " << passBy.q1 << " " << passBy.q2 << '\n';
+      std::cout << "passby " << passBy.c1 << " " << passBy.c2 << '\n';
     }
-    auto itT = std::find(targetCoords.begin(), targetCoords.end(), passBy.q1);
+    auto itT = std::find(targetCoords.begin(), targetCoords.end(), passBy.c1);
     if (itT != targetCoords.end()) {
-      *itT = passBy.q2 + arch->getNpositions();
+      *itT = passBy.c2 + arch->getNpositions();
     }
-    auto itC = std::find(controlCoords.begin(), controlCoords.end(), passBy.q1);
+    auto itC = std::find(controlCoords.begin(), controlCoords.end(), passBy.c1);
     if (itC != controlCoords.end()) {
-      *itC = passBy.q2 + arch->getNpositions();
+      *itC = passBy.c2 + arch->getNpositions();
     }
   }
-  auto opCopy = faComb.op->clone();
+  auto opCopy = pbComb.op->clone();
   opCopy->setTargets(targetCoords);
   qc::Controls controls;
   for (const auto& control : controlCoords) {
@@ -196,15 +196,15 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
   mappedQc.emplace_back(opCopy->clone());
 
   // mapGate(faComb.op);
-  for (const auto& passBy : faComb.moves) {
-    mappedQc.move(passBy.q2 + arch->getNpositions(), passBy.q1);
+  for (const auto& passBy : pbComb.moves) {
+    mappedQc.move(passBy.c2 + arch->getNpositions(), passBy.c1);
     if (this->parameters->verbose) {
-      std::cout << "passby " << passBy.q2 << " " << passBy.q1 << '\n';
+      std::cout << "passby " << passBy.c2 << " " << passBy.c1 << '\n';
     }
   }
 
-  frontLayer.removeGatesAndUpdate({faComb.op});
-  nPassBy += faComb.moves.size();
+  frontLayer.removeGatesAndUpdate({pbComb.op});
+  nPassBy += pbComb.moves.size();
 }
 
 void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
@@ -1627,7 +1627,7 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
       applyFlyingAncilla(frontLayer, bestFaComb);
       break;
     case MappingMethod::PassByMethod:
-      applyPassBy(frontLayer, bestFaComb);
+      applyPassBy(frontLayer, bestPbComb);
       break;
     default:
       break;

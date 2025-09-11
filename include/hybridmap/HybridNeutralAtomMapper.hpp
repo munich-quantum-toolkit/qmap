@@ -168,8 +168,7 @@ protected:
   void applyBridge(NeutralAtomLayer& frontLayer, const Bridge& bridge);
   void applyFlyingAncilla(NeutralAtomLayer& frontLayer,
                           const FlyingAncillaComb& faComb);
-  void applyPassBy(NeutralAtomLayer& frontLayer,
-                   const FlyingAncillaComb& faComb);
+  void applyPassBy(NeutralAtomLayer& frontLayer, const PassByComb& pbComb);
 
   // Methods for gate vs. shuttling
   /**
