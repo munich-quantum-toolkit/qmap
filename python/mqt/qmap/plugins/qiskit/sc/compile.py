@@ -37,11 +37,7 @@ if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
-    from ....sc import (
-        Arch,
-        Architecture,
-        MappingResults,
-    )
+    from ....sc import Arch, Architecture, MappingResults
     from ....types import CircuitInputType
     from ....visualization import SearchVisualizer
 
