@@ -403,8 +403,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + (nPos * 2);
     const auto ancQ2 = passBy.q2 + (nPos * 2);
-    if (passBy.origin + nPos != ancQ1) {
-      mappedQc.move(passBy.origin + nPos, ancQ1);
+    if (passBy.origin + 2 * nPos != ancQ1) {
+      mappedQc.move(passBy.origin + 2 * nPos, ancQ1);
     }
     mappedQc.h(ancQ1);
     mappedQc.cz(passBy.q1, ancQ1);
