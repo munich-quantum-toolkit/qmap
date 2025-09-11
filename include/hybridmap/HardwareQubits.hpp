@@ -89,11 +89,7 @@ public:
           InitialCoordinateMapping::Trivial,
       uint32_t seed = 0)
       : arch(&architecture) {
-    if (nQubits == 0) {
-      this->nQubits = architecture.getNqubits();
-    } else {
-      this->nQubits = nQubits;
-    }
+    this->nQubits = nQubits;
     swapDistances = SymmetricMatrix<SwapDistance>(this->nQubits);
 
     switch (initialCoordinateMapping) {

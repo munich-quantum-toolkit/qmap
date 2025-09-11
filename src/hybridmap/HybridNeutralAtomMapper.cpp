@@ -669,7 +669,7 @@ FlyingAncillaComb NeutralAtomMapper::convertMoveCombToFlyingAncillaComb(
 
 PassByComb
 NeutralAtomMapper::convertMoveCombToPassByComb(const MoveComb& moveComb) const {
-  if (this->flyingAncillas.getNumQubits() == 0) {
+  if (!this->parameters->usePassBy) {
     return {};
   }
   const auto usedQubits = moveComb.op->getUsedQubits();
