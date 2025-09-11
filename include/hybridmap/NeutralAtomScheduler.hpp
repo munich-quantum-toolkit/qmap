@@ -30,13 +30,16 @@ struct SchedulerResults {
   qc::fp totalGateFidelities;
   qc::fp totalFidelities;
   uint32_t nCZs = 0;
+  uint32_t nAodActivate = 0;
+  uint32_t nAodMove = 0;
 
   SchedulerResults(const qc::fp executionTime, const qc::fp idleTime,
                    const qc::fp gateFidelities, const qc::fp fidelities,
-                   const uint32_t cZs)
+                   const uint32_t cZs, const uint32_t aodActivate,
+                   const uint32_t aodMove)
       : totalExecutionTime(executionTime), totalIdleTime(idleTime),
         totalGateFidelities(gateFidelities), totalFidelities(fidelities),
-        nCZs(cZs) {}
+        nCZs(cZs), nAodActivate(aodActivate), nAodMove(aodMove) {}
 
   [[nodiscard]] std::string toString() const {
     std::stringstream ss;
@@ -128,7 +131,8 @@ public:
   static void printSchedulerResults(std::vector<qc::fp>& totalExecutionTimes,
                                     qc::fp totalIdleTime,
                                     qc::fp totalGateFidelities,
-                                    qc::fp totalFidelities, uint32_t nCZs);
+                                    qc::fp totalFidelities, uint32_t nCZs,
+                                    uint32_t nAodActivate, uint32_t nAodMove);
   static void printTotalExecutionTimes(
       const std::vector<qc::fp>& totalExecutionTimes,
       const std::vector<std::deque<std::pair<qc::fp, qc::fp>>>&

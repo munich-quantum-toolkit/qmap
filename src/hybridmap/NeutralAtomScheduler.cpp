@@ -50,7 +50,8 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   }
 
   int index = 0;
-  int nAodActivate = 0;
+  uint32_t nAodActivate = 0;
+  uint32_t nAodMove = 0;
   uint32_t nCZs = 0;
   for (const auto& op : qc) {
     index++;
@@ -59,6 +60,8 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     }
     if (op->getType() == qc::AodActivate) {
       nAodActivate++;
+    } else if (op->getType() == qc::AodMove) {
+      nAodMove++;
     } else if (op->getType() == qc::OpType::Z && op->getNcontrols() == 1) {
       nCZs++;
     }
@@ -152,11 +155,6 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     totalGateFidelities *= opFidelity;
     totalGateTime += opTime;
-    if (verbose) {
-      // std::cout << "\n";
-      // printTotalExecutionTimes(totalExecutionTimes,
-      // rydbergBlockedQubitsTimes);
-    }
 
     // update animation
     if (createAnimationCsv) {
@@ -165,7 +163,6 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   }
   if (verbose) {
     std::cout << "\n* schedule end!\n";
-    std::cout << "nAodActivate: " << nAodActivate << "\n";
   }
 
   const auto maxExecutionTime =
@@ -178,16 +175,18 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
   if (verbose) {
     printSchedulerResults(totalExecutionTimes, totalIdleTime,
-                          totalGateFidelities, totalFidelities, nCZs);
+                          totalGateFidelities, totalFidelities, nCZs,
+                          nAodActivate, nAodMove);
   }
-  return {maxExecutionTime, totalIdleTime, totalGateFidelities, totalFidelities,
-          nCZs};
+  return {maxExecutionTime, totalIdleTime, totalGateFidelities,
+          totalFidelities,  nCZs,          nAodActivate,
+          nAodMove};
 }
 
 void na::NeutralAtomScheduler::printSchedulerResults(
     std::vector<qc::fp>& totalExecutionTimes, const qc::fp totalIdleTime,
     const qc::fp totalGateFidelities, const qc::fp totalFidelities,
-    const uint32_t nCZs) {
+    const uint32_t nCZs, const uint32_t nAodActivate, const uint32_t nAodMove) {
   const auto totalExecutionTime =
       *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
   std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
@@ -195,6 +194,8 @@ void na::NeutralAtomScheduler::printSchedulerResults(
   std::cout << "totalGateFidelities: " << totalGateFidelities << "\n";
   std::cout << "totalFidelities: " << totalFidelities << "\n";
   std::cout << "totalNumCZs: " << nCZs << "\n";
+  std::cout << "nAodActivate: " << nAodActivate << "\n";
+  std::cout << "nAodMove: " << nAodMove << "\n";
 }
 
 void na::NeutralAtomScheduler::printTotalExecutionTimes(
