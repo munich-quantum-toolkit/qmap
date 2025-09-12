@@ -2256,6 +2256,10 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
 MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     const MoveComb& bestMoveComb, const FlyingAncillaComb& bestFaComb,
     const PassByComb& bestPbComb) const {
+  if (flyingAncillas.getNumQubits() == 0 && !parameters->usePassBy) {
+    return MappingMethod::MoveMethod;
+  }
+
   // move distance reduction
   auto moveDistReduction =
       moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling) +
