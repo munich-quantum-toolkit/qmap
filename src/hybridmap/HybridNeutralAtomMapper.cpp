@@ -2244,9 +2244,10 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   qc::fp const bridgeFidelity = this->arch->getGateAverageFidelity(bridgeName) *
                                 std::exp(-this->arch->getGateTime(bridgeName) /
                                          this->arch->getDecoherenceTime());
-  if (bridgeDistReduction * std::log(swapFidelity) /
-          parameters->dynamicMappingWeight >
-      swapDistReduction * std::log(bridgeFidelity)) {
+  const auto swap = -swapDistReduction * std::log(1 - swapFidelity) *
+                    parameters->dynamicMappingWeight;
+  const auto bridge = -bridgeDistReduction * std::log(1 - bridgeFidelity);
+  if (swap >= bridge) {
     return MappingMethod::SwapMethod;
   }
   return MappingMethod::BridgeMethod;
@@ -2256,7 +2257,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     const MoveComb& bestMoveComb, const FlyingAncillaComb& bestFaComb,
     const PassByComb& bestPbComb) const {
   // move distance reduction
-  auto const moveDistReduction =
+  auto moveDistReduction =
       moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling) +
       (this->parameters->lookaheadWeightMoves *
        moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling));
@@ -2277,12 +2278,10 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   auto const moveDecoherence =
       std::exp(-moveTime / this->arch->getDecoherenceTime());
   auto const moveFidelity = moveOpFidelity * moveDecoherence;
-  const auto move = std::log(moveFidelity) / moveDistReduction /
-                    parameters->dynamicMappingWeight;
 
   // fa
-  auto fa = -std::numeric_limits<double>::infinity();
   auto faDistReduction = 0.0;
+  auto faFidelity = 0.0;
   if (flyingAncillas.getNumQubits() != 0) {
     // flying ancilla distance reduction
     auto const faCoords = this->hardwareQubits.getCoordIndices(
@@ -2300,17 +2299,16 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     auto const faDecoherence =
         std::exp(-faDist / this->arch->getShuttlingTime(qc::OpType::AodMove) /
                  this->arch->getDecoherenceTime());
-    auto const faFidelity = faOpFidelity * faDecoherence;
-    fa = std::log(faFidelity) / faDistReduction;
+    faFidelity = faOpFidelity * faDecoherence;
   }
 
   // passby
   auto pbDistReduction = 0.0;
-  auto passBy = -std::numeric_limits<double>::infinity();
+  auto passByFidelity = 0.0;
   if (parameters->usePassBy) {
     auto const pbCoords = this->hardwareQubits.getCoordIndices(
         this->mapping.getHwQubits(bestPbComb.op->getUsedQubits()));
-    faDistReduction = this->arch->getAllToAllEuclideanDistance(pbCoords);
+    pbDistReduction = this->arch->getAllToAllEuclideanDistance(pbCoords);
     const auto pbCombSize = bestPbComb.moves.size();
 
     auto const passByDist = this->arch->getPassByEuclideanDistance(bestPbComb);
@@ -2320,7 +2318,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
          static_cast<qc::fp>(pbCombSize)) +
         (this->arch->getShuttlingTime(qc::OpType::AodDeactivate) *
          static_cast<qc::fp>(pbCombSize));
-    auto const passByFidelity =
+    passByFidelity =
         std::pow(this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
                      this->arch->getShuttlingAverageFidelity(
                          qc::OpType::AodActivate) *
@@ -2328,11 +2326,21 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
                          qc::OpType::AodDeactivate),
                  pbCombSize) *
         std::exp(-passByTime / this->arch->getDecoherenceTime());
-
-    const auto move = std::log(moveFidelity) / moveDistReduction /
-                      parameters->dynamicMappingWeight;
-    passBy = std::log(passByFidelity) / faDistReduction;
   }
+
+  auto const minDistanceReduction =
+      std::min({moveDistReduction, faDistReduction, pbDistReduction});
+  if (minDistanceReduction < 0) {
+    moveDistReduction -= minDistanceReduction;
+    faDistReduction -= minDistanceReduction;
+    pbDistReduction -= minDistanceReduction;
+  }
+
+  // higher is better
+  const auto move = -std::log(1 - moveFidelity) * moveDistReduction *
+                    parameters->dynamicMappingWeight;
+  const auto fa = -std::log(1 - faFidelity) * faDistReduction;
+  const auto passBy = -std::log(1 - passByFidelity) * faDistReduction;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
