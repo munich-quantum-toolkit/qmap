@@ -398,7 +398,16 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   }
   auto controlCoords =
       hardwareQubits.getCoordIndices(mapping.getHwQubits(controlQubits));
+  // merge target and control coords
+  auto allCoords = targetCoords;
+  allCoords.insert(allCoords.end(), controlCoords.begin(), controlCoords.end());
 
+  if (allCoords.size() / 2 != faComb.moves.size()) {
+    throw std::runtime_error(
+        "Not enough flying ancilla moves for the given operation");
+  }
+
+  uint32_t i = 0;
   const auto nPos = this->arch->getNpositions();
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + (nPos * 2);
@@ -407,15 +416,18 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
       mappedQc.move(passBy.origin + 2 * nPos, ancQ1);
     }
     mappedQc.h(ancQ1);
-    mappedQc.cz(passBy.q1, ancQ1);
+    mappedQc.cz(allCoords[i], ancQ1);
+    i++;
     mappedQc.h(ancQ1);
     mappedQc.move(ancQ1, ancQ2);
 
-    auto itT = std::find(targetCoords.begin(), targetCoords.end(), passBy.q1);
+    auto itT =
+        std::find(targetCoords.begin(), targetCoords.end(), allCoords[i]);
     if (itT != targetCoords.end()) {
       *itT = ancQ2;
     }
-    auto itC = std::find(controlCoords.begin(), controlCoords.end(), passBy.q1);
+    auto itC =
+        std::find(controlCoords.begin(), controlCoords.end(), allCoords[i]);
     if (itC != controlCoords.end()) {
       *itC = ancQ2;
     }
@@ -439,7 +451,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     const auto ancQ2 = passBy.q2 + (nPos * 2);
     mappedQc.move(ancQ2, ancQ1);
     mappedQc.h(ancQ1);
-    mappedQc.cz(passBy.q1, ancQ1);
+    mappedQc.cz(allCoords[i + 1], ancQ1);
+    i += 2;
     mappedQc.h(ancQ1);
 
     // update position of flying ancillas
