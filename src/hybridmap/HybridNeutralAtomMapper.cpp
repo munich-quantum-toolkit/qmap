@@ -101,7 +101,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     std::cout << "nMoves: " << nMoves << '\n';
     std::cout << "nPassBy: " << nPassBy << '\n';
 
-    mappedQc.print(std::cout);
+    // mappedQc.print(std::cout);
   }
 }
 
@@ -144,12 +144,12 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
 
 qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   // decompose SWAP gates
-  qc::CircuitOptimizer::decomposeSWAP(mappedQc, false);
+  // qc::CircuitOptimizer::decomposeSWAP(mappedQc, false);
   // decompose bridge gates
-  decomposeBridgeGates(mappedQc);
-  qc::CircuitOptimizer::replaceMCXWithMCZ(mappedQc);
-  qc::CircuitOptimizer::singleQubitGateFusion(mappedQc);
-  qc::CircuitOptimizer::flattenOperations(mappedQc);
+  // decomposeBridgeGates(mappedQc);
+  // qc::CircuitOptimizer::replaceMCXWithMCZ(mappedQc);
+  // qc::CircuitOptimizer::singleQubitGateFusion(mappedQc);
+  // qc::CircuitOptimizer::flattenOperations(mappedQc);
   // decompose AOD moves
   MoveToAodConverter aodScheduler(*arch, hardwareQubits, flyingAncillas);
   mappedQcAOD = aodScheduler.schedule(mappedQc);
@@ -412,12 +412,9 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + (nPos * 2);
     const auto ancQ2 = passBy.q2 + (nPos * 2);
-    if (passBy.origin + 2 * nPos != ancQ1) {
-      mappedQc.move(passBy.origin + 2 * nPos, ancQ1);
-    }
+    mappedQc.move(passBy.origin + 2 * nPos, ancQ1);
     mappedQc.h(ancQ1);
     mappedQc.cz(allCoords[i], ancQ1);
-    i++;
     mappedQc.h(ancQ1);
     mappedQc.move(ancQ1, ancQ2);
 
@@ -431,6 +428,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     if (itC != controlCoords.end()) {
       *itC = ancQ2;
     }
+    i += 2;
 
     if (this->parameters->verbose) {
       std::cout << "passby (flying ancilla) " << passBy.origin << " "
@@ -446,12 +444,13 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   opCopy->setControls(controls);
   mappedQc.emplace_back(opCopy->clone());
 
+  i = 0;
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + (nPos * 2);
     const auto ancQ2 = passBy.q2 + (nPos * 2);
     mappedQc.move(ancQ2, ancQ1);
     mappedQc.h(ancQ1);
-    mappedQc.cz(allCoords[i + 1], ancQ1);
+    mappedQc.cz(allCoords[i], ancQ1);
     i += 2;
     mappedQc.h(ancQ1);
 
