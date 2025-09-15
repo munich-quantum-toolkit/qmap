@@ -104,6 +104,7 @@ HardwareQubits::computeAllShortestPaths(const HwQubit q1,
           currentPath.size() == shortestPathLength) {
         shortestPathLength = currentPath.size();
         allPaths.push_back(currentPath);
+        break;
       } else if (currentPath.size() > shortestPathLength) {
         // Since we use BFS, once a path longer than the shortest length is
         // found, stop exploring
