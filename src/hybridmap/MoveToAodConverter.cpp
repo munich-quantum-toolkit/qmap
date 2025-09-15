@@ -554,8 +554,8 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             targetQubits.emplace_back(ends[i]);
           } else {
             // insert before one before the found position
-            targetQubits.insert(pos - 1, ends[i]);
-            targetQubits.insert(pos - 1, starts[i]);
+            const auto newPos = targetQubits.insert(pos - 1, ends[i]);
+            targetQubits.insert(newPos, starts[i]);
           }
         }
 
@@ -568,6 +568,9 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             const auto& end = deactivationDim[i]->init * d +
                               deactivationDim[i]->offset * interD;
             if (std::abs(start - end) > 0.0001) {
+              if (start > 10000) {
+                int i = 0;
+              }
               aodOperations.emplace_back(dim, start, end);
             }
           }
