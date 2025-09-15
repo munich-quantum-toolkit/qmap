@@ -40,6 +40,8 @@ protected:
   qc::Permutation hwToCoordIdx;
   SymmetricMatrix<SwapDistance> swapDistances;
   std::map<HwQubit, HwQubits> nearbyQubits;
+  std::vector<CoordIndex> freeCoordinates;
+  std::vector<CoordIndex> occupiedCoordinates;
   qc::Permutation initialHwPos;
 
   /**
@@ -96,6 +98,7 @@ public:
     case Trivial:
       for (uint32_t i = 0; i < this->nQubits; ++i) {
         hwToCoordIdx.emplace(i, i);
+        occupiedCoordinates.emplace_back(i);
       }
       initTrivialSwapDistances();
       break;
@@ -109,11 +112,20 @@ public:
       std::shuffle(indices.begin(), indices.end(), g);
       for (uint32_t i = 0; i < this->nQubits; ++i) {
         hwToCoordIdx.emplace(i, indices[i]);
+        occupiedCoordinates.emplace_back(indices[i]);
       }
 
       swapDistances = SymmetricMatrix(this->nQubits, -1);
     }
     initNearbyQubits();
+
+    for (uint32_t i = 0; i < architecture.getNpositions(); ++i) {
+      if (std::find(occupiedCoordinates.begin(), occupiedCoordinates.end(),
+                    i) == occupiedCoordinates.end()) {
+        freeCoordinates.emplace_back(i);
+      }
+    }
+
     initialHwPos = hwToCoordIdx;
   }
 
@@ -133,9 +145,11 @@ public:
    * @return Boolean indicating if the hardware qubit is mapped to a coordinate.
    */
   [[nodiscard]] bool isMapped(CoordIndex idx) const {
-    return !std::none_of(
-        hwToCoordIdx.begin(), hwToCoordIdx.end(),
-        [idx](const auto& pair) { return pair.second == idx; });
+    if (std::find(occupiedCoordinates.begin(), occupiedCoordinates.end(),
+                  idx) != occupiedCoordinates.end()) {
+      return true;
+    }
+    return false;
   }
   /**
    * @brief Updates mapping after moving a hardware qubit to a coordinate.
@@ -148,6 +162,8 @@ public:
 
   void removeHwQubit(const HwQubit hwQubit) {
     hwToCoordIdx.erase(hwQubit);
+    freeCoordinates.emplace_back(initialHwPos.at(hwQubit));
+    occupiedCoordinates.emplace_back(initialHwPos.at(hwQubit));
     initialHwPos.erase(hwQubit);
     // set swap distances to -1
     for (uint32_t i = 0; i < swapDistances.size(); ++i) {

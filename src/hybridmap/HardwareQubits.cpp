@@ -144,6 +144,14 @@ void HardwareQubits::move(HwQubit hwQubit, const CoordIndex newCoord) {
     }
   }
 
+  const auto oldCoord = hwToCoordIdx.at(hwQubit);
+  occupiedCoordinates.erase(std::find(occupiedCoordinates.begin(),
+                                      occupiedCoordinates.end(), oldCoord));
+  occupiedCoordinates.emplace_back(newCoord);
+  freeCoordinates.emplace_back(oldCoord);
+  freeCoordinates.erase(
+      std::find(freeCoordinates.begin(), freeCoordinates.end(), newCoord));
+
   // remove qubit from old nearby qubits
   const auto prevNearbyQubits = nearbyQubits.at(hwQubit);
   for (const auto& qubit : prevNearbyQubits) {
@@ -249,38 +257,29 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord,
                                      const CoordIndices& excludedCoords) const {
   // return the closest free coord in general
   // and the closest free coord in the given direction
-  std::vector<CoordIndex> closestFreeCoords;
-  std::queue<CoordIndex> queue;
-  queue.push(coord);
-  std::set<CoordIndex> visited;
-  visited.emplace(coord);
-  bool foundClosest = false;
-  while (!queue.empty()) {
-    const auto currentCoord = queue.front();
-    queue.pop();
-    auto nearbyCoords = this->arch->getNN(currentCoord);
-    for (const auto& nearbyCoord : nearbyCoords) {
-      if (std::find(visited.rbegin(), visited.rend(), nearbyCoord) ==
-          visited.rend()) {
-        visited.emplace(nearbyCoord);
-        if (!this->isMapped(nearbyCoord) &&
-            std::find(excludedCoords.begin(), excludedCoords.end(),
-                      nearbyCoord) == excludedCoords.end()) {
-          if (!foundClosest) {
-            closestFreeCoords.emplace_back(nearbyCoord);
-          }
-          foundClosest = true;
-          if (direction == arch->getVector(coord, nearbyCoord).direction) {
-            closestFreeCoords.emplace_back(nearbyCoord);
-            return closestFreeCoords;
-          }
-        } else {
-          queue.push(nearbyCoord);
-        }
-      }
+  std::vector<CoordIndex> freeCoordsInDirection;
+  for (const auto& freeCoord : freeCoordinates) {
+    if (std::find(excludedCoords.begin(), excludedCoords.end(), freeCoord) !=
+        excludedCoords.end()) {
+      continue;
+    }
+    if (direction == arch->getVector(coord, freeCoord).direction) {
+      freeCoordsInDirection.emplace_back(freeCoord);
     }
   }
-  return closestFreeCoords;
+  if (freeCoordsInDirection.empty()) {
+    freeCoordsInDirection = freeCoordinates;
+  }
+  auto minDistance = std::numeric_limits<qc::fp>::max();
+  CoordIndex minCoord = freeCoordsInDirection.front();
+  for (const auto& freeCoord : freeCoordsInDirection) {
+    if (const auto distance = arch->getEuclideanDistance(coord, freeCoord);
+        distance < minDistance) {
+      minDistance = distance;
+      minCoord = freeCoord;
+    }
+  }
+  return {minCoord};
 }
 
 std::vector<CoordIndex> HardwareQubits::findClosestAncillaCoord(
