@@ -1497,12 +1497,6 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
     if (!bestPos.coords.empty()) {
       nMovesGate = std::min(nMovesGate, bestPos.nMoves);
     }
-    for (const auto& nearbyCoord : this->arch->getNearbyCoordinates(coord)) {
-      if (std::find(visited.begin(), visited.end(), nearbyCoord) ==
-          visited.end()) {
-        q.push(nearbyCoord);
-      }
-    }
   }
   if (finalBestPos.coords.empty()) {
     // check if interaction radius too small
