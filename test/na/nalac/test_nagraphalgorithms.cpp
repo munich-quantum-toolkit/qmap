@@ -1,5 +1,5 @@
-#include "Definitions.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/nalac/NAGraphAlgorithms.hpp"
@@ -18,7 +18,7 @@ class TestNAGraph : public testing::Test {
 protected:
   qc::QuantumComputation qc;
   qc::Layer layer;
-  na::InteractionGraph graph{};
+  na::nalac::InteractionGraph graph{};
   void SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
@@ -91,7 +91,8 @@ TEST_F(TestNAGraph, Getter) {
 }
 
 TEST_F(TestNAGraph, MaxIndepSet) {
-  const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  const auto& maxIndepSet =
+      na::nalac::NAGraphAlgorithms::getMaxIndependentSet(graph);
   EXPECT_EQ(maxIndepSet.size(), 3);
   EXPECT_TRUE(maxIndepSet.count(1));
   EXPECT_TRUE(maxIndepSet.count(3));
@@ -99,20 +100,23 @@ TEST_F(TestNAGraph, MaxIndepSet) {
 }
 
 TEST_F(TestNAGraph, CoveredEdges) {
-  EXPECT_THROW(std::ignore = na::NAGraphAlgorithms::coveredEdges(
+  EXPECT_THROW(std::ignore = na::nalac::NAGraphAlgorithms::coveredEdges(
                    graph, std::unordered_set<qc::Qubit>{8}),
                std::invalid_argument);
 }
 
 TEST_F(TestNAGraph, Coloring) {
-  const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  const auto& maxIndepSet =
+      na::nalac::NAGraphAlgorithms::getMaxIndependentSet(graph);
   std::vector queue(maxIndepSet.cbegin(), maxIndepSet.cend());
   // sort the vertices by degree in descending order
   std::sort(queue.begin(), queue.end(), [&](const auto& u, const auto& v) {
     return graph.getDegree(u) > graph.getDegree(v);
   });
-  const auto& edges = na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
-  const auto& coloring = na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
+  const auto& edges =
+      na::nalac::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
+  const auto& coloring =
+      na::nalac::NAGraphAlgorithms::colorEdges(graph, edges, queue);
   // check that adjacent edges have different colors
   for (const auto& [e, k] : coloring.first) {
     for (const auto& [f, l] : coloring.first) {
@@ -159,7 +163,8 @@ TEST_F(TestNAGraph, Coloring) {
 }
 
 TEST_F(TestNAGraph, SequenceOrdering) {
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
+  const auto& sequence =
+      na::nalac::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   // check that the order of moveable qubits is consistent
   auto order =
@@ -184,7 +189,8 @@ TEST_F(TestNAGraph, SequenceOrdering) {
 }
 
 TEST_F(TestNAGraph, InteractionExists) {
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
+  const auto& sequence =
+      na::nalac::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   const auto& fixed = sequence.second;
   // check that all interactions are part of the interaction graph
@@ -203,12 +209,14 @@ TEST_F(TestNAGraph, InteractionExists) {
 }
 
 TEST_F(TestNAGraph, CoveredInteractions) {
-  const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  const auto& maxIndepSet =
+      na::nalac::NAGraphAlgorithms::getMaxIndependentSet(graph);
   const auto& coveredEdges =
-      na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
+      na::nalac::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   // TODO for some reason this must be a vector, set gives an error
   std::vector coveredEdgesVec(coveredEdges.cbegin(), coveredEdges.cend());
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
+  const auto& sequence =
+      na::nalac::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   const auto& fixed = sequence.second;
   // check that all interactions that are covered by the independent set are

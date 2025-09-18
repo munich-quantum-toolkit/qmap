@@ -1,7 +1,6 @@
 FormatStyle: file
 
 Checks: |
-  boost-*,
   bugprone-*,
   -bugprone-easily-swappable-parameters,
   -bugprone-unchecked-optional-access,

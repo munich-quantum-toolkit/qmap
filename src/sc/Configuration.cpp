@@ -50,12 +50,6 @@ nlohmann::basic_json<> Configuration::json() const {
       lookaheadSettings["first_factor"] = firstLookaheadFactor;
       lookaheadSettings["factor"] = lookaheadFactor;
     }
-    if (useTeleportation) {
-      auto& teleportation = heuristicJson["teleportation"];
-      teleportation["qubits"] = teleportationQubits;
-      teleportation["seed"] = teleportationSeed;
-      teleportation["fake"] = teleportationFake;
-    }
   }
 
   if (method == Method::Exact) {

@@ -5,9 +5,9 @@
 
 #include "hybridmap/NeutralAtomScheduler.hpp"
 
-#include "Definitions.hpp"
 #include "hybridmap/HybridAnimation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"

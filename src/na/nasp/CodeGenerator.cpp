@@ -1,16 +1,19 @@
 #include "na/nasp/CodeGenerator.hpp"
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/entities/Atom.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/operations/NAGlobalOperation.hpp"
-#include "na/operations/NALocalOperation.hpp"
-#include "na/operations/NAShuttlingOperation.hpp"
+#include "na/operations/GlobalCZOp.hpp"
+#include "na/operations/GlobalRYOp.hpp"
+#include "na/operations/LoadOp.hpp"
+#include "na/operations/LocalRZOp.hpp"
+#include "na/operations/MoveOp.hpp"
+#include "na/operations/StoreOp.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,6 +22,7 @@
 #include <memory>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -31,7 +35,7 @@ auto CodeGenerator::coordFromDiscrete(
     const NASolver::Result::Qubit q, const int64_t maxHOffset,
     const int64_t maxVOffset, const int64_t minEntanglingY,
     const int64_t maxEntanglingY, const int64_t minAtomDist,
-    const int64_t noInteractionRadius, const int64_t zoneDist) -> Point {
+    const int64_t noInteractionRadius, const int64_t zoneDist) -> Location {
   const auto dx = noInteractionRadius + (2LL * maxHOffset * minAtomDist);
   const auto dy = noInteractionRadius + (2LL * maxVOffset * minAtomDist);
   const auto x = q.x;
@@ -41,21 +45,23 @@ auto CodeGenerator::coordFromDiscrete(
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {
-      return {(x * dx) + (h * minAtomDist), (y * dy) + (v * minAtomDist)};
+      return {static_cast<double>(x * dx + h * minAtomDist),
+              static_cast<double>(y * dy + v * minAtomDist)};
     }
-    return {(x * dx) + (h * minAtomDist),
-            zoneDist + ((y - 1) * dy) + (v * minAtomDist)};
+    return {static_cast<double>(x * dx + h * minAtomDist),
+            static_cast<double>(zoneDist + (y - 1) * dy + v * minAtomDist)};
   }
   // top storage zone
   if (y < minEntanglingY) {
-    return {(x * dx) + (h * minAtomDist), (y * dy) + (v * minAtomDist)};
+    return {static_cast<double>(x * dx + h * minAtomDist),
+            static_cast<double>(y * dy + v * minAtomDist)};
   }
   if (y <= maxEntanglingY) {
-    return {(x * dx) + (h * minAtomDist),
-            zoneDist + ((y - 1) * dy) + (v * minAtomDist)};
+    return {static_cast<double>(x * dx + h * minAtomDist),
+            static_cast<double>(zoneDist + (y - 1) * dy + v * minAtomDist)};
   }
-  return {(x * dx) + (h * minAtomDist),
-          (2LL * zoneDist) + ((y - 2) * dy) + (v * minAtomDist)};
+  return {static_cast<double>(x * dx + h * minAtomDist),
+          static_cast<double>(2LL * zoneDist + (y - 2) * dy + v * minAtomDist)};
 }
 
 auto CodeGenerator::generate(const QuantumComputation& input,
@@ -71,9 +77,11 @@ auto CodeGenerator::generate(const QuantumComputation& input,
   CircuitOptimizer::flattenOperations(flattened);
   const Layer layer(flattened);
   NAComputation code;
-  std::vector<std::shared_ptr<Point>> oldPositions;
+  const auto& globalZone = code.emplaceBackZone("global");
+  const auto& interactionZone = code.emplaceBackZone("zone_cz0");
+  std::vector<const Atom*> atoms;
   std::vector<bool> wasAOD;
-  oldPositions.reserve(result.stages.front().qubits.size());
+  atoms.reserve(result.stages.front().qubits.size());
   wasAOD.reserve(result.stages.front().qubits.size());
   // initialize atoms in SLM and load required ones into AOD
   {
@@ -85,21 +93,22 @@ auto CodeGenerator::generate(const QuantumComputation& input,
         vAODLines[static_cast<std::size_t>(q.x)].emplace(q.c);
       }
     }
-    std::vector<std::shared_ptr<Point>> loadPositions;
+    std::vector<const Atom*> loadAtoms;
+    std::size_t c = 0;
     for (const auto& q : result.stages.front().qubits) {
-      auto pos = std::make_shared<Point>(coordFromDiscrete(
+      const auto& pos = coordFromDiscrete(
           q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
-          minAtomDist, noInteractionRadius, zoneDist));
+          minAtomDist, noInteractionRadius, zoneDist);
       wasAOD.emplace_back(q.a);
+      const auto& atom = *atoms.emplace_back(
+          &code.emplaceBackAtom("atom" + std::to_string(c++)));
       if (q.a) {
-        loadPositions.emplace_back(pos);
+        loadAtoms.emplace_back(&atom);
       }
-      oldPositions.emplace_back(pos);
-      code.emplaceInitialPosition(pos);
+      code.emplaceInitialLocation(atom, pos);
     }
-    if (!loadPositions.empty()) {
-      code.emplaceBack<NAShuttlingOperation>(LOAD, loadPositions,
-                                             loadPositions);
+    if (!loadAtoms.empty()) {
+      code.emplaceBack<LoadOp>(loadAtoms);
     }
   }
   const auto ops = layer.getExecutablesOfType(H, 0);
@@ -113,13 +122,12 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     throw std::invalid_argument("Not all atoms are initialized to plus state.");
   }
   // initialize atoms in to |+> state starting in |0> state
-  code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{RY, 0},
-                                                       std::vector{PI_2}));
+  code.emplaceBack<GlobalRYOp>(globalZone, PI_2);
   std::for_each(ops.cbegin(), ops.cend(), [](const auto& v) { v->execute(); });
   // Reference to the executable set of the input circuit
   const auto& executableSet = layer.getExecutableSet();
   if (result.stages.front().rydberg) {
-    code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{Z, 1}));
+    code.emplaceBack<GlobalCZOp>(interactionZone);
     // find and execute corresponding gates in input circuit
     for (const auto& g : result.stages.front().gates) {
       const auto& it = std::find_if(
@@ -140,51 +148,40 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     }
   }
   for (uint16_t t = 1; t < static_cast<uint16_t>(result.stages.size()); ++t) {
-    std::vector<std::shared_ptr<Point>> newPositions;
-    newPositions.reserve(oldPositions.size());
-    std::vector<std::shared_ptr<Point>> startPositions;
-    std::vector<std::shared_ptr<Point>> endPositions;
-    std::vector<std::shared_ptr<Point>> loadStartPositions;
-    std::vector<std::shared_ptr<Point>> loadEndPositions;
-    std::vector<std::shared_ptr<Point>> storeStartPositions;
-    std::vector<std::shared_ptr<Point>> storeEndPositions;
+    std::vector<const Atom*> moveAtoms;
+    std::vector<Location> targetLocations;
+    std::vector<const Atom*> loadAtoms;
+    std::vector<const Atom*> storeAtoms;
     for (uint16_t i = 0;
          static_cast<size_t>(i) < result.stages.at(t).qubits.size(); ++i) {
       const auto& q = result.stages.at(t).qubits.at(i);
-      auto pos = std::make_shared<Point>(coordFromDiscrete(
-          q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
-          minAtomDist, noInteractionRadius, zoneDist));
+      auto pos = coordFromDiscrete(q, maxHOffset, maxVOffset, minEntanglingY,
+                                   maxEntanglingY, minAtomDist,
+                                   noInteractionRadius, zoneDist);
       if (wasAOD[i] && q.a) {
-        startPositions.emplace_back(oldPositions[i]);
-        endPositions.emplace_back(pos);
+        moveAtoms.emplace_back(atoms[i]);
+        targetLocations.emplace_back(pos);
       } else if (wasAOD[i] && !q.a) {
-        storeStartPositions.emplace_back(oldPositions[i]);
-        storeEndPositions.emplace_back(pos);
+        storeAtoms.emplace_back(atoms[i]);
       } else if (!wasAOD[i] && q.a) {
-        loadStartPositions.emplace_back(oldPositions[i]);
-        loadEndPositions.emplace_back(loadStartPositions.back());
-        startPositions.emplace_back(loadEndPositions.back());
-        endPositions.emplace_back(pos);
+        loadAtoms.emplace_back(atoms[i]);
+        moveAtoms.emplace_back(atoms[i]);
+        targetLocations.emplace_back(pos);
       }
-      newPositions.emplace_back(pos);
       wasAOD[i] = q.a;
     }
-    if (!storeEndPositions.empty()) {
-      code.emplaceBack<NAShuttlingOperation>(STORE, storeStartPositions,
-                                             storeEndPositions);
+    if (!storeAtoms.empty()) {
+      code.emplaceBack<StoreOp>(storeAtoms);
     }
-    if (!loadEndPositions.empty()) {
-      code.emplaceBack<NAShuttlingOperation>(LOAD, loadStartPositions,
-                                             loadEndPositions);
+    if (!loadAtoms.empty()) {
+      code.emplaceBack<LoadOp>(loadAtoms);
     }
-    if (!startPositions.empty()) {
-      code.emplaceBack<NAShuttlingOperation>(MOVE, startPositions,
-                                             endPositions);
+    if (!moveAtoms.empty()) {
+      code.emplaceBack<MoveOp>(moveAtoms, targetLocations);
     }
     if (result.stages.at(t).rydberg) {
-      code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{Z, 1}));
+      code.emplaceBack<GlobalCZOp>(interactionZone);
     }
-    oldPositions = std::move(newPositions);
     // find and execute corresponding gates in input circuit
     for (const auto& g : result.stages.at(t).gates) {
       const auto& it = std::find_if(
@@ -205,8 +202,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     }
   }
   if (!executableSet.empty()) {
-    code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{RY, 0},
-                                                         std::vector{-PI_4}));
+    code.emplaceBack<GlobalRYOp>(globalZone, -PI_4);
     while (!executableSet.empty()) {
       const auto& v = (*executableSet.cbegin());
       if (v->getOperation()->getType() != H) {
@@ -214,13 +210,10 @@ auto CodeGenerator::generate(const QuantumComputation& input,
             "Not all non CZ-gates in input circuit are executed.");
       }
       const auto q = v->getOperation()->getTargets().front();
-      const auto& pos = oldPositions[q];
-      code.emplaceBack(std::make_unique<NALocalOperation>(
-          FullOpType{RZ, 0}, std::vector{PI}, pos));
+      code.emplaceBack<LocalRZOp>(*atoms[q], PI);
       v->execute();
     }
-    code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{RY, 0},
-                                                         std::vector{PI_4}));
+    code.emplaceBack<GlobalRYOp>(globalZone, PI_4);
   }
   return code;
 }

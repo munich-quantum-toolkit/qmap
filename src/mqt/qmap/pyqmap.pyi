@@ -1,3 +1,5 @@
+"""Python bindings module for MQT QMAP."""
+
 from typing import Any, ClassVar, overload
 
 from mqt.core.ir import QuantumComputation
@@ -31,7 +33,10 @@ class Arch:
     def value(self) -> int: ...
 
 class Architecture:
+    """Class representing device/backend information."""
     class Properties:
+        """Class representing properties of an architecture."""
+
         name: str
         num_qubits: int
 
@@ -55,26 +60,26 @@ class Architecture:
     coupling_map: set[tuple[int, int]]
     name: str
     num_qubits: int
-    properties: Architecture.Properties
+    properties: Properties
 
     @overload
     def __init__(self) -> None: ...
     @overload
     def __init__(self, num_qubits: int, coupling_map: set[tuple[int, int]]) -> None: ...
     @overload
-    def __init__(
-        self, num_qubits: int, coupling_map: set[tuple[int, int]], properties: Architecture.Properties
-    ) -> None: ...
+    def __init__(self, num_qubits: int, coupling_map: set[tuple[int, int]], properties: Properties) -> None: ...
     @overload
     def load_coupling_map(self, available_architecture: Arch) -> None: ...
     @overload
     def load_coupling_map(self, coupling_map_file: str) -> None: ...
     @overload
-    def load_properties(self, properties: Architecture.Properties) -> None: ...
+    def load_properties(self, properties: Properties) -> None: ...
     @overload
     def load_properties(self, properties: str) -> None: ...
 
 class CircuitInfo:
+    """Circuit information."""
+
     cnots: int
     direction_reverse: int
     gates: int
@@ -85,7 +90,6 @@ class CircuitInfo:
     qubits: int
     single_qubit_gates: int
     swaps: int
-    teleportations: int
 
     def __init__(self) -> None: ...
 
@@ -115,6 +119,8 @@ class CommanderGrouping:
     def value(self) -> int: ...
 
 class Configuration:
+    """Class representing the configuration for the mapping."""
+
     add_measurements_to_mapped_circuit: bool
     add_barriers_between_layers: bool
     heuristic: Heuristic
@@ -140,12 +146,8 @@ class Configuration:
     subgraph: set[int]
     swap_limit: int
     swap_reduction: SwapReduction
-    teleportation_fake: bool
-    teleportation_qubits: int
-    teleportation_seed: int
     timeout: int
     use_subsets: bool
-    use_teleportation: bool
     verbose: bool
     debug: bool
     data_logging_path: str
@@ -331,6 +333,8 @@ class LayerHeuristicBenchmarkInfo:
     def json(self) -> dict[str, Any]: ...
 
 class MappingResults:
+    """Class representing the results of a mapping."""
+
     configuration: Configuration
     input: CircuitInfo
     mapped_circuit: str
@@ -342,7 +346,6 @@ class MappingResults:
     layer_heuristic_benchmark: LayerHeuristicBenchmarkInfo
 
     def __init__(self) -> None: ...
-    def csv(self) -> str: ...
     def json(self) -> dict[str, Any]: ...
 
 class Method:
@@ -393,7 +396,19 @@ class SwapReduction:
     @property
     def value(self) -> int: ...
 
-def map(circ: QuantumComputation, arch: Architecture, config: Configuration) -> MappingResults: ...  # noqa: A001
+def map(  # noqa: A001
+    circ: QuantumComputation, arch: Architecture, config: Configuration
+) -> tuple[QuantumComputation, MappingResults]:
+    """Map a quantum circuit to an architecture.
+
+    Args:
+        circ: The quantum circuit to map.
+        arch: The architecture to map to.
+        config: The mapping configuration.
+
+    Returns:
+        A tuple containing the mapped circuit and the mapping results.
+    """
 
 class TargetMetric:
     __members__: ClassVar[dict[TargetMetric, int]] = ...  # read-only
@@ -448,6 +463,8 @@ class Verbosity:
     def value(self) -> int: ...
 
 class SynthesisConfiguration:
+    """Class representing the configuration for the Clifford synthesis tehcniques."""
+
     dump_intermediate_results: bool
     gate_limit_factor: float
     initial_timestep_limit: int
@@ -468,6 +485,7 @@ class SynthesisConfiguration:
     def json(self) -> dict[str, Any]: ...
 
 class SynthesisResults:
+    """Class representing the results of the Clifford synthesis techniques."""
     def __init__(self) -> None: ...
     def sat(self) -> bool: ...
     def unsat(self) -> bool: ...
@@ -489,6 +507,7 @@ class SynthesisResults:
     def two_qubit_gates(self) -> int: ...
 
 class Tableau:
+    """Class representing a Clifford tableau."""
     @overload
     def __init__(self, n: int, include_stabilizers: bool = False) -> None: ...
     @overload
@@ -497,6 +516,7 @@ class Tableau:
     def __init__(self, stabilizers: str, destabilizers: str) -> None: ...
 
 class CliffordSynthesizer:
+    """The main class for the Clifford synthesis techniques."""
     @overload
     def __init__(self, initial_tableau: Tableau, target_tableau: Tableau) -> None: ...
     @overload
@@ -508,6 +528,8 @@ class CliffordSynthesizer:
     def synthesize(self, config: SynthesisConfiguration = ...) -> None: ...
     @property
     def results(self) -> SynthesisResults: ...
+    @property
+    def result_circuit(self) -> QuantumComputation: ...
 
 class InitialCoordinateMapping:
     __members__: ClassVar[dict[str, int]] = ...  # read-only
@@ -572,6 +594,7 @@ class HybridMapperParameters:
     ) -> None: ...
 
 class HybridNAMapper:
+    """The hybrid mapper for Neutral Atom Quantum Computers."""
     def __init__(self, arch: NeutralAtomHybridArchitecture, params: HybridMapperParameters = ...) -> None: ...
     def get_animation_csv(self) -> str: ...
     def get_init_hw_pos(self) -> dict[int, int]: ...
@@ -592,6 +615,8 @@ class HybridNAMapper:
     def set_parameters(self, params: HybridMapperParameters) -> None: ...
 
 class NeutralAtomHybridArchitecture:
+    """Class representing the architecture of a Neutral Atom Quantum Computer."""
+
     name: str
 
     def __init__(self, filename: str) -> None: ...
@@ -651,6 +676,7 @@ class HybridSynthesisMapper:
     def set_parameters(self, params: HybridMapperParameters) -> None: ...
 
 class NAStatePreparationSolver:
+    """The main class for the Neutral Atom State Preparation."""
     def __init__(
         self,
         new_max_x: int,
@@ -667,7 +693,7 @@ class NAStatePreparationSolver:
 
     class Result:
         def __init__(self) -> None: ...
-        def yaml(self, compact: bool = ...) -> str: ...
+        def json(self) -> dict[str, Any]: ...
 
     def solve(
         self,

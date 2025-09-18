@@ -3,10 +3,10 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Definitions.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "qasm3/Importer.hpp"
 

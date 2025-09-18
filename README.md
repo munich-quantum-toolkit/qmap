@@ -47,14 +47,18 @@ Compiling a given quantum circuit to a certain device is as easy as
 ```python3
 from mqt import qmap
 from qiskit import QuantumCircuit
-from qiskit.providers.fake_provider import FakeLondon
+from qiskit.providers.fake_provider import GenericBackendV2
 
 circ = QuantumCircuit(3)
 circ.h(0)
 circ.cx(0, 1)
 circ.cx(0, 2)
 
-circ_mapped, results = qmap.compile(circ, arch=FakeLondon())
+arch = GenericBackendV2(
+    num_qubits=5,
+    coupling_map=[[0, 1], [1, 0], [1, 2], [2, 1], [1, 3], [3, 1], [3, 4], [4, 3]],
+)
+circ_mapped, results = qmap.compile(circ, arch=arch)
 ```
 
 Optimizing a Clifford circuit is as easy as

@@ -10,7 +10,7 @@ import pytest
 import rustworkx as rx
 from qiskit.providers.fake_provider import GenericBackendV2
 
-from mqt.qmap import Architecture
+from mqt.qmap.pyqmap import Architecture
 from mqt.qmap.subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,

@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/AodOperation.hpp"
 

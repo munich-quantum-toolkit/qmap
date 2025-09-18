@@ -5,10 +5,10 @@
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
-#include "Definitions.hpp"
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
 #include "cliffordsynthesis/Results.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"

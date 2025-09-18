@@ -5,8 +5,8 @@
 
 #include "hybridmap/NeutralAtomLayer.hpp"
 
-#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 

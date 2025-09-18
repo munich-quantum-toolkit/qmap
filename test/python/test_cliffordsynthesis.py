@@ -242,13 +242,13 @@ def test_optimize_qiskit_circuit(bell_circuit: QuantumCircuit) -> None:
 
 def test_optimize_with_initial_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can optimize a circuit with an initial tableau."""
-    circ, _ = qmap.optimize_clifford(circuit=bell_circuit, initial_tableau=qmap.Tableau(bell_circuit.num_qubits))
+    circ, _ = qmap.optimize_clifford(circuit=bell_circuit, initial_tableau=qmap.pyqmap.Tableau(bell_circuit.num_qubits))
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
 def test_synthesize_from_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from an MQT Tableau."""
-    tableau = qmap.Tableau("['XX', 'ZZ']")
+    tableau = qmap.pyqmap.Tableau("['XX', 'ZZ']")
     circ, _ = qmap.synthesize_clifford(target_tableau=tableau)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
@@ -277,4 +277,4 @@ def test_synthesize_from_string(bell_circuit: QuantumCircuit) -> None:
 def test_invalid_kwarg_to_synthesis() -> None:
     """Test that we raise an error if we pass an invalid kwarg to synthesis."""
     with pytest.raises(ValueError, match="Invalid keyword argument"):
-        qmap.synthesize_clifford(target_tableau=qmap.Tableau("Z"), invalid_kwarg=True)
+        qmap.synthesize_clifford(target_tableau=qmap.pyqmap.Tableau("Z"), invalid_kwarg=True)

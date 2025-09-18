@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/Architecture.hpp"
-#include "na/Configuration.hpp"
-#include "na/NAComputation.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
+#include "na/nalac/datastructures/Configuration.hpp"
+#include "na/nalac/datastructures/NAComputation.hpp"
+#include "na/nalac/datastructures/NADefinitions.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -25,7 +25,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 class NAMapper {
 public:
@@ -73,8 +73,8 @@ protected:
     PositionStatus positionStatus = PositionStatus::UNDEFINED;
     std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
     std::shared_ptr<Point> currentPosition = initialPosition;
-    std::vector<Zone> zones;
-    explicit Atom(const std::vector<Zone>& z = {}) : zones(z) {};
+    std::vector<std::size_t> zones;
+    explicit Atom(const std::vector<std::size_t>& z = {}) : zones(z) {};
   };
   auto preprocess() -> void { validateCircuit(); }
   auto validateCircuit() -> void;
@@ -107,7 +107,8 @@ protected:
   auto store(std::vector<bool>& initialFreeSites,
              std::vector<bool>& currentFreeSites, std::vector<Atom>& placement,
              std::unordered_set<qc::Qubit>& currentlyShuttling,
-             const std::vector<qc::Qubit>& qubits, Zone destination) -> void;
+             const std::vector<qc::Qubit>& qubits, std::size_t destination)
+      -> void;
   /**
    * @brief Picks up atom in the initial zone as a preparation for moving it to
    * the entangling zone.
@@ -137,11 +138,11 @@ public:
     }
     return mappedQc;
   }
-  [[nodiscard]] auto getStats() const -> const na::NAMapper::Statistics& {
+  [[nodiscard]] auto getStats() const -> const Statistics& {
     if (!done) {
       throw std::logic_error("No statistics available.");
     }
     return stats;
   }
 };
-} // namespace na
+} // namespace na::nalac

@@ -5,13 +5,13 @@
 
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
@@ -1501,11 +1501,11 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
   if (finalBestPos.coords.empty()) {
     // check if interaction radius too small
     if (std::sqrt(gateCoords.size()) > this->arch->getInteractionRadius()) {
-      throw qc::QFRException(
+      throw std::runtime_error(
           "Interaction radius too small for the given gate size of " +
           std::to_string(gateCoords.size()));
     } else {
-      throw qc::QFRException(
+      throw std::runtime_error(
           "No move position found (check if enough free coords are available)");
     }
   }
@@ -1515,7 +1515,7 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
 MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
     const HwQubits& gateQubits, const CoordIndices& position) const {
   if (position.empty()) {
-    throw qc::QFRException("No position given");
+    throw std::invalid_argument("No position given");
   }
   // compute for each qubit the best position around it based on the cost of
   // the single move choose best one

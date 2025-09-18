@@ -5,12 +5,12 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "HardwareQubits.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/Permutation.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"

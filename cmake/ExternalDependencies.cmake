@@ -36,35 +36,24 @@ if(BUILD_MQT_QMAP_BINDINGS)
   endif()
 
   # add pybind11 library
-  find_package(pybind11 2.13.5 CONFIG REQUIRED)
+  find_package(pybind11 2.13.6 CONFIG REQUIRED)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_VERSION 3.0.0
+set(MQT_CORE_VERSION 3.0.2
     CACHE STRING "MQT Core version")
 #set(MQT_CORE_REV "c2701a0747781eeca43b71dec43ffb0531022a51"
 set(MQT_CORE_REV "na-hybrid-extension"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
-set(MQT_CORE_REPO_OWNER "cda-tum"
+set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
 # cmake-format: on
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(
-    mqt-core
-    GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/mqt-core.git
-    GIT_TAG ${MQT_CORE_REV}
-    FIND_PACKAGE_ARGS ${MQT_CORE_VERSION})
-  list(APPEND FETCH_PACKAGES mqt-core)
-else()
-  find_package(mqt-core ${MQT_CORE_VERSION} QUIET)
-  if(NOT mqt-core_FOUND)
-    FetchContent_Declare(
-      mqt-core
-      GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/mqt-core.git
-      GIT_TAG ${MQT_CORE_REV})
-    list(APPEND FETCH_PACKAGES mqt-core)
-  endif()
-endif()
+FetchContent_Declare(
+  mqt-core
+  GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/core.git
+  GIT_TAG ${MQT_CORE_REV}
+  FIND_PACKAGE_ARGS ${MQT_CORE_VERSION})
+list(APPEND FETCH_PACKAGES mqt-core)
 
 set(JSON_VERSION
     3.11.3
@@ -73,84 +62,44 @@ set(JSON_URL https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}
 set(JSON_SystemInclude
     ON
     CACHE INTERNAL "Treat the library headers like system headers")
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(nlohmann_json URL ${JSON_URL} FIND_PACKAGE_ARGS ${JSON_VERSION})
-  list(APPEND FETCH_PACKAGES nlohmann_json)
-else()
-  find_package(nlohmann_json ${JSON_VERSION} QUIET)
-  if(NOT nlohmann_json_FOUND)
-    FetchContent_Declare(nlohmann_json URL ${JSON_URL})
-    list(APPEND FETCH_PACKAGES nlohmann_json)
-  endif()
-endif()
+FetchContent_Declare(nlohmann_json URL ${JSON_URL} FIND_PACKAGE_ARGS ${JSON_VERSION})
+list(APPEND FETCH_PACKAGES nlohmann_json)
 
-set(PLOG_VERSION
-    1.1.10
-    CACHE STRING "Plog version")
+set(PLOG_REV
+    "94899e0b926ac1b0f4750bfbd495167b4a6ae9ef"
+    CACHE STRING "Plog revision")
 set(PLOG_URL https://github.com/SergiusTheBest/plog/archive/refs/tags/${PLOG_VERSION}.tar.gz)
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(plog URL ${PLOG_URL} FIND_PACKAGE_ARGS ${PLOG_VERSION})
-  list(APPEND FETCH_PACKAGES plog)
-else()
-  find_package(plog ${PLOG_VERSION} QUIET)
-  if(NOT plog_FOUND)
-    FetchContent_Declare(plog URL ${PLOG_URL})
-    list(APPEND FETCH_PACKAGES plog)
-  endif()
-endif()
+FetchContent_Declare(
+  plog
+  GIT_REPOSITORY https://github.com/SergiusTheBest/plog.git
+  GIT_TAG ${PLOG_REV}
+  FIND_PACKAGE_ARGS)
+list(APPEND FETCH_PACKAGES plog)
 
 if(BUILD_MQT_QMAP_TESTS)
   set(gtest_force_shared_crt
       ON
       CACHE BOOL "" FORCE)
   set(GTEST_VERSION
-      1.14.0
+      1.16.0
       CACHE STRING "Google Test version")
   set(GTEST_URL https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-    FetchContent_Declare(googletest URL ${GTEST_URL} FIND_PACKAGE_ARGS ${GTEST_VERSION} NAMES GTest)
-    list(APPEND FETCH_PACKAGES googletest)
-  else()
-    find_package(googletest ${GTEST_VERSION} QUIET NAMES GTest)
-    if(NOT googletest_FOUND)
-      FetchContent_Declare(googletest URL ${GTEST_URL})
-      list(APPEND FETCH_PACKAGES googletest)
-    endif()
-  endif()
+  FetchContent_Declare(googletest URL ${GTEST_URL} FIND_PACKAGE_ARGS ${GTEST_VERSION} NAMES GTest)
+  list(APPEND FETCH_PACKAGES googletest)
 endif()
 
 if(BUILD_MQT_QMAP_BINDINGS)
   # add pybind11_json library
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-    FetchContent_Declare(
-      pybind11_json
-      GIT_REPOSITORY https://github.com/pybind/pybind11_json
-      FIND_PACKAGE_ARGS)
-    list(APPEND FETCH_PACKAGES pybind11_json)
-  else()
-    find_package(pybind11_json QUIET)
-    if(NOT pybind11_json_FOUND)
-      FetchContent_Declare(pybind11_json GIT_REPOSITORY https://github.com/pybind/pybind11_json)
-      list(APPEND FETCH_PACKAGES pybind11_json)
-    endif()
-  endif()
-endif()
-
-# Add YAML-CPP as a dependency.
-set(YAML_VERSION
-    0.8.0
-    CACHE STRING "YAML-CPP version")
-set(YAML_URL https://github.com/jbeder/yaml-cpp/archive/refs/tags/${YAML_VERSION}.tar.gz)
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(yaml-cpp URL ${YAML_URL} FIND_PACKAGE_ARGS ${YAML_VERSION})
-  list(APPEND FETCH_PACKAGES yaml-cpp)
-else()
-  find_package(yaml-cpp ${YAML_VERSION} QUIET)
-  if(NOT yaml-cpp_FOUND)
-    FetchContent_Declare(yaml-cpp URL ${YAML_URL})
-    list(APPEND FETCH_PACKAGES yaml-cpp)
-  endif()
+  FetchContent_Declare(
+    pybind11_json
+    GIT_REPOSITORY https://github.com/pybind/pybind11_json
+    FIND_PACKAGE_ARGS)
+  list(APPEND FETCH_PACKAGES pybind11_json)
 endif()
 
 # Make all declared dependencies available.
 FetchContent_MakeAvailable(${FETCH_PACKAGES})
+
+# Mark the plog includes as SYSTEM includes to suppress warnings.
+get_target_property(PLOG_IID plog INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(plog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${PLOG_IID}")

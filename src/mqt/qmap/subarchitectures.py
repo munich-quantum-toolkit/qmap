@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from matplotlib import figure
     from qiskit.providers import BackendV1, BackendV2
 
-    from . import Architecture
     from ._compat.typing import TypeAlias
+    from .pyqmap import Architecture
 
 import contextlib
 

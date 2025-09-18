@@ -69,12 +69,6 @@ struct Configuration {
   double firstLookaheadFactor = 0.75;
   double lookaheadFactor = 0.5;
 
-  // teleportation settings
-  bool useTeleportation = false;
-  std::size_t teleportationQubits = 0;
-  std::uint64_t teleportationSeed = 0;
-  bool teleportationFake = false;
-
   // timeout merely affects exact mapper
   std::size_t timeout = 3600000; // 60min timeout
 

@@ -258,16 +258,6 @@ protected:
   void applySWAP(const Edge& swap, std::size_t layer, Node& node);
 
   /**
-   * @brief applies an in-place teleportation of 2 virtual qubits in the given
-   * node and recalculates all costs accordingly
-   *
-   * @param swap pair of physical qubits on which to perform a teleportation
-   * @param layer index of current circuit layer
-   * @param node search node in which to apply the swap
-   */
-  void applyTeleportation(const Edge& swap, std::size_t layer, Node& node);
-
-  /**
    * @brief increments `node.sharedSwaps` if the given swap is shared with
    * another qubit such that both qubits get closer to being validly mapped
    *

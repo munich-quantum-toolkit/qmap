@@ -9,7 +9,8 @@ import pytest
 from qiskit import QuantumCircuit
 
 from mqt.qcec import verify
-from mqt.qmap import (
+from mqt.qmap.compile import compile  # noqa: A004
+from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -20,7 +21,6 @@ from mqt.qmap import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
-    compile,  # noqa: A004
 )
 from mqt.qmap.visualization import SearchVisualizer
 
@@ -59,7 +59,6 @@ def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str)
     """Test that the available architectures can be properly used."""
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -83,7 +82,6 @@ def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: Arc
     """Test that the available architecture enums can be properly used."""
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -96,7 +94,6 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
 
     example_circuit_mapped, results = compile(example_circuit, arch="test_architecture.arch")
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -107,7 +104,6 @@ def test_architecture_from_python(example_circuit: QuantumCircuit) -> None:
     arch = Architecture(3, {(0, 1), (0, 2), (1, 2)})
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -123,7 +119,6 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
 
     example_circuit_mapped, results = compile(example_circuit, arch=None, calibration="test_calibration.cal")
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -174,9 +169,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
             lookahead_heuristic="gate_count_max_distance",
             lookaheads=15,
             lookahead_factor=0.5,
-            use_teleportation=True,
-            teleportation_fake=False,
-            teleportation_seed=0,
             pre_mapping_optimizations=True,
             post_mapping_optimizations=True,
             verbose=True,
@@ -194,9 +186,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         assert results.configuration.automatic_layer_splits_node_limit == 5000
         assert results.configuration.lookaheads == 15
         assert results.configuration.lookahead_factor == 0.5
-        assert results.configuration.use_teleportation is True
-        assert results.configuration.teleportation_fake is False
-        assert results.configuration.teleportation_seed == 0
         assert results.configuration.pre_mapping_optimizations is True
         assert results.configuration.post_mapping_optimizations is True
         assert results.configuration.verbose is True
@@ -213,7 +202,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         layering="disjoint_qubits",
         automatic_layer_splits_node_limit=None,
         lookahead_heuristic=None,
-        use_teleportation=False,
         pre_mapping_optimizations=False,
         post_mapping_optimizations=False,
         verbose=False,
@@ -227,7 +215,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.layering == Layering.disjoint_qubits
     assert results.configuration.automatic_layer_splits is False
     assert results.configuration.lookaheads == 0
-    assert results.configuration.use_teleportation is False
     assert results.configuration.pre_mapping_optimizations is False
     assert results.configuration.post_mapping_optimizations is False
     assert results.configuration.verbose is False

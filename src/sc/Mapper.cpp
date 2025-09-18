@@ -5,8 +5,8 @@
 
 #include "sc/Mapper.hpp"
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
@@ -529,11 +529,6 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
                         MappingResults::CircuitInfo& info) {
   for (; it != end; ++it) {
     const auto& g = *it;
-    if (g->getType() == qc::Teleportation) {
-      info.gates += GATES_OF_TELEPORTATION;
-      continue;
-    }
-
     if (g->isStandardOperation()) {
       if (g->getType() == qc::SWAP) {
         auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);

@@ -5,14 +5,14 @@
 
 #include "hybridmap/MoveToAodConverter.hpp"
 
-#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/entities/Location.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -200,7 +200,7 @@ void MoveToAodConverter::MoveGroup::addMove(const AtomMove& move,
 
 void MoveToAodConverter::AodActivationHelper::addActivation(
     std::pair<ActivationMergeType, ActivationMergeType> merge,
-    const Point& origin, const AtomMove& move, MoveVector v, bool needLoad) {
+    const Location& origin, const AtomMove& move, MoveVector v, bool needLoad) {
   const auto x = static_cast<std::uint32_t>(origin.x);
   const auto y = static_cast<std::uint32_t>(origin.y);
   const auto signX = v.direction.getSignX();
@@ -292,7 +292,7 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
   }
 }
 void MoveToAodConverter::AodActivationHelper::addActivationFa(
-    const Point& origin, const AtomMove& move, MoveVector v, bool needLoad) {
+    const Location& origin, const AtomMove& move, MoveVector v, bool needLoad) {
   const auto x = static_cast<std::uint32_t>(origin.x);
   const auto y = static_cast<std::uint32_t>(origin.y);
   const auto signX = v.direction.getSignX();
@@ -307,8 +307,8 @@ void MoveToAodConverter::AodActivationHelper::addActivationFa(
 [[nodiscard]] std::pair<ActivationMergeType, ActivationMergeType>
 MoveToAodConverter::canAddActivation(
     const AodActivationHelper& activationHelper,
-    const AodActivationHelper& deactivationHelper, const Point& origin,
-    const MoveVector& v, const Point& final, const MoveVector& vReverse,
+    const AodActivationHelper& deactivationHelper, const Location& origin,
+    const MoveVector& v, const Location& final, const MoveVector& vReverse,
     Dimension dim) {
   auto start =
       static_cast<std::uint32_t>(dim == Dimension::X ? origin.x : origin.y);

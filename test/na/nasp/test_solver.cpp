@@ -1,16 +1,15 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/nasp/SolverFactory.hpp"
 #include "qasm3/Importer.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
-#include <yaml-cpp/yaml.h> // NOLINT(*-include-cleaner)
 
 TEST(Solver, SteaneDoubleSidedStorage) {
   const auto& circ =
@@ -18,8 +17,7 @@ TEST(Solver, SteaneDoubleSidedStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -33,8 +31,7 @@ TEST(Solver, ShorDoubleSidedStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -48,8 +45,7 @@ TEST(Solver, Surface3DoubleSidedStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -64,8 +60,7 @@ TEST(Solver, SteaneBottomStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto resultUnsat =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -103,8 +98,7 @@ TEST(Solver, NoShieldingFixedOrder) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 7);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
@@ -118,8 +112,7 @@ TEST(Solver, FixedTransfer) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result = solver.solve(
       pairs, static_cast<uint16_t>(circ.getNqubits()), 5, 2, false, true);
@@ -132,8 +125,7 @@ TEST(Solver, Unsat) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
@@ -160,19 +152,39 @@ TEST(Solver, Exceptions) {
                std::invalid_argument);
 }
 
-TEST(Solver, YAMLRoundTrip) {
+TEST(Solver, JSONRoundTrip) {
   const auto& circ =
       qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
                    std::nullopt, false, true);
-  const auto resultRT = na::NASolver::Result::fromYAML(
-      YAML::Load(result.yaml())); // NOLINT(*-include-cleaner)
+  const auto resultRT = na::NASolver::Result::fromJSON(result.json());
   EXPECT_EQ(resultRT, result);
+}
+
+TEST(Solver, GetOpsForSolver) {
+  const auto& circ = qasm3::Importer::imports(R"(
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[2];
+h q;
+cz q[0], q[1];
+)");
+  // get operations for solver
+  EXPECT_NO_THROW({
+    const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
+    EXPECT_EQ(pairs.size(), 1);
+    EXPECT_EQ(pairs.front(), (std::pair{0U, 1U}));
+  });
+  EXPECT_THROW(std::ignore =
+                   na::NASolver::getOpsForSolver(circ, qc::Z, 1, false),
+               std::invalid_argument);
+  EXPECT_THROW(std::ignore =
+                   na::NASolver::getOpsForSolver(circ, qc::H, 0, true),
+               std::invalid_argument);
 }

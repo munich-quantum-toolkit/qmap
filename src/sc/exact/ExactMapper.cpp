@@ -5,9 +5,9 @@
 
 #include "sc/exact/ExactMapper.hpp"
 
-#include "Definitions.hpp"
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/LogicBlock.hpp"

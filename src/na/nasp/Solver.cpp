@@ -1,6 +1,8 @@
 #include "na/nasp/Solver.hpp"
 
-#include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "ir/Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -8,6 +10,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <numeric>
 #include <optional>
 #include <sstream>
@@ -17,8 +20,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-// NOLINTNEXTLINE (misc-include-cleaner)
-#include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
 namespace na {
@@ -297,12 +298,20 @@ auto NASolver::getValidTransferTransitionConstraints(const uint16_t t) const
   return constraints;
 }
 
+namespace {
+struct QubitPairHash {
+  auto operator()(const std::pair<qc::Qubit, qc::Qubit>& x) const -> size_t {
+    return qc::combineHash(x.first, x.second);
+  }
+};
+} // namespace
+
 auto NASolver::getCircuitExecutionConstraints(
     const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     const bool mindOpsOrder, const bool shieldIdleAtoms) -> std::vector<expr> {
   const auto numGates = ops.size();
   std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, std::vector<expr>,
-                     qc::PairHash<qc::Qubit, qc::Qubit>>
+                     QubitPairHash>
       pairToGates;
   gates.clear();
   gates.reserve(numGates);
@@ -664,138 +673,131 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
                 maxEntanglingY, maxHOffset,   maxVOffset};
 }
 
-/// Initialize a Qubit from a YAML string.
+/// Initialize a Qubit from a JSON string.
 // NOLINTNEXTLINE (misc-include-cleaner)
-auto NASolver::Result::Qubit::fromYAML(const YAML::Node& yaml) -> Qubit {
+auto NASolver::Result::Qubit::fromJSON(const nlohmann::json& json) -> Qubit {
   Qubit qubit{};
-  qubit.a = yaml["a"].as<bool>();
-  qubit.c = yaml["c"].as<std::uint16_t>();
-  qubit.h = yaml["h"].as<int>();
-  qubit.r = yaml["r"].as<std::uint16_t>();
-  qubit.v = yaml["v"].as<int>();
-  qubit.x = yaml["x"].as<std::uint16_t>();
-  qubit.y = yaml["y"].as<std::uint16_t>();
+  qubit.a = json["a"].get<bool>();
+  qubit.c = json["c"].get<std::uint16_t>();
+  qubit.h = json["h"].get<int>();
+  qubit.r = json["r"].get<std::uint16_t>();
+  qubit.v = json["v"].get<int>();
+  qubit.x = json["x"].get<std::uint16_t>();
+  qubit.y = json["y"].get<std::uint16_t>();
   return qubit;
 }
 
-auto NASolver::Result::Qubit::yaml(std::size_t indent, const bool item,
-                                   const bool compact) const -> std::string {
-  std::stringstream ss;
-  ss << std::boolalpha;
-  ss << std::string(indent, ' ');
-  if (item) {
-    ss << "- ";
-    indent += 2;
-  }
-  if (compact) {
-    ss << "{x: " << x << ", y: " << y << ", a: " << a << ", c: " << c
-       << ", r: " << r << ", h: " << h << ", v: " << v << "}\n";
-    return ss.str();
-  }
-  ss << "x: " << x << "\n";
-  ss << std::string(indent, ' ') << "y: " << y << "\n";
-  ss << std::string(indent, ' ') << "a: " << a << "\n";
-  ss << std::string(indent, ' ') << "c: " << c << "\n";
-  ss << std::string(indent, ' ') << "r: " << r << "\n";
-  ss << std::string(indent, ' ') << "h: " << h << "\n";
-  ss << std::string(indent, ' ') << "v: " << v << "\n";
-  return ss.str();
+auto NASolver::Result::Qubit::json() const -> nlohmann::json {
+  nlohmann::json json;
+  json.emplace("x", x);
+  json.emplace("y", y);
+  json.emplace("a", a);
+  json.emplace("c", c);
+  json.emplace("r", r);
+  json.emplace("h", h);
+  json.emplace("v", v);
+  return json;
 }
 auto NASolver::Result::Qubit::operator==(const Qubit& other) const -> bool {
   return x == other.x && y == other.y && a == other.a && c == other.c &&
          r == other.r && h == other.h && v == other.v;
 }
 
-auto NASolver::Result::Stage::yaml(std::size_t indent, const bool item,
-                                   const bool compact) const -> std::string {
-  std::stringstream ss;
-  ss << std::boolalpha;
-  ss << std::string(indent, ' ');
-  if (item) {
-    ss << "- ";
-    indent += 2;
-  }
-  ss << "rydberg: " << rydberg << "\n";
-  ss << std::string(indent, ' ') << "gates:\n";
+auto NASolver::Result::Stage::json() const -> nlohmann::json {
+  nlohmann::json json;
+  json.emplace("rydberg", rydberg);
+  json.emplace("gates", nlohmann::json::array());
   for (const auto& gate : gates) {
-    ss << gate.yaml(indent + 2, true, compact);
+    json["gates"].emplace_back(gate.json());
   }
-  ss << std::string(indent, ' ') << "qubits:\n";
+  json.emplace("qubits", nlohmann::json::array());
   for (const auto& qubit : qubits) {
-    ss << qubit.yaml(indent + 2, true, compact);
+    json["qubits"].emplace_back(qubit.json());
   }
-  return ss.str();
+  return json;
 }
 auto NASolver::Result::Stage::operator==(const Stage& other) const -> bool {
   return rydberg == other.rydberg && gates == other.gates &&
          qubits == other.qubits;
 }
 
-auto NASolver::Result::fromYAML(const YAML::Node& yaml) -> Result {
+auto NASolver::Result::fromJSON(const nlohmann::json& json) -> Result {
   Result result{};
-  result.sat = yaml["sat"].as<bool>();
+  result.sat = json["sat"].get<bool>();
   if (result.sat) {
-    for (const auto& stage : yaml["stages"]) {
-      result.stages.emplace_back(Stage::fromYAML(stage));
+    for (const auto& stage : json["stages"]) {
+      result.stages.emplace_back(Stage::fromJSON(stage));
     }
   }
   return result;
 }
 
-auto NASolver::Result::Gate::fromYAML(const YAML::Node& yaml) -> Gate {
+auto NASolver::Result::Gate::fromJSON(const nlohmann::json& json) -> Gate {
   Gate gate{};
-  gate.qubits.first = yaml["qubits"][0].as<qc::Qubit>();
-  gate.qubits.second = yaml["qubits"][1].as<qc::Qubit>();
+  gate.qubits.first = json["qubits"][0].get<qc::Qubit>();
+  gate.qubits.second = json["qubits"][1].get<qc::Qubit>();
   return gate;
 }
 
-auto NASolver::Result::Gate::yaml(std::size_t indent, const bool item,
-                                  const bool compact) const -> std::string {
-  std::stringstream ss;
-  ss << std::string(indent, ' ');
-  if (item) {
-    ss << "- ";
-    indent += 2;
-  }
-  if (compact) {
-    ss << "qubits: [" << qubits.first << ", " << qubits.second << "]\n";
-    return ss.str();
-  }
-  ss << "qubits:\n";
-  ss << std::string(indent, ' ') << "- " << qubits.first << "\n";
-  ss << std::string(indent, ' ') << "- " << qubits.second << "\n";
-  return ss.str();
+auto NASolver::Result::Gate::json() const -> nlohmann::json {
+  nlohmann::json json;
+  json.emplace("qubits", std::pair{qubits.first, qubits.second});
+  return json;
 }
 auto NASolver::Result::Gate::operator==(const Gate& other) const -> bool {
   return qubits == other.qubits;
 }
 
-auto NASolver::Result::Stage::fromYAML(const YAML::Node& yaml) -> Stage {
+auto NASolver::Result::Stage::fromJSON(const nlohmann::json& json) -> Stage {
   Stage stage{};
-  stage.rydberg = yaml["rydberg"].as<bool>();
-  for (const auto& gate : yaml["gates"]) {
-    stage.gates.emplace_back(Gate::fromYAML(gate));
+  stage.rydberg = json["rydberg"].get<bool>();
+  for (const auto& gate : json["gates"]) {
+    stage.gates.emplace_back(Gate::fromJSON(gate));
   }
-  for (const auto& qubit : yaml["qubits"]) {
-    stage.qubits.emplace_back(Qubit::fromYAML(qubit));
+  for (const auto& qubit : json["qubits"]) {
+    stage.qubits.emplace_back(Qubit::fromJSON(qubit));
   }
   return stage;
 }
 
-auto NASolver::Result::yaml(const std::size_t indent, const bool compact) const
-    -> std::string {
-  std::stringstream ss;
-  ss << std::boolalpha;
-  ss << std::string(indent, ' ') << "sat: " << sat << "\n";
+auto NASolver::Result::json() const -> nlohmann::json {
+  nlohmann::json json;
+  json.emplace("sat", sat);
   if (sat) {
-    ss << std::string(indent, ' ') << "stages:\n";
+    json.emplace("stages", nlohmann::json::array());
     for (const auto& stage : stages) {
-      ss << stage.yaml(indent + 2, true, compact);
+      json["stages"].emplace_back(stage.json());
     }
   }
-  return ss.str();
+  return json;
 }
 auto NASolver::Result::operator==(const Result& other) const -> bool {
   return sat == other.sat && stages == other.stages;
+}
+auto NASolver::getOpsForSolver(const qc::QuantumComputation& circ,
+                               const qc::OpType opType, const std::size_t ctrls,
+                               const bool quiet)
+    -> std::vector<std::pair<unsigned int, unsigned int>> {
+  auto flattened = circ;
+  qc::CircuitOptimizer::flattenOperations(flattened);
+  std::vector<std::pair<unsigned int, unsigned int>> ops;
+  ops.reserve(flattened.size());
+  for (const auto& op : flattened) {
+    if (op->getType() == opType && op->getNcontrols() == ctrls) {
+      const auto& operands = op->getUsedQubits();
+      if (operands.size() != 2) {
+        std::stringstream ss;
+        ss << "Operation " << op->getName() << " does not have two operands.";
+        throw std::invalid_argument(ss.str());
+      }
+      ops.emplace_back(*operands.cbegin(), *operands.rbegin());
+    } else if (!quiet) {
+      std::stringstream ss;
+      ss << "Operation " << op->getName() << " is not of type " << opType
+         << " or does not have " << ctrls << " controls.";
+      throw std::invalid_argument(ss.str());
+    }
+  }
+  return ops;
 }
 } // namespace na

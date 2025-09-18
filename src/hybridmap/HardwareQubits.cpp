@@ -5,10 +5,10 @@
 
 #include "hybridmap/HardwareQubits.hpp"
 
-#include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 
 #include <algorithm>
 #include <cstddef>

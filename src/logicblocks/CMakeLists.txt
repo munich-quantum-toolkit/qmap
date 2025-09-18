@@ -24,5 +24,8 @@ target_link_libraries(
   PUBLIC plog::plog z3::z3lib
   PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
+# set required C++ standard
+target_compile_features(mqt-logic-blocks PUBLIC cxx_std_17)
+
 # add MQT alias
 add_library(MQT::LogicBlocks ALIAS mqt-logic-blocks)

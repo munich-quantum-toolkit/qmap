@@ -1,9 +1,9 @@
 # set required cmake version
-cmake_minimum_required(VERSION 3.19...3.30)
+cmake_minimum_required(VERSION 3.24...4.0)
 
 project(
   mqt-qmap
-  LANGUAGES CXX
+  LANGUAGES C CXX
   DESCRIPTION "MQT QMAP - A library for mapping of quantum circuits to quantum architectures")
 
 # Add path for custom modules

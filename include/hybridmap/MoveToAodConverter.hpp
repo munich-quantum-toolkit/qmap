@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/entities/Location.hpp"
 
 #include <cstdint>
 #include <map>
@@ -163,10 +163,10 @@ protected:
      */
     void
     addActivation(std::pair<ActivationMergeType, ActivationMergeType> merge,
-                  const Point& origin, const AtomMove& move, MoveVector v,
+                  const Location& origin, const AtomMove& move, MoveVector v,
                   bool needLoad);
 
-    void addActivationFa(const Point& origin, const AtomMove& move,
+    void addActivationFa(const Location& origin, const AtomMove& move,
                          MoveVector v, bool needLoad);
     /**
      * @brief Merges the given activation into the current activations
@@ -239,8 +239,9 @@ protected:
   [[nodiscard]] static std::pair<ActivationMergeType, ActivationMergeType>
   canAddActivation(const AodActivationHelper& activationHelper,
                    const AodActivationHelper& deactivationHelper,
-                   const Point& origin, const MoveVector& v, const Point& final,
-                   const MoveVector& vReverse, Dimension dim);
+                   const Location& origin, const MoveVector& v,
+                   const Location& final, const MoveVector& vReverse,
+                   Dimension dim);
 
   /**
    * @brief Move operations within a move group can be executed in parallel

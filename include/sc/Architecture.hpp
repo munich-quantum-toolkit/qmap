@@ -25,7 +25,6 @@
 constexpr std::uint8_t GATES_OF_BIDIRECTIONAL_SWAP = 3U;
 constexpr std::uint8_t GATES_OF_UNIDIRECTIONAL_SWAP = 7U;
 constexpr std::uint8_t GATES_OF_DIRECTION_REVERSE = 4U;
-constexpr std::uint8_t GATES_OF_TELEPORTATION = 7U;
 
 constexpr std::uint32_t COST_SINGLE_QUBIT_GATE = 1;
 constexpr std::uint32_t COST_CNOT_GATE = 10;
@@ -33,8 +32,6 @@ constexpr std::uint32_t COST_MEASUREMENT = 10;
 constexpr std::uint32_t COST_UNIDIRECTIONAL_SWAP =
     3 * COST_CNOT_GATE + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
-constexpr std::uint32_t COST_TELEPORTATION =
-    2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
 class Architecture {
@@ -253,11 +250,6 @@ public:
            couplingMap.find({edge.second, edge.first}) != couplingMap.end();
   }
 
-  CouplingMap& getCurrentTeleportations() { return currentTeleportations; }
-  std::vector<std::pair<std::int16_t, std::int16_t>>& getTeleportationQubits() {
-    return teleportationQubits;
-  }
-
   [[nodiscard]] const Matrix&
   getDistanceTable(bool includeReversalCost = true) const {
     if (includeReversalCost) {
@@ -429,13 +421,10 @@ public:
 
   [[nodiscard]] double distance(std::uint16_t control, std::uint16_t target,
                                 bool includeReversalCost = true) const {
-    if (currentTeleportations.empty()) {
-      if (includeReversalCost) {
-        return distanceTableReversals.at(control).at(target);
-      }
-      return distanceTable.at(control).at(target);
+    if (includeReversalCost) {
+      return distanceTableReversals.at(control).at(target);
     }
-    return static_cast<double>(bfs(control, target, currentTeleportations));
+    return distanceTable.at(control).at(target);
   }
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
@@ -503,7 +492,6 @@ protected:
   std::string name;
   std::uint16_t nqubits = 0;
   CouplingMap couplingMap;
-  CouplingMap currentTeleportations;
 
   /** true if the coupling map contains no unidirectional edges */
   bool isBidirectional = true;
@@ -529,11 +517,6 @@ protected:
   void createFidelityTable();
 
   // added for teleportation
-  static bool contains(const std::vector<int>& v, const int e) {
-    return std::find(v.begin(), v.end(), e) != v.end();
-  }
-  [[nodiscard]] std::uint64_t bfs(std::uint16_t start, std::uint16_t goal,
-                                  const std::set<Edge>& teleportations) const;
 
   static std::size_t findCouplingLimit(const CouplingMap& cm,
                                        std::uint16_t nQubits);

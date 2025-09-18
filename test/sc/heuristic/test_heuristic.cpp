@@ -3,14 +3,13 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Definitions.hpp"
-#include "ir/operations/CompoundOperation.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
 #include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
-#include "sc/DataLogger.hpp"
 #include "sc/configuration/AvailableArchitecture.hpp"
+#include "sc/configuration/Configuration.hpp"
 #include "sc/configuration/EarlyTermination.hpp"
 #include "sc/configuration/Heuristic.hpp"
 #include "sc/configuration/InitialLayout.hpp"
@@ -213,224 +212,6 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   }
   path.push_back(node->id);
   return path;
-}
-
-class InternalsTest : public HeuristicMapper, public testing::Test {
-protected:
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  static Architecture defaultArch;
-
-  InternalsTest() : HeuristicMapper(qc::QuantumComputation{1}, defaultArch) {}
-  void SetUp() override { results = MappingResults{}; }
-};
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-Architecture InternalsTest::defaultArch{1, {}};
-
-TEST_F(InternalsTest, NodeCostCalculation) {
-  results.config.heuristic = Heuristic::GateCountMaxDistance;
-  results.config.lookaheadHeuristic = LookaheadHeuristic::None;
-  results.config.layering = Layering::Disjoint2qBlocks;
-
-  architecture->loadCouplingMap(5, {{0, 1}, {1, 2}, {3, 1}, {4, 3}});
-  qc = qc::QuantumComputation{5};
-  // layer 0 distances:
-  // 0-1: 2 swaps & 2 reversals
-  // 2-3: 0 swaps & 1 reversals
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(1, 0);
-  qc.cx(1, 0);
-  qc.cx(3, 2);
-  // Architecture::distance currently counts at most 1 reversal per qubit pair
-  createLayers();
-
-  EXPECT_EQ(layers.size(), 1)
-      << "layering failed, not able to test node cost calculation";
-
-  const std::vector<Exchange> swaps{Exchange(0, 1, qc::OpType::Teleportation),
-                                    Exchange(1, 2, SWAP)};
-
-  HeuristicMapper::Node node(0, 0, {4, 3, 1, 2, 0}, {4, 2, 3, 1, 0}, swaps,
-                             {{2, 3}}, 5., 0);
-  EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE);
-  EXPECT_EQ(node.validMappedTwoQubitGates.size(), 1);
-
-  results.config.heuristic = Heuristic::GateCountSumDistance;
-  updateHeuristicCost(0, node);
-  EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE * 2,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE)
-      << "updateHeuristicCost should not change costFixed";
-
-  results.config.heuristic = Heuristic::GateCountMaxDistance;
-  updateHeuristicCost(0, node);
-  EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE)
-      << "updateHeuristicCost should not change costFixed";
-
-  applySWAP({3, 4}, 0, node);
-  EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
-              FLOAT_TOLERANCE);
-  EXPECT_EQ(node.validMappedTwoQubitGates.size(), 0);
-
-  node.lookaheadPenalty = 0.;
-  EXPECT_NEAR(node.getTotalCost(),
-              5. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP,
-              FLOAT_TOLERANCE);
-
-  node.lookaheadPenalty = 2.;
-  EXPECT_NEAR(node.getTotalCost(),
-              7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
-              FLOAT_TOLERANCE);
-
-  recalculateFixedCost(0, node);
-  EXPECT_EQ(node.validMappedTwoQubitGates.size(), 0);
-  EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.getTotalCost(),
-              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 3 +
-                  COST_DIRECTION_REVERSE,
-              FLOAT_TOLERANCE);
-  EXPECT_NEAR(node.getTotalFixedCost(),
-              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
-              FLOAT_TOLERANCE);
-}
-
-TEST_F(InternalsTest, NodeLookaheadCalculation) {
-  results.config.heuristic = Heuristic::GateCountMaxDistance;
-  results.config.lookaheadHeuristic = LookaheadHeuristic::None;
-  results.config.layering = Layering::Disjoint2qBlocks;
-
-  architecture->loadCouplingMap(5, {{0, 1}, {1, 2}, {3, 1}, {4, 3}});
-  qc = qc::QuantumComputation{5};
-  // layer 0 distances:
-  // 0-1: 2 swaps & 2 reversals
-  // 2-3: 0 swaps & 1 reversals
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(0, 1);
-  qc.cx(1, 0);
-  qc.cx(1, 0);
-  qc.cx(3, 2);
-
-  // layer 1 distances:
-  // 0-4: 2 swaps & 0 reversals
-  // 1-2: 1 swaps & 1 reversals
-  qc.cx(0, 4);
-  qc.cx(0, 4);
-  qc.cx(1, 2);
-
-  // layer 2 distances:
-  // 0-1: 2 swaps & 0 reversals
-  qc.cx(0, 1);
-
-  // layer 3 distances:
-  // 0-4: 2 swaps & 0 reversals
-  qc.cx(4, 0);
-
-  // Architecture::distance currently counts at most 1 reversal per qubit pair
-
-  createLayers();
-
-  EXPECT_EQ(layers.size(), 4)
-      << "layering failed, not able to test node cost calculation";
-
-  const std::vector<Exchange> swaps{Exchange(0, 1, qc::OpType::Teleportation),
-                                    Exchange(1, 2, SWAP)};
-
-  HeuristicMapper::Node node(0, 0, {4, 3, 1, 2, 0}, {4, 2, 3, 1, 0}, swaps,
-                             {{2, 3}}, 5., 0);
-  EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE);
-
-  results.config.firstLookaheadFactor = 0.75;
-  results.config.lookaheadFactor = 0.5;
-
-  results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
-  results.config.nrLookaheads = 1;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty, 0.75 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-  results.config.nrLookaheads = 2;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-  results.config.nrLookaheads = 3;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-  results.config.nrLookaheads = 4;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-
-  results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountSumDistance;
-  results.config.nrLookaheads = 1;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
-              FLOAT_TOLERANCE);
-  results.config.nrLookaheads = 2;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE) +
-                  0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-  results.config.nrLookaheads = 3;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE) +
-                  0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-  results.config.nrLookaheads = 4;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE) +
-                  0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
-                  0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
-              FLOAT_TOLERANCE);
-
-  node.qubits = {4, 3, 1, -1, -1};
-  node.locations = {-1, 2, -1, 1, 0};
-
-  results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
-  results.config.nrLookaheads = 1;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
-              FLOAT_TOLERANCE);
-
-  results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountSumDistance;
-  results.config.nrLookaheads = 1;
-  updateLookaheadPenalty(0, node);
-  EXPECT_NEAR(node.lookaheadPenalty,
-              0.75 * (2 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
-              FLOAT_TOLERANCE);
 }
 
 class TestHeuristics
@@ -1096,7 +877,6 @@ TEST(Functionality, BenchmarkGeneratedNodes) {
   settings.initialLayout = InitialLayout::Identity;
   settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.useTeleportation = false;
   settings.debug = true;
   ibmQX5Mapper->map(settings);
   auto results = ibmQX5Mapper->getResults();
@@ -1126,13 +906,6 @@ TEST(Functionality, InvalidSettings) {
   // fidelity-aware heuristic with non-fidelity-aware lookahead heuristic
   config.heuristic = Heuristic::FidelityBestLocation;
   EXPECT_THROW(mapper.map(config), QMAPException);
-  config.lookaheadHeuristic = LookaheadHeuristic::None;
-  // fidelity-aware heuristic with teleportation
-  config.teleportationQubits = 2;
-  EXPECT_THROW(mapper.map(config), QMAPException);
-  config.teleportationQubits = 0;
-  // valid settings
-  EXPECT_NO_THROW(mapper.map(config));
 }
 
 TEST(Functionality, NoMeasurementsAdded) {
@@ -1187,42 +960,6 @@ TEST(Functionality, InvalidCircuits) {
   EXPECT_THROW(mapper3.map(config), QMAPException);
 }
 
-TEST(Functionality, DataLoggerAfterClose) {
-  const std::string dataLoggingPath = "test_log/datalogger_after_close/";
-  qc::QuantumComputation qc{3};
-  qc.x(0);
-  Architecture arch{3, {}};
-  auto dataLogger = std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
-  const qc::CompoundOperation compOp{};
-  Exchange teleport(0, 2, 1, qc::OpType::Teleportation);
-
-  dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {{teleport}}, 0);
-  dataLogger->logSearchNode(1, 0, 0, 0., 0., 0., {}, false, {}, 0);
-  dataLogger->splitLayer();
-  dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
-  dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
-  dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {}, 0);
-  dataLogger->close();
-  dataLogger->clearLog();
-
-  dataLogger->logArchitecture();
-  dataLogger->logInputCircuit(qc);
-  dataLogger->logOutputCircuit(qc);
-  dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {}, 0);
-  dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
-  dataLogger->splitLayer();
-  MappingResults result;
-  dataLogger->logMappingResult(result);
-
-  // count files and subdirectories in data logging path
-  std::size_t fileCount = 0;
-  for ([[maybe_unused]] const auto& _ :
-       std::filesystem::directory_iterator(dataLoggingPath)) {
-    ++fileCount;
-  }
-  EXPECT_EQ(fileCount, 0);
-}
-
 TEST(Functionality, DataLogger) {
   // setting up example architecture and circuit
   Architecture architecture{};
@@ -1261,7 +998,6 @@ TEST(Functionality, DataLogger) {
   settings.firstLookaheadFactor = 0.5;
   settings.lookaheadFactor = 0.9;
   settings.debug = true;
-  settings.useTeleportation = false;
   // setting data logging path to enable data logging
   settings.dataLoggingPath = "test_log/datalogger";
 
@@ -1348,12 +1084,6 @@ TEST(Functionality, DataLogger) {
     EXPECT_EQ(lookaheadJson["first_factor"], settings.firstLookaheadFactor);
     EXPECT_EQ(lookaheadJson["lookaheads"], settings.nrLookaheads);
   }
-  if (settings.useTeleportation) {
-    const auto& teleportationJson = heuristicSettingsJson["teleportation"];
-    EXPECT_EQ(teleportationJson["qubits"], settings.teleportationQubits);
-    EXPECT_EQ(teleportationJson["seed"], settings.teleportationSeed);
-    EXPECT_EQ(teleportationJson["fake"], settings.teleportationFake);
-  }
 
   const auto& inCircJson = resultJson["circuit"];
   EXPECT_EQ(inCircJson["cnots"], results.input.cnots);
@@ -1378,7 +1108,6 @@ TEST(Functionality, DataLogger) {
   EXPECT_EQ(statJson["layers"], results.input.layers);
   EXPECT_EQ(statJson["mapping_time"], results.time);
   EXPECT_EQ(statJson["swaps"], results.output.swaps);
-  EXPECT_EQ(statJson["teleportations"], results.output.teleportations);
   EXPECT_EQ(statJson["total_fidelity"], results.output.totalFidelity);
   EXPECT_EQ(statJson["total_log_fidelity"], results.output.totalLogFidelity);
 
@@ -1950,49 +1679,6 @@ TEST_P(HeuristicTest20Q, Dynamic) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
   settings.debug = true;
-  tokyoMapper->map(settings);
-  tokyoMapper->printResult(std::cout);
-  SUCCEED() << "Mapping successful";
-}
-
-class HeuristicTest20QTeleport
-    : public testing::TestWithParam<std::tuple<std::uint64_t, std::string>> {
-protected:
-  std::string testExampleDir = "../../../examples/";
-  std::string testArchitectureDir = "../../../extern/architectures/";
-
-  qc::QuantumComputation qc;
-  Architecture arch;
-  std::unique_ptr<HeuristicMapper> tokyoMapper;
-
-  void SetUp() override {
-    qc = qasm3::Importer::importf(testExampleDir + std::get<1>(GetParam()) +
-                                  ".qasm");
-    arch.loadCouplingMap(AvailableArchitecture::IbmqTokyo);
-    tokyoMapper = std::make_unique<HeuristicMapper>(qc, arch);
-  }
-};
-
-INSTANTIATE_TEST_SUITE_P(
-    HeuristicTeleport, HeuristicTest20QTeleport,
-    testing::Combine(testing::Values(0, 1, 2, 3, 1337, 1338, 3147),
-                     testing::Values("ising_model_10", "rd73_140", "cnt3-5_179",
-                                     "qft_16", "z4_268")),
-    [](const testing::TestParamInfo<HeuristicTest20QTeleport::ParamType>& inf) {
-      std::string name = std::get<1>(inf.param);
-      std::replace(name.begin(), name.end(), '-', '_');
-      std::stringstream ss{};
-      ss << name << "_seed" << std::get<0>(inf.param);
-      return ss.str();
-    });
-
-TEST_P(HeuristicTest20QTeleport, Teleportation) {
-  Configuration settings{};
-  settings.initialLayout = InitialLayout::Dynamic;
-  settings.debug = true;
-  settings.teleportationQubits = std::min(
-      (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
-  settings.teleportationSeed = std::get<0>(GetParam());
   tokyoMapper->map(settings);
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";

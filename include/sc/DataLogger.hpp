@@ -6,8 +6,8 @@
 #pragma once
 
 #include "Architecture.hpp"
-#include "Definitions.hpp"
 #include "MappingResults.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "utils.hpp"

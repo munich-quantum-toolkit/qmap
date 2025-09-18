@@ -117,6 +117,8 @@ void Tableau::applyGate(const qc::Operation* const gate) {
   // non-controlled gates
   if (!gate->isControlled()) {
     switch (gate->getType()) {
+    case qc::OpType::I:
+      break;
     case qc::OpType::H:
       applyH(target);
       break;

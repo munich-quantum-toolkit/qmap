@@ -1,18 +1,18 @@
 #include "na/nalac/NAMapper.hpp"
 
-#include "Definitions.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/Architecture.hpp"
-#include "na/Configuration.hpp"
-#include "na/NADefinitions.hpp"
 #include "na/nalac/NAGraphAlgorithms.hpp"
-#include "na/operations/NAGlobalOperation.hpp"
-#include "na/operations/NALocalOperation.hpp"
-#include "na/operations/NAShuttlingOperation.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
+#include "na/nalac/datastructures/Configuration.hpp"
+#include "na/nalac/datastructures/NADefinitions.hpp"
+#include "na/nalac/datastructures/operations/NAGlobalOperation.hpp"
+#include "na/nalac/datastructures/operations/NALocalOperation.hpp"
+#include "na/nalac/datastructures/operations/NAShuttlingOperation.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -32,34 +32,34 @@
 #include <unordered_set>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 auto NAMapper::validateCircuit() -> void {
   for (const auto& op : initialQc) {
     if (op->isCompoundOperation() && isGlobal(*op, initialQc.getNqubits())) {
       const auto& co = dynamic_cast<qc::CompoundOperation&>(*op);
-      if (!arch.isAllowedGlobally({co.at(0)->getType(), 0})) {
+      if (!arch.isAllowedGlobally(co.at(0)->getType(), 0)) {
         std::stringstream ss;
         ss << "The chosen architecture does not support the operation "
-           << FullOpType{op->getType(), 0} << " globally.";
+           << op->getType() << " globally.";
         throw std::invalid_argument(ss.str());
       }
     } else if (op->isStandardOperation() && op->isSingleQubitGate()) {
       assert(op->getNcontrols() == 0);
-      if (!arch.isAllowedLocally({op->getType(), 0})) {
+      if (!arch.isAllowedLocally(op->getType(), 0)) {
         std::stringstream ss;
         ss << "The chosen architecture does not support the operation "
-           << FullOpType{op->getType(), 0} << " locally.";
+           << op->getType() << " locally.";
         throw std::invalid_argument(ss.str());
       }
     } else if (op->isStandardOperation() &&
                op->getNcontrols() + op->getNtargets() == 2) {
       assert(!op->isSingleQubitGate());
-      if (!arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
-        if (!arch.isAllowedGlobally({op->getType(), op->getNcontrols()})) {
+      if (!arch.isAllowedLocally(op->getType(), op->getNcontrols())) {
+        if (!arch.isAllowedGlobally(op->getType(), op->getNcontrols())) {
           std::stringstream ss;
           ss << "The chosen architecture does not support the operation "
-             << FullOpType{op->getType(), op->getNcontrols()}
+             << std::string(op->getNcontrols(), 'c') << op->getType()
              << " either locally or globally.";
           throw std::invalid_argument(ss.str());
         }
@@ -116,8 +116,9 @@ auto NAMapper::makeLogicalArrays() -> void {
                   initialArch.getPositionOffsetBy({x, y}, r, c)));
             }
           }
-          mappedQc.emplaceBack<NALocalOperation>(lop.getType(), lop.getParams(),
-                                                 positions);
+          mappedQc.emplaceBack<NALocalOperation>(lop.getType().first,
+                                                 lop.getType().second,
+                                                 lop.getParams(), positions);
         }
       }
     } else if (op->isShuttlingOperation()) {
@@ -287,7 +288,7 @@ auto NAMapper::checkApplicability(const qc::Operation* op,
   }
   assert(op->isStandardOperation()); // ensured by preprocess
   if (op->isSingleQubitGate()) {
-    assert(arch.isAllowedLocally({op->getType(), op->getNcontrols()}));
+    assert(arch.isAllowedLocally(op->getType(), op->getNcontrols()));
     assert(op->getNcontrols() == 0);
     // individual gate that can act on one or more atoms
     return std::all_of(
@@ -300,12 +301,12 @@ auto NAMapper::checkApplicability(const qc::Operation* op,
             // selected zones
             return std::any_of(qubitPlacement.zones.cbegin(),
                                qubitPlacement.zones.cend(), [&](const auto& z) {
-                                 return arch.isAllowedLocally(
-                                     {op->getType(), 0}, z);
+                                 return arch.isAllowedLocally(op->getType(), 0,
+                                                              z);
                                });
           case Atom::PositionStatus::DEFINED:
             // check whether the gate is applicable at the current position
-            return arch.isAllowedLocallyAt({op->getType(), 0},
+            return arch.isAllowedLocallyAt(op->getType(), 0,
                                            *qubitPlacement.currentPosition);
           default:
             qc::unreachable();
@@ -313,7 +314,7 @@ auto NAMapper::checkApplicability(const qc::Operation* op,
         });
   }
   assert(op->getNcontrols() + op->getNtargets() == 2);
-  assert(arch.isAllowedGlobally({op->getType(), op->getNcontrols()}));
+  assert(arch.isAllowedGlobally(op->getType(), op->getNcontrols()));
   // TODO global gate that acts exactly on two atoms
   return false;
 }
@@ -324,7 +325,7 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
     // global gates are represented as compound operations
     return;
   }
-  assert(arch.isAllowedLocally({op->getType(), 0}));
+  assert(arch.isAllowedLocally(op->getType(), 0));
   assert(op->getNcontrols() == 0);
   // individual gate that can act on one or more atoms
   std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
@@ -337,7 +338,7 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
                                        placement.at(qubit).zones.end(),
                                        [&](auto& z) {
                                          return !arch.isAllowedLocally(
-                                             {op->getType(), 0}, z);
+                                             op->getType(), 0, z);
                                        }),
                         placement.at(qubit).zones.end());
                     break;
@@ -390,7 +391,7 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
                      std::vector<Atom>& placement,
                      std::unordered_set<qc::Qubit>& currentlyShuttling,
                      const std::vector<qc::Qubit>& qubits,
-                     const Zone destination) -> void {
+                     const std::size_t destination) -> void {
   // this distance is used for spacing atoms that should interact or pass
   // another atom
   const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
@@ -569,7 +570,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
         }
       }
       const auto spotsNeeded = pickUpOrder.size();
-      Zone zone = 0;
+      std::size_t zone = 0;
       Index row = 0;
       std::size_t freeSpotsInRow = 0;
       for (const auto& z : placement.at(q).zones) {
@@ -845,14 +846,12 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
         (*it)->execute();
         if (op->isCompoundOperation()) {
           const auto* const co = dynamic_cast<const qc::CompoundOperation*>(op);
-          mappedQc.emplaceBack<NAGlobalOperation>(
-              FullOpType{co->at(0)->getType(), 0}, co->at(0)->getParameter());
+          mappedQc.emplaceBack<NAGlobalOperation>(co->at(0)->getType(), 0,
+                                                  co->at(0)->getParameter());
         } else if (isGlobal(*op, nqubits) &&
-                   arch.isAllowedGlobally(
-                       {op->getType(), op->getNcontrols()})) {
+                   arch.isAllowedGlobally(op->getType(), op->getNcontrols())) {
           mappedQc.emplaceBack<NAGlobalOperation>(
-              FullOpType{op->getType(), op->getNcontrols()},
-              op->getParameter());
+              op->getType(), op->getNcontrols(), op->getParameter());
         } else {
           // collect executable gates of the same type
           std::vector<std::shared_ptr<Point>> positions = {
@@ -873,8 +872,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             }
           }
           mappedQc.emplaceBack<NALocalOperation>(
-              FullOpType{op->getType(), op->getNcontrols()}, op->getParameter(),
-              positions);
+              op->getType(), op->getNcontrols(), op->getParameter(), positions);
         }
         it = executableSet.begin();
       } else {
@@ -900,7 +898,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       Point start = *placement.at(q1).currentPosition;
       Point end = start;
       const Point& target = arch.getPositionOfSite(
-          arch.getSitesInZone(*arch.getPropertiesOfOperation({op->getType(), 1})
+          arch.getSitesInZone(*arch.getPropertiesOfOperation(op->getType(), 1)
                                    .zones.begin())
               .at(0));
       end.x += d;
@@ -930,7 +928,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       mappedQc.emplaceBack<NAShuttlingOperation>(
           MOVE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
-      mappedQc.emplaceBack<NAGlobalOperation>(FullOpType{qc::OpType::Z, 1});
+      mappedQc.emplaceBack<NAGlobalOperation>(qc::OpType::Z, 1);
       maxSeqWidth = 1UL;
       mappedQc.emplaceBack<NAShuttlingOperation>(
           MOVE, std::vector{std::make_shared<Point>(end)},
@@ -964,8 +962,8 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             "Other gates than cz are not supported for mapping yet.");
         // TODO: support other gates than cz
       }
-      const Zone interactionZone =
-          *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
+      const std::size_t interactionZone =
+          *arch.getPropertiesOfOperation(qc::OpType::Z, 1).zones.begin();
       const auto sites = arch.getSitesInRow(interactionZone, 0);
       const auto& sequence =
           NAGraphAlgorithms::computeSequence(graph, sites.size());
@@ -1073,7 +1071,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
         }
         mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, startMoveable,
                                                    endMoveable);
-        mappedQc.emplaceBack<NAGlobalOperation>(FullOpType{qc::OpType::Z, 1});
+        mappedQc.emplaceBack<NAGlobalOperation>(qc::OpType::Z, 1);
         for (const auto& q : moveableOrdered) {
           for (const auto& [p, _] : fixed) {
             const auto qPos = *placement.at(q).currentPosition;
@@ -1160,4 +1158,4 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       std::chrono::duration<qc::fp, std::milli>(end - startPostprocess).count();
   done = true;
 }
-} // namespace na
+} // namespace na::nalac

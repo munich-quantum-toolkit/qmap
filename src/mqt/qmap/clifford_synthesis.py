@@ -5,15 +5,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+
     from .compile import CircuitInputType
 
-from qiskit import QuantumCircuit, qasm3
 from qiskit.quantum_info import Clifford, PauliList
-from qiskit.transpiler.layout import TranspileLayout
 
 from mqt.core import load
+from mqt.core.plugins.qiskit import mqt_to_qiskit
 
-from .compile import extract_initial_layout_from_qasm
 from .pyqmap import (
     CliffordSynthesizer,
     SynthesisConfiguration,
@@ -82,18 +82,6 @@ def _config_from_kwargs(kwargs: dict[str, Any]) -> SynthesisConfiguration:
     return config
 
 
-def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
-    """Create a proper :class:`qiskit.QuantumCircuit` from a QASM string (including layout information)."""
-    circ = qasm3.loads(qasm)
-    layout = extract_initial_layout_from_qasm(qasm, circ.qregs)
-
-    circ._layout = TranspileLayout(  # noqa: SLF001
-        initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
-    )
-
-    return circ
-
-
 def synthesize_clifford(
     target_tableau: str | Clifford | PauliList | Tableau,
     initial_tableau: str | Clifford | PauliList | Tableau | None = None,
@@ -132,11 +120,7 @@ def synthesize_clifford(
         synthesizer = CliffordSynthesizer(tableau)
 
     synthesizer.synthesize(config)
-
-    results = synthesizer.results
-    circ = _circuit_from_qasm(results.circuit)
-
-    return circ, results
+    return mqt_to_qiskit(synthesizer.result_circuit), synthesizer.results
 
 
 def optimize_clifford(
@@ -177,8 +161,4 @@ def optimize_clifford(
         synthesizer = CliffordSynthesizer(qc, include_destabilizers)
 
     synthesizer.synthesize(config)
-
-    results = synthesizer.results
-    circ = _circuit_from_qasm(results.circuit)
-
-    return circ, results
+    return mqt_to_qiskit(synthesizer.result_circuit), synthesizer.results

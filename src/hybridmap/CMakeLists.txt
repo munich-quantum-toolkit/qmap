@@ -20,7 +20,7 @@ if(NOT TARGET ${MQT_QMAP_HYBRIDMAP_TARGET_NAME})
   # link to the MQT::Core libraries
   target_link_libraries(
     ${MQT_QMAP_HYBRIDMAP_TARGET_NAME}
-    PUBLIC MQT::CoreIR nlohmann_json::nlohmann_json
+    PUBLIC MQT::CoreIR MQT::CoreNA nlohmann_json::nlohmann_json
     PRIVATE MQT::ProjectWarnings MQT::ProjectOptions MQT::CoreCircuitOptimizer)
 
   # add MQT alias

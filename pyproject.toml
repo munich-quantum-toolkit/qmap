@@ -1,9 +1,9 @@
 [build-system]
 requires = [
   "scikit-build-core>=0.11.0",
-  "setuptools-scm>=8.1",
+  "setuptools-scm>=8.2",
   "pybind11>=2.13.6",
-  "mqt.core>=3.0.0b5",
+  "mqt.core>=3.0.0rc2",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -43,7 +43,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "mqt.core>=3.0.0b5",
+    "mqt.core>=3.0.0rc2",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "importlib_resources>=5.0; python_version < '3.10'",
@@ -260,7 +260,7 @@ isort.required-imports = ["from __future__ import annotations"]
 "test/python/**" = ["T20", "ANN"]
 "docs/**" = ["T20"]
 "noxfile.py" = ["T20", "TID251"]
-"*.pyi" = ["D418", "PYI021"]  # pydocstyle
+"*.pyi" = ["D418", "PYI021"]  # "*.pyi" = ["D418", "DOC202", "PYI011", "PYI021"]
 "*.ipynb" = [
     "D",    # pydocstyle
     "E402", # Allow imports to appear anywhere in Jupyter notebooks
@@ -287,6 +287,7 @@ anc = "anc"
 optin = "optin"
 aer = "aer"
 iy = "iy"
+ket = "ket"
 
 
 [tool.repo-review]
@@ -336,7 +337,7 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-circuit-optimizer.dll \
 --exclude mqt-core-ds.dll \
 --exclude mqt-core-na.dll"""
-environment = { CMAKE_GENERATOR = "Ninja" }
+environment = { CMAKE_GENERATOR = "Ninja", UV_PRERELEASE = "allow" }
 
 
 [tool.uv]
@@ -351,8 +352,8 @@ mqt-qmap = { workspace = true }
 build = [
   "pybind11>=2.13.6",
   "scikit-build-core>=0.11.0",
-  "setuptools-scm>=8.1",
-  "mqt.core>=3.0.0b5",
+  "setuptools-scm>=8.2",
+  "mqt.core>=3.0.0rc2",
 ]
 docs = [
   "networkx>=3.2.1",
@@ -361,17 +362,15 @@ docs = [
   "walkerlayout>=1.0.2",
   "ipywidgets>=8.1.5",
   "furo>=2024.8.6",
-  "qiskit[visualization]>=1.0.0",
-  "setuptools-scm>=8.1",
+  "qiskit[qasm3-import,visualization]>=1.0.0",
+  "setuptools-scm>=8.2",
   "sphinx-autoapi>=3.6.0",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
   "sphinxcontrib-bibtex>=2.6.3",
-  "sphinxcontrib-svg2pdfconverter>=1.2.3",
+  "sphinxcontrib-svg2pdfconverter>=1.3.0",
   "sphinxext-opengraph>=0.9.1",
-  "ipykernel>=6.29.5",
-  "nbsphinx>=0.9.6",
-  "sphinx-autodoc-typehints>=2.3.0",
+  "myst-nb>=1.2.0",
   "sphinx>=7.4.7",
   "sphinx>=8.1.3; python_version >= '3.10'",
   "sphinx>=8.2.3; python_version >= '3.11'",
@@ -382,9 +381,9 @@ test = [
   "distinctipy>=1.3.4",
   "walkerlayout>=1.0.2",
   "ipywidgets>=8.1.5",
-  "pytest>=8.3.4",
+  "pytest>=8.3.5",
   "pytest-cov>=6",
-  "mqt.qcec>=3.0.0b1",
+  "mqt.qcec>=3.0.0b3",
 ]
 dev = [
   {include-group = "build"},

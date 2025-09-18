@@ -3,7 +3,7 @@
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/NAComputation.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/entities/Location.hpp"
 
 #include <cstdint>
 
@@ -50,7 +50,7 @@ private:
                                 int64_t maxVOffset, int64_t minEntanglingY,
                                 int64_t maxEntanglingY, int64_t minAtomDist,
                                 int64_t noInteractionRadius, int64_t zoneDist)
-      -> Point;
+      -> Location;
 
 public:
   /**

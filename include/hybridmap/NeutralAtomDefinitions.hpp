@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/Operation.hpp"
 
 #include <cstdint>

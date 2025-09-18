@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/Operation.hpp"
 
 #include <cstdint>

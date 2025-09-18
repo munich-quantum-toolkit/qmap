@@ -11,8 +11,8 @@ if(NOT TARGET ${MQT_QMAP_NASP_TARGET_NAME})
 
   target_link_libraries(
     ${MQT_QMAP_NASP_TARGET_NAME}
-    PUBLIC MQT::QMapNA MQT::CoreCircuitOptimizer z3::z3lib yaml-cpp
-    PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
+    PUBLIC MQT::CoreNA nlohmann_json::nlohmann_json z3::z3lib
+    PRIVATE MQT::CoreDS MQT::CoreCircuitOptimizer MQT::ProjectOptions MQT::ProjectWarnings)
 
   add_library(MQT::NASP ALIAS ${MQT_QMAP_NASP_TARGET_NAME})
 endif()

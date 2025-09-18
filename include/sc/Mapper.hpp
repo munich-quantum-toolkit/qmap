@@ -6,10 +6,10 @@
 #pragma once
 
 #include "Architecture.hpp"
-#include "Definitions.hpp"
 #include "MappingResults.hpp"
 #include "configuration/Configuration.hpp"
 #include "ir//QuantumComputation.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/Operation.hpp"
 #include "utils.hpp"
 
@@ -301,9 +301,10 @@ public:
 
   virtual MappingResults& getResults() { return results; }
 
-  virtual nlohmann::basic_json<> json() { return results.json(); }
+  /// get an rvalue reference to the mapped circuit to move it out of the mapper
+  qc::QuantumComputation&& moveMappedCircuit() { return std::move(qcMapped); }
 
-  virtual std::string csv() { return results.csv(); }
+  virtual nlohmann::basic_json<> json() { return results.json(); }
 
   std::ostream& printLayering(std::ostream& out) {
     out << "---------------- Layering -------------------\n";

@@ -5,9 +5,9 @@
 
 #include "hybridmap/HybridAnimation.hpp"
 
-#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 

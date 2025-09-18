@@ -26,7 +26,6 @@ def test_heuristic_no_swaps_trivial_layout(backend: GenericBackendV2) -> None:
 
     qc_mapped, results = qmap.compile(qc, arch=backend)
     assert results.timeout is False
-    assert results.mapped_circuit
     # assert results.output.swaps == 0
 
     result = verify(qc, qc_mapped)
@@ -45,7 +44,6 @@ def test_heuristic_no_swaps_non_trivial_layout(backend: GenericBackendV2) -> Non
     qc_mapped, results = qmap.compile(qc, arch=backend)
 
     assert results.timeout is False
-    assert results.mapped_circuit
     # assert results.output.swaps == 0
 
     result = verify(qc, qc_mapped)
@@ -64,7 +62,6 @@ def test_heuristic_non_trivial_swaps(backend: GenericBackendV2) -> None:
     qc_mapped, results = qmap.compile(qc, arch=backend)
 
     assert results.timeout is False
-    assert results.mapped_circuit
     assert results.output.swaps == 1
 
     print("\n")

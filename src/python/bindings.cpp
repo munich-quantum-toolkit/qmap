@@ -3,7 +3,6 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Definitions.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
@@ -14,13 +13,12 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
-#include "na/NADefinitions.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/nasp/SolverFactory.hpp"
 #include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/Mapper.hpp"
@@ -59,14 +57,9 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 // c++ binding function
-MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
-                   Configuration& config) {
-  if (config.useTeleportation) {
-    config.teleportationQubits =
-        std::min((arch.getNqubits() - circ.getNqubits()) & ~1U,
-                 static_cast<std::size_t>(8));
-  }
-
+std::pair<qc::QuantumComputation, MappingResults>
+map(const qc::QuantumComputation& circ, Architecture& arch,
+    Configuration& config) {
   std::unique_ptr<Mapper> mapper;
   try {
     if (config.method == Method::Heuristic) {
@@ -89,12 +82,9 @@ MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
   }
 
   auto& results = mapper->getResults();
+  auto&& qcMapped = mapper->moveMappedCircuit();
 
-  std::stringstream qasm{};
-  mapper->dumpResult(qasm);
-  results.mappedCircuit = qasm.str();
-
-  return results;
+  return {std::move(qcMapped), results};
 }
 
 PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
@@ -269,11 +259,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def_readwrite("first_lookahead_factor",
                      &Configuration::firstLookaheadFactor)
       .def_readwrite("lookahead_factor", &Configuration::lookaheadFactor)
-      .def_readwrite("use_teleportation", &Configuration::useTeleportation)
-      .def_readwrite("teleportation_qubits",
-                     &Configuration::teleportationQubits)
-      .def_readwrite("teleportation_seed", &Configuration::teleportationSeed)
-      .def_readwrite("teleportation_fake", &Configuration::teleportationFake)
       .def_readwrite("timeout", &Configuration::timeout)
       .def_readwrite("encoding", &Configuration::encoding)
       .def_readwrite("commander_grouping", &Configuration::commanderGrouping)
@@ -310,7 +295,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
                      &MappingResults::layerHeuristicBenchmark)
       .def_readwrite("wcnf", &MappingResults::wcnf)
       .def("json", &MappingResults::json)
-      .def("csv", &MappingResults::csv)
       .def("__repr__", &MappingResults::toString);
 
   // Main class for storing circuit information
@@ -330,9 +314,7 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
                      &MappingResults::CircuitInfo::totalLogFidelity)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",
-                     &MappingResults::CircuitInfo::directionReverse)
-      .def_readwrite("teleportations",
-                     &MappingResults::CircuitInfo::teleportations);
+                     &MappingResults::CircuitInfo::directionReverse);
 
   // Heuristic benchmark information
   py::class_<MappingResults::HeuristicBenchmarkInfo>(
@@ -705,6 +687,10 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   synthesizer.def_property_readonly("results",
                                     &cs::CliffordSynthesizer::getResults,
                                     "Returns the results of the synthesis.");
+  synthesizer.def_property_readonly(
+      "result_circuit", [](cs::CliffordSynthesizer& self) {
+        return qasm3::Importer::imports(self.getResults().getResultCircuit());
+      });
 
   // Neutral Atom Hybrid Mapper
   py::enum_<na::InitialCoordinateMapping>(
@@ -1081,8 +1067,8 @@ whether idle qubits should be shielded from the entangling operations.
     :func:`get_ops_for_solver`.
 
 .. note::
-    The returned solver's result can either directly exported to the YAML format
-    by calling the method :func:`yaml` on the result object or the result object
+    The returned solver's result can either directly exported to the JSON format
+    by calling the method :func:`json` on the result object or the result object
     can be passed to the function :func:`generate_code` to generate code
     consisting of neutral atom operations.
 
@@ -1103,16 +1089,11 @@ whether idle qubits should be shielded from the entangling operations.
       "Neutral Atom State Preparation Solver Result")
       .def(py::init<>(), "Create a result object")
       .def(
-          "yaml",
-          [](const na::NASolver::Result& result, const bool compact) {
-            return result.yaml(0, compact);
-          },
-          "compact"_a = true, R"(
-Returns the result as a YAML string.
+          "json",
+          [](const na::NASolver::Result& result) { return result.json(); }, R"(
+Returns the result as a JSON string.
 
-:param compact: if True, the YAML string contains JSON elements to make it more
-compact
-:returns: the result as a YAML string
+:returns: the result as a JSON string
 )");
 
   m.def(
@@ -1148,9 +1129,8 @@ of the abstraction from the 2D grid used for the solver must be provided again.
         std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
                        opTypeLowerStr.begin(),
                        [](unsigned char c) { return std::tolower(c); });
-        const auto fullOpType =
-            na::FullOpType{qc::opTypeFromString(operationType), numControls};
-        return na::SolverFactory::getOpsForSolver(qc, fullOpType, quiet);
+        return na::NASolver::getOpsForSolver(
+            qc, qc::opTypeFromString(operationType), numControls, quiet);
       },
       "qc"_a, "operation_type"_a = "Z", "num_operands"_a = 1, "quiet"_a = true,
       R"(

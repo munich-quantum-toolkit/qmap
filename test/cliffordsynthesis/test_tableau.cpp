@@ -510,6 +510,7 @@ TEST_F(TestTableau, CircuitTranslation) {
   using namespace qc::literals;
 
   qc::QuantumComputation qc(2U);
+  qc.i(0);
   qc.x(0);
   qc.y(0);
   qc.z(0);

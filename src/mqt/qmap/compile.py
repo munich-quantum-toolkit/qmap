@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
-from qiskit import QuantumCircuit, QuantumRegister, qasm3
-from qiskit.transpiler import Layout, TranspileLayout
-
 if TYPE_CHECKING:
     from os import PathLike
 
+    from qiskit.circuit import QuantumCircuit
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
@@ -21,6 +19,7 @@ if TYPE_CHECKING:
     CircuitInputType = Union[QuantumComputation, str, PathLike[str], QuantumCircuit]
 
 from mqt.core import load
+from mqt.core.plugins.qiskit import mqt_to_qiskit
 
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration
@@ -50,30 +49,6 @@ def __dir__() -> list[str]:
     return __all__
 
 
-def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) -> Layout:
-    """Extract the initial layout resulting from compiling a circuit from a QASM file.
-
-    Args:
-        qasm: The QASM file to extract the initial layout from.
-        qregs: The quantum registers of the circuit.
-
-    Returns:
-        The initial layout.
-    """
-    for line in qasm.split("\n"):
-        if line.startswith("// i "):
-            # strip away initial part of line
-            stripped_line = line[5:]
-            # split line into tokens
-            tokens = stripped_line.split(" ")
-            # convert tokens to integers
-            int_tokens = [int(token) for token in tokens]
-            # create an empty layout
-            return Layout().from_intlist(int_tokens, *qregs)
-    msg = "No initial layout found in QASM file."
-    raise ValueError(msg)
-
-
 def compile(  # noqa: A001
     circ: CircuitInputType,
     arch: str | Arch | Architecture | Backend | None,
@@ -89,9 +64,6 @@ def compile(  # noqa: A001
     lookahead_heuristic: str | LookaheadHeuristic | None = "gate_count_max_distance",
     lookaheads: int = 15,
     lookahead_factor: float = 0.5,
-    use_teleportation: bool = False,
-    teleportation_fake: bool = False,
-    teleportation_seed: int = 0,
     encoding: str | Encoding = "commander",
     commander_grouping: str | CommanderGrouping = "fixed3",
     swap_reduction: str | SwapReduction = "coupling_limit",
@@ -131,9 +103,6 @@ def compile(  # noqa: A001
         include_WCNF: Include WCNF file in the results. Defaults to False.
         use_subsets: Use qubit subsets, or consider all available physical qubits at once. Defaults to True.
         subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered. Defaults to None.
-        use_teleportation: Use teleportation in addition to swaps. Defaults to False.
-        teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons). Defaults to False.
-        teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar). Defaults to 0.
         pre_mapping_optimizations: Run pre-mapping optimizations. Defaults to True.
         post_mapping_optimizations: Run post-mapping optimizations. Defaults to True.
         add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
@@ -179,9 +148,6 @@ def compile(  # noqa: A001
     config.include_WCNF = include_WCNF
     config.use_subsets = use_subsets
     config.subgraph = subgraph
-    config.use_teleportation = use_teleportation
-    config.teleportation_fake = teleportation_fake
-    config.teleportation_seed = teleportation_seed
     config.pre_mapping_optimizations = pre_mapping_optimizations
     config.post_mapping_optimizations = post_mapping_optimizations
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
@@ -199,13 +165,5 @@ def compile(  # noqa: A001
     config.lookahead_factor = lookahead_factor
 
     qc = load(circ)
-    results = map(qc, architecture, config)
-
-    circ = qasm3.loads(results.mapped_circuit)
-    layout = extract_initial_layout_from_qasm(results.mapped_circuit, circ.qregs)
-
-    circ._layout = TranspileLayout(  # noqa: SLF001
-        initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
-    )
-
-    return circ, results
+    qc_mapped, results = map(qc, architecture, config)
+    return mqt_to_qiskit(qc_mapped, set_layout=True), results

@@ -1,8 +1,8 @@
 #include "na/nalac/NAGraphAlgorithms.hpp"
 
-#include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"
 #include "datastructures/DisjointSet.hpp"
+#include "ir/Definitions.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
     -> std::unordered_set<qc::Qubit> {
@@ -625,4 +625,4 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g,
   }
   return {moveablePositions, fixedPositions};
 }
-} // namespace na
+} // namespace na::nalac
