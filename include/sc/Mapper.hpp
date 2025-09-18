@@ -13,7 +13,6 @@
 #include "ir/operations/Operation.hpp"
 #include "utils.hpp"
 
-#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <cstdint>
@@ -196,8 +195,6 @@ protected:
    * @param control the (potential) control qubit of the gate
    * @param target the target qubit of the gate
    * @param gate the gate to be added to the layer
-   * @param collect2qBlocks if true, gates are collected in 2Q-blocks, and
-   * layering is performed on these blocks
    */
   void
   processDisjointQubitLayer(std::vector<std::optional<std::size_t>>& lastLayer,
@@ -289,32 +286,13 @@ public:
       std::cerr << "Mapped circuit is empty.\n";
       return;
     }
-
-    const std::size_t dot = outputFilename.find_last_of('.');
-    std::string extension = outputFilename.substr(dot + 1);
-    std::transform(extension.begin(), extension.end(), extension.begin(),
-                   [](unsigned char c) { return ::tolower(c); });
-    if (extension == "real") {
-      dumpResult(outputFilename, qc::Format::Real);
-    } else if (extension == "qasm") {
-      dumpResult(outputFilename, qc::Format::OpenQASM3);
-    } else {
-      throw QMAPException("[dump] Extension " + extension +
-                          " not recognized/supported for dumping.");
-    }
-  }
-
-  virtual void dumpResult(const std::string& outputFilename,
-                          qc::Format format) {
     const std::size_t slash = outputFilename.find_last_of('/');
     const std::size_t dot = outputFilename.find_last_of('.');
     results.output.name = outputFilename.substr(slash + 1, dot - slash - 1);
-    qcMapped.dump(outputFilename, format);
+    qcMapped.dump(outputFilename, qc::Format::OpenQASM3);
   }
 
-  virtual void dumpResult(std::ostream& os, qc::Format format) {
-    qcMapped.dump(os, format);
-  }
+  virtual void dumpResult(std::ostream& os) { qcMapped.dumpOpenQASM(os); }
 
   virtual std::ostream& printResult(std::ostream& out) {
     out << results.toString();

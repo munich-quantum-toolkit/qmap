@@ -7,6 +7,7 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
+#include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/DataLogger.hpp"
 #include "sc/configuration/AvailableArchitecture.hpp"
@@ -461,7 +462,7 @@ protected:
     const std::string testName = ss.str();
 
     circuitName = std::get<1>(GetParam());
-    qc.import(testExampleDir + circuitName + ".qasm");
+    qc = qasm3::Importer::importf(testExampleDir + circuitName + ".qasm");
     ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
@@ -1074,7 +1075,6 @@ TEST(Functionality, EmptyDump) {
   mapper.dumpResult("test.qasm");
   mapper.map({});
   EXPECT_NO_THROW(mapper.dumpResult("test.qasm"););
-  EXPECT_THROW(mapper.dumpResult("test.dummy"), QMAPException);
   std::filesystem::remove("test.qasm");
 }
 
@@ -1160,8 +1160,8 @@ TEST(Functionality, NoMeasurementsAdded) {
   // get the resulting circuit
   auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper.dumpResult(qasm, qc::Format::OpenQASM3);
-  qcMapped.import(qasm, qc::Format::OpenQASM3);
+  mapper.dumpResult(qasm);
+  qcMapped = qasm3::Importer::import(qasm);
 
   // check no measurements were added
   EXPECT_EQ(qcMapped.getNops(), 3U);
@@ -1299,33 +1299,21 @@ TEST(Functionality, DataLogger) {
   const auto& singleQubitFidelityCosts =
       architecture.getSingleQubitFidelityCosts();
   for (std::size_t i = 0; i < singleQubitFidelityCosts.size(); ++i) {
-    if (std::isinf(singleQubitFidelityCosts[i])) {
-      EXPECT_TRUE(fidelityJson["single_qubit_fidelity_costs"][i].is_null());
-    } else {
-      EXPECT_EQ(fidelityJson["single_qubit_fidelity_costs"][i],
-                singleQubitFidelityCosts[i]);
-    }
+    EXPECT_EQ(fidelityJson["single_qubit_fidelity_costs"][i],
+              singleQubitFidelityCosts[i]);
   }
   const auto& twoQubitFidelityCosts = architecture.getTwoQubitFidelityCosts();
   for (std::size_t i = 0; i < twoQubitFidelityCosts.size(); ++i) {
     for (std::size_t j = 0; j < twoQubitFidelityCosts[i].size(); ++j) {
-      if (std::isinf(twoQubitFidelityCosts[i][j])) {
-        EXPECT_TRUE(fidelityJson["two_qubit_fidelity_costs"][i][j].is_null());
-      } else {
-        EXPECT_EQ(fidelityJson["two_qubit_fidelity_costs"][i][j],
-                  twoQubitFidelityCosts[i][j]);
-      }
+      EXPECT_EQ(fidelityJson["two_qubit_fidelity_costs"][i][j],
+                twoQubitFidelityCosts[i][j]);
     }
   }
   const auto& swapFidelityCosts = architecture.getSwapFidelityCosts();
   for (std::size_t i = 0; i < swapFidelityCosts.size(); ++i) {
     for (std::size_t j = 0; j < swapFidelityCosts[i].size(); ++j) {
-      if (std::isinf(swapFidelityCosts[i][j])) {
-        EXPECT_TRUE(fidelityJson["swap_fidelity_costs"][i][j].is_null());
-      } else {
-        EXPECT_EQ(fidelityJson["swap_fidelity_costs"][i][j],
-                  swapFidelityCosts[i][j]);
-      }
+      EXPECT_EQ(fidelityJson["swap_fidelity_costs"][i][j],
+                swapFidelityCosts[i][j]);
     }
   }
 
@@ -1432,7 +1420,7 @@ TEST(Functionality, DataLogger) {
   std::stringstream inputFileBuffer;
   inputFileBuffer << inputQasmFile.rdbuf();
   std::stringstream inputQasmBuffer;
-  qc.dumpOpenQASM3(inputQasmBuffer);
+  qc.dumpOpenQASM(inputQasmBuffer);
   EXPECT_EQ(inputFileBuffer.str(), inputQasmBuffer.str());
 
   auto outputQasmFile =
@@ -1444,7 +1432,7 @@ TEST(Functionality, DataLogger) {
   std::stringstream outputFileBuffer;
   outputFileBuffer << outputQasmFile.rdbuf();
   std::stringstream outputQasmBuffer;
-  mapper->dumpResult(outputQasmBuffer, qc::Format::OpenQASM3);
+  mapper->dumpResult(outputQasmBuffer);
   EXPECT_EQ(outputFileBuffer.str(), outputQasmBuffer.str());
 
   // checking logged search graph info against known values (correct qubit
@@ -1693,12 +1681,9 @@ TEST(Functionality, InitialLayoutDump) {
   mapper.map(config);
 
   std::stringstream qasmStream{};
-  mapper.dumpResult(qasmStream, qc::Format::OpenQASM3);
+  mapper.dumpResult(qasmStream);
   const std::string qasm = qasmStream.str();
-
-  qasmStream = std::stringstream(qasm);
-  auto qcMapped = qc::QuantumComputation();
-  qcMapped.import(qasmStream, qc::Format::OpenQASM3);
+  auto qcMapped = qasm3::Importer::imports(qasm);
 
   qasmStream = std::stringstream(qasm);
   std::string line;
@@ -1767,8 +1752,8 @@ TEST_F(LayeringTest, Disjoint2qBlocks) {
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
-  qcMapped.import(qasm, qc::Format::OpenQASM3);
+  mapper->dumpResult(qasm);
+  qcMapped = qasm3::Importer::import(qasm);
   // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {
@@ -1787,8 +1772,8 @@ TEST_F(LayeringTest, DisjointQubits) {
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
-  qcMapped.import(qasm, qc::Format::OpenQASM3);
+  mapper->dumpResult(qasm);
+  qcMapped = qasm3::Importer::import(qasm);
   // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {
@@ -1807,8 +1792,8 @@ TEST_F(LayeringTest, IndividualGates) {
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
-  qcMapped.import(qasm, qc::Format::OpenQASM3);
+  mapper->dumpResult(qasm);
+  qcMapped = qasm3::Importer::import(qasm);
   // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {
@@ -1833,7 +1818,7 @@ protected:
   Configuration settings{};
 
   void SetUp() override {
-    qc.import(testExampleDir + GetParam() + ".qasm");
+    qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
     ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
@@ -1898,7 +1883,7 @@ protected:
   Configuration settings{};
 
   void SetUp() override {
-    qc.import(testExampleDir + GetParam() + ".qasm");
+    qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
     ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
     ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
     settings.debug = true;
@@ -1945,7 +1930,7 @@ protected:
   std::unique_ptr<HeuristicMapper> tokyoMapper;
 
   void SetUp() override {
-    qc.import(testExampleDir + GetParam() + ".qasm");
+    qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
     arch.loadCouplingMap(AvailableArchitecture::IbmqTokyo);
     tokyoMapper = std::make_unique<HeuristicMapper>(qc, arch);
   }
@@ -1981,7 +1966,8 @@ protected:
   std::unique_ptr<HeuristicMapper> tokyoMapper;
 
   void SetUp() override {
-    qc.import(testExampleDir + std::get<1>(GetParam()) + ".qasm");
+    qc = qasm3::Importer::importf(testExampleDir + std::get<1>(GetParam()) +
+                                  ".qasm");
     arch.loadCouplingMap(AvailableArchitecture::IbmqTokyo);
     tokyoMapper = std::make_unique<HeuristicMapper>(qc, arch);
   }
@@ -2025,7 +2011,7 @@ protected:
   std::unique_ptr<HeuristicMapper> nonFidelityMapper;
 
   void SetUp() override {
-    qc.import(testExampleDir + GetParam() + ".qasm");
+    qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
     arch.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     arch.loadProperties(testCalibrationDir + "ibmq_london.csv");
     mapper = std::make_unique<HeuristicMapper>(qc, arch);

@@ -47,7 +47,7 @@ public:
   void setSolverResult(const logicbase::Result r) { solverResult = r; }
   void setSolverCalls(const std::size_t c) { solverCalls = c; }
 
-  void setResultCircuit(qc::QuantumComputation& qc);
+  void setResultCircuit(const qc::QuantumComputation& qc);
   void setResultTableau(const Tableau& tableau);
 
   [[nodiscard]] bool sat() const {

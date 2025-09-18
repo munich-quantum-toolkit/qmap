@@ -245,66 +245,66 @@ LogicTerm LogicTerm::lte(const LogicTerm& a, const LogicTerm& b) {
 LogicTerm LogicTerm::neg(const LogicTerm& a) { return {OpType::NEG, a}; }
 
 LogicTerm LogicTerm::operator&&(const LogicTerm& other) const {
-  return LogicTerm::a(*this, other);
+  return a(*this, other);
 }
 
 LogicTerm LogicTerm::operator&(const LogicTerm& other) const {
-  return LogicTerm::bvAnd(*this, other);
+  return bvAnd(*this, other);
 }
 
 LogicTerm LogicTerm::operator|(const LogicTerm& other) const {
-  return LogicTerm::bvOr(*this, other);
+  return bvOr(*this, other);
 }
 
 LogicTerm LogicTerm::operator^(const LogicTerm& other) const {
-  return LogicTerm::bvXor(*this, other);
+  return bvXor(*this, other);
 }
 
 LogicTerm LogicTerm::operator||(const LogicTerm& other) const {
-  return LogicTerm::o(*this, other);
+  return o(*this, other);
 }
 
 LogicTerm LogicTerm::operator==(const LogicTerm& other) const {
-  return LogicTerm::eq(*this, other);
+  return eq(*this, other);
 }
 
 LogicTerm LogicTerm::operator!=(const LogicTerm& other) const {
-  return LogicTerm::neq(*this, other);
+  return neq(*this, other);
 }
 
 LogicTerm LogicTerm::operator+(const LogicTerm& other) const {
-  return LogicTerm::add(*this, other);
+  return add(*this, other);
 }
 
 LogicTerm LogicTerm::operator-(const LogicTerm& other) const {
-  return LogicTerm::sub(*this, other);
+  return sub(*this, other);
 }
 
 LogicTerm LogicTerm::operator*(const LogicTerm& other) const {
-  return LogicTerm::mul(*this, other);
+  return mul(*this, other);
 }
 
 LogicTerm LogicTerm::operator/(const LogicTerm& other) const {
-  return LogicTerm::div(*this, other);
+  return div(*this, other);
 }
 
 LogicTerm LogicTerm::operator>(const LogicTerm& other) const {
-  return LogicTerm::gt(*this, other);
+  return gt(*this, other);
 }
 
 LogicTerm LogicTerm::operator<(const LogicTerm& other) const {
-  return LogicTerm::lt(*this, other);
+  return lt(*this, other);
 }
 
 LogicTerm LogicTerm::operator>=(const LogicTerm& other) const {
-  return LogicTerm::gte(*this, other);
+  return gte(*this, other);
 }
 
 LogicTerm LogicTerm::operator<=(const LogicTerm& other) const {
-  return LogicTerm::lte(*this, other);
+  return lte(*this, other);
 }
 
-LogicTerm LogicTerm::operator!() const { return LogicTerm::neg(*this); }
+LogicTerm LogicTerm::operator!() const { return neg(*this); }
 
 bool LogicTerm::isConst() const { return getOpType() == OpType::Constant; }
 
@@ -334,7 +334,7 @@ int LogicTerm::getIntValue() const {
   case CType::BITVECTOR:
     return static_cast<int>(bvValue);
   default:
-    return std::numeric_limits<int>::infinity();
+    return std::numeric_limits<int>::max();
   }
 }
 
@@ -349,7 +349,7 @@ double LogicTerm::getFloatValue() const {
   case CType::BITVECTOR:
     return static_cast<double>(bvValue);
   default:
-    return std::numeric_limits<double>::infinity();
+    return std::numeric_limits<double>::max();
   }
 }
 
@@ -364,7 +364,7 @@ uint64_t LogicTerm::getBitVectorValue() const {
   case CType::BITVECTOR:
     return bvValue & (static_cast<uint64_t>(std::pow(2, bvSize)) - 1U);
   default:
-    return std::numeric_limits<uint64_t>::infinity();
+    return std::numeric_limits<uint64_t>::max();
   }
 }
 
@@ -379,7 +379,7 @@ uint16_t LogicTerm::getBitVectorSize() const {
   case CType::BITVECTOR:
     return bvSize;
   default:
-    return std::numeric_limits<uint16_t>::infinity();
+    return std::numeric_limits<uint16_t>::max();
   }
 }
 

@@ -3,12 +3,12 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Definitions.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <cstddef>
 #include <fstream>
@@ -16,7 +16,6 @@
 #include <iostream>
 #include <limits>
 #include <plog/Severity.h>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -78,9 +77,7 @@ protected:
     test = GetParam();
 
     if (!test.initialCircuit.empty()) {
-      std::stringstream ss(test.initialCircuit);
-      qc::QuantumComputation qc{};
-      qc.import(ss, qc::Format::OpenQASM3);
+      auto qc = qasm3::Importer::imports(test.initialCircuit);
       std::cout << "Initial circuit:\n" << qc;
       targetTableau = Tableau(qc);
       targetTableauWithDestabilizer =

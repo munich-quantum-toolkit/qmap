@@ -75,7 +75,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingTimes"].items()) {
-      shuttlingTimes.emplace(qc::OP_NAME_TO_TYPE.at(key), value);
+      shuttlingTimes.emplace(qc::opTypeFromString(key), value);
     }
     // compute values for SWAP gate
     qc::fp const swapGateTime =
@@ -106,7 +106,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
-      shuttlingAverageFidelities.emplace(qc::OP_NAME_TO_TYPE.at(key), value);
+      shuttlingAverageFidelities.emplace(qc::opTypeFromString(key), value);
     }
     this->parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
@@ -172,7 +172,8 @@ void NeutralAtomArchitecture::computeSwapDistances(
             });
 
   // compute swap distances
-  this->swapDistances = SymmetricMatrix<SwapDistance>(this->getNpositions());
+  this->swapDistances =
+      qc::SymmetricMatrix<SwapDistance>(this->getNpositions());
 
   for (uint32_t coordIndex1 = 0; coordIndex1 < this->getNpositions();
        coordIndex1++) {

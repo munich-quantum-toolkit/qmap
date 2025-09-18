@@ -38,7 +38,7 @@ protected:
   const NeutralAtomArchitecture* arch = nullptr;
   CoordIndex nQubits = 0;
   qc::Permutation hwToCoordIdx;
-  SymmetricMatrix<SwapDistance> swapDistances;
+  qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::map<HwQubit, HwQubits> nearbyQubits;
   std::vector<CoordIndex> freeCoordinates;
   std::vector<CoordIndex> occupiedCoordinates;
@@ -115,7 +115,7 @@ public:
         occupiedCoordinates.emplace_back(indices[i]);
       }
 
-      swapDistances = SymmetricMatrix(this->nQubits, -1);
+      swapDistances = qc::SymmetricMatrix(this->nQubits, -1);
     }
     initNearbyQubits();
 

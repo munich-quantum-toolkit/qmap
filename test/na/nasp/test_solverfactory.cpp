@@ -2,6 +2,7 @@
 #include "ir/operations/OpType.hpp"
 #include "na/Architecture.hpp"
 #include "na/nasp/SolverFactory.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -141,7 +142,8 @@ TEST(SolverFactory, Create) {
   arch.fromFileStream(archIS, gridSS);
   // create solver
   auto solver = na::SolverFactory::create(arch);
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // get operations for solver
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);

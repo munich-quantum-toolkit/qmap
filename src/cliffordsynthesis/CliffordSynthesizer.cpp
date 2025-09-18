@@ -12,6 +12,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/Operation.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -26,6 +27,7 @@
 #include <plog/Log.h>
 #include <plog/Logger.h>
 #include <plog/Severity.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -120,6 +122,23 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   const std::chrono::duration<double> diff = end - start;
   PLOG_INFO << "Synthesis took " << diff.count() << " seconds";
   results.setRuntime(diff.count());
+}
+
+void CliffordSynthesizer::initResultCircuitFromResults() {
+  resultCircuit = std::make_shared<qc::QuantumComputation>(
+      qasm3::Importer::imports(results.getResultCircuit()));
+}
+
+qc::QuantumComputation& CliffordSynthesizer::getResultCircuit() {
+  initResultCircuitFromResults();
+  return *resultCircuit;
+}
+
+Tableau& CliffordSynthesizer::getResultTableau() {
+  std::stringstream ss;
+  ss << results.getResultTableau();
+  resultTableau.fromString(ss.str());
+  return resultTableau;
 }
 
 void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
@@ -471,8 +490,9 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   std::size_t layer = 0U;
   std::size_t i = 0;
   for (const auto& gate : qc) {
-    if (gate->isCompoundOperation()) {
-      const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+    if (const auto* const compOp =
+            dynamic_cast<const qc::CompoundOperation* const>(gate.get());
+        compOp != nullptr) {
       for (const auto& subGate : *compOp) {
         gateToLayer(*subGate, i, layers, layerNum, layer);
       }

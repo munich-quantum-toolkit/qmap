@@ -7,4 +7,5 @@ if(TARGET MQT::QMapCliffordSynthesis)
   file(GLOB_RECURSE CLIFFORDSYNTHESIS_TEST_SOURCES *.cpp)
   package_add_test(mqt-qmap-cliffordsynthesis-test MQT::QMapCliffordSynthesis
                    ${CLIFFORDSYNTHESIS_TEST_SOURCES})
+  target_link_libraries(mqt-qmap-cliffordsynthesis-test PRIVATE MQT::CoreQASM)
 endif()

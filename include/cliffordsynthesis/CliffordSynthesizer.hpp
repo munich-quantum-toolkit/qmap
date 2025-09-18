@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
@@ -17,12 +16,11 @@
 #include <limits>
 #include <memory>
 #include <plog/Log.h>
-#include <sstream>
 #include <utility>
 
 namespace cs {
 
-class CliffordSynthesizer {
+class CliffordSynthesizer final {
   using EncoderConfig = encoding::SATEncoder::Configuration;
 
 public:
@@ -46,29 +44,17 @@ public:
         initialCircuit(std::make_shared<qc::QuantumComputation>(qc)),
         results(qc, targetTableau) {}
 
-  virtual ~CliffordSynthesizer() = default;
+  ~CliffordSynthesizer() = default;
 
   void synthesize(const Configuration& config = {});
 
   [[nodiscard]] Results& getResults() { return results; };
 
-  void initResultCircuitFromResults() {
-    std::stringstream ss;
-    ss << results.getResultCircuit();
-    resultCircuit = std::make_unique<qc::QuantumComputation>();
-    resultCircuit->import(ss, qc::Format::OpenQASM3);
-  }
+  void initResultCircuitFromResults();
 
-  [[nodiscard]] qc::QuantumComputation& getResultCircuit() {
-    initResultCircuitFromResults();
-    return *resultCircuit;
-  };
-  [[nodiscard]] Tableau& getResultTableau() {
-    std::stringstream ss;
-    ss << results.getResultTableau();
-    resultTableau.fromString(ss.str());
-    return resultTableau;
-  }
+  [[nodiscard]] qc::QuantumComputation& getResultCircuit();
+
+  [[nodiscard]] Tableau& getResultTableau();
 
 protected:
   Tableau initialTableau;

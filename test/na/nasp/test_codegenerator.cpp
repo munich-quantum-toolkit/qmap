@@ -4,13 +4,15 @@
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <optional>
 
 TEST(CodeGenerator, Generate) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf((TEST_CIRCUITS_PATH "/steane.qasm"));
   // initialize a solver with the following parameters
   // - 3 interaction sites in the horizontal direction
   // - 7 interaction sites in the vertical direction

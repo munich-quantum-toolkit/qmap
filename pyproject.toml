@@ -1,8 +1,9 @@
 [build-system]
 requires = [
-  "scikit-build-core>=0.10.1",
+  "scikit-build-core>=0.11.0",
   "setuptools-scm>=8.1",
-  "pybind11>=2.13.5",
+  "pybind11>=2.13.6",
+  "mqt.core>=3.0.0b5",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -18,7 +19,8 @@ authors = [
     { name = "Yannick Stade", email = "yannick.stade@tum.de" }
 ]
 keywords = ["MQT", "quantum-computing", "design-automation", "compiler", "clifford-synthesis"]
-license = { file = "LICENSE.md" }
+license = "MIT"
+license-files = ["LICENSE.md"]
 
 classifiers = [
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
@@ -27,7 +29,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: C++",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -42,36 +43,22 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "mqt.core>=3.0.0b5",
     "qiskit[qasm3-import]>=1.0.0",
-    "rustworkx[all]>=0.14.0",
+    "rustworkx[all]>=0.16.0",
     "importlib_resources>=5.0; python_version < '3.10'",
     "typing_extensions>=4.6; python_version < '3.10'",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest>=7.2", "mqt.qcec>=2.4.5", "mqt.qmap[visualization]"]
-coverage = ["mqt.qmap[test]", "pytest-cov>=4"]
-docs = [
-    "furo>=2023.9.10",
-    "setuptools-scm>=8.1",
-    "sphinxcontrib-bibtex>=2.4.2",
-    "sphinx-copybutton>=0.5",
-    "ipykernel",
-    "nbsphinx",
-    "sphinxext-opengraph>=0.9",
-    "sphinx-autodoc-typehints",
-    "qiskit[visualization]",
-    "mqt.qmap[visualization]"
-]
 visualization = [
-    "distinctipy>=1.2.2",
-    "plotly>=5.15.0",
-    "networkx>=2.5",
+    "distinctipy>=1.3.4",
+    "plotly>=6.0.0",
+    "networkx>=3.2.1",
     "walkerlayout>=1.0.2",
-    "ipywidgets>=7.6.5",
+    "ipywidgets>=8.1.5",
 ]
-dev = ["mqt.qmap[coverage, docs]"]
 
 [project.urls]
 Homepage = "https://github.com/cda-tum/mqt-qmap"
@@ -86,14 +73,14 @@ minimum-version = "build-system.requires"
 # Set the wheel install directory
 wheel.install-dir = "mqt/qmap"
 
+# Explicitly set the package directory
+wheel.packages = ["src/mqt"]
+
 # Set required Ninja version
 ninja.version = ">=1.10"
 
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}/{build_type}"
-
-# Explicitly set the package directory
-wheel.packages = ["src/mqt"]
 
 # Only build the Python bindings target
 build.targets = ["pyqmap"]
@@ -116,6 +103,7 @@ sdist.exclude = [
 [tool.scikit-build.cmake.define]
 BUILD_MQT_QMAP_TESTS = "OFF"
 BUILD_MQT_QMAP_BINDINGS = "ON"
+ENABLE_IPO = "ON"
 
 [[tool.scikit-build.overrides]]
 if.python-version = ">=3.13"
@@ -148,13 +136,14 @@ xfail_strict = true
 filterwarnings = [
   "error",
   'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
-  'ignore:.*qiskit\.providers\.models.* is deprecated.*:DeprecationWarning:qiskit.*', # Qiskit imports deprecated code (should be resolved in the 1.2.1 release)
-  'ignore:.*Treating CircuitInstruction as an iterable is deprecated.*:DeprecationWarning:mqt.qcec.*', # Needs a new release of QCEC (should be resolved in 2.7.1)
   # we purposely maintain compatibility with the V1 backends until Qiskit removes them in 2.0
   'ignore:.*qiskit\.providers\.models.* is deprecated.*:DeprecationWarning:mqt.qmap.*',
   'ignore:.*qiskit\.providers\.fake_provider\.fake_backend\.FakeBackend.* is deprecated.*:DeprecationWarning:',
   'ignore:.*qiskit\.providers\.backend.BackendV1.* is deprecated.*:DeprecationWarning:',
-  # Qiskit 1.3 deprecations
+  'ignore:.*qiskit\.providers\.backend_compat.BackendV2Converter.* is deprecated.*:DeprecationWarning:',
+  # Qiskit 1.2 deprecations (to be removed with Qiskit 2.0)
+  'ignore:.*qiskit\.providers\.models.* is deprecated.*:DeprecationWarning:qiskit.*',
+  # Qiskit 1.3 deprecations (to be removed with Qiskit 2.0)
   'ignore:.*``qiskit.dagcircuit.dagcircuit.DAGCircuit.*`` is deprecated as of qiskit 1.3.0.*:DeprecationWarning:',
   'ignore:.*``qiskit.circuit.instruction.Instruction.condition`` is deprecated as of qiskit 1.3.0.*:DeprecationWarning:',
   'ignore:.*``qiskit.circuit.library.standard_gates.x.*`` is pending deprecation as of qiskit 1.3.*:PendingDeprecationWarning:',
@@ -171,6 +160,8 @@ report.exclude_also = [
     'if TYPE_CHECKING:',
     'raise AssertionError',
     'raise NotImplementedError',
+    'def __dir__()',  # Ignore __dir__ method that exists mainly for better IDE support
+    '@overload'  # Overloads are only for static typing
 ]
 
 [tool.mypy]
@@ -195,6 +186,7 @@ ignore = ["W002"]  # Triggers on __init__.py's
 
 [tool.ruff]
 line-length = 120
+namespace-packages = ["mqt"]
 preview = true
 unsafe-fixes = true
 
@@ -305,8 +297,9 @@ ignore = ["GH200"]
 build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
-test-command = "python -c \"from mqt import qmap\""
-test-skip = ["cp313*"] # skip testing on Python 3.13 until our dependencies are ready
+test-groups = ["test"]
+test-command = "pytest {project}/test/python"
+test-skip = ["cp3*t-*"] # skip testing on free-threading Python until our dependencies are ready
 build-frontend = "build[uv]"
 enable = ["cpython-freethreading"]
 manylinux-x86_64-image = "manylinux_2_28"
@@ -314,26 +307,87 @@ manylinux-aarch64-image = "manylinux_2_28"
 manylinux-ppc64le-image = "manylinux_2_28"
 manylinux-s390x-image = "manylinux_2_28"
 
+# The mqt-core shared libraries are provided by the mqt-core Python package.
+# They should not be vendorized into the mqt-qcec wheel. This requires
+# excluding the shared libraries from the repair process.
+
 [tool.cibuildwheel.linux]
 environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY="ON" }
 before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
-    "auditwheel repair -w {dest_dir} {wheel}",
+  """auditwheel repair -w {dest_dir} {wheel} \
+--exclude libmqt-core-ir.so.3.0 \
+--exclude libmqt-core-qasm.so.3.0 \
+--exclude libmqt-core-circuit-optimizer.so.3.0 \
+--exclude libmqt-core-ds.so.3.0 \
+--exclude libmqt-core-na.so.3.0""",
 ]
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} --ignore-missing-dependencies"
 
 [tool.cibuildwheel.windows]
-before-build = "pip install delvewheel>=1.7.3"
-repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
+before-build = "uv pip install delvewheel>=1.9.0"
+repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pkg mqt \
+--exclude mqt-core-ir.dll \
+--exclude mqt-core-qasm.dll \
+--exclude mqt-core-circuit-optimizer.dll \
+--exclude mqt-core-ds.dll \
+--exclude mqt-core-na.dll"""
 environment = { CMAKE_GENERATOR = "Ninja" }
-
-[[tool.cibuildwheel.overrides]]
-select = "*-macosx_arm64"
-environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 
 [tool.uv]
+required-version = ">=0.5.20"
 reinstall-package = ["mqt.qmap"]
+
+
+[tool.uv.sources]
+mqt-qmap = { workspace = true }
+
+[dependency-groups]
+build = [
+  "pybind11>=2.13.6",
+  "scikit-build-core>=0.11.0",
+  "setuptools-scm>=8.1",
+  "mqt.core>=3.0.0b5",
+]
+docs = [
+  "networkx>=3.2.1",
+  "plotly>=6.0.0",
+  "distinctipy>=1.3.4",
+  "walkerlayout>=1.0.2",
+  "ipywidgets>=8.1.5",
+  "furo>=2024.8.6",
+  "qiskit[visualization]>=1.0.0",
+  "setuptools-scm>=8.1",
+  "sphinx-autoapi>=3.6.0",
+  "sphinx-copybutton>=0.5.2",
+  "sphinx-design>=0.6.1",
+  "sphinxcontrib-bibtex>=2.6.3",
+  "sphinxcontrib-svg2pdfconverter>=1.2.3",
+  "sphinxext-opengraph>=0.9.1",
+  "ipykernel>=6.29.5",
+  "nbsphinx>=0.9.6",
+  "sphinx-autodoc-typehints>=2.3.0",
+  "sphinx>=7.4.7",
+  "sphinx>=8.1.3; python_version >= '3.10'",
+  "sphinx>=8.2.3; python_version >= '3.11'",
+]
+test = [
+  "networkx>=3.2.1",
+  "plotly>=6.0.0",
+  "distinctipy>=1.3.4",
+  "walkerlayout>=1.0.2",
+  "ipywidgets>=8.1.5",
+  "pytest>=8.3.4",
+  "pytest-cov>=6",
+  "mqt.qcec>=3.0.0b1",
+]
+dev = [
+  {include-group = "build"},
+  {include-group = "docs"},
+  {include-group = "test"},
+]

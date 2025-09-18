@@ -395,9 +395,9 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
     : Tableau(qc.getNqubits(), includeDestabilizers) {
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
-    if (gate->getType() == qc::OpType::Compound) {
-      const auto* const compOp =
-          dynamic_cast<const qc::CompoundOperation* const>(gate.get());
+    if (const auto* const compOp =
+            dynamic_cast<const qc::CompoundOperation* const>(gate.get());
+        compOp != nullptr) {
       auto cit = compOp->begin();
       while (cit != compOp->end()) {
         if (currentG >= begin && (currentG < end)) {

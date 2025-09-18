@@ -8,6 +8,7 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -96,7 +97,7 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   mapperParameters.verbose = true;
   mapper.setParameters(mapperParameters);
 
-  qc::QuantumComputation qc(testQcPath);
+  auto qc = qasm3::Importer::importf(testQcPath);
   const auto qcMapped = mapper.map(qc, initialMapping);
   ASSERT_GT(qcMapped.size(), qc.size());
   mapper.convertToAod();
@@ -149,10 +150,8 @@ protected:
     // mapperParameters.useBridge = true;
     mapperParameters.usePassBy = true;
     mapper.setParameters(mapperParameters);
-    qc = qc::QuantumComputation(
+    auto qc = qasm3::Importer::importf(
         "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
-    // "circuits/modulo_2.qasm");
-    // "circuits/random_nativegates_ibm_qiskit_opt3_50.qasm");
   }
 };
 

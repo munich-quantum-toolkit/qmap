@@ -116,7 +116,7 @@ private:
     /**
      * @brief Construct a new Qubit object
      * @param ctx the solvers context
-     * @param id the unique identifier of the qubit
+     * @param idx the unique identifier of the qubit
      * @param t the stage the qubit is in
      * @param maxX the maximum possible discrete x-coordinate used to determine
      * the bit width for x
@@ -131,7 +131,7 @@ private:
      * @param maxVOffset the maximum possible vertical offset used to determine
      * the bit width for v
      */
-    [[nodiscard]] Qubit(context& ctx, uint16_t id, uint16_t t, uint16_t maxX,
+    [[nodiscard]] Qubit(context& ctx, uint16_t idx, uint16_t t, uint16_t maxX,
                         uint16_t maxY, uint16_t maxC, uint16_t maxR,
                         uint16_t maxHOffset, uint16_t maxVOffset);
 
@@ -205,10 +205,10 @@ private:
     std::vector<expr> storeRows;
 
   public:
-    [[nodiscard]] explicit Stage(context& ctx, uint16_t t, uint16_t numQubits,
-                                 uint16_t maxX, uint16_t maxY, uint16_t maxC,
-                                 uint16_t maxR, uint16_t maxHOffset,
-                                 uint16_t maxVOffset);
+    [[nodiscard]] explicit Stage(context& ctx, uint16_t timestep,
+                                 uint16_t numQubits, uint16_t maxX,
+                                 uint16_t maxY, uint16_t maxC, uint16_t maxR,
+                                 uint16_t maxHOffset, uint16_t maxVOffset);
 
     [[nodiscard]] uint16_t getT() const { return t; }
 

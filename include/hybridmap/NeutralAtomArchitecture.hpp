@@ -154,7 +154,7 @@ protected:
   Parameters parameters;
 
   std::vector<Point> coordinates;
-  SymmetricMatrix<SwapDistance> swapDistances;
+  qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
   BridgeCircuits bridgeCircuits = BridgeCircuits(10);

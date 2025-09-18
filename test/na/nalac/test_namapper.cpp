@@ -12,6 +12,7 @@
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -264,22 +265,22 @@ TEST(NAMapper, Exceptions) {
   EXPECT_THROW(std::ignore = mapper.getResult(), std::logic_error);
   EXPECT_THROW(std::ignore = mapper.getStats(), std::logic_error);
   EXPECT_THROW(
-      mapper.map(qc::QuantumComputation::fromQASM(
+      mapper.map(qasm3::Importer::imports(
           "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nx q[0];\n")),
       std::invalid_argument);
-  EXPECT_THROW(mapper.map(qc::QuantumComputation::fromQASM(
+  EXPECT_THROW(mapper.map(qasm3::Importer::imports(
                    "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg "
                    "q[5];\nry(pi/2) q[0];\n")),
                std::invalid_argument);
   EXPECT_THROW(
-      mapper.map(qc::QuantumComputation::fromQASM(
+      mapper.map(qasm3::Importer::imports(
           "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nrz(pi/2) q;\n")),
       std::invalid_argument);
-  EXPECT_THROW(mapper.map(qc::QuantumComputation::fromQASM(
+  EXPECT_THROW(mapper.map(qasm3::Importer::imports(
                    "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nccz "
                    "q[0], q[1], q[2];\n")),
                std::logic_error);
-  EXPECT_THROW(mapper.map(qc::QuantumComputation::fromQASM(
+  EXPECT_THROW(mapper.map(qasm3::Importer::imports(
                    "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\ncx "
                    "q[0], q[1];\n")),
                std::logic_error);
@@ -670,7 +671,7 @@ rz(3.9927041) q[3];
 rz(3.9927041) q[4];
 rz(3.9927041) q[5];
 rz(3.9927041) q[7];)";
-  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& circ = qasm3::Importer::imports(qasm);
   const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
@@ -923,7 +924,7 @@ ry(0.3223291) q;
 cp(pi) q[9],q[11];
 ry(-2.2154814) q;
 ry(2.2154814) q;)";
-  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& circ = qasm3::Importer::imports(qasm);
   const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
@@ -1159,7 +1160,7 @@ ry(0.3223291) q;
 cp(pi) q[9],q[11];
 ry(-2.2154814) q;
 ry(2.2154814) q;)";
-  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& circ = qasm3::Importer::imports(qasm);
   const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(

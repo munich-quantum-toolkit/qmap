@@ -3,7 +3,6 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
@@ -24,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <qasm3/Importer.hpp>
 #include <set>
 #include <sstream>
 #include <string>
@@ -49,7 +49,7 @@ protected:
     if (::testing::UnitTest::GetInstance()
             ->current_test_info()
             ->value_param() != nullptr) {
-      qc.import(testExampleDir + GetParam() + ".qasm");
+      qc = qasm3::Importer::importf(testExampleDir + GetParam() + ".qasm");
     } else {
       qc.addQubitRegister(3U);
       qc.cx(1_pc, 0);
@@ -389,7 +389,7 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
   qc.x(1);
   ibmQX4Mapper = std::make_unique<ExactMapper>(qc, ibmQX4);
   ibmQX4Mapper->map(settings);
-  ibmQX4Mapper->dumpResult(std::cout, qc::Format::OpenQASM3);
+  ibmQX4Mapper->dumpResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
 
@@ -402,16 +402,14 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
   settings.useSubsets = false;
   mapper.map(settings);
 
-  std::ostringstream oss{};
-  mapper.dumpResult(oss, qc::Format::OpenQASM3);
-  auto qcMapped = qc::QuantumComputation();
-  std::istringstream iss{oss.str()};
-  qcMapped.import(iss, qc::Format::OpenQASM3);
+  std::stringstream ss{};
+  mapper.dumpResult(ss);
+  auto qcMapped = qasm3::Importer::import(ss);
   std::cout << qcMapped << '\n';
   EXPECT_EQ(qcMapped.initialLayout.size(), 4U);
   EXPECT_EQ(qcMapped.initialLayout[0], 3);
   EXPECT_EQ(qcMapped.outputPermutation.size(), 3U);
-  EXPECT_TRUE(qcMapped.garbage.at(3));
+  EXPECT_TRUE(qcMapped.getGarbage().at(3));
 }
 
 TEST_F(ExactTest, WCNF) {
@@ -500,8 +498,8 @@ TEST_F(ExactTest, NoMeasurementsAdded) {
   // get the resulting circuit
   auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  ibmqLondonMapper->dumpResult(qasm, qc::Format::OpenQASM3);
-  qcMapped.import(qasm, qc::Format::OpenQASM3);
+  ibmqLondonMapper->dumpResult(qasm);
+  qcMapped = qasm3::Importer::import(qasm);
 
   // check no measurements were added
   EXPECT_EQ(qcMapped.getNops(), 4U);
@@ -514,13 +512,12 @@ TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
                           {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
   arch.loadCouplingMap(5, cm);
 
-  std::stringstream ss{"OPENQASM 2.0;\ninclude \"qelib1.inc\";\n"
-                       "qreg q[4];\n"
-                       "cx q[0],q[1];\n"
-                       "cx q[1],q[2];\n"
-                       "cx q[2],q[3];\n"
-                       "cx q[3],q[0];\n"};
-  qc.import(ss, qc::Format::OpenQASM3);
+  qc = qasm3::Importer::imports("OPENQASM 2.0;\ninclude \"qelib1.inc\";\n"
+                                "qreg q[4];\n"
+                                "cx q[0],q[1];\n"
+                                "cx q[1],q[2];\n"
+                                "cx q[2],q[3];\n"
+                                "cx q[3],q[0];\n");
 
   auto mapper = ExactMapper(qc, arch);
   // explicitly do not use subsets, but the full architecture
@@ -556,31 +553,30 @@ TEST_F(ExactTest, RegressionTestDirectionReverseCost) {
 
 TEST_F(ExactTest, RegressionTestExactMapperPerformance) {
   // Regression test for https://github.com/cda-tum/qmap/issues/256
-  std::stringstream ss{"OPENQASM 2.0;\n"
-                       "include \"qelib1.inc\";\n"
-                       "qreg q[3];\n"
-                       "cx q[0],q[2];\n"
-                       "cx q[2],q[1];\n"
-                       "cx q[2],q[1];\n"
-                       "cx q[0],q[2];\n"
-                       "cx q[1],q[0];\n"
-                       "cx q[1],q[2];\n"
-                       "cx q[0],q[2];\n"
-                       "cx q[1],q[0];\n"
-                       "cx q[2],q[1];\n"
-                       "cx q[1],q[0];\n"
-                       "cx q[2],q[1];\n"
-                       "cx q[0],q[2];\n"
-                       "cx q[0],q[1];\n"
-                       "cx q[2],q[1];\n"
-                       "cx q[0],q[2];\n"
-                       "cx q[1],q[0];\n"
-                       "cx q[1],q[2];\n"};
+  qc = qasm3::Importer::imports("OPENQASM 2.0;\n"
+                                "include \"qelib1.inc\";\n"
+                                "qreg q[3];\n"
+                                "cx q[0],q[2];\n"
+                                "cx q[2],q[1];\n"
+                                "cx q[2],q[1];\n"
+                                "cx q[0],q[2];\n"
+                                "cx q[1],q[0];\n"
+                                "cx q[1],q[2];\n"
+                                "cx q[0],q[2];\n"
+                                "cx q[1],q[0];\n"
+                                "cx q[2],q[1];\n"
+                                "cx q[1],q[0];\n"
+                                "cx q[2],q[1];\n"
+                                "cx q[0],q[2];\n"
+                                "cx q[0],q[1];\n"
+                                "cx q[2],q[1];\n"
+                                "cx q[0],q[2];\n"
+                                "cx q[1],q[0];\n"
+                                "cx q[1],q[2];\n");
 
   Architecture arch;
   const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {3, 2}, {3, 4}, {4, 2}};
   arch.loadCouplingMap(5, cm);
-  qc.import(ss, qc::Format::OpenQASM3);
 
   auto mapper = ExactMapper(qc, arch);
   settings.swapReduction = SwapReduction::CouplingLimit;
@@ -597,22 +593,21 @@ TEST_F(ExactTest, RegressionTestExactMapperPerformance) {
 
 TEST_F(ExactTest, RegressionTestExactMapperPerformance2) {
   // Regression test for https://github.com/cda-tum/qmap/issues/256
-  std::stringstream ss{"OPENQASM 2.0;\n"
-                       "include \"qelib1.inc\";\n"
-                       "qreg q[4];\n"
-                       "cx q[0],q[1];\n"
-                       "cx q[3],q[0];\n"
-                       "cx q[1],q[3];\n"
-                       "cx q[1],q[0];\n"
-                       "cx q[3],q[0];\n"
-                       "cx q[1],q[3];\n"
-                       "cx q[0],q[1];\n"
-                       "cx q[1],q[2];\n"};
+  qc = qasm3::Importer::imports("OPENQASM 2.0;\n"
+                                "include \"qelib1.inc\";\n"
+                                "qreg q[4];\n"
+                                "cx q[0],q[1];\n"
+                                "cx q[3],q[0];\n"
+                                "cx q[1],q[3];\n"
+                                "cx q[1],q[0];\n"
+                                "cx q[3],q[0];\n"
+                                "cx q[1],q[3];\n"
+                                "cx q[0],q[1];\n"
+                                "cx q[1],q[2];\n");
 
   Architecture arch;
   const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {3, 2}, {3, 4}, {4, 2}};
   arch.loadCouplingMap(5, cm);
-  qc.import(ss, qc::Format::OpenQASM3);
 
   auto mapper = ExactMapper(qc, arch);
   settings.swapReduction = SwapReduction::CouplingLimit;

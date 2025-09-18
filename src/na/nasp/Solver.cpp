@@ -23,46 +23,48 @@
 
 namespace na {
 
-NASolver::Qubit::Qubit(context& ctx, uint16_t id, const uint16_t t,
+NASolver::Qubit::Qubit(context& ctx, uint16_t idx, const uint16_t t,
                        const uint16_t maxX, const uint16_t maxY,
                        const uint16_t maxC, const uint16_t maxR,
                        const uint16_t maxHOffset, const uint16_t maxVOffset)
-    : id(id), x(ctx.bv_const(
-                  ("x" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
-                  minBitsToRepresentUInt(maxX))),
+    : id(idx),
+      x(ctx.bv_const(
+          ("x" + std::to_string(t) + "^" + std::to_string(idx)).c_str(),
+          minBitsToRepresentUInt(maxX))),
       y(ctx.bv_const(
-          ("y" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          ("y" + std::to_string(t) + "^" + std::to_string(idx)).c_str(),
           minBitsToRepresentUInt(maxY))),
       a(ctx.bool_const(
-          ("a" + std::to_string(t) + "^" + std::to_string(id)).c_str())),
+          ("a" + std::to_string(t) + "^" + std::to_string(idx)).c_str())),
       c(ctx.bv_const(
-          ("c" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          ("c" + std::to_string(t) + "^" + std::to_string(idx)).c_str(),
           minBitsToRepresentUInt(maxC))),
       r(ctx.bv_const(
-          ("r" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          ("r" + std::to_string(t) + "^" + std::to_string(idx)).c_str(),
           minBitsToRepresentUInt(maxR))),
       h(ctx.bv_const(
-          ("h" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          ("h" + std::to_string(t) + "^" + std::to_string(idx)).c_str(),
           minBitsToRepresentInt(maxHOffset))),
       v(ctx.bv_const(
-          ("v" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          ("v" + std::to_string(t) + "^" + std::to_string(idx)).c_str(),
           minBitsToRepresentInt(maxVOffset))) {}
 
-NASolver::Stage::Stage(context& ctx, const uint16_t t, const uint16_t numQubits,
-                       const uint16_t maxX, const uint16_t maxY,
-                       const uint16_t maxC, const uint16_t maxR,
-                       const uint16_t maxHOffset, const uint16_t maxVOffset)
-    : t(t) {
+NASolver::Stage::Stage(context& ctx, const uint16_t timestep,
+                       const uint16_t numQubits, const uint16_t maxX,
+                       const uint16_t maxY, const uint16_t maxC,
+                       const uint16_t maxR, const uint16_t maxHOffset,
+                       const uint16_t maxVOffset)
+    : t(timestep) {
   qubits.reserve(numQubits);
   for (uint16_t id = 0; id < numQubits; ++id) {
-    qubits.emplace_back(ctx, id, t, maxX, maxY, maxC, maxR, maxHOffset,
+    qubits.emplace_back(ctx, id, timestep, maxX, maxY, maxC, maxR, maxHOffset,
                         maxVOffset);
   }
   loadCols.reserve(maxC);
   storeCols.reserve(maxC);
   for (uint16_t c = 0; c <= maxC; ++c) {
     std::stringstream suffixStream;
-    suffixStream << "_" << t << "^c" << c;
+    suffixStream << "_" << timestep << "^c" << c;
     const auto& suffix = suffixStream.str();
     loadCols.emplace_back(ctx.bool_const(("load" + suffix).c_str()));
     storeCols.emplace_back(ctx.bool_const(("store" + suffix).c_str()));
@@ -71,7 +73,7 @@ NASolver::Stage::Stage(context& ctx, const uint16_t t, const uint16_t numQubits,
   storeRows.reserve(maxR);
   for (uint16_t r = 0; r <= maxR; ++r) {
     std::stringstream suffixStream;
-    suffixStream << "_" << t << "^r" << r;
+    suffixStream << "_" << timestep << "^r" << r;
     const auto& suffix = suffixStream.str();
     loadRows.emplace_back(ctx.bool_const(("load" + suffix).c_str()));
     storeRows.emplace_back(ctx.bool_const(("store" + suffix).c_str()));
@@ -269,7 +271,7 @@ auto NASolver::getValidTransferTransitionConstraints(const uint16_t t) const
       }
       constraints.emplace_back(implies(
           getTransferStageConstraint(t) && stages[t].getQubit(i).getA(),
-          !stages[t + 1].getQubit(i).getA() == (colClauses || rowClauses)));
+          (!stages[t + 1].getQubit(i).getA()) == (colClauses || rowClauses)));
     }
     for (std::uint16_t j = 0; j < numQubits; ++j) {
       // For Loaded: Loaded atoms remain in the relative position with respect
@@ -352,10 +354,10 @@ auto NASolver::getCircuitExecutionConstraints(
       constraints.emplace_back(ult(lastGate, numStages));
     }
     constraints.reserve((3 * numGates) +
-                        (numStages * numQubits * (numQubits - 1) / 2));
+                        (numStages * numQubits * (numQubits - 1U) / 2U));
   } else {
-    constraints.reserve((numGates * (numGates - 1) / 2) + 4 * numGates +
-                        (numStages * numQubits * (numQubits - 1) / 2));
+    constraints.reserve((numGates * (numGates - 1) / 2) + (4 * numGates) +
+                        (numStages * numQubits * (numQubits - 1U) / 2U));
     for (std::uint16_t g = 0; static_cast<size_t>(g) < numGates; ++g) {
       constraints.emplace_back(
           // 0 <= gates[g] &&

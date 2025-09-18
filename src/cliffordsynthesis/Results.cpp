@@ -29,9 +29,9 @@ Results::Results(qc::QuantumComputation& qc, const Tableau& tableau) {
   setSolverResult(logicbase::Result::SAT);
 }
 
-void Results::setResultCircuit(qc::QuantumComputation& qc) {
+void Results::setResultCircuit(const qc::QuantumComputation& qc) {
   std::stringstream ss;
-  qc.dumpOpenQASM3(ss);
+  qc.dumpOpenQASM(ss);
   resultCircuit = ss.str();
 }
 
