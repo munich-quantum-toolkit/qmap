@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "Encodings.hpp"
 #include "Logic.hpp"
@@ -23,10 +32,10 @@ protected:
   std::shared_ptr<z3::solver> solver = std::make_shared<z3::solver>(*ctx);
 };
 TEST_F(TestZ3, ConstructDestruct) {
-  std::unique_ptr<z3logic::Z3LogicBlock> const z3logic =
+  auto const z3logic =
       std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
 
-  LogicTerm const t = LogicTerm("x", CType::BOOL);
+  auto const t = LogicTerm("x", CType::BOOL);
 }
 
 TEST_F(TestZ3, SimpleTrue) {
@@ -380,10 +389,9 @@ TEST_F(TestZ3, AMOAndExactlyOneNaive) {
 TEST_F(TestZ3, AMOAndExactlyOneCMDR) {
   using namespace encodings;
 
-  size_t const n = 22;
+  constexpr size_t n = 22;
 
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
 
   std::vector<std::vector<LogicTerm>> aNodes;
 
@@ -397,6 +405,7 @@ TEST_F(TestZ3, AMOAndExactlyOneCMDR) {
 
   for (size_t i = 0; i < n; ++i) {
     std::vector<LogicTerm> a;
+    a.reserve(n);
     for (size_t j = 0; j < n; ++j) {
       a.emplace_back(aNodes[i][j]);
     }
@@ -406,6 +415,7 @@ TEST_F(TestZ3, AMOAndExactlyOneCMDR) {
   }
   for (size_t i = 0; i < n; ++i) {
     std::vector<LogicTerm> a;
+    a.reserve(n);
     for (size_t j = 0; j < n; ++j) {
       a.emplace_back(aNodes[i][j]);
     }
@@ -421,13 +431,12 @@ TEST_F(TestZ3, AMOAndExactlyOneCMDR) {
 TEST_F(TestZ3, AMOAndExactlyOneBimander) {
   using namespace encodings;
 
-  size_t const n = 11;
+  constexpr size_t n = 11;
 
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
 
   std::vector<std::vector<LogicTerm>> aNodes;
-
+  aNodes.reserve(n);
   for (size_t i = 0; i < n; ++i) {
     aNodes.emplace_back();
     for (size_t j = 0; j < n; ++j) {
@@ -438,6 +447,7 @@ TEST_F(TestZ3, AMOAndExactlyOneBimander) {
 
   for (size_t i = 0; i < n; ++i) {
     std::vector<LogicTerm> a;
+    a.reserve(n);
     for (size_t j = 0; j < n; ++j) {
       a.emplace_back(aNodes[i][j]);
     }
@@ -447,6 +457,7 @@ TEST_F(TestZ3, AMOAndExactlyOneBimander) {
   }
   for (size_t i = 0; i < n; ++i) {
     std::vector<LogicTerm> a;
+    a.reserve(n);
     for (size_t j = 0; j < n; ++j) {
       a.emplace_back(aNodes[i][j]);
     }
@@ -459,8 +470,7 @@ TEST_F(TestZ3, AMOAndExactlyOneBimander) {
 }
 
 TEST_F(TestZ3, TestBasicModel) {
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
 
   LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm const b = z3logic->makeVariable("b", CType::INT);
@@ -484,8 +494,7 @@ TEST_F(TestZ3, TestBasicModel) {
 }
 
 TEST_F(TestZ3, TestVariableConversionsToBool) {
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
 
   LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm const b = z3logic->makeVariable("b", CType::INT);
@@ -502,8 +511,7 @@ TEST_F(TestZ3, TestVariableConversionsToBool) {
 }
 
 TEST_F(TestZ3, TestVariableConversionsToBV) {
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
 
   LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm const b = z3logic->makeVariable("b", CType::INT);
@@ -520,8 +528,7 @@ TEST_F(TestZ3, TestVariableConversionsToBV) {
 }
 
 TEST_F(TestZ3, TestVariableConversionsToInt) {
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
 
   LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm const b = z3logic->makeVariable("b", CType::INT);
@@ -537,8 +544,7 @@ TEST_F(TestZ3, TestVariableConversionsToInt) {
 }
 
 TEST_F(TestZ3, TestVariableConversionsToReal) {
-  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
-      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+  auto z3logic = std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
 
   LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm const b = z3logic->makeVariable("b", CType::INT);
@@ -562,8 +568,7 @@ protected:
 };
 
 TEST_F(TestZ3Opt, ConstructDestruct) {
-  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
-      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
 
   LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm const b = z3logic->makeVariable("b", CType::BOOL);
@@ -579,8 +584,7 @@ TEST_F(TestZ3Opt, ConstructDestruct) {
 }
 
 TEST_F(TestZ3Opt, SimpleTrue) {
-  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
-      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
 
   LogicTerm a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm b = z3logic->makeVariable("b", CType::BOOL);
@@ -654,8 +658,7 @@ TEST_F(TestZ3Opt, SimpleTrue) {
 }
 
 TEST_F(TestZ3Opt, SimpleFalse) {
-  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
-      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
 
   LogicTerm a = z3logic->makeVariable("a", CType::BOOL);
   LogicTerm b = z3logic->makeVariable("b", CType::BOOL);
@@ -754,8 +757,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
 }
 
 TEST_F(TestZ3Opt, IntBase) {
-  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
-      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
   z3logic->reset();
 
   LogicTerm a = z3logic->makeVariable("a", CType::INT);
@@ -825,8 +827,7 @@ TEST_F(TestZ3Opt, IntBase) {
   EXPECT_EQ(z3logic->solve(), Result::SAT);
 }
 TEST_F(TestZ3Opt, IntNumbers) {
-  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
-      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
   z3logic->reset();
 
   LogicTerm a = z3logic->makeVariable("a", CType::INT);
@@ -905,11 +906,11 @@ TEST_F(TestZ3Opt, IntNumbers) {
 }
 
 TEST_F(TestZ3Opt, AMOAndExactlyOneNaive) {
-  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
-      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
   z3logic->reset();
 
   std::vector<std::vector<LogicTerm>> aNodes;
+  aNodes.reserve(4);
   for (int i = 0; i < 4; ++i) {
     aNodes.emplace_back();
     for (int j = 0; j < 4; ++j) {
@@ -919,7 +920,7 @@ TEST_F(TestZ3Opt, AMOAndExactlyOneNaive) {
   }
 
   for (size_t i = 0; i < 4; ++i) {
-    LogicTerm a = LogicTerm(0);
+    auto a = LogicTerm(0);
     for (size_t j = 0; j < 4; ++j) {
       a = a + LogicTerm::ite(aNodes[i][j], LogicTerm(1), LogicTerm(0));
     }
@@ -927,7 +928,7 @@ TEST_F(TestZ3Opt, AMOAndExactlyOneNaive) {
     z3logic->assertFormula(aa);
   }
   for (size_t i = 0; i < 4; ++i) {
-    LogicTerm a = LogicTerm(0);
+    auto a = LogicTerm(0);
     for (size_t j = 0; j < 4; ++j) {
       a = a + LogicTerm::ite(aNodes[j][i], LogicTerm(1), LogicTerm(0));
     }

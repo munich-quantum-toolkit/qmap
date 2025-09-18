@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "datastructures/Layer.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -169,7 +179,7 @@ TEST_F(TestNAGraph, SequenceOrdering) {
   // check that the order of moveable qubits is consistent
   auto order =
       std::accumulate(moveable[0].cbegin(), moveable[0].cend(),
-                      std::vector<qc::Qubit>{}, [](auto& acc, const auto& p) {
+                      std::vector<qc::Qubit>{}, [](auto acc, const auto& p) {
                         acc.push_back(p.first);
                         return acc;
                       });

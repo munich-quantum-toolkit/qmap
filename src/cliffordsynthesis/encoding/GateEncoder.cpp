@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
@@ -104,8 +109,8 @@ GateEncoder::collectGateTransformations(
 
   for (const auto& gate : SINGLE_QUBIT_GATES) {
     const auto& transformation = gateToTransformation(pos, qubit, gate);
-    const auto& it = std::find_if(
-        transformations.begin(), transformations.end(), [&](const auto& entry) {
+    const auto& it =
+        std::ranges::find_if(transformations, [&](const auto& entry) {
           return entry.first.deepEquals(transformation);
         });
     if (it != transformations.end()) {

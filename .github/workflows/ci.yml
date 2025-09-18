@@ -14,222 +14,269 @@ concurrency:
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@v1.8
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
 
-  cpp-tests:
-    name: 🇨‌ Test
+  cpp-tests-ubuntu:
+    name: 🇨‌ Test 🐧
     needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.8
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && !contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+        compiler: [gcc]
+        config: [Release]
+        include:
+          - runs-on: ubuntu-24.04
+            compiler: gcc
+            config: Debug
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-ubuntu.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
-      # Runs to enable
-      enable-ubuntu2404-gcc-release: true
-      enable-ubuntu2404-arm-gcc-release: true
-      enable-macos13-clang-release: true
-      enable-macos14-clang-release: true
-      enable-windows2022-msvc-release: true
-      # Runs to disable
-      enable-ubuntu2404-gcc-debug: false
-      enable-ubuntu2404-clang-release: false
-      enable-ubuntu2404-clang-debug: false
-      enable-ubuntu2204-gcc-release: false
-      enable-ubuntu2204-gcc-debug: false
-      enable-ubuntu2204-clang-release: false
-      enable-ubuntu2204-clang-debug: false
-      enable-ubuntu2404-arm-gcc-debug: false
-      enable-ubuntu2404-arm-clang-release: false
-      enable-ubuntu2404-arm-clang-debug: false
-      enable-ubuntu2204-arm-gcc-release: false
-      enable-ubuntu2204-arm-gcc-debug: false
-      enable-ubuntu2204-arm-clang-release: false
-      enable-ubuntu2204-arm-clang-debug: false
-      enable-macos13-clang-debug: false
-      enable-macos13-gcc-release: false
-      enable-macos13-gcc-debug: false
-      enable-macos14-clang-debug: false
-      enable-macos14-gcc-release: false
-      enable-macos14-gcc-debug: false
-      enable-macos15-clang-release: false
-      enable-macos15-clang-debug: false
-      enable-macos15-gcc-release: false
-      enable-macos15-gcc-debug: false
-      enable-windows2022-msvc-debug: false
-      enable-windows2022-clang-release: false
-      enable-windows2022-clang-debug: false
-      enable-windows2025-msvc-release: false
-      enable-windows2025-msvc-debug: false
-      enable-windows2025-clang-release: false
-      enable-windows2025-clang-debug: false
-      # General settings
+      runs-on: ${{ matrix.runs-on }}
+      compiler: ${{ matrix.compiler }}
+      config: ${{ matrix.config }}
       setup-z3: true
 
-  # run extensive C++ tests whenever this is on a PR and the PR has the `extensive-cpp-ci` label
-  cpp-tests-extensive:
-    name: 🇨‌ Test (Extensive)
+  cpp-tests-macos:
+    name: 🇨‌ Test 🍎
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && !contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [macos-14]
+        compiler: [clang]
+        config: [Release, Debug]
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      compiler: ${{ matrix.compiler }}
+      config: ${{ matrix.config }}
+      cmake-args: -DMQT_CORE_WITH_GMP=ON
+      setup-z3: true
+
+  cpp-tests-windows:
+    name: 🇨‌ Test 🏁
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && !contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [windows-2022, windows-11-arm]
+        compiler: [msvc]
+        config: [Release]
+        include:
+          - runs-on: windows-2022
+            compiler: msvc
+            config: Debug
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-windows.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      compiler: ${{ matrix.compiler }}
+      config: ${{ matrix.config }}
+      setup-z3: true
+
+  # run extensive C++ tests on PRs labeled with the `extensive-cpp-ci` label
+  cpp-tests-extensive-ubuntu:
+    name: 🇨‌ Test (Extensive) 🐧
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.8
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          [ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm]
+        compiler: [gcc, clang, clang-19, clang-20]
+        config: [Release, Debug]
+        exclude:
+          # both combinations do not support C++20 due to the compiler being too old
+          - runs-on: ubuntu-22.04
+            compiler: clang
+          - runs-on: ubuntu-22.04-arm
+            compiler: clang
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-ubuntu.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
-      # Runs to enable
-      enable-ubuntu2404-gcc-debug: true
-      enable-ubuntu2404-clang-release: true
-      enable-ubuntu2404-clang-debug: true
-      enable-ubuntu2204-gcc-release: true
-      enable-ubuntu2204-gcc-debug: true
-      enable-ubuntu2204-clang-release: true
-      enable-ubuntu2204-clang-debug: true
-      enable-ubuntu2404-arm-gcc-debug: true
-      enable-ubuntu2404-arm-clang-release: true
-      enable-ubuntu2404-arm-clang-debug: true
-      enable-ubuntu2204-arm-gcc-release: true
-      enable-ubuntu2204-arm-gcc-debug: true
-      enable-ubuntu2204-arm-clang-release: true
-      enable-ubuntu2204-arm-clang-debug: true
-      enable-macos13-clang-debug: true
-      enable-macos13-gcc-release: true
-      enable-macos13-gcc-debug: true
-      enable-macos14-clang-debug: true
-      enable-macos14-gcc-release: true
-      enable-macos14-gcc-debug: true
-      enable-macos15-clang-release: true
-      enable-macos15-clang-debug: true
-      enable-macos15-gcc-release: true
-      enable-macos15-gcc-debug: true
-      enable-windows2022-msvc-debug: true
-      enable-windows2022-clang-release: true
-      enable-windows2022-clang-debug: true
-      enable-windows2025-msvc-release: true
-      enable-windows2025-msvc-debug: true
-      enable-windows2025-clang-release: true
-      enable-windows2025-clang-debug: true
-      # Runs to disable (these are already enabled in the non-extensive run)
-      enable-ubuntu2404-gcc-release: false
-      enable-ubuntu2404-arm-gcc-release: false
-      enable-macos13-clang-release: false
-      enable-macos14-clang-release: false
-      enable-windows2022-msvc-release: false
-      # General settings
+      runs-on: ${{ matrix.runs-on }}
+      compiler: ${{ matrix.compiler }}
+      config: ${{ matrix.config }}
+      setup-z3: true
+
+  # run extensive C++ tests on PRs labeled with the `extensive-cpp-ci` label
+  cpp-tests-extensive-macos:
+    name: 🇨‌ Test (Extensive) 🍎
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [macos-14, macos-15]
+        compiler: [clang, clang-19, clang-20, gcc-14, gcc-15]
+        config: [Release, Debug]
+        exclude:
+          # see https://github.com/munich-quantum-toolkit/core/issues/979
+          - runs-on: macos-15
+            compiler: gcc-14
+          - runs-on: macos-15
+            compiler: gcc-15
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      compiler: ${{ matrix.compiler }}
+      config: ${{ matrix.config }}
+      cmake-args: -DMQT_CORE_WITH_GMP=ON
+      setup-z3: true
+
+  # run extensive C++ tests on PRs labeled with the `extensive-cpp-ci` label
+  cpp-tests-extensive-windows:
+    name: 🇨‌ Test (Extensive) 🏁
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [windows-2022, windows-2025, windows-11-arm]
+        compiler: [msvc, clang]
+        config: [Release, Debug]
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-windows.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      compiler: ${{ matrix.compiler }}
+      config: ${{ matrix.config }}
       setup-z3: true
 
   cpp-coverage:
     name: 🇨‌ Coverage
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@v1.8
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
       setup-z3: true
     permissions:
       contents: read
       id-token: write
 
+  # to properly link python bindings, the target must be enabled and pybind11 must be installed
   cpp-linter:
     name: 🇨‌ Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.8
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
+      clang-version: 20
+      cmake-args: -DBUILD_MQT_QMAP_BINDINGS=ON
+      files-changed-only: true
+      install-pkgs: "pybind11==3.0.0"
+      setup-python: true
       setup-z3: true
+      cpp-linter-extra-args: "-std=c++20"
 
-  # run extensive Python tests whenever this is on a PR and the PR has the `extensive-python-ci` label
   python-tests:
     name: 🐍 Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.8
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-24.04, ubuntu-24.04-arm, macos-14, windows-2022]
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
-      # Runs to enable
-      enable-ubuntu2404: true
-      enable-ubuntu2404-arm: true
-      enable-macos13: true
-      enable-macos14: true
-      enable-windows2022: true
-      # Runs to disable
-      enable-ubuntu2204: false
-      enable-ubuntu2204-arm: false
-      enable-macos15: false
-      enable-windows2025: false
-      # General settings
+      runs-on: ${{ matrix.runs-on }}
       setup-z3: true
+
+  python-coverage:
+    name: 🐍 Coverage
+    needs: [change-detection, python-tests]
+    if: fromJSON(needs.change-detection.outputs.run-python-tests)
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-coverage.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     permissions:
       contents: read
       id-token: write
 
+  # run extensive Python tests on PRs labeled with the `extensive-python-ci` label
   python-tests-extensive:
     name: 🐍 Test (Extensive)
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-python-ci')
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.8
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-22.04, ubuntu-22.04-arm, macos-15, windows-2025]
+        exclude:
+          # see https://github.com/munich-quantum-toolkit/qmap/issues/703
+          - runs-on: macos-15
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
-      # Runs to enable
-      enable-ubuntu2204: true
-      enable-ubuntu2204-arm: true
-      enable-macos15: true
-      enable-windows2025: true
-      # Runs to disable (these are already enabled in the non-extensive run)
-      enable-ubuntu2404: false
-      enable-ubuntu2404-arm: false
-      enable-macos13: false
-      enable-macos14: false
-      enable-windows2022: false
-      # General settings
+      runs-on: ${{ matrix.runs-on }}
       setup-z3: true
-    permissions:
-      contents: read
-      id-token: write
 
   python-linter:
     name: 🐍 Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@v1.8
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
       setup-z3: true
 
-  code-ql:
-    name: 📝 CodeQL
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-code-ql)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-code-ql.yml@v1.8
-    with:
-      setup-z3: true
-
-  cd:
+  build-sdist:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging.yml@v1.8
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-sdist.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
+
+  build-wheel:
+    name: 🚀 CD
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cd)
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          [
+            ubuntu-24.04,
+            ubuntu-24.04-arm,
+            macos-14,
+            windows-2022,
+            windows-11-arm,
+          ]
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-wheel-cibuildwheel.yml@56cf3608b07dc10bda5b98d77ed6ad21ecf7ef5d # v1.17.0
     with:
+      runs-on: ${{ matrix.runs-on }}
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
       z3-version: 4.12.6
 
-  required-checks-pass: # This job does nothing and is only used for branch protection
+  # this job does nothing and is only used for branch protection
+  required-checks-pass:
     name: 🚦 Check
     if: always()
     needs:
       - change-detection
-      - cpp-tests
-      - cpp-tests-extensive
+      - cpp-tests-ubuntu
+      - cpp-tests-macos
+      - cpp-tests-windows
+      - cpp-tests-extensive-ubuntu
+      - cpp-tests-extensive-macos
+      - cpp-tests-extensive-windows
       - cpp-coverage
       - cpp-linter
       - python-tests
-      - python-tests-extensive
       - python-linter
-      - code-ql
-      - cd
+      - python-tests-extensive
+      - build-sdist
+      - build-wheel
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@release/v1
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           allowed-skips: >-
             ${{
-              fromJSON(needs.change-detection.outputs.run-cpp-tests)
-              && '' || 'cpp-tests,'
+              fromJSON(needs.change-detection.outputs.run-cpp-tests) && !contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+              && '' || 'cpp-tests-ubuntu,cpp-tests-macos,cpp-tests-windows,'
             }}
             ${{
               fromJSON(needs.change-detection.outputs.run-cpp-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
-              && '' || 'cpp-tests-extensive,'
+              && '' || 'cpp-tests-extensive-ubuntu,cpp-tests-extensive-macos,cpp-tests-extensive-windows,'
             }}
             ${{
               fromJSON(needs.change-detection.outputs.run-cpp-tests)
@@ -241,22 +288,14 @@ jobs:
             }}
             ${{
               fromJSON(needs.change-detection.outputs.run-python-tests)
-              && '' || 'python-tests,'
+              && '' || 'python-tests,python-coverage,python-linter,'
             }}
             ${{
               fromJSON(needs.change-detection.outputs.run-python-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-python-ci')
               && '' || 'python-tests-extensive,'
             }}
             ${{
-              fromJSON(needs.change-detection.outputs.run-python-tests)
-              && '' || 'python-linter,'
-            }}
-            ${{
-              fromJSON(needs.change-detection.outputs.run-code-ql)
-              && '' || 'code-ql,'
-            }}
-            ${{
               fromJSON(needs.change-detection.outputs.run-cd)
-              && '' || 'cd,'
+              && '' || 'build-sdist,build-wheel'
             }}
           jobs: ${{ toJSON(needs) }}

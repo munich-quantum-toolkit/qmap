@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Nox sessions."""
 
 from __future__ import annotations
@@ -18,7 +26,9 @@ nox.options.default_venv_backend = "uv"
 
 nox.options.sessions = ["lint", "tests", "minimums"]
 
-PYTHON_ALL_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+# TODO(denialhaag): Add 3.14 when all dependencies support it
+#   https://github.com/munich-quantum-toolkit/qmap/issues/718
+PYTHON_ALL_VERSIONS = ["3.10", "3.11", "3.12", "3.13"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
@@ -58,16 +68,6 @@ def _run_tests(
         "build",
         "--only-group",
         "test",
-        # Build mqt-core from source to work around pybind believing that two
-        # compiled extensions might not be binary compatible.
-        # This will be fixed in a new pybind11 release that includes https://github.com/pybind/pybind11/pull/5439.
-        "--no-binary-package",
-        "mqt-core",
-        # Similarly to above, build mqt-qcec from source because otherwise there
-        # might be binary compatibility issues with the compiled extensions.
-        # This can be removed once the above is no longer necessary.
-        "--no-binary-package",
-        "mqt-qcec",
         *install_args,
         env=env,
     )
@@ -83,6 +83,9 @@ def _run_tests(
     )
     if extra_command:
         session.run(*extra_command, env=env)
+    if "--cov" in session.posargs:
+        # try to use the lighter-weight `sys.monitoring` coverage core
+        env["COVERAGE_CORE"] = "sysmon"
     session.run(
         "uv",
         "run",
@@ -147,11 +150,6 @@ def docs(session: nox.Session) -> None:
         "build",
         "--only-group",
         "docs",
-        # Build mqt-core from source to work around pybind believing that two
-        # compiled extensions might not be binary compatible.
-        # This will be fixed in a new pybind11 release that includes https://github.com/pybind/pybind11/pull/5439.
-        "--no-binary-package",
-        "mqt-core",
         env=env,
     )
 

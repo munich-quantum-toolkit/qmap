@@ -19,7 +19,7 @@ To this end, an algorithm's description first has to be _synthesized_ using the 
 In addition, circuits have to be _mapped_ to the target quantum device to satisfy its connectivity constraints.
 Even though Clifford circuits form a finite subgroup of all quantum circuits -- one that is not even universal for quantum computing -- the search space for these problems grows exponentially with respect to the number of considered qubits.
 
-The _Clifford synthesis approach_ in QMAP can be used to produce optimal Clifford circuits based on the methods proposed in {cite:p}`peham2023DepthOptimalSynthesis}.
+The _Clifford synthesis approach_ in QMAP can be used to produce optimal Clifford circuits based on the methods proposed in {cite:p}`peham2023DepthOptimalSynthesis`.
 To this end, it encodes the underlying task as a satisfiability (SAT) problem and solves it using the [SMT solver Z3](https://github.com/Z3Prover/z3) in conjunction with a binary search scheme.
 
 The following gives a brief overview on Clifford circuits and how QMAP can be used for their synthesis.
@@ -129,7 +129,7 @@ _QMAP_ can be used in a multitude of ways to efficiently synthesize Clifford cir
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
 
-from mqt import qmap
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 
 qc = QuantumCircuit(2)
 qc.h(0)
@@ -137,7 +137,7 @@ qc.cx(0, 1)
 qc.h(0)
 qc.h(1)
 
-qc_opt, results = qmap.optimize_clifford(circuit=qc, use_maxsat=True, include_destabilizers=True)
+qc_opt, results = optimize_clifford(circuit=qc, use_maxsat=True, include_destabilizers=True)
 
 qc_opt.draw(output="mpl")
 ```
@@ -154,7 +154,8 @@ The heuristic synthesizer can be used as follows:
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
 
-from mqt import qmap
+from mqt.qmap.clifford_synthesis import TargetMetric
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 
 qc = QuantumCircuit(2)
 qc.x(0)
@@ -165,8 +166,12 @@ qc.x(1)
 qc.cx(1, 0)
 qc.x(1)
 
-qc_opt, results = qmap.optimize_clifford(
-    circuit=qc, heuristic=True, split_size=3, include_destabilizers=True, target_metric="depth"
+qc_opt, results = optimize_clifford(
+    circuit=qc,
+    heuristic=True,
+    split_size=3,
+    include_destabilizers=True,
+    target_metric=TargetMetric.depth,
 )
 
 qc_opt.draw(output="mpl")
@@ -179,7 +184,7 @@ In this example the synthesized circuit does not have optimal depth as can be ch
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
 
-from mqt import qmap
+from mqt.qmap.plugins.qiskit.clifford_synthesis import optimize_clifford
 
 qc = QuantumCircuit(2)
 qc.x(0)
@@ -190,7 +195,12 @@ qc.x(1)
 qc.cx(1, 0)
 qc.x(1)
 
-qc_opt, results = qmap.optimize_clifford(circuit=qc, heuristic=False, include_destabilizers=True, target_metric="depth")
+qc_opt, results = optimize_clifford(
+    circuit=qc,
+    heuristic=False,
+    include_destabilizers=True,
+    target_metric=TargetMetric.depth,
+)
 
 qc_opt.draw(output="mpl")
 ```
@@ -202,7 +212,7 @@ However, the heuristic still gives a good depth reduction in many cases.
 ### Starting from a functional description
 
 ```{code-cell} ipython3
-from mqt.qmap import synthesize_clifford
+from mqt.qmap.plugins.qiskit.clifford_synthesis import synthesize_clifford
 from mqt.qmap.clifford_synthesis import Tableau
 
 tableau = Tableau("['+ZZ', '+XX']")
@@ -213,4 +223,4 @@ qc_synth.draw(output="mpl")
 
 The synthesis method offers lots of configuration options to fine-tune the synthesis procedure, e.g., changing the target metric.
 
-See {func}`~mqt.qmap.clifford_synthesis.synthesize_clifford` and {func}`~mqt.qmap.clifford_synthesis.optimize_clifford` for more information.
+See {func}`~mqt.qmap.plugins.qiskit.clifford_synthesis.synthesize_clifford` and {func}`~mqt.qmap.plugins.qiskit.clifford_synthesis.optimize_clifford` for more information.

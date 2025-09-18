@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "sc/exact/ExactMapper.hpp"
 
@@ -29,6 +34,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <string>
@@ -152,9 +158,7 @@ void ExactMapper::map(const Configuration& settings) {
             static_cast<double>(settings.timeout) *
             (static_cast<double>(limit) * 0.5) /
             static_cast<double>(maxLimit < upperLimit ? upperLimit : maxLimit));
-        if (timeout <= 10000U) {
-          timeout = 10000U;
-        }
+        timeout = std::max(timeout, static_cast<std::size_t>(10000U));
         if (settings.verbose) {
           std::cout << "Timeout: " << timeout
                     << "  Max-Timeout: " << settings.timeout << '\n';
@@ -310,11 +314,9 @@ void ExactMapper::map(const Configuration& settings) {
         const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
 
-        if (architecture->getCouplingMap().find(cnot) ==
-            architecture->getCouplingMap().end()) {
+        if (!architecture->getCouplingMap().contains(cnot)) {
           const Edge reverse = {cnot.second, cnot.first};
-          if (architecture->getCouplingMap().find(reverse) ==
-              architecture->getCouplingMap().end()) {
+          if (!architecture->getCouplingMap().contains(reverse)) {
             throw QMAPException(
                 "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
                 std::to_string(reverse.second));
@@ -346,9 +348,7 @@ void ExactMapper::map(const Configuration& settings) {
     if (!mappingSwaps.empty() && swapsIterator != mappingSwaps.end() &&
         layerIterator != reducedLayerIndices.end() && i == *layerIterator) {
       // apply swaps before layer
-      for (auto it = (*swapsIterator).rbegin(); it != (*swapsIterator).rend();
-           ++it) {
-        const auto& [q0, q1] = *it;
+      for (auto [q0, q1] : std::ranges::reverse_view(*swapsIterator)) {
         const auto logical0 = static_cast<qc::Qubit>(qubits.at(q0));
         const auto logical1 = static_cast<qc::Qubit>(qubits.at(q1));
         qcMapped.swap(q0, q1);
@@ -441,7 +441,7 @@ void ExactMapper::coreMappingRoutine(
         skippedPi.insert(piCount);
       }
       ++piCount;
-    } while (std::next_permutation(pi.begin(), pi.end()));
+    } while (std::ranges::next_permutation(pi).found);
   }
   //////////////////////////////////////////
   /// 	Boolean Variable Definitions	//
@@ -481,13 +481,13 @@ number of variables: (|L|-1) * m!
     y.emplace_back();
     piCount = 0;
     do {
-      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+      if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
         yName.str("");
         yName << "y_" << k << '_' << piCount;
         y.back().emplace_back(lb->makeVariable(yName.str(), CType::BOOL));
       }
       ++piCount;
-    } while (std::next_permutation(pi.begin(), pi.end()));
+    } while (std::ranges::next_permutation(pi).found);
   }
 
   //////////////////////////////////////////
@@ -519,8 +519,9 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         std::vector<LogicTerm> varIDs;
+        varIDs.reserve(qc.getNqubits());
         for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
-          varIDs.push_back(x[k][i][j]);
+          varIDs.emplace_back(x[k][i][j]);
         }
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
           lb->assertFormula(
@@ -544,8 +545,9 @@ number of variables: (|L|-1) * m!
 
       for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
         std::vector<LogicTerm> varIDs;
+        varIDs.reserve(qubitChoice.size());
         for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          varIDs.push_back(x[k][i][j]);
+          varIDs.emplace_back(x[k][i][j]);
         }
 
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
@@ -572,7 +574,9 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         std::vector<LogicTerm> vars;
+        vars.reserve(qc.getNqubits());
         std::vector<std::size_t> varIDs;
+        varIDs.reserve(qc.getNqubits());
         for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
           vars.emplace_back(x[k][i][j]);
           varIDs.emplace_back(j);
@@ -583,8 +587,9 @@ number of variables: (|L|-1) * m!
       for (std::size_t j = 0; j < qc.getNqubits();
            ++j) { // There is no exactly one Bimander
         std::vector<LogicTerm> varIDs;
+        varIDs.reserve(qubitChoice.size());
         for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          varIDs.push_back(x[k][i][j]);
+          varIDs.emplace_back(x[k][i][j]);
         }
 
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
@@ -653,7 +658,7 @@ number of variables: (|L|-1) * m!
     auto& i = x[k - 1];
     auto& j = x[k];
     do {
-      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+      if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
         auto equal = LogicTerm(true);
         for (const auto qubit : qubitChoice) {
           for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
@@ -667,7 +672,7 @@ number of variables: (|L|-1) * m!
         ++internalPiCount;
       }
       ++piCount;
-    } while (std::next_permutation(pi.begin(), pi.end()));
+    } while (std::ranges::next_permutation(pi).found);
   }
 
   // Allow only 1 y_k_pi to be true
@@ -677,13 +682,13 @@ number of variables: (|L|-1) * m!
       piCount = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+        if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
           onlyOne = onlyOne + LogicTerm::ite(y[k - 1][internalPiCount],
                                              LogicTerm(1), LogicTerm(0));
           ++internalPiCount;
         }
         ++piCount;
-      } while (std::next_permutation(pi.begin(), pi.end()));
+      } while (std::ranges::next_permutation(pi).found);
       lb->assertFormula(onlyOne == LogicTerm(1));
     }
   } else {
@@ -692,12 +697,12 @@ number of variables: (|L|-1) * m!
       piCount = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+        if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
           varIDs.push_back(y[k - 1][internalPiCount]);
           ++internalPiCount;
         }
         ++piCount;
-      } while (std::next_permutation(pi.begin(), pi.end()));
+      } while (std::ranges::next_permutation(pi).found);
       if (config.commanderGrouping == CommanderGrouping::Fixed2) {
         lb->assertFormula(encodings::exactlyOneCmdr(
             encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
@@ -724,7 +729,7 @@ number of variables: (|L|-1) * m!
   internalPiCount = 0;
   auto cost = LogicTerm(0);
   do {
-    if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+    if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
       auto picost = architecture->minimumNumberOfSwaps(pi);
       if (architecture->bidirectional()) {
         picost *= GATES_OF_BIDIRECTIONAL_SWAP;
@@ -738,7 +743,7 @@ number of variables: (|L|-1) * m!
       ++internalPiCount;
     }
     ++piCount;
-  } while (std::next_permutation(pi.begin(), pi.end()));
+  } while (std::ranges::next_permutation(pi).found);
 
   // cost for reversed directions
   if (!architecture->bidirectional()) {
@@ -820,16 +825,16 @@ number of variables: (|L|-1) * m!
         piCount = 0;
         internalPiCount = 0;
         // sort the permutation of the qubits to start fresh
-        std::sort(pi.begin(), pi.end());
+        std::ranges::sort(pi);
         do {
-          if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
+          if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
             if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
               break;
             }
             ++internalPiCount;
           }
           ++piCount;
-        } while (std::next_permutation(pi.begin(), pi.end()));
+        } while (std::ranges::next_permutation(pi).found);
       }
 
       architecture->minimumNumberOfSwaps(pi, swaps.at(k));

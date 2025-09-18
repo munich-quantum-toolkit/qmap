@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #pragma once
 
@@ -127,7 +132,7 @@ struct MoveVector {
     return direction == other.direction;
   }
   [[nodiscard]] qc::fp getLength() const {
-    return std::sqrt(std::pow(xEnd - xStart, 2) + std::pow(yEnd - yStart, 2));
+    return std::hypot(xEnd - xStart, yEnd - yStart);
   }
   [[nodiscard]] bool overlap(const MoveVector& other) const;
   [[nodiscard]] bool include(const MoveVector& other) const;

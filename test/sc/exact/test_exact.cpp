@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
@@ -35,7 +40,7 @@ protected:
   std::string testCalibrationDir = "../../../extern/calibration/";
 
   qc::QuantumComputation qc;
-  Configuration settings{};
+  Configuration settings;
   Architecture ibmqYorktown;
   Architecture ibmqLondon;
   Architecture ibmQX4;
@@ -75,7 +80,7 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84"),
     [](const testing::TestParamInfo<ExactTest::ParamType>& inf) {
       std::string name = inf.param;
-      std::replace(name.begin(), name.end(), '-', '_');
+      std::ranges::replace(name, '-', '_');
       return name;
     });
 

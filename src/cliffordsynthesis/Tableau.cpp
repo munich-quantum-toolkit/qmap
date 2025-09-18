@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "cliffordsynthesis/Tableau.hpp"
 
@@ -50,6 +55,7 @@ void Tableau::import(const std::string& filename) {
   import(is);
 }
 
+namespace {
 void parseLine(const std::string& line, char separator,
                const std::set<char>& escapeChars,
                const std::set<char>& ignoredChars,
@@ -58,28 +64,29 @@ void parseLine(const std::string& line, char separator,
   std::string word;
   bool inEscape = false;
   for (const char c : line) {
-    if (ignoredChars.find(c) != ignoredChars.end()) {
+    if (ignoredChars.contains(c)) {
       continue;
     }
     if (inEscape) {
-      if (escapeChars.find(c) != escapeChars.end()) {
+      if (escapeChars.contains(c)) {
         inEscape = false;
       } else {
         word += c;
       }
     } else {
-      if (escapeChars.find(c) != escapeChars.end()) {
+      if (escapeChars.contains(c)) {
         inEscape = true;
       } else if (c == separator) {
-        result.push_back(word);
+        result.emplace_back(word);
         word = "";
       } else {
         word += c;
       }
     }
   }
-  result.push_back(word);
+  result.emplace_back(word);
 }
+} // namespace
 
 void Tableau::import(std::istream& is) {
   tableau.clear();
@@ -481,8 +488,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   }
 
   auto stabilizers = line;
-  stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
-                    stabilizers.end());
+  std::erase_if(stabilizers, isspace);
 
   if (stabilizers[0] == '[') {
     if (stabilizers[stabilizers.size() - 1] == ']') {

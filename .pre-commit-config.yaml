@@ -16,7 +16,7 @@ ci:
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -42,7 +42,7 @@ repos:
 
   # Handling unwanted unicode characters
   - repo: https://github.com/sirosen/texthooks
-    rev: 0.6.8
+    rev: 0.7.1
     hooks:
       - id: fix-ligatures
       - id: fix-smartquotes
@@ -55,11 +55,17 @@ repos:
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
 
+  # Check for license headers
+  - repo: https://github.com/emzeat/mz-lictools
+    rev: v2.8.0
+    hooks:
+      - id: license-tools
+
   # Python linting using ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.8
+    rev: v0.13.0
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: ["--fix", "--show-fixes"]
         types_or: [python, pyi, jupyter]
       - id: ruff-format
@@ -67,36 +73,35 @@ repos:
 
   # Also run Black on examples in the documentation
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: 1.19.1
+    rev: 1.20.0
     hooks:
       - id: blacken-docs
-        additional_dependencies: [black==24.*]
+        additional_dependencies: [black==25.*]
 
   # Check static types with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+    rev: v1.18.1
     hooks:
       - id: mypy
         files: ^(src/mqt|test/python|noxfile.py)
         args: []
         additional_dependencies:
-          - importlib_resources
           - nox
           - numpy
           - pytest
           - rustworkx
           - mqt.qcec
-          - mqt.core>=3.0.0rc2
+          - mqt.core>=3.2.1
 
   # Check for spelling
   - repo: https://github.com/crate-ci/typos
-    rev: v1.32.0
+    rev: v1.36.2
     hooks:
       - id: typos
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v20.1.3
+    rev: v21.1.0
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]
@@ -112,7 +117,7 @@ repos:
 
   # Format configuration files with prettier
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.5.3
+    rev: v3.6.2
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
@@ -128,14 +133,14 @@ repos:
 
   # Check best practices for scientific Python code
   - repo: https://github.com/scientific-python/cookie
-    rev: 2025.01.22
+    rev: 2025.05.02
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]
 
   # Check JSON schemata
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.0
+    rev: 0.33.3
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
@@ -143,7 +148,7 @@ repos:
 
   # Check the pyproject.toml file
   - repo: https://github.com/henryiii/validate-pyproject-schema-store
-    rev: 2025.04.07
+    rev: 2025.09.12
     hooks:
       - id: validate-pyproject
 

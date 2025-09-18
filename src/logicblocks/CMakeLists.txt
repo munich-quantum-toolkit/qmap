@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 add_library(
   mqt-logic-blocks
   ${MQT_QMAP_INCLUDE_BUILD_DIR}/logicblocks/Encodings.hpp
@@ -25,7 +33,7 @@ target_link_libraries(
   PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
 # set required C++ standard
-target_compile_features(mqt-logic-blocks PUBLIC cxx_std_17)
+target_compile_features(mqt-logic-blocks PUBLIC cxx_std_20)
 
 # add MQT alias
 add_library(MQT::LogicBlocks ALIAS mqt-logic-blocks)

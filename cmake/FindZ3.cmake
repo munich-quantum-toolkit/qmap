@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 # Code adapted from https://fossies.org/linux/llvm/cmake/modules/FindZ3.cmake
 include(CheckCXXSourceRuns)
 include(FindPackageHandleStandardArgs)

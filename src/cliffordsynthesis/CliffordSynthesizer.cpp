@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
@@ -465,6 +470,7 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   }
 }
 
+namespace {
 void gateToLayer(const qc::Operation& gate, std::size_t& i,
                  std::vector<std::size_t>& layers,
                  std::vector<std::size_t>& layerNum, std::size_t& layer) {
@@ -507,6 +513,7 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   }
   return layers;
 }
+} // namespace
 
 void CliffordSynthesizer::depthHeuristicSynthesis() {
   PLOG_INFO << "Optimizing Circuit with Heuristic";

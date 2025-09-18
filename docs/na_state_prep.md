@@ -20,7 +20,7 @@ This is the motivation of employing error correction during a quantum computatio
 To this end, a (logical) qubit on the algorithmic level is encoded into a shared and highly entangled state of multiple physical qubits.
 Before the actual computation can start, those physical qubits need to be prepared in a state that represents the logical zero state.
 
-For that, we provide tool that takes a state preparation circuit and generates an optimal sequence of operations tailored to the zoned neutral atom architecture.
+For that, we provide a tool based on {cite:p}`stadeOptimalStatePreparation2024` that takes a state preparation circuit and generates an optimal sequence of operations tailored to the zoned neutral atom architecture.
 Thereby, the circuit consists of one initial layer of Hadamard gates on all qubits that initialize the physical qubits in the plus state.
 Those are followed by a set of entangling (CZ) gates that generate a so-called graph state.
 The final logical state is achieved by applying additional Hadamard gates on selected qubits.

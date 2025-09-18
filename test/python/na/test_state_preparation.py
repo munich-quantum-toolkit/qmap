@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test the state preparation for zoned neutral atom architectures."""
 
 from __future__ import annotations
@@ -5,8 +13,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from mqt.core import load
+
 from mqt.qmap.na.state_preparation import NAStatePreparationSolver, generate_code, get_ops_for_solver
 
 # get root directory of the project

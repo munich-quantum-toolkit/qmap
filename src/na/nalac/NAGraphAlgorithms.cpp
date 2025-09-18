@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/nalac/NAGraphAlgorithms.hpp"
 
 #include "datastructures/DirectedAcyclicGraph.hpp"
@@ -371,7 +381,7 @@ auto NAGraphAlgorithms::computeRestingPositions(
         const auto& overlappingPairs =
             std::accumulate(tResting.cbegin(), tResting.cend(),
                             std::vector<std::pair<std::size_t, std::size_t>>(),
-                            [&](auto& acc, const auto& value) {
+                            [&](auto acc, const auto& value) {
                               if (value.first.first < pair.second &&
                                   pair.first < value.first.second) {
                                 acc.emplace_back(value.first);

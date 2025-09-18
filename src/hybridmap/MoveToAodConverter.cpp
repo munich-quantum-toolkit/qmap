@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "hybridmap/MoveToAodConverter.hpp"
 
@@ -124,9 +129,8 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
     } else if (!currentMoveGroup.moves.empty() ||
                !currentMoveGroup.movesFa.empty()) {
       for (const auto& qubit : op->getUsedQubits()) {
-        if (std::find(currentMoveGroup.qubitsUsedByGates.begin(),
-                      currentMoveGroup.qubitsUsedByGates.end(),
-                      qubit) == currentMoveGroup.qubitsUsedByGates.end()) {
+        if (std::ranges::find(currentMoveGroup.qubitsUsedByGates, qubit) ==
+            currentMoveGroup.qubitsUsedByGates.end()) {
           currentMoveGroup.qubitsUsedByGates.emplace_back(qubit);
         }
       }
@@ -142,7 +146,7 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
     const AtomMove& move, const NeutralAtomArchitecture& archArg) {
   // if move would move a qubit that is used by a gate in this move group
   // return false
-  if (std::find(qubitsUsedByGates.begin(), qubitsUsedByGates.end(), move.c1) !=
+  if (std::ranges::find(qubitsUsedByGates, move.c1) !=
       qubitsUsedByGates.end()) {
     return false;
   }
@@ -153,8 +157,8 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
   } else {
     movesToCheck = &movesFa;
   }
-  return std::all_of(
-      movesToCheck->begin(), movesToCheck->end(),
+  return std::ranges::all_of(
+      *movesToCheck,
       [&move, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
         auto moveGroup = opPair.first;
         // check that passby and move are not in same group
@@ -370,11 +374,10 @@ MoveToAodConverter::canAddActivation(
 
 void MoveToAodConverter::AodActivationHelper::reAssignOffsets(
     std::vector<std::shared_ptr<AodMove>>& aodMoves, int32_t sign) {
-  std::sort(
-      aodMoves.begin(), aodMoves.end(),
-      [](const std::shared_ptr<AodMove>& a, const std::shared_ptr<AodMove>& b) {
-        return std::abs(a->delta) < std::abs(b->delta);
-      });
+  std::ranges::sort(aodMoves, [](const std::shared_ptr<AodMove>& a,
+                                 const std::shared_ptr<AodMove>& b) {
+    return std::abs(a->delta) < std::abs(b->delta);
+  });
   int32_t offset = sign;
   for (auto& aodMove : aodMoves) {
     // same sign

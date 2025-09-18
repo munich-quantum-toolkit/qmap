@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "na/nalac/NAMapper.hpp"
 
 #include "datastructures/Layer.hpp"
@@ -102,7 +112,7 @@ auto NAMapper::makeLogicalArrays() -> void {
       const auto& posPerRow =
           std::accumulate(allPositions.cbegin(), allPositions.cend(),
                           std::map<std::int64_t, std::set<std::int64_t>>(),
-                          [&](auto& acc, const auto& p) {
+                          [&](auto acc, const auto& p) {
                             acc[p->y].insert(p->x);
                             return acc;
                           });

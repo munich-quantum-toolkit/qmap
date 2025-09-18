@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "hybridmap/NeutralAtomScheduler.hpp"
 
@@ -165,8 +170,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     std::cout << "\n* schedule end!\n";
   }
 
-  const auto maxExecutionTime =
-      *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
+  const auto maxExecutionTime = *std::ranges::max_element(totalExecutionTimes);
   const auto totalIdleTime =
       (maxExecutionTime * arch->getNqubits()) - totalGateTime;
   const auto totalFidelities =
@@ -187,8 +191,8 @@ void na::NeutralAtomScheduler::printSchedulerResults(
     std::vector<qc::fp>& totalExecutionTimes, const qc::fp totalIdleTime,
     const qc::fp totalGateFidelities, const qc::fp totalFidelities,
     const uint32_t nCZs, const uint32_t nAodActivate, const uint32_t nAodMove) {
-  const auto totalExecutionTime =
-      *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
+  const auto totalExecutionTime = *std::ranges::max_element(
+      totalExecutionTimes.begin(), totalExecutionTimes.end());
   std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
   std::cout << "totalIdleTime: " << totalIdleTime << "\n";
   std::cout << "totalGateFidelities: " << totalGateFidelities << "\n";

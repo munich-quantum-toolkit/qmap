@@ -1,4 +1,5 @@
-# Copyright (c) 2025 Chair for Design Automation, TUM
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
 # All rights reserved.
 #
 # SPDX-License-Identifier: MIT
@@ -45,14 +46,13 @@ except ModuleNotFoundError:
 release = version.split("+")[0]
 
 project = "MQT QMAP"
-author = "Chair for Design Automation, Technical University of Munich"
+author = "Chair for Design Automation, TUM & Munich Quantum Software Company"
 language = "en"
-project_copyright = "2025, Chair for Design Automation, Technical University of Munich"
+project_copyright = "2023 - 2025 Chair for Design Automation, TUM & 2025 Munich Quantum Software Company"
 
 master_doc = "index"
 
 templates_path = ["_templates"]
-html_css_files = ["custom.css"]
 
 extensions = [
     "myst_nb",
@@ -114,6 +114,7 @@ nb_mime_priority_overrides = [
     # builder name, mime type, priority
     ("latex", "image/svg+xml", 15),
 ]
+nb_execution_raise_on_error = True
 
 
 class CDAStyle(UnsrtStyle):
@@ -140,7 +141,7 @@ copybutton_line_continuation_character = "\\"
 
 modindex_common_prefix = ["mqt.qmap."]
 
-autoapi_dirs = ["../src/mqt"]
+autoapi_dirs = ["../python/mqt"]
 autoapi_python_use_implicit_namespaces = True
 autoapi_root = "api"
 autoapi_add_toctree_entry = False
@@ -153,6 +154,7 @@ autoapi_options = [
     "show-module-summary",
 ]
 autoapi_keep_files = True
+autoapi_python_class_content = "both"
 add_module_names = False
 toc_object_entries_show_parents = "hide"
 python_use_unqualified_type_names = True
@@ -162,13 +164,33 @@ napoleon_numpy_docstring = False
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"
 html_static_path = ["_static"]
+html_css_files = [
+    "custom.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css",
+]
 html_theme_options = {
     "light_logo": "mqt_dark.png",
     "dark_logo": "mqt_light.png",
-    "source_repository": "https://github.com/cda-tum/mqt-qmap/",
+    "source_repository": "https://github.com/munich-quantum-toolkit/qmap/",
     "source_branch": "main",
     "source_directory": "docs/",
     "navigation_with_keys": True,
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/munich-quantum-toolkit/qmap/",
+            "html": "",
+            "class": "fa-brands fa-solid fa-github fa-2x",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/mqt-qmap/",
+            "html": "",
+            "class": "fa-brands fa-solid fa-python fa-2x",
+        },
+    ],
 }
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -184,7 +206,9 @@ latex_documents = [
         master_doc,
         "mqt_qmap.tex",
         r"MQT QMAP\\{\Large A tool for Mapping Quantum Circuits to various Hardware Technologies}",
-        r"Chair for Design Automation\\Technical University of Munich",
+        r"""Chair for Design Automation\\ Technical University of Munich, Germany\\
+        \href{mailto:quantum.cda@xcit.tum.de}{quantum.cda@xcit.tum.de}\\
+        Munich Quantum Software Company GmbH\\Garching near Munich, Germany""",
         "howto",
         False,
     ),
@@ -203,6 +227,19 @@ latex_elements = {
 \DeclarePairedDelimiter\mket{\lvert}{\rangle}
 \DeclarePairedDelimiter\mbra{\langle}{\rvert}
 \DeclareUnicodeCharacter{03C0}{$\pi$}
+\DeclareUnicodeCharacter{2728}{\faicon{star}}
+\DeclareUnicodeCharacter{1F6B8}{\faicon{user-plus}}
+\DeclareUnicodeCharacter{1F4DD}{\faicon{book}}
+\DeclareUnicodeCharacter{1F69A}{\faicon{truck}}
+\DeclareUnicodeCharacter{267B}{\faicon{recycle}}
+\DeclareUnicodeCharacter{2B06}{\faicon{arrow-up}}
+\DeclareUnicodeCharacter{1F4C4}{\faicon{file-alt}}
+\DeclareUnicodeCharacter{1F525}{\faicon{fire}}
+\DeclareUnicodeCharacter{1F41B}{\faicon{bug}}
+\DeclareUnicodeCharacter{1F4DA}{\faicon{book-open}}
+\DeclareUnicodeCharacter{1F4E6}{\faicon{archive}}
+\DeclareUnicodeCharacter{23EA}{\faicon{angle-double-left}}
+\DeclareUnicodeCharacter{FE0F}{}
 
 \newcommand*{\ket}[1]{\ensuremath{\mket{\mkern1mu#1}}}
 \newcommand*{\bra}[1]{\ensuremath{\mbra{\mkern1mu#1}}}

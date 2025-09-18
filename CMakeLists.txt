@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 # set required cmake version
 cmake_minimum_required(VERSION 3.24...4.0)
 
@@ -8,6 +16,25 @@ project(
 
 # Add path for custom modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# set the logging level
+set(MQT_QMAP_LOG_LEVEL
+    DEBUG
+    CACHE
+      STRING
+      "Set the active log level for spdlog (possible values: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL, OFF)"
+)
+set_property(
+  CACHE MQT_QMAP_LOG_LEVEL
+  PROPERTY STRINGS
+           TRACE
+           DEBUG
+           INFO
+           WARN
+           ERROR
+           CRITICAL
+           OFF)
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${MQT_QMAP_LOG_LEVEL})
 
 option(BUILD_MQT_QMAP_BINDINGS "Build the MQT QMAP Python bindings" OFF)
 if(BUILD_MQT_QMAP_BINDINGS)
@@ -33,7 +60,7 @@ if(BUILD_MQT_QMAP_BINDINGS)
 
   # top-level call to find Python
   find_package(
-    Python 3.9 REQUIRED
+    Python 3.10 REQUIRED
     COMPONENTS Interpreter Development.Module
     OPTIONAL_COMPONENTS Development.SABIModule)
 endif()
@@ -52,8 +79,16 @@ include(cmake/ExternalDependencies.cmake)
 # set the include directory for the build tree
 set(MQT_QMAP_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+# set prefix for all MQT QMAP targets
+set(MQT_QMAP_TARGET_NAME mqt-qmap)
+
 # add main library code
 add_subdirectory(src)
+
+# add bindings code if enabled
+if(BUILD_MQT_QMAP_BINDINGS)
+  add_subdirectory(bindings)
+endif()
 
 # add test code
 if(BUILD_MQT_QMAP_TESTS)

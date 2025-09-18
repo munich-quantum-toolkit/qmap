@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "hybridmap/NeutralAtomLayer.hpp"
 
@@ -122,8 +127,8 @@ void NeutralAtomLayer::candidatesToGates(
 void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
   std::set<qc::Qubit> qubitsToUpdate;
   for (const auto& gate : gatesToRemove) {
-    if (std::find(gates.begin(), gates.end(), gate) != gates.end()) {
-      gates.erase(std::find(gates.begin(), gates.end(), gate));
+    if (std::ranges::find(gates, gate) != gates.end()) {
+      gates.erase(std::ranges::find(gates, gate));
       auto usedQubits = gate->getUsedQubits();
       qubitsToUpdate.insert(usedQubits.begin(), usedQubits.end());
     }
@@ -135,10 +140,10 @@ void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
 
 bool commutesWithAtQubit(const GateList& layer, const qc::Operation* opPointer,
                          const qc::Qubit& qubit) {
-  return std::all_of(layer.begin(), layer.end(),
-                     [&opPointer, &qubit](const auto& frontOpPointer) {
-                       return commuteAtQubit(opPointer, frontOpPointer, qubit);
-                     });
+  return std::ranges::all_of(
+      layer, [&opPointer, &qubit](const auto& frontOpPointer) {
+        return commuteAtQubit(opPointer, frontOpPointer, qubit);
+      });
 }
 
 bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
@@ -158,8 +163,7 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
   // commutes at qubit if at least one of the two gates does not use qubit
   auto usedQubits1 = op1->getUsedQubits();
   auto usedQubits2 = op2->getUsedQubits();
-  if (usedQubits1.find(qubit) == usedQubits1.end() ||
-      usedQubits2.find(qubit) == usedQubits2.end()) {
+  if (!usedQubits1.contains(qubit) || !usedQubits2.contains(qubit)) {
     return true;
   }
 

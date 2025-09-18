@@ -1,9 +1,17 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 [build-system]
 requires = [
-  "scikit-build-core>=0.11.0",
-  "setuptools-scm>=8.2",
-  "pybind11>=2.13.6",
-  "mqt.core>=3.0.0rc2",
+  "scikit-build-core>=0.11.2",
+  "setuptools-scm>=8.3.1",
+  "pybind11>=3.0.0",
+  "mqt.core~=3.2.1",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -33,38 +41,37 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Development Status :: 5 - Production/Stable",
     "Typing :: Typed",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "mqt.core>=3.0.0rc2",
+    "mqt.core~=3.2.1",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
-    "importlib_resources>=5.0; python_version < '3.10'",
-    "typing_extensions>=4.6; python_version < '3.10'",
+    "typing_extensions>=4.6; python_version < '3.11'",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 visualization = [
     "distinctipy>=1.3.4",
-    "plotly>=6.0.0",
+    "plotly>=6.0.1",
     "networkx>=3.2.1",
     "walkerlayout>=1.0.2",
-    "ipywidgets>=8.1.5",
+    "ipywidgets>=8.1.7",
 ]
 
 [project.urls]
-Homepage = "https://github.com/cda-tum/mqt-qmap"
+Homepage = "https://github.com/munich-quantum-toolkit/qmap"
 Documentation = "https://mqt.readthedocs.io/projects/qmap"
-Issues = "https://github.com/cda-tum/mqt-qmap/issues"
-Discussions = "https://github.com/cda-tum/mqt-qmap/discussions"
+Issues = "https://github.com/munich-quantum-toolkit/qmap/issues"
+Discussions = "https://github.com/munich-quantum-toolkit/qmap/discussions"
 
 [tool.scikit-build]
 # Protect the configuration against future changes in scikit-build-core
@@ -74,7 +81,7 @@ minimum-version = "build-system.requires"
 wheel.install-dir = "mqt/qmap"
 
 # Explicitly set the package directory
-wheel.packages = ["src/mqt"]
+wheel.packages = ["python/mqt"]
 
 # Set required Ninja version
 ninja.version = ">=1.10"
@@ -83,13 +90,19 @@ ninja.version = ">=1.10"
 build-dir = "build/{wheel_tag}/{build_type}"
 
 # Only build the Python bindings target
-build.targets = ["pyqmap"]
+build.targets = [
+  "mqt-qmap-clifford_synthesis-bindings",
+  "mqt-qmap-hybrid_mapper-bindings",
+  "mqt-qmap-na-zoned-bindings",
+  "mqt-qmap-na-nasp-bindings",
+  "mqt-qmap-sc-bindings",
+]
 
 # Only install the Python package component
 install.components = ["mqt-qmap_Python"]
 
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
-sdist.include = ["src/mqt/qmap/_version.py"]
+sdist.include = ["python/mqt/qmap/_version.py"]
 sdist.exclude = [
     "**/.github",
     "**/doc",
@@ -114,7 +127,7 @@ cmake.define.DISABLE_GIL = "1"
 
 
 [tool.check-sdist]
-sdist-only = ["src/mqt/qmap/_version.py"]
+sdist-only = ["python/mqt/qmap/_version.py"]
 git-only = [
     "docs/*",
     "extern/*",
@@ -124,13 +137,19 @@ git-only = [
 
 
 [tool.setuptools_scm]
-write_to = "src/mqt/qmap/_version.py"
+write_to = "python/mqt/qmap/_version.py"
 
 
 [tool.pytest.ini_options]
 minversion = "7.2"
 testpaths = ["test/python"]
-addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--showlocals",
+  "--numprocesses=auto", # Automatically use all available CPU cores for parallel testing
+]
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = [
@@ -163,11 +182,14 @@ report.exclude_also = [
     'def __dir__()',  # Ignore __dir__ method that exists mainly for better IDE support
     '@overload'  # Overloads are only for static typing
 ]
+run.disable_warnings = [
+  "no-sysmon",
+]
 
 [tool.mypy]
-files = ["src/mqt", "test/python", "noxfile.py"]
-mypy_path = ["$MYPY_CONFIG_FILE_DIR/src"]
-python_version = "3.9"
+files = ["python/mqt", "test/python", "noxfile.py"]
+mypy_path = ["$MYPY_CONFIG_FILE_DIR/python"]
+python_version = "3.10"
 warn_unused_configs = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 strict = true
@@ -189,6 +211,7 @@ line-length = 120
 namespace-packages = ["mqt"]
 preview = true
 unsafe-fixes = true
+src = ["python"]
 
 [tool.ruff.lint]
 extend-select = [
@@ -240,21 +263,14 @@ ignore = [
     "S101",    # Use of assert detected
     "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
 ]
+future-annotations = true
 typing-modules = ["mqt.qmap._compat.typing"]
-isort.required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"typing.Callable".msg = "Use collections.abc.Callable instead."
-"typing.Iterator".msg = "Use collections.abc.Iterator instead."
-"typing.Mapping".msg = "Use collections.abc.Mapping instead."
-"typing.Sequence".msg = "Use collections.abc.Sequence instead."
-"typing.Set".msg = "Use collections.abc.Set instead."
-"typing.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
 "typing_extensions.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
-"typing.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
-"typing_extensions.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
-"importlib.resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
-"importlib_resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
+
+[tool.ruff.lint.isort]
+known-first-party = ["mqt.qmap"]
 
 [tool.ruff.lint.per-file-ignores]
 "test/python/**" = ["T20", "ANN"]
@@ -266,7 +282,7 @@ isort.required-imports = ["from __future__ import annotations"]
     "E402", # Allow imports to appear anywhere in Jupyter notebooks
     "I002", # Allow missing `from __future__ import annotations` import
 ]
-"src/mqt/qmap/_compat/**.py" = ["TID251"]
+"python/mqt/qmap/_compat/**.py" = ["TID251"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -300,13 +316,19 @@ skip = "*-musllinux*"
 archs = "auto64"
 test-groups = ["test"]
 test-command = "pytest {project}/test/python"
-test-skip = ["cp3*t-*"] # skip testing on free-threading Python until our dependencies are ready
 build-frontend = "build[uv]"
 enable = ["cpython-freethreading"]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-ppc64le-image = "manylinux_2_28"
 manylinux-s390x-image = "manylinux_2_28"
+test-skip = [
+  "cp3*t-*", # no freethreading qiskit wheels
+  "cp*-win_arm64", # no numpy, qiskit, ... wheels
+  # TODO(denialhaag): Remove when all dependencies support Python 3.14
+  #   https://github.com/munich-quantum-toolkit/qmap/issues/718
+  "cp314-*",
+]
 
 # The mqt-core shared libraries are provided by the mqt-core Python package.
 # They should not be vendorized into the mqt-qcec wheel. This requires
@@ -317,12 +339,12 @@ environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3
 before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
-  """auditwheel repair -w {dest_dir} {wheel} \
---exclude libmqt-core-ir.so.3.0 \
---exclude libmqt-core-qasm.so.3.0 \
---exclude libmqt-core-circuit-optimizer.so.3.0 \
---exclude libmqt-core-ds.so.3.0 \
---exclude libmqt-core-na.so.3.0""",
+    """auditwheel repair -w {dest_dir} {wheel} \
+--exclude libmqt-core-ir.so.3.2 \
+--exclude libmqt-core-qasm.so.3.2 \
+--exclude libmqt-core-circuit-optimizer.so.3.2 \
+--exclude libmqt-core-ds.so.3.2 \
+--exclude libmqt-core-na.so.3.2""",
 ]
 
 [tool.cibuildwheel.macos]
@@ -337,7 +359,6 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-circuit-optimizer.dll \
 --exclude mqt-core-ds.dll \
 --exclude mqt-core-na.dll"""
-environment = { CMAKE_GENERATOR = "Ninja", UV_PRERELEASE = "allow" }
 
 
 [tool.uv]
@@ -350,40 +371,41 @@ mqt-qmap = { workspace = true }
 
 [dependency-groups]
 build = [
-  "pybind11>=2.13.6",
-  "scikit-build-core>=0.11.0",
-  "setuptools-scm>=8.2",
-  "mqt.core>=3.0.0rc2",
+  "pybind11>=3.0.0",
+  "scikit-build-core>=0.11.2",
+  "setuptools-scm>=8.3.1",
+  "mqt.core~=3.2.1",
 ]
 docs = [
   "networkx>=3.2.1",
-  "plotly>=6.0.0",
+  "plotly>=6.0.1",
   "distinctipy>=1.3.4",
   "walkerlayout>=1.0.2",
-  "ipywidgets>=8.1.5",
+  "ipywidgets>=8.1.7",
   "furo>=2024.8.6",
   "qiskit[qasm3-import,visualization]>=1.0.0",
-  "setuptools-scm>=8.2",
+  "setuptools-scm>=8.3.1",
   "sphinx-autoapi>=3.6.0",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
   "sphinxcontrib-bibtex>=2.6.3",
   "sphinxcontrib-svg2pdfconverter>=1.3.0",
-  "sphinxext-opengraph>=0.9.1",
+  "sphinxext-opengraph>=0.10.0",
   "myst-nb>=1.2.0",
-  "sphinx>=7.4.7",
-  "sphinx>=8.1.3; python_version >= '3.10'",
+  "sphinx>=8.1.3",
   "sphinx>=8.2.3; python_version >= '3.11'",
 ]
 test = [
   "networkx>=3.2.1",
-  "plotly>=6.0.0",
+  "plotly>=6.0.1",
   "distinctipy>=1.3.4",
   "walkerlayout>=1.0.2",
-  "ipywidgets>=8.1.5",
+  "ipywidgets>=8.1.7",
   "pytest>=8.3.5",
-  "pytest-cov>=6",
-  "mqt.qcec>=3.0.0b3",
+  "pytest-cov>=6.1.1",
+  "pytest-sugar>=1.0.0",
+  "pytest-xdist>=3.7.0",
+  "mqt.qcec>=3.2.0",
 ]
 dev = [
   {include-group = "build"},
