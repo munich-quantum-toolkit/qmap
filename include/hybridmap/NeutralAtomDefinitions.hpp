@@ -29,7 +29,7 @@ namespace na {
 // (or not).
 using CoordIndex = std::uint32_t;
 using CoordIndices = std::vector<CoordIndex>;
-using AdjacencyMatrix = SymmetricMatrix<std::uint8_t>;
+using AdjacencyMatrix = qc::SymmetricMatrix<std::uint8_t>;
 
 // A HwQubit corresponds to an atom in the neutral atom architecture. It can be
 // used as qubit or not and occupies a certain position in the architecture.

@@ -2162,7 +2162,7 @@ std::set<std::set<qc::Qubit>>
 NeutralAtomMapper::findQtargetSet(std::set<qc::Qubit>& usedQubits) {
   std::set<std::set<qc::Qubit>> qTargetSet;
   const auto numUsedQubits = usedQubits.size();
-  SymmetricMatrix<qc::fp> gateQubitDistances(numUsedQubits);
+  qc::SymmetricMatrix<qc::fp> gateQubitDistances(numUsedQubits);
   for (uint32_t i = 0; i < numUsedQubits; ++i) {
     for (uint32_t j = 0; j <= i; ++j) {
       if (i == j) {

@@ -97,7 +97,7 @@ public:
       uint32_t seed = 0)
       : arch(&architecture) {
     this->nQubits = nQubits;
-    swapDistances = SymmetricMatrix<SwapDistance>(this->nQubits);
+    swapDistances = qc::SymmetricMatrix<SwapDistance>(this->nQubits);
 
     switch (initialCoordinateMapping) {
     case Trivial:

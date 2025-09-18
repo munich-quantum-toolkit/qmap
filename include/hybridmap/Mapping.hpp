@@ -35,10 +35,11 @@ namespace na {
  */
 class Mapping {
 protected:
-  // std::map<qc::Qubit, HwQubit>
+  using DAG = std::vector<std::deque<std::unique_ptr<qc::Operation>*>>;
+
   qc::Permutation circToHw;
   HardwareQubits hwQubits;
-  qc::DAG dag;
+  DAG dag;
 
   /**
    * @brief GraphMatching for initCoordMapping

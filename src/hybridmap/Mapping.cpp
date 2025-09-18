@@ -10,8 +10,8 @@
 
 #include "hybridmap/Mapping.hpp"
 
-#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 
 #include <algorithm>
 #include <cstddef>

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 //
 // This file is part of the MQT QMAP library released under the MIT license.
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
@@ -5,11 +15,11 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "HybridNeutralAtomMapper.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomUtils.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
