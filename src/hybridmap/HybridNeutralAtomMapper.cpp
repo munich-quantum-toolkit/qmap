@@ -100,11 +100,11 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   }
 
   if (this->parameters->verbose) {
-    std::cout << "nSwaps: " << nSwaps << '\n';
-    std::cout << "nBridges: " << nBridges << '\n';
-    std::cout << "nFAncillas: " << nFAncillas << '\n';
-    std::cout << "nMoves: " << nMoves << '\n';
-    std::cout << "nPassBy: " << nPassBy << '\n';
+    std::cout << "nSwaps: " << stats.nSwaps << '\n';
+    std::cout << "nBridges: " << stats.nBridges << '\n';
+    std::cout << "nFAncillas: " << stats.nFAncillas << '\n';
+    std::cout << "nMoves: " << stats.nMoves << '\n';
+    std::cout << "nPassBy: " << stats.nPassBy << '\n';
 
     // mappedQc.print(std::cout);
   }
@@ -209,7 +209,7 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
   }
 
   frontLayer.removeGatesAndUpdate({pbComb.op});
-  nPassBy += pbComb.moves.size();
+  stats.nPassBy += pbComb.moves.size();
 }
 
 void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
@@ -329,7 +329,7 @@ void NeutralAtomMapper::updateBlockedQubits(const HwQubits& qubits) {
 }
 
 void NeutralAtomMapper::applySwap(const Swap& swap) {
-  nSwaps++;
+  stats.nSwaps++;
 
   this->mapping.applySwap(swap);
   // convert circuit qubits to CoordIndex and append to mappedQc
@@ -370,7 +370,7 @@ void NeutralAtomMapper::applyMove(AtomMove move) {
       std::cout << "  not mapped" << '\n';
     }
   }
-  nMoves++;
+  stats.nMoves++;
 }
 void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
                                     const Bridge& bridge) {
@@ -389,7 +389,7 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
   const auto* op = bridge.first;
   frontLayer.removeGatesAndUpdate({op});
 
-  nBridges++;
+  stats.nBridges++;
 }
 void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
                                            const FlyingAncillaComb& faComb) {
@@ -479,7 +479,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   }
 
   frontLayer.removeGatesAndUpdate({faComb.op});
-  nFAncillas += faComb.moves.size();
+  stats.nFAncillas += faComb.moves.size();
 }
 
 Swap NeutralAtomMapper::findBestSwap(const Swap& lastSwap) {

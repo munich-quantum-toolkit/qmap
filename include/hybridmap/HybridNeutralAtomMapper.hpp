@@ -10,12 +10,12 @@
 
 #pragma once
 
-#include "NeutralAtomLayer.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
@@ -48,11 +48,20 @@ struct MapperParameters {
   qc::fp shuttlingWeight = 1;
   uint32_t seed = 0;
   uint32_t numFlyingAncillas = 0;
-  uint32_t limitShuttlingLayer = std::numeric_limits<uint32_t>::max();
+  uint32_t limitShuttlingLayer = 10;
   uint32_t maxBridgeDistance = 1;
   bool usePassBy = true;
   bool verbose = false;
-  InitialCoordinateMapping initialCoordMapping;
+  InitialCoordinateMapping initialCoordMapping =
+      InitialCoordinateMapping::Trivial;
+};
+
+struct MapperStats {
+  uint32_t nSwaps = 0;
+  uint32_t nBridges = 0;
+  uint32_t nFAncillas = 0;
+  uint32_t nMoves = 0;
+  uint32_t nPassBy = 0;
 };
 
 enum RoutingType : uint8_t {
@@ -83,6 +92,7 @@ enum RoutingType : uint8_t {
  */
 class NeutralAtomMapper {
 protected:
+  MapperStats stats;
   // The considered architecture
   const NeutralAtomArchitecture* arch = nullptr;
   // The mapped quantum circuit
@@ -111,12 +121,6 @@ protected:
   std::deque<AtomMove> lastMoves;
   // Precomputed decay weights
   std::vector<qc::fp> decayWeights;
-  // Counter variables
-  uint32_t nSwaps = 0;
-  uint32_t nBridges = 0;
-  uint32_t nFAncillas = 0;
-  uint32_t nMoves = 0;
-  uint32_t nPassBy = 0;
 
   // The current placement of the hardware qubits onto the coordinates
   HardwareQubits hardwareQubits;
@@ -545,10 +549,6 @@ public:
                              const Mapping& initialMapping) {
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     mappedQcAOD = qc::QuantumComputation(arch->getNpositions());
-    nMoves = 0;
-    nSwaps = 0;
-    nBridges = 0;
-    nFAncillas = 0;
     mapAppend(qc, initialMapping);
     return mappedQc;
   }
@@ -576,10 +576,26 @@ public:
    * @param initialMapping The initial mapping of the circuit qubits to the
    * hardware qubits
    */
-  [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
-                                      const InitialMapping initialMapping) {
+  [[maybe_unused]] void mapWithoutReturn(qc::QuantumComputation& qc,
+                                         const InitialMapping initialMapping) {
     map(qc, initialMapping);
-    convertToAod();
+  }
+
+  /**
+   * @brief Returns the statistics of the mapping.
+   * @return The statistics of the mapping
+   */
+  [[nodiscard]] MapperStats getStats() const { return stats; }
+
+  [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, qc::fp>
+  getStatsMap() const {
+    std::unordered_map<std::string, qc::fp> result;
+    result["nSwaps"] = stats.nSwaps;
+    result["nBridges"] = stats.nBridges;
+    result["nFAncillas"] = stats.nFAncillas;
+    result["nMoves"] = stats.nMoves;
+    result["nPassBy"] = stats.nPassBy;
+    return result;
   }
 
   /**
