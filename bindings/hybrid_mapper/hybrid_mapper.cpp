@@ -50,57 +50,57 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                                    "Parameters controlling the mapper behavior")
       .def(py::init<>(),
            "Create a MapperParameters instance with default values")
-      .def_readwrite("lookaheadDepth", &na::MapperParameters::lookaheadDepth,
+      .def_readwrite("lookahead_depth", &na::MapperParameters::lookaheadDepth,
                      "Depth of lookahead for mapping decisions")
-      .def_readwrite("lookaheadWeightSwaps",
+      .def_readwrite("lookahead_weight_swaps",
                      &na::MapperParameters::lookaheadWeightSwaps,
                      "Weight assigned to swap operations during lookahead")
-      .def_readwrite("lookaheadWeightMoves",
+      .def_readwrite("lookahead_weight_moves",
                      &na::MapperParameters::lookaheadWeightMoves,
                      "Weight assigned to move operations during lookahead")
       .def_readwrite("decay", &na::MapperParameters::decay,
                      "Decay factor for gate blocking")
-      .def_readwrite("shuttlingTimeWeight",
+      .def_readwrite("shuttling_time_weight",
                      &na::MapperParameters::shuttlingTimeWeight,
                      "Weight for shuttling time in cost evaluation")
       .def_readwrite(
-          "dynamicMappingWeight", &na::MapperParameters::dynamicMappingWeight,
+          "dynamic_mapping_weight", &na::MapperParameters::dynamicMappingWeight,
           "Weight for dynamic remapping (SWAPs or MOVEs) in cost evaluation")
-      .def_readwrite("gateWeight", &na::MapperParameters::gateWeight,
+      .def_readwrite("gate_weight", &na::MapperParameters::gateWeight,
                      "Weight for gate execution in cost evaluation")
-      .def_readwrite("shuttlingWeight", &na::MapperParameters::shuttlingWeight,
+      .def_readwrite("shuttling_weight", &na::MapperParameters::shuttlingWeight,
                      "Weight for shuttling operations in cost evaluation")
       .def_readwrite(
           "seed", &na::MapperParameters::seed,
           "Random seed for stochastic decisions (initial mapping, etc.)")
-      .def_readwrite("numFlyingAncillas",
+      .def_readwrite("num_flying_ancillas",
                      &na::MapperParameters::numFlyingAncillas,
                      "Number of ancilla qubits to be used (0 or 1 for now)")
-      .def_readwrite("limitShuttlingLayer",
+      .def_readwrite("limit_shuttling_layer",
                      &na::MapperParameters::limitShuttlingLayer,
                      "Maximum allowed shuttling layer (default: unlimited)")
-      .def_readwrite("maxBridgeDistance",
+      .def_readwrite("max_bridge_distance",
                      &na::MapperParameters::maxBridgeDistance,
                      "Maximum distance for bridge operations")
-      .def_readwrite("usePassBy", &na::MapperParameters::usePassBy,
+      .def_readwrite("use_pass_by", &na::MapperParameters::usePassBy,
                      "Enable or disable pass-by operations")
       .def_readwrite("verbose", &na::MapperParameters::verbose,
                      "Enable verbose logging for debugging")
-      .def_readwrite("initialCoordMapping",
+      .def_readwrite("initial_coord_mapping",
                      &na::MapperParameters::initialCoordMapping,
                      "Strategy for initial coordinate mapping");
 
   py::class_<na::MapperStats>(m, "MapperStats")
       .def(py::init<>())
-      .def_readwrite("nSwaps", &na::MapperStats::nSwaps,
+      .def_readwrite("num_swaps", &na::MapperStats::nSwaps,
                      "Number of swap operations performed")
-      .def_readwrite("nBridges", &na::MapperStats::nBridges,
+      .def_readwrite("num_bridges", &na::MapperStats::nBridges,
                      "Number of bridge operations performed")
-      .def_readwrite("nFAncillas", &na::MapperStats::nFAncillas,
+      .def_readwrite("num_f_ancillas", &na::MapperStats::nFAncillas,
                      "Number of fresh ancilla qubits used")
-      .def_readwrite("nMoves", &na::MapperStats::nMoves,
+      .def_readwrite("num_moves", &na::MapperStats::nMoves,
                      "Number of move operations performed")
-      .def_readwrite("nPassBy", &na::MapperStats::nPassBy,
+      .def_readwrite("num_pass_by", &na::MapperStats::nPassBy,
                      "Number of pass-by operations performed");
 
   py::class_<na::NeutralAtomArchitecture>(m, "NeutralAtomHybridArchitecture")
@@ -110,21 +110,21 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def_readwrite("name", &na::NeutralAtomArchitecture::name,
                      "Name of the architecture")
       .def_property_readonly(
-          "nrows", &na::NeutralAtomArchitecture::getNrows,
+          "num_rows", &na::NeutralAtomArchitecture::getNrows,
           "Number of rows in a rectangular grid SLM arrangement")
       .def_property_readonly(
-          "ncolumns", &na::NeutralAtomArchitecture::getNcolumns,
+          "num_columns", &na::NeutralAtomArchitecture::getNcolumns,
           "Number of columns in a rectangular grid SLM arrangement")
       .def_property_readonly(
-          "npositions", &na::NeutralAtomArchitecture::getNpositions,
+          "num_positions", &na::NeutralAtomArchitecture::getNpositions,
           "Total number of positions in a rectangular grid SLM arrangement")
       .def_property_readonly(
-          "naods", &na::NeutralAtomArchitecture::getNAods,
+          "num_aods", &na::NeutralAtomArchitecture::getNAods,
           "Number of independent 2D acousto-optic deflectors")
       .def_property_readonly("naod_coordinates",
                              &na::NeutralAtomArchitecture::getNAodCoordinates,
                              "Maximal number of AOD rows/columns (NOT USED) ")
-      .def_property_readonly("nqubits",
+      .def_property_readonly("num_qubits",
                              &na::NeutralAtomArchitecture::getNqubits,
                              "Number of atoms in the neutral atom quantum "
                              "computer that can be used as qubits")
@@ -182,9 +182,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "map_qasm_file",
           [](na::NeutralAtomMapper& mapper, const std::string& filename,
-             const na::InitialMapping initialMapping) {
+             const na::InitialMapping initial_mapping) {
             auto circ = qasm3::Importer::importf(filename);
-            mapper.map(circ, initialMapping);
+            mapper.map(circ, initial_mapping);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
           "filename"_a, "initial_mapping"_a = na::InitialMapping::Identity)
@@ -198,16 +198,18 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            &na::NeutralAtomMapper::getMappedQcAodQasm,
            "Returns the mapped circuit with AOD operations as an extended "
            "qasm2 string")
-      .def("saveMappedQcAodQasm", &na::NeutralAtomMapper::saveMappedQcAodQasm,
+      .def("save_mapped_qc_aod_qasm",
+           &na::NeutralAtomMapper::saveMappedQcAodQasm,
            "Saves the mapped circuit with AOD operations as an extended qasm2 "
            "string",
            "filename"_a)
       .def(
           "schedule",
           [](na::NeutralAtomMapper& mapper, const bool verbose,
-             const bool createAnimationCsv, const double shuttlingSpeedFactor) {
-            auto results = mapper.schedule(verbose, createAnimationCsv,
-                                           shuttlingSpeedFactor);
+             const bool create_animation_csv,
+             const double shuttling_speed_factor) {
+            auto results = mapper.schedule(verbose, create_animation_csv,
+                                           shuttling_speed_factor);
             return results.toMap();
           },
           "Schedule the mapped circuit", "verbose"_a = false,
