@@ -12,7 +12,6 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 ### Removed
 
 - 🔥 Drop support for Python 3.9 ([#767]) ([**@denialhaag**])
-- 🔥 Stop testing on and shipping wheels for x86 macOS systems ([#760]) ([**@denialhaag**])
 
 ## [3.3.1] - 2025-08-07
 
