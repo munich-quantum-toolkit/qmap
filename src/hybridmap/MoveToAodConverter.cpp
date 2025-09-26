@@ -250,7 +250,11 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
       reAssignOffsets(aodMovesX, signX);
       break;
     case ActivationMergeType::Merge:
-      throw std::runtime_error("Merge in both dimensions should never happen.");
+      mergeActivationDim(
+          Dimension::X,
+          AodActivation{Dimension::X, {x, deltaX, signX, needLoad}, move},
+          AodActivation{Dimension::Y, {y, deltaY, signY, needLoad}, move});
+      break;
     case ActivationMergeType::Append:
       mergeActivationDim(
           Dimension::X,
