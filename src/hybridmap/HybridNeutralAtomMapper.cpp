@@ -2228,6 +2228,9 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   if (bestBridge == Bridge()) {
     return MappingMethod::SwapMethod;
   }
+  if (this->parameters->dynamicMappingWeight == 0) {
+    return MappingMethod::BridgeMethod;
+  }
   // swap distance reduction
   qc::fp const swapDistReduction =
       swapDistanceReduction(bestSwap, this->frontLayerGate) +
@@ -2246,9 +2249,9 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   qc::fp const bridgeFidelity = this->arch->getGateAverageFidelity(bridgeName) *
                                 std::exp(-this->arch->getGateTime(bridgeName) /
                                          this->arch->getDecoherenceTime());
-  const auto swap = -swapDistReduction * std::log(1 - swapFidelity) *
+  const auto swap = std::log(swapFidelity) / swapDistReduction /
                     parameters->dynamicMappingWeight;
-  const auto bridge = -bridgeDistReduction * std::log(1 - bridgeFidelity);
+  const auto bridge = std::log(bridgeFidelity) / bridgeDistReduction;
   if (swap >= bridge) {
     return MappingMethod::SwapMethod;
   }
@@ -2343,10 +2346,10 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   }
 
   // higher is better
-  const auto move = -std::log(1 - moveFidelity) * moveDistReduction *
+  const auto move = std::log(moveFidelity) / moveDistReduction /
                     parameters->dynamicMappingWeight;
-  const auto fa = -std::log(1 - faFidelity) * faDistReduction;
-  const auto passBy = -std::log(1 - passByFidelity) * faDistReduction;
+  const auto fa = std::log(faFidelity) / faDistReduction;
+  const auto passBy = std::log(passByFidelity) / faDistReduction;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
