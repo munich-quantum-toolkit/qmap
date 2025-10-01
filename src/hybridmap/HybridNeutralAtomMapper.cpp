@@ -547,8 +547,8 @@ std::set<Swap> NeutralAtomMapper::getAllPossibleSwaps(
   }
   return swaps;
 }
-Bridge NeutralAtomMapper::findBestBridge() {
-  auto allBridges = getShortestBridges();
+Bridge NeutralAtomMapper::findBestBridge(const Swap& bestSwap) {
+  auto allBridges = getShortestBridges(bestSwap);
   if (allBridges.empty()) {
     return {};
   }
@@ -572,13 +572,18 @@ Bridge NeutralAtomMapper::findBestBridge() {
   return allBridges[bestBridgeIdx];
 }
 
-Bridges NeutralAtomMapper::getShortestBridges() {
+Bridges NeutralAtomMapper::getShortestBridges(const Swap& bestSwap) {
   Bridges allBridges;
   size_t minBridgeLength = std::numeric_limits<size_t>::max();
   for (const auto* const op : this->frontLayerGate) {
     if (op->getUsedQubits().size() == 2) {
+      // only consider gates which involve at least one of the swapped qubits
       auto usedQuBits = op->getUsedQubits();
       auto usedHwQubits = this->mapping.getHwQubits(usedQuBits);
+      if (!usedHwQubits.contains(bestSwap.first) &&
+          !usedHwQubits.contains(bestSwap.second)) {
+        continue;
+      }
       // shortcut if distance already larger than minBridgeLength
       const auto dist =
           this->hardwareQubits.getAllToAllSwapDistance(usedHwQubits);
@@ -1810,7 +1815,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
       auto bestSwap = findBestSwap(lastSwap);
       MappingMethod bestMethod = MappingMethod::SwapMethod;
       if (parameters->maxBridgeDistance > 0) {
-        auto bestBridge = findBestBridge();
+        auto bestBridge = findBestBridge(bestSwap);
         bestMethod = compareSwapAndBridge(bestSwap, bestBridge);
         if (bestMethod == MappingMethod::BridgeMethod) {
           updateBlockedQubits(
