@@ -721,7 +721,8 @@ qc::fp NeutralAtomMapper::swapCost(
         swapCostPerLayer(swap, swapCloseByLookahead, swapExactLookahead) /
         static_cast<qc::fp>(this->lookaheadLayerGate.size());
   }
-  auto cost = (parameters->lookaheadWeightSwaps * distanceChangeLookahead) +
+  auto cost = (parameters->lookaheadWeightSwaps * distanceChangeLookahead /
+               this->parameters->lookaheadDepth) +
               distanceChangeFront;
   //  compute the last time one of the swap qubits was used
   if (this->parameters->decay != 0) {
@@ -1209,7 +1210,8 @@ qc::fp NeutralAtomMapper::moveCost(const AtomMove& move) const {
     const auto lookaheadCost =
         moveCostPerLayer(move, this->lookaheadLayerShuttling) /
         static_cast<qc::fp>(this->lookaheadLayerShuttling.size());
-    cost += parameters->lookaheadWeightMoves * lookaheadCost;
+    cost += parameters->lookaheadWeightMoves * lookaheadCost /
+            static_cast<qc::fp>(this->parameters->lookaheadDepth);
   }
   if (!this->lastMoves.empty()) {
     const auto parallelCost =
@@ -1654,18 +1656,8 @@ NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
   const auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
   qc::fp minNumSwaps = 0;
   if (usedHwQubits.size() == 2) {
-    SwapDistance minDistance = std::numeric_limits<SwapDistance>::max();
-    for (const auto& hwQubit : usedHwQubits) {
-      for (const auto& otherHwQubit : usedHwQubits) {
-        if (hwQubit == otherHwQubit) {
-          continue;
-        }
-        auto distance =
-            this->hardwareQubits.getSwapDistance(hwQubit, otherHwQubit);
-        minDistance = std::min(distance, minDistance);
-      }
-    }
-    minNumSwaps = minDistance;
+    minNumSwaps = this->hardwareQubits.getSwapDistance(
+        *usedHwQubits.begin(), *(usedHwQubits.rbegin()), true);
   } else { // multi-qubit gates
     const auto bestPos = getBestMultiQubitPosition(opPointer);
     if (bestPos.empty()) {
@@ -2240,7 +2232,8 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   qc::fp const swapDistReduction =
       swapDistanceReduction(bestSwap, this->frontLayerGate) +
       (this->parameters->lookaheadWeightSwaps *
-       swapDistanceReduction(bestSwap, this->lookaheadLayerGate));
+       swapDistanceReduction(bestSwap, this->lookaheadLayerGate) /
+       this->parameters->lookaheadDepth);
 
   // bridge distance reduction
   qc::fp const bridgeDistReduction = bestBridge.second.size() - 2;
@@ -2274,7 +2267,8 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   auto moveDistReduction =
       moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling) +
       (this->parameters->lookaheadWeightMoves *
-       moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling));
+       moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling) /
+       this->parameters->lookaheadDepth);
   // move
   auto const moveDist = this->arch->getMoveCombEuclideanDistance(bestMoveComb);
   auto const moveCombSize = bestMoveComb.size();

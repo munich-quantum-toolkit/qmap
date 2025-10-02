@@ -241,8 +241,8 @@ protected:
 
   // Methods for bridge operations mapping
 
-  [[nodiscard]] Bridge findBestBridge();
-  [[nodiscard]] Bridges getShortestBridges();
+  [[nodiscard]] Bridge findBestBridge(const Swap& bestSwap);
+  [[nodiscard]] Bridges getShortestBridges(const Swap& bestSwap);
 
   [[nodiscard]] CoordIndices computeCurrentCoordUsages() const;
 
