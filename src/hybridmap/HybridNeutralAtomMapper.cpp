@@ -774,17 +774,17 @@ NeutralAtomMapper::moveCombDistanceReduction(const MoveComb& moveComb,
     auto usedQubits = op->getUsedQubits();
     auto hwQubits = this->mapping.getHwQubits(usedQubits);
     auto coordIndices = this->hardwareQubits.getCoordIndices(hwQubits);
-    const auto& distBefore =
-        this->arch->getAllToAllEuclideanDistance(coordIndices);
     for (const auto& move : moveComb.moves) {
       if (coordIndices.find(move.c1) != coordIndices.end()) {
+        const auto& distBefore =
+            this->arch->getAllToAllEuclideanDistance(coordIndices);
         coordIndices.erase(move.c1);
         coordIndices.insert(move.c2);
+        const auto& distAfter =
+            this->arch->getAllToAllEuclideanDistance(coordIndices);
+        moveDistReduction += distBefore - distAfter;
       }
     }
-    const auto& distAfter =
-        this->arch->getAllToAllEuclideanDistance(coordIndices);
-    moveDistReduction += distBefore - distAfter;
   }
   return moveDistReduction;
 }
