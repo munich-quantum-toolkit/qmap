@@ -1420,21 +1420,38 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
     auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
     auto usedCoordsSet = this->hardwareQubits.getCoordIndices(usedHwQubits);
     auto usedCoords = std::vector(usedCoordsSet.begin(), usedCoordsSet.end());
-    auto bestPos = getBestMovePos(usedCoords);
-    if (this->parameters->verbose) {
-      std::cout << "bestPos: ";
-      for (const auto qubit : bestPos) {
-        std::cout << qubit << " ";
+    std::set<CoordIndices> bestPositions;
+    if (usedCoords.size() == 2) {
+      // check vecinity
+      for (const auto& coord : usedCoords) {
+        auto const nearbyFreeCoords =
+            this->hardwareQubits.getNearbyFreeCoordinatesByCoord(coord);
+        for (const auto& freeCoord : nearbyFreeCoords) {
+          bestPositions.insert({coord, freeCoord});
+        }
       }
-      std::cout << '\n';
+      // none free nearby coords
+      if (bestPositions.empty()) {
+        bestPositions.insert(getBestMovePos(usedCoords));
+        bestPositions.insert(getBestMovePos({usedCoords[1], usedCoords[0]}));
+      }
+    } else {
+      // iterate over all possible permutations of the usedCoords
+      // to find different best positions
+      std::sort(usedCoords.begin(), usedCoords.end());
+      do {
+        bestPositions.insert(getBestMovePos(usedCoords));
+      } while (std::next_permutation(usedCoords.begin(), usedCoords.end()));
     }
-    auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
-    moves.setOperation(op, bestPos);
-    allMoves.addMoveCombs(moves);
+    for (const auto& bestPos : bestPositions) {
+      auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
+      moves.setOperation(op, bestPos);
+      if (allMoves.size() > this->parameters->limitShuttlingLayer) {
+        break;
+      }
+      allMoves.addMoveCombs(moves);
+    }
     ++i;
-    if (i >= parameters->limitShuttlingLayer) {
-      break;
-    }
   }
   allMoves.removeLongerMoveCombs();
   return allMoves;
