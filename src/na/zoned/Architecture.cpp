@@ -253,7 +253,7 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
         }
       } else {
         throw std::invalid_argument("Operation fidelity must contain data for "
-                                    "rydberg_gate");
+                                    "'rydberg_gate'");
       }
       if (json["operation_fidelity"].contains("atom_transfer")) {
         if (json["operation_fidelity"]["atom_transfer"].is_number()) {
