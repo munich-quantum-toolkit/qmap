@@ -223,7 +223,7 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
         }
       } else {
         throw std::invalid_argument(
-            "Operation duration must contain data for single_qubit_gate");
+            "Operation duration must contain data for 'single_qubit_gate'");
       }
     } else {
       throw std::invalid_argument(
