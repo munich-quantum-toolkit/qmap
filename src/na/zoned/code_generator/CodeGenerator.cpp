@@ -357,7 +357,7 @@ auto CodeGenerator::appendRearrangement(
     // Make a virtual move of all rows to their target y-coordinates
     for (const auto& [targetY, sourceY] : revVerticalMoves) {
       const auto row = sourceYToAodRow.at(sourceY);
-      aodRowsToY[row] = targetY + startD / 2;
+      aodRowsToY[row] = targetY + targetD / 2;
     }
     // store the atoms column-wise
     for (const auto& [targetX, qubitsToStore] : xToQubitsToBeStored) {
@@ -367,17 +367,17 @@ auto CodeGenerator::appendRearrangement(
       const auto it = aodColsToX.find(oldAodCol);
       assert(it != aodColsToX.end());
       // Push still activated columns away if necessary
-      auto nextX = targetX - (startD / 2);
+      auto nextX = targetX - (targetD / 2);
       for (auto lowerIt = std::next(std::make_reverse_iterator(it));
            lowerIt != aodColsToX.crend() && lowerIt->first > nextX; ++lowerIt) {
         lowerIt->second = nextX;
-        nextX -= nextX > 0 ? startD : startD / 2;
+        nextX -= nextX > 0 ? targetD : targetD / 2;
       }
-      nextX = targetX + startD + (startD / 2);
+      nextX = targetX + targetD + (targetD / 2);
       for (auto upperIt = std::next(it);
            upperIt != aodColsToX.cend() && upperIt->first < nextX; ++upperIt) {
         upperIt->second = nextX;
-        nextX += nextX < targetMaxY ? startD : startD / 2;
+        nextX += nextX < targetMaxY ? targetD : targetD / 2;
       }
       // Align aod rows
       for (const auto qubit : qubitsToStore) {
@@ -410,9 +410,10 @@ auto CodeGenerator::appendRearrangement(
         // Make a virtual offset of rows with old atoms
         const auto& qubitMovement = movements.at(qubit);
         const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
-        aodRowsToY[aodRow] = qubitMovement.targetY + startD / 2;
+        aodRowsToY[aodRow] = qubitMovement.targetY + targetD / 2;
       }
       code.emplaceBack<StoreOp>(atomsToStore);
+      aodColsToX.erase(it);
     }
   }
 }
