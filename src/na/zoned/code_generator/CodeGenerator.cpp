@@ -206,6 +206,16 @@ auto CodeGenerator::appendRearrangement(
     // (value) x-position of each column that must be moved.
     std::unordered_map<size_t, size_t> horizontalMoves;
 
+    // We assume that all qubits to be loaded are in the same zone. We extract
+    // the vertical separation of the zone from the first qubit's zone.
+    const auto startDy =
+        std::get<0>(startPlacement.front()).get().siteSeparation.second;
+    const auto startMaxY = startDy * (std::get<0>(startPlacement.front()).get().nRows);
+    // We do the same for the target zone
+    const auto targetDy =
+        std::get<0>(targetPlacement[0]).get().siteSeparation.second;
+    const auto targetMaxY = startDy * (std::get<0>(startPlacement.front()).get().nRows);
+
     for (const auto qubit : qubits) {
       // get the current location of the qubit
       const auto& [currentSlm, currentR, currentC] = startPlacement[qubit];
@@ -223,12 +233,12 @@ auto CodeGenerator::appendRearrangement(
       const auto verticalIt =
           revVerticalMoves.try_emplace(targetY, currentY).first;
       // If this does not hold, the input was invalid for this generator.
-      // More precisely, this condition assert ensures that rows do not split.
+      // More precisely, this conditional assert ensures that rows do not split.
       assert(verticalIt->second == currentY);
       const auto& horizontalIt =
           horizontalMoves.try_emplace(currentX, targetX).first;
       // If this does not hold, the input was invalid for this generator.
-      // More precisely, this condition assert ensures that columns do not
+      // More precisely, this conditional assert ensures that columns do not
       // split.
       assert(horizontalIt->second == targetX);
     }
@@ -263,14 +273,16 @@ auto CodeGenerator::appendRearrangement(
       const auto newAodRow = yToAodRow[currentY];
       const auto it = aodRows.emplace(newAodRow, currentY).first;
       // Push already activated rows away if necessary.
-      auto nextY = currentY - config_.parkingOffset;
-      for (auto lowerIt = std::make_reverse_iterator(it); lowerIt != aodRows.crend(); lowerIt = std::next(lowerIt)) {
-        if (it->second > nextY) {
-          it->second = nextY;
-          nextY = 0; // TODO
-        } else {
-          break;
-        }
+      auto nextY = currentY - (startDy / 2);
+      for (auto lowerIt = std::next(std::make_reverse_iterator(it));
+           lowerIt != aodRows.crend() && lowerIt->second > nextY; ++lowerIt) {
+        lowerIt->second = nextY;
+        nextY -= nextY > 0 ? startDy : startDy / 2;
+      }
+      for (auto upperIt = std::next(it);
+           upperIt != aodRows.cend() && upperIt->second < nextY; ++upperIt) {
+        upperIt->second = nextY;
+        nextY += nextY < startMaxY ? startDy : startDy / 2;
       }
     }
 
