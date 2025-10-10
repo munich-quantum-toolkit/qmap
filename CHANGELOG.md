@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Fixed
+
+- 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
+
 ### Removed
 
 - 🔥 Drop support for Python 3.9 ([#767]) ([**@denialhaag**])
@@ -133,6 +137,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#793]: https://github.com/munich-quantum-toolkit/qmap/pull/793
 [#767]: https://github.com/munich-quantum-toolkit/qmap/pull/767
 [#760]: https://github.com/munich-quantum-toolkit/qmap/pull/760
 [#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728
