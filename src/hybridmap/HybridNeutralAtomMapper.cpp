@@ -1195,122 +1195,69 @@ MoveComb NeutralAtomMapper::findBestAtomMove() {
 
 qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) const {
   qc::fp costComb = 0;
-  for (const auto& move : moveComb.moves) {
-    costComb += moveCost(move);
+  const auto frontDistReduction =
+      moveCombDistanceReduction(moveComb, this->frontLayerShuttling) /
+      static_cast<qc::fp>(this->frontLayerShuttling.size());
+  costComb -= frontDistReduction;
+  if (!lookaheadLayerShuttling.empty()) {
+    const auto lookaheadDistReduction =
+        moveCombDistanceReduction(moveComb, this->lookaheadLayerShuttling) /
+        static_cast<qc::fp>(this->lookaheadLayerShuttling.size());
+    costComb -= parameters->lookaheadWeightMoves * lookaheadDistReduction /
+                static_cast<qc::fp>(this->parameters->lookaheadDepth);
+  }
+  if (!this->lastMoves.empty()) {
+    const auto parallelMovecost =
+        parameters->shuttlingTimeWeight * parallelMoveCost(moveComb);
+    costComb += parallelMovecost;
   }
   return costComb;
 }
 
-qc::fp NeutralAtomMapper::moveCost(const AtomMove& move) const {
-  qc::fp cost = 0;
-  const auto frontCost = moveCostPerLayer(move, this->frontLayerShuttling) /
-                         static_cast<qc::fp>(this->frontLayerShuttling.size());
-  cost += frontCost;
-  if (!lookaheadLayerShuttling.empty()) {
-    const auto lookaheadCost =
-        moveCostPerLayer(move, this->lookaheadLayerShuttling) /
-        static_cast<qc::fp>(this->lookaheadLayerShuttling.size());
-    cost += parameters->lookaheadWeightMoves * lookaheadCost /
-            static_cast<qc::fp>(this->parameters->lookaheadDepth);
-  }
-  if (!this->lastMoves.empty()) {
-    const auto parallelCost =
-        parameters->shuttlingTimeWeight * parallelMoveCost(move) /
-        static_cast<qc::fp>(this->lastMoves.size()) /
-        static_cast<qc::fp>(this->frontLayerShuttling.size());
-    cost += parallelCost;
-  }
-
-  return cost;
-}
-
-qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
-                                           const GateList& layer) const {
-  // compute cost assuming the move was applied
-  qc::fp distChange = 0;
-  if (const auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.c1);
-      this->mapping.isMapped(toMoveHwQubit)) {
-    const auto toMoveCircuitQubit = this->mapping.getCircQubit(toMoveHwQubit);
-    for (const auto& gate : layer) {
-      if (auto const usedQubits = gate->getUsedQubits();
-          usedQubits.contains(toMoveCircuitQubit)) {
-        // check distance reduction
-        qc::fp distanceBefore = 0;
-        for (const auto& qubit : usedQubits) {
-          if (qubit == toMoveCircuitQubit) {
-            continue;
-          }
-          const auto hwQubit = this->mapping.getHwQubit(qubit);
-          const auto dist = this->arch->getEuclideanDistance(
-              this->hardwareQubits.getCoordIndex(hwQubit),
-              this->hardwareQubits.getCoordIndex(toMoveHwQubit));
-          distanceBefore += dist;
-        }
-        qc::fp distanceAfter = 0;
-        for (const auto& qubit : usedQubits) {
-          if (qubit == toMoveCircuitQubit) {
-            continue;
-          }
-          const auto hwQubit = this->mapping.getHwQubit(qubit);
-          const auto dist = this->arch->getEuclideanDistance(
-              this->hardwareQubits.getCoordIndex(hwQubit), move.c2);
-          distanceAfter += dist;
-        }
-        distChange += distanceAfter - distanceBefore;
-      }
-    }
-  }
-  return distChange;
-}
-
-qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) const {
+qc::fp NeutralAtomMapper::parallelMoveCost(const MoveComb& moveComb) const {
   qc::fp parallelCost = 0;
-  const auto moveVector = this->arch->getVector(move.c1, move.c2);
-  std::vector<CoordIndex> lastEndingCoords;
-  if (this->lastMoves.empty()) {
-    parallelCost += arch->getVectorShuttlingTime(moveVector);
-  }
-  for (const auto& lastMove : this->lastMoves) {
-    lastEndingCoords.emplace_back(lastMove.c2);
-    // decide of shuttling can be done in parallel
-    auto lastMoveVector = this->arch->getVector(lastMove.c1, lastMove.c2);
-    if (moveVector.overlap(lastMoveVector)) {
-      if (moveVector.direction != lastMoveVector.direction) {
-        parallelCost += arch->getVectorShuttlingTime(moveVector);
-      } else {
-        // check if move can be done in parallel
-        if (moveVector.include(lastMoveVector)) {
+  for (const auto& move : moveComb.moves) {
+    const auto moveVector = this->arch->getVector(move.c1, move.c2);
+    std::vector<CoordIndex> lastEndingCoords;
+    if (this->lastMoves.empty()) {
+      parallelCost += arch->getVectorShuttlingTime(moveVector);
+    }
+    for (const auto& lastMove : this->lastMoves) {
+      lastEndingCoords.emplace_back(lastMove.c2);
+      // decide of shuttling can be done in parallel
+      auto lastMoveVector = this->arch->getVector(lastMove.c1, lastMove.c2);
+      if (moveVector.overlap(lastMoveVector)) {
+        if (moveVector.direction != lastMoveVector.direction) {
           parallelCost += arch->getVectorShuttlingTime(moveVector);
+        } else {
+          // check if move can be done in parallel
+          if (moveVector.include(lastMoveVector)) {
+            parallelCost += arch->getVectorShuttlingTime(moveVector);
+          }
         }
       }
     }
-  }
-  // check if in same row/column like last moves
-  // then can may be loaded in parallel
-  const auto moveCoordInit = this->arch->getCoordinate(move.c1);
-  const auto moveCoordEnd = this->arch->getCoordinate(move.c2);
-  parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
-                  arch->getShuttlingTime(qc::OpType::AodDeactivate);
-  for (const auto& lastMove : this->lastMoves) {
-    const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.c1);
-    const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.c2);
-    if (moveCoordInit.x == lastMoveCoordInit.x ||
-        moveCoordInit.y == lastMoveCoordInit.y) {
-      parallelCost -= arch->getShuttlingTime(qc::OpType::AodActivate);
+    // check if in same row/column like last moves
+    // then can may be loaded in parallel
+    const auto moveCoordInit = this->arch->getCoordinate(move.c1);
+    const auto moveCoordEnd = this->arch->getCoordinate(move.c2);
+    parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
+                    arch->getShuttlingTime(qc::OpType::AodDeactivate);
+    for (const auto& lastMove : this->lastMoves) {
+      const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.c1);
+      const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.c2);
+      if (moveCoordInit.x == lastMoveCoordInit.x ||
+          moveCoordInit.y == lastMoveCoordInit.y) {
+        parallelCost -= arch->getShuttlingTime(qc::OpType::AodActivate);
+      }
+      if (moveCoordEnd.x == lastMoveCoordEnd.x ||
+          moveCoordEnd.y == lastMoveCoordEnd.y) {
+        parallelCost -= arch->getShuttlingTime(qc::OpType::AodDeactivate);
+      }
     }
-    if (moveCoordEnd.x == lastMoveCoordEnd.x ||
-        moveCoordEnd.y == lastMoveCoordEnd.y) {
-      parallelCost -= arch->getShuttlingTime(qc::OpType::AodDeactivate);
-    }
   }
-  // check if move can use AOD atom from last moves
-  //  if (std::find(lastEndingCoords.begin(), lastEndingCoords.end(),
-  //  move.c1) ==
-  //      lastEndingCoords.end()) {
-  //    parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
-  //                    arch->getShuttlingTime(qc::OpType::AodDeactivate);
-  //  }
-  return parallelCost;
+  return parallelCost / static_cast<qc::fp>(this->lastMoves.size()) /
+         static_cast<qc::fp>(this->frontLayerShuttling.size());
 }
 
 MultiQubitMovePos
@@ -1421,28 +1368,12 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
     auto usedCoordsSet = this->hardwareQubits.getCoordIndices(usedHwQubits);
     auto usedCoords = std::vector(usedCoordsSet.begin(), usedCoordsSet.end());
     std::set<CoordIndices> bestPositions;
-    if (usedCoords.size() == 2) {
-      // check vecinity
-      for (const auto& coord : usedCoords) {
-        auto const nearbyFreeCoords =
-            this->hardwareQubits.getNearbyFreeCoordinatesByCoord(coord);
-        for (const auto& freeCoord : nearbyFreeCoords) {
-          bestPositions.insert({coord, freeCoord});
-        }
-      }
-      // none free nearby coords
-      if (bestPositions.empty()) {
-        bestPositions.insert(getBestMovePos(usedCoords));
-        bestPositions.insert(getBestMovePos({usedCoords[1], usedCoords[0]}));
-      }
-    } else {
-      // iterate over all possible permutations of the usedCoords
-      // to find different best positions
-      std::sort(usedCoords.begin(), usedCoords.end());
-      do {
-        bestPositions.insert(getBestMovePos(usedCoords));
-      } while (std::next_permutation(usedCoords.begin(), usedCoords.end()));
-    }
+    // iterate over all possible permutations of the usedCoords
+    // to find different best positions
+    std::sort(usedCoords.begin(), usedCoords.end());
+    do {
+      bestPositions.insert(getBestMovePos(usedCoords));
+    } while (std::next_permutation(usedCoords.begin(), usedCoords.end()));
     for (const auto& bestPos : bestPositions) {
       auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
       moves.setOperation(op, bestPos);
@@ -1576,7 +1507,8 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
           costs.emplace_back(remainingCoord, cost);
         }
       } else {
-        auto cost = moveCost({currentGateQubit, remainingCoord});
+        MoveComb moveComb({AtomMove{currentGateQubit, remainingCoord}});
+        auto cost = moveCostComb(moveComb);
         costs.emplace_back(remainingCoord, cost);
       }
     }

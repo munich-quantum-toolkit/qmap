@@ -407,16 +407,6 @@ protected:
   qc::fp moveCombDistanceReduction(const MoveComb& moveComb,
                                    const GateList& layer) const;
   qc::fp swapDistanceReduction(const Swap& swap, const GateList& layer);
-  /**
-   * @brief Calculates the cost of a move operation.
-   * @details Assumes the move is executed and computes the distance reduction
-   * for the layer.
-   * @param move The move operation to compute the cost for
-   * @param layer The layer to compute the distance reduction for
-   * @return The distance reduction cost
-   */
-  [[nodiscard]] qc::fp moveCostPerLayer(const AtomMove& move,
-                                        const GateList& layer) const;
 
   /**
    * @brief Calculates a parallelization cost if the move operation can be
@@ -424,17 +414,7 @@ protected:
    * @param move The move operation to compute the cost for
    * @return The parallelization cost
    */
-  [[nodiscard]] qc::fp parallelMoveCost(const AtomMove& move) const;
-  /**
-   * @brief Calculates the cost of a move operation.
-   * @details The cost of a move operation is computed with the following terms:
-   * - distance reduction for front + lookahead layers using moveCostPerLayer
-   * - parallelization term based on last moves using parallelMoveCost
-   * The three contributions are weighted with the runtime parameters.
-   * @param move The move operation to compute the cost for
-   * @return The cost of the move operation
-   */
-  [[nodiscard]] qc::fp moveCost(const AtomMove& move) const;
+  [[nodiscard]] qc::fp parallelMoveCost(const MoveComb& moveComb) const;
   /**
    * @brief Calculates the cost of a series of move operations by summing up the
    * cost of each move.
