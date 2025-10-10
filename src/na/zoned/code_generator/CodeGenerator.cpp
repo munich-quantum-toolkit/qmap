@@ -180,39 +180,9 @@ auto CodeGenerator::appendTwoQubitGates(
 }
 namespace {
 [[nodiscard]] auto enumerate(const auto& data) {
-  return data | std::views::transform([i = 0](const auto& value) mutable {
+  return data | std::views::transform([i = 0UL](const auto& value) mutable {
            return std::pair{i++, value};
          });
-}
-struct QubitMovement {
-  int64_t sourceX;
-  int64_t sourceY;
-  int64_t targetX;
-  int64_t targetY;
-};
-template <std::ranges::input_range R>
-[[nodiscard]] auto getMovements(R&& qubits, const Placement& sourcePlacement,
-                                const Placement& targetPlacement,
-                                const Architecture& arch)
-    -> std::unordered_map<qc::Qubit, QubitMovement> {
-  std::unordered_map<qc::Qubit, QubitMovement> movements;
-  std::ranges::for_each(qubits, [&](const auto& qubit) {
-    const auto& [sourceSlm, sourceR, sourceC] = sourcePlacement[qubit];
-    const auto& [targetSlm, targetR, targetC] = targetPlacement[qubit];
-    const auto& [sourceX, sourceY] =
-        arch.exactSLMLocation(sourceSlm, sourceR, sourceC);
-    const auto& [targetX, targetY] =
-        arch.exactSLMLocation(targetSlm, targetR, targetC);
-    movements.emplace(qubit, QubitMovement{static_cast<int64_t>(sourceX),
-                                           static_cast<int64_t>(sourceY),
-                                           static_cast<int64_t>(targetX),
-                                           static_cast<int64_t>(targetY)});
-  });
-  return movements;
-}
-[[nodiscard]] auto isRightOffset(const Site& site) -> bool {
-  const auto& slm = std::get<0>(site).get();
-  return slm.isStorage() || slm.entanglementZone_->front() != slm;
 }
 } // namespace
 auto CodeGenerator::appendRearrangement(
@@ -220,234 +190,600 @@ auto CodeGenerator::appendRearrangement(
     const Placement& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) const -> void {
-  const bool fromStorageToEntanglement = std::get<0>(startPlacement.at(routing.front().front())).get().isStorage();
-  // We assume rearrangements between zones not within zones
-  assert(fromStorageToEntanglement == std::get<0>(targetPlacement.at(routing.front().front())).get().isEntanglement());
   for (const auto& qubits : routing) {
-    // A map from qubits to their movement
-    const auto& movements = getMovements(qubits, startPlacement,
-                                         targetPlacement, architecture_.get());
-
-    // We assume that all qubits to be loaded are in the same zone. We extract
-    // the vertical separation of the zone from the first qubit's zone.
-    const auto startDx = static_cast<int64_t>(
-        std::get<0>(startPlacement.at(routing.front().front())).get().siteSeparation.first);
-    const auto startDy = static_cast<int64_t>(
-        std::get<0>(startPlacement.at(routing.front().front())).get().siteSeparation.second);
-    const auto startMaxY =
-        startDy *
-        static_cast<int64_t>(std::get<0>(startPlacement.front()).get().nRows);
-    // We do the same for the target zone
-    const auto targetDx = static_cast<int64_t>(
-        std::get<0>(targetPlacement.at(routing.front().front())).get().siteSeparation.first);
-    const auto targetDy = static_cast<int64_t>(
-        std::get<0>(targetPlacement.at(routing.front().front())).get().siteSeparation.second);
-    const auto targetMaxX =
-        targetDx *
-        static_cast<int64_t>(std::get<0>(startPlacement.front()).get().nCols);
-
-    // Map collecting all atoms that must be loaded within each source row
-    // (y-coordinate). It is intentionally an 'ordered' map to save the sorting
-    // afterward. This set is intentionally an 'ordered' map to ensure
-    // deterministic (ordered atoms) code generation.
-    std::map<int64_t, std::set<qc::Qubit>> yToQubitsToBeLoaded;
-    // Map collecting all atoms that must be stored within each target column
-    // (x-coordinate). It is intentionally an 'ordered' map to save the sorting
-    // afterward. This set is intentionally an 'ordered' map to ensure
-    // deterministic (ordered atoms) code generation.
-    std::map<int64_t, std::set<qc::Qubit>> xToQubitsToBeStored;
-    // Since rows cannot split, this map collects the end (key) and start
-    // (value) y-position of each row that must be moved. It is intentionally an
-    // 'ordered' map to save the sorting afterward.
-    std::map<int64_t, int64_t> revVerticalMoves;
-    // Since columns cannot split, this map collects the start (key) and end
-    // (value) x-position of each column that must be moved. It is intentionally
-    // an 'ordered' map to save the sorting afterward.
-    std::map<int64_t, int64_t> horizontalMoves;
-
-    for (const auto& [qubit, movement] : movements) {
-      // record the qubits in each row to be loaded and column to be stored
-      yToQubitsToBeLoaded.try_emplace(movement.sourceY)
-          .first->second.emplace(qubit);
-      xToQubitsToBeStored.try_emplace(movement.targetX)
-          .first->second.emplace(qubit);
-      // record the moves
-      const auto verticalIt =
-          revVerticalMoves.try_emplace(movement.targetY, movement.sourceY)
-              .first;
-      // If this does not hold, the input was invalid for this generator.
-      // More precisely, this conditional `assert` ensures that rows do not
-      // split.
-      assert(verticalIt->second == movement.sourceY);
-      const auto& horizontalIt =
-          horizontalMoves.try_emplace(movement.sourceX, movement.targetX).first;
-      // If this does not hold, the input was invalid for this generator.
-      // More precisely, this conditional `assert` ensures that columns do not
-      // split.
-      assert(horizontalIt->second == movement.targetX);
+    RearrangementGenerator rearrangementGenerator(
+        architecture_.get(), startPlacement, targetPlacement, qubits);
+    rearrangementGenerator.generate(atoms, code);
+  }
+}
+auto CodeGenerator::RearrangementGenerator::getLocationFromSite(
+    const Site& site) -> std::pair<int64_t, int64_t> {
+  const auto& [slm, r, c] = site;
+  const auto& [x, y] = architecture_.get().exactSLMLocation(slm, r, c);
+  return {static_cast<int64_t>(x), static_cast<int64_t>(y)};
+}
+auto CodeGenerator::RearrangementGenerator::getSiteKindFromSite(
+    const Site& site) -> QubitMovement::SiteKind {
+  const auto& slm = std::get<0>(site).get();
+  if (slm.isStorage()) {
+    return QubitMovement::SiteKind::STORAGE;
+  }
+  if (slm.entanglementZone_->front().location.first <
+      slm.entanglementZone_->back().location.first) {
+    if (slm == slm.entanglementZone_->front()) {
+      return QubitMovement::SiteKind::ENTANGLEMENT_LEFT;
     }
+    return QubitMovement::SiteKind::ENTANGLEMENT_RIGHT;
+  }
+  if (slm == slm.entanglementZone_->back()) {
+    return QubitMovement::SiteKind::ENTANGLEMENT_LEFT;
+  }
+  return QubitMovement::SiteKind::ENTANGLEMENT_RIGHT;
+}
+auto CodeGenerator::RearrangementGenerator::loadRowByRow(
+    const std::vector<std::reference_wrapper<const Atom>>& atoms,
+    NAComputation& code) -> void {
+  // Map collecting all atoms that must be loaded within each source row
+  // (y-coordinate). It is intentionally an 'ordered' map to save the sorting
+  // afterward. This set is intentionally an 'ordered' map to ensure
+  // deterministic (ordered atoms) code generation.
+  std::map<int64_t, std::set<qc::Qubit>> yToQubitsToBeLoaded;
 
-    // A map from the source y-coordinate of the row to the AOD row that will
-    // load the atoms in this row. Here it is important that the moves are
-    // sorted by their final y-coordinate.
-    std::unordered_map<int64_t, size_t> sourceYToAodRow;
-    for (const auto& [aodRow, revMove] : enumerate(revVerticalMoves)) {
-      sourceYToAodRow.emplace(revMove.second, aodRow);
+  for (const auto& [qubit, movement] : movements_) {
+    // record the qubits in each row to be loaded
+    yToQubitsToBeLoaded.try_emplace(movement.sourceY)
+        .first->second.emplace(qubit);
+  }
+
+  // Since rows cannot split, this map collects the end (key) and start
+  // (value) y-position of each row that must be moved. It is intentionally an
+  // 'ordered' map to save the sorting afterward.
+  std::map<int64_t, int64_t> revVerticalMoves;
+  for (const auto& [k, v] : verticalMoves_) {
+    revVerticalMoves.emplace(v, k);
+  }
+
+  // A map from the source y-coordinate of the row to the AOD row that will
+  // load the atoms in this row. Here it is important that the moves are
+  // sorted by their final y-coordinate.
+  std::unordered_map<int64_t, size_t> sourceYToAodRow;
+  for (const auto& [aodRow, revMove] : enumerate(revVerticalMoves)) {
+    sourceYToAodRow.emplace(revMove.second, aodRow);
+  }
+  // A map from the source x-coordinate of the column to the AOD column that
+  // will load the atoms in this column.
+  std::unordered_map<int64_t, size_t> sourceXToAodCol;
+  for (const auto& [aodCol, x] :
+       enumerate(horizontalMoves_ | std::views::keys)) {
+    sourceXToAodCol.emplace(x, aodCol);
+  }
+
+  // Load the atoms row-wise
+  for (const auto& [sourceY, qubitsToLoad] : yToQubitsToBeLoaded) {
+    // Get the AOD row to load the atoms in this row.
+    assert(sourceYToAodRow.contains(sourceY));
+    const auto newAodRow = sourceYToAodRow[sourceY];
+    // already include a virtual offset move by `startD / 2`
+    const auto it =
+        aodRowsToY_.emplace(newAodRow, sourceY + sourceDy_ / 2).first;
+    // Push already activated rows away if necessary.
+    auto nextY = sourceY - (sourceDy_ / 2);
+    for (auto lowerIt = std::make_reverse_iterator(it);
+         lowerIt != aodRowsToY_.rend() && lowerIt->second > nextY; ++lowerIt) {
+      lowerIt->second = nextY;
+      nextY -= nextY > 0 ? sourceDy_ : sourceDy_ / 2;
     }
-    // A map from the target x-coordinate of the column to the AOD column that
-    // will store the atoms in this column. Here it is important that the moves
-    // are sorted by their final x-coordinate.
-    std::unordered_map<int64_t, size_t> targetXToAodCol;
-    for (const auto& [aodCol, move] : enumerate(horizontalMoves)) {
-      targetXToAodCol.emplace(move.second, aodCol);
+    nextY = sourceY + sourceDy_ + (sourceDy_ / 2);
+    for (auto upperIt = std::next(it);
+         upperIt != aodRowsToY_.end() && upperIt->second < nextY; ++upperIt) {
+      upperIt->second = nextY;
+      nextY += nextY < sourceMaxY_ ? sourceDy_ : sourceDy_ / 2;
     }
-
-    // A map from activated AOD columns to their current x-coordinate. This is
-    // intentionally an 'ordered' map to ease the pushing of activated columns.
-    std::map<size_t, int64_t> aodColsToX;
-    // A map from activated AOD rows to their current y-coordinate. This is
-    // intentionally an 'ordered' map to ease the pushing of activated rows.
-    std::map<size_t, int64_t> aodRowsToY;
-    // A map of shuttling qubits to their current location. This is required to
-    // compare their latest position with their new position to check whether
-    // they moved and need to be included in a move operation. This map is
-    // intentionally an 'ordered' map to ensure deterministic (ordered atoms)
-    // code generation.
-    std::map<qc::Qubit, std::pair<int64_t, int64_t>>
-        shuttlingQubitToCurrentLocation;
-
-    // Load the atoms row-wise
-    for (const auto& [sourceY, qubitsToLoad] : yToQubitsToBeLoaded) {
-      // Get the AOD row to load the atoms in this row.
-      assert(sourceYToAodRow.contains(sourceY));
-      const auto newAodRow = sourceYToAodRow[sourceY];
-      // already include a virtual offset move by `startD / 2`
-      const auto it =
-          aodRowsToY.emplace(newAodRow, sourceY + startDy / 2).first;
-      // Push already activated rows away if necessary.
-      auto nextY = sourceY - (startDy / 2);
-      for (auto lowerIt = std::make_reverse_iterator(it);
-           lowerIt != aodRowsToY.rend() && lowerIt->second > nextY; ++lowerIt) {
-        lowerIt->second = nextY;
-        nextY -= nextY > 0 ? startDy : startDy / 2;
+    // Align aod columns
+    for (const auto qubit : qubitsToLoad) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const auto aodCol = sourceXToAodCol.at(qubitMovement.sourceX);
+      aodColsToX_[aodCol] = qubitMovement.sourceX;
+    }
+    // Write out offset move before loading new atoms
+    std::vector<const Atom*> atomsToOffset;
+    std::vector<Location> offsetTargetLocations;
+    for (auto& [qubit, location] : shuttlingQubitToCurrentLocation_) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const std::pair newLocation{
+          aodColsToX_.at(sourceXToAodCol.at(qubitMovement.sourceX)),
+          aodRowsToY_.at(sourceYToAodRow.at(qubitMovement.sourceY))};
+      if (location != newLocation) {
+        atomsToOffset.emplace_back(&atoms[qubit].get());
+        offsetTargetLocations.emplace_back(
+            static_cast<double>(newLocation.first),
+            static_cast<double>(newLocation.second));
+        location = newLocation;
       }
-      nextY = sourceY + startDy + (startDy / 2);
-      for (auto upperIt = std::next(it);
-           upperIt != aodRowsToY.cend() && upperIt->second < nextY; ++upperIt) {
-        upperIt->second = nextY;
-        nextY += nextY < startMaxY ? startDy : startDy / 2;
-      }
-      // Align aod columns
-      for (const auto qubit : qubitsToLoad) {
-        const auto& qubitMovement = movements.at(qubit);
-        const auto aodCol = targetXToAodCol.at(qubitMovement.targetX);
-        aodColsToX[aodCol] = qubitMovement.sourceX;
-      }
-      // Write out offset move before loading new atoms
-      std::vector<const Atom*> atomsToOffset;
-      std::vector<Location> offsetTargetLocations;
-      for (auto& [qubit, location] : shuttlingQubitToCurrentLocation) {
-        const auto& qubitMovement = movements.at(qubit);
-        const std::pair newLocation{
-            aodColsToX[targetXToAodCol[qubitMovement.targetX]],
-            aodRowsToY[sourceYToAodRow[qubitMovement.sourceY]]};
-        if (location != newLocation) {
-          atomsToOffset.emplace_back(&atoms[qubit].get());
-          offsetTargetLocations.emplace_back(
-              static_cast<double>(newLocation.first),
-              static_cast<double>(newLocation.second));
-          location = newLocation;
-        }
-      }
-      if (!atomsToOffset.empty()) {
-        code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
-      }
-      // Load new atoms
-      std::vector<const Atom*> atomsToLoad;
-      for (const auto& qubit : qubitsToLoad) {
-        atomsToLoad.emplace_back(&atoms[qubit].get());
-        const auto& qubitMovement = movements.at(qubit);
-        shuttlingQubitToCurrentLocation.emplace(
-            qubit, std::pair{qubitMovement.sourceX, qubitMovement.sourceY});
-        // Make a virtual offset of columns with new atoms
-        const auto aodCol = targetXToAodCol.at(qubitMovement.targetX);
-        if (fromStorageToEntanglement) {
-          aodColsToX[aodCol] = qubitMovement.sourceX + startDx / 2;
+    }
+    if (!atomsToOffset.empty()) {
+      code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    }
+    // Load new atoms
+    std::vector<const Atom*> atomsToLoad;
+    for (const auto& qubit : qubitsToLoad) {
+      atomsToLoad.emplace_back(&atoms[qubit].get());
+      const auto& qubitMovement = movements_.at(qubit);
+      shuttlingQubitToCurrentLocation_.emplace(
+          qubit, std::pair{qubitMovement.sourceX, qubitMovement.sourceY});
+      // Make a virtual offset of columns with new atoms
+      const auto aodCol = sourceXToAodCol.at(qubitMovement.sourceX);
+      if (qubitMovement.sourceSite == QubitMovement::SiteKind::STORAGE) {
+        aodColsToX_[aodCol] = qubitMovement.sourceX + sourceDx_ / 2;
+      } else {
+        if (qubitMovement.sourceSite ==
+            QubitMovement::SiteKind::ENTANGLEMENT_LEFT) {
+          aodColsToX_[aodCol] = qubitMovement.sourceX - sourceDx_ / 4;
         } else {
-          // todo(ystade): probably best to store in movement struct
-          if (isRightOffset(startPlacement[qubit])) {
-            aodColsToX[aodCol] = qubitMovement.sourceX + startDx / 3;
-          } else {
-            aodColsToX[aodCol] = qubitMovement.sourceX - startDx / 3;
-          }
+          aodColsToX_[aodCol] = qubitMovement.sourceX + sourceDx_ / 4;
         }
       }
-      code.emplaceBack<LoadOp>(atomsToLoad);
     }
-    // Make a virtual move of all rows to their target y-coordinates
-    for (const auto& [targetY, sourceY] : revVerticalMoves) {
-      const auto row = sourceYToAodRow.at(sourceY);
-      aodRowsToY[row] = targetY + targetDy / 2;
-    }
-    // store the atoms column-wise
-    for (const auto& [targetX, qubitsToStore] : xToQubitsToBeStored) {
-      // Get the AOD column to store the atom from
-      assert(targetXToAodCol.contains(targetX));
-      const auto oldAodCol = targetXToAodCol[targetX];
-      const auto it = aodColsToX.find(oldAodCol);
-      assert(it != aodColsToX.end());
-      it->second = targetX;
-      // Push still activated columns away if necessary
-      auto nextX = targetX - (targetDx / 2);
+    code.emplaceBack<LoadOp>(atomsToLoad);
+  }
+}
+auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
+    const std::vector<std::reference_wrapper<const Atom>>& atoms,
+    NAComputation& code) -> void {
+  // Map collecting all atoms that must be loaded within each source column
+  // (x-coordinate). It is intentionally an 'ordered' map to save the sorting
+  // afterward. This set is intentionally an 'ordered' map to ensure
+  // deterministic (ordered atoms) code generation.
+  std::map<int64_t, std::set<qc::Qubit>> xToQubitsToBeLoaded;
+
+  for (const auto& [qubit, movement] : movements_) {
+    // record the qubits in each column to be loaded
+    xToQubitsToBeLoaded.try_emplace(movement.sourceX)
+        .first->second.emplace(qubit);
+  }
+
+  // Since columns cannot split, this map collects the end (key) and start
+  // (value) x-position of each column that must be moved. It is intentionally
+  // an 'ordered' map to save the sorting afterward.
+  std::map<int64_t, int64_t> revHorizontalMoves;
+  for (const auto& [k, v] : horizontalMoves_) {
+    revHorizontalMoves.emplace(v, k);
+  }
+
+  // A map from the source x-coordinate of the column to the AOD column that
+  // will load the atoms in this column. Here it is important that the moves are
+  // sorted by their final x-coordinate.
+  std::unordered_map<int64_t, size_t> sourceXToAodCol;
+  for (const auto& [aodCol, revMove] : enumerate(revHorizontalMoves)) {
+    sourceXToAodCol.emplace(revMove.second, aodCol);
+  }
+  // A map from the source y-coordinate of the row to the AOD row that
+  // will load the atoms in this column.
+  std::unordered_map<int64_t, size_t> sourceYToAodRow;
+  for (const auto& [aodRow, y] : enumerate(verticalMoves_ | std::views::keys)) {
+    sourceYToAodRow.emplace(y, aodRow);
+  }
+
+  // Load the atoms column-wise
+  for (const auto& [sourceX, qubitsToLoad] : xToQubitsToBeLoaded) {
+    // Get the AOD column to load the atoms in this column.
+    assert(sourceXToAodCol.contains(sourceX));
+    const auto newAodCol = sourceXToAodCol[sourceX];
+    if (const auto columnKind = movements_.at(*qubitsToLoad.begin()).sourceSite;
+        columnKind == QubitMovement::SiteKind::STORAGE) {
+      // already include a virtual offset move by `startDx / 2`
+      const auto it =
+          aodColsToX_.emplace(newAodCol, sourceX + sourceDx_ / 2).first;
+      // Push already activated columns away if necessary.
+      auto nextX = sourceX - (sourceDx_ / 2);
       for (auto lowerIt = std::make_reverse_iterator(it);
-           lowerIt != aodColsToX.rend() && lowerIt->second > nextX; ++lowerIt) {
+           lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
+           ++lowerIt) {
         lowerIt->second = nextX;
-        nextX -= nextX > 0 ? targetDx : targetDx / 2;
+        nextX -= nextX > 0 ? sourceDx_ : sourceDx_ / 2;
       }
-      nextX = targetX + targetDx + (targetDx / 2);
+      nextX = sourceX + sourceDx_ + (sourceDx_ / 2);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX.cend() && upperIt->second < nextX; ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX;
+           ++upperIt) {
         upperIt->second = nextX;
-        nextX += nextX < targetMaxX ? targetDx : targetDx / 2;
+        nextX += nextX < sourceMaxX_ ? sourceDx_ : sourceDx_ / 2;
       }
-      // Align aod rows
-      for (const auto qubit : qubitsToStore) {
-        const auto& qubitMovement = movements.at(qubit);
-        const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
-        aodRowsToY[aodRow] = qubitMovement.targetY;
+    } else if (columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT) {
+      // already include a virtual offset move by `startDx / 2`
+      const auto it =
+          aodColsToX_.emplace(newAodCol, sourceX - sourceDx_ / 4).first;
+      // Push already activated columns away if necessary.
+      bool odd = true;
+      auto nextX = sourceX - (sourceDx_ / 2);
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
+           ++lowerIt) {
+        lowerIt->second = nextX;
+        nextX -= nextX > 0 || odd ? sourceDx_ - sourceDx_ / 4 : sourceDx_ / 4;
+        odd = !odd;
       }
-      // Write out offset move before storing new atoms
-      std::vector<const Atom*> atomsToOffset;
-      std::vector<Location> offsetTargetLocations;
-      for (auto& [qubit, location] : shuttlingQubitToCurrentLocation) {
-        const auto& qubitMovement = movements.at(qubit);
-        const std::pair newLocation{
-            aodColsToX[targetXToAodCol[qubitMovement.targetX]],
-            aodRowsToY[sourceYToAodRow[qubitMovement.sourceY]]};
-        if (location != newLocation) {
-          atomsToOffset.emplace_back(&atoms[qubit].get());
-          offsetTargetLocations.emplace_back(
-              static_cast<double>(newLocation.first),
-              static_cast<double>(newLocation.second));
-          location = newLocation;
-        }
+      odd = false;
+      nextX = sourceX + sourceDx_ - (sourceDx_ / 4);
+      for (auto upperIt = std::next(it);
+           upperIt != aodColsToX_.end() && upperIt->second < nextX;
+           ++upperIt) {
+        upperIt->second = nextX;
+        nextX += nextX < sourceMaxX_ || odd ? sourceDx_ - sourceDx_ / 4
+                                            : sourceDx_ / 4;
+        odd = !odd;
       }
-      if (!atomsToOffset.empty()) {
-        code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    } else {
+      // already include a virtual offset move by `startDx / 2`
+      const auto it =
+          aodColsToX_.emplace(newAodCol, sourceX + sourceDx_ / 4).first;
+      // Push already activated columns away if necessary.
+      bool odd = false;
+      auto nextX = sourceX - sourceDx_ + (sourceDx_ / 4);
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
+           ++lowerIt) {
+        lowerIt->second = nextX;
+        nextX -= nextX > 0 || odd ? sourceDx_ - sourceDx_ / 4 : sourceDx_ / 4;
+        odd = !odd;
       }
-      // Store old atoms
-      std::vector<const Atom*> atomsToStore;
-      for (const auto& qubit : qubitsToStore) {
-        atomsToStore.emplace_back(&atoms[qubit].get());
-        shuttlingQubitToCurrentLocation.erase(qubit);
-        // Make a virtual offset of rows with old atoms
-        const auto& qubitMovement = movements.at(qubit);
-        const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
-        aodRowsToY[aodRow] = qubitMovement.targetY + targetDy / 2;
+      odd = true;
+      nextX = sourceX + (sourceDx_ / 2);
+      for (auto upperIt = std::next(it);
+           upperIt != aodColsToX_.end() && upperIt->second < nextX;
+           ++upperIt) {
+        upperIt->second = nextX;
+        nextX += nextX < sourceMaxX_ || odd ? sourceDx_ - sourceDx_ / 4
+                                            : sourceDx_ / 4;
+        odd = !odd;
       }
-      code.emplaceBack<StoreOp>(atomsToStore);
-      aodColsToX.erase(it);
     }
+    // Align aod rows
+    for (const auto qubit : qubitsToLoad) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
+      aodRowsToY_[aodRow] = qubitMovement.sourceY;
+    }
+    // Write out offset move before loading new atoms
+    std::vector<const Atom*> atomsToOffset;
+    std::vector<Location> offsetTargetLocations;
+    for (auto& [qubit, location] : shuttlingQubitToCurrentLocation_) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const std::pair newLocation{
+          aodColsToX_.at(sourceXToAodCol.at(qubitMovement.sourceX)),
+          aodRowsToY_.at(sourceYToAodRow.at(qubitMovement.sourceY))};
+      if (location != newLocation) {
+        atomsToOffset.emplace_back(&atoms[qubit].get());
+        offsetTargetLocations.emplace_back(
+            static_cast<double>(newLocation.first),
+            static_cast<double>(newLocation.second));
+        location = newLocation;
+      }
+    }
+    if (!atomsToOffset.empty()) {
+      code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    }
+    // Load new atoms
+    std::vector<const Atom*> atomsToLoad;
+    for (const auto& qubit : qubitsToLoad) {
+      atomsToLoad.emplace_back(&atoms[qubit].get());
+      const auto& qubitMovement = movements_.at(qubit);
+      shuttlingQubitToCurrentLocation_.emplace(
+          qubit, std::pair{qubitMovement.sourceX, qubitMovement.sourceY});
+      // Make a virtual offset of rows with new atoms
+      const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
+      aodRowsToY_[aodRow] = qubitMovement.sourceY + sourceDy_ / 2;
+    }
+    code.emplaceBack<LoadOp>(atomsToLoad);
+  }
+}
+auto CodeGenerator::RearrangementGenerator::storeRowByRow(
+    const std::vector<std::reference_wrapper<const Atom>>& atoms,
+    NAComputation& code) -> void {
+  // A map from the target y-coordinate of the row to the AOD row that
+  // will store the atoms in this row. Here it is important that the moves
+  // are sorted by their initial y-coordinate.
+  std::unordered_map<int64_t, size_t> targetYToAodRow;
+  for (const auto& [aodRow, move] : enumerate(verticalMoves_)) {
+    targetYToAodRow.emplace(move.second, aodRow);
+  }
+  // A set of target x-coordinate of the columns to the AOD columns that
+  // will store the atoms in this column
+  std::set<int64_t> targetXs;
+  for (const auto x : horizontalMoves_ | std::views::values) {
+    targetXs.emplace(x);
+  }
+  std::unordered_map<int64_t, size_t> targetXToAodCol;
+  for (const auto& [aodCol, x] : enumerate(targetXs)) {
+    targetXToAodCol.emplace(x, aodCol);
+  }
+
+  // Map collecting all atoms that must be stored within each target row
+  // (y-coordinate). It is intentionally an 'ordered' map to save the sorting
+  // afterward. This set is intentionally an 'ordered' map to ensure
+  // deterministic (ordered atoms) code generation.
+  std::map<int64_t, std::set<qc::Qubit>> yToQubitsToBeStored;
+
+  for (const auto& [qubit, movement] : movements_) {
+    // record the qubits in each column to be loaded
+    yToQubitsToBeStored.try_emplace(movement.targetY)
+        .first->second.emplace(qubit);
+    // Make a virtual move of all columns to their target x-coordinates
+    const auto x = movement.targetX;
+    const auto aodCol = targetXToAodCol.at(x);
+    if (movement.targetSite == QubitMovement::SiteKind::STORAGE) {
+      aodColsToX_[aodCol] = x + targetDx_ / 2;
+    } else {
+      if (movement.targetSite == QubitMovement::SiteKind::ENTANGLEMENT_LEFT) {
+        aodColsToX_[aodCol] = x - targetDx_ / 4;
+      } else {
+        aodColsToX_[aodCol] = x + targetDx_ / 4;
+      }
+    }
+  }
+
+  for (const auto& [targetY, qubitsToStore] : yToQubitsToBeStored) {
+    // Get the AOD column to store the atom from
+    assert(targetYToAodRow.contains(targetY));
+    const auto oldAodRow = targetYToAodRow[targetY];
+    const auto it = aodRowsToY_.find(oldAodRow);
+    assert(it != aodRowsToY_.end());
+    it->second = targetY;
+    // Push still activated columns away if necessary
+    auto nextY = targetY - (targetDy_ / 2);
+    for (auto lowerIt = std::make_reverse_iterator(it);
+         lowerIt != aodRowsToY_.rend() && lowerIt->second > nextY; ++lowerIt) {
+      lowerIt->second = nextY;
+      nextY -= nextY > 0 ? targetDy_ : targetDy_ / 2;
+    }
+    nextY = targetY + targetDy_ + (targetDy_ / 2);
+    for (auto upperIt = std::next(it);
+         upperIt != aodRowsToY_.end() && upperIt->second < nextY; ++upperIt) {
+      upperIt->second = nextY;
+      nextY += nextY < targetMaxY_ ? targetDy_ : targetDy_ / 2;
+    }
+    // Align aod columns
+    for (const auto qubit : qubitsToStore) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const auto aodCol = targetXToAodCol.at(qubitMovement.targetX);
+      aodColsToX_[aodCol] = qubitMovement.targetX;
+    }
+    std::vector<const Atom*> atomsToOffset;
+    std::vector<Location> offsetTargetLocations;
+    for (auto& [qubit, location] : shuttlingQubitToCurrentLocation_) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const std::pair newLocation{
+          aodColsToX_.at(targetXToAodCol.at(qubitMovement.targetX)),
+          aodRowsToY_.at(targetYToAodRow.at(qubitMovement.targetY))};
+      if (location != newLocation) {
+        atomsToOffset.emplace_back(&atoms[qubit].get());
+        offsetTargetLocations.emplace_back(
+            static_cast<double>(newLocation.first),
+            static_cast<double>(newLocation.second));
+        location = newLocation;
+      }
+    }
+    if (!atomsToOffset.empty()) {
+      code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    }
+    // Store old atoms
+    std::vector<const Atom*> atomsToStore;
+    for (const auto& qubit : qubitsToStore) {
+      atomsToStore.emplace_back(&atoms[qubit].get());
+      shuttlingQubitToCurrentLocation_.erase(qubit);
+      // Make a virtual offset of rows with old atoms
+      const auto& qubitMovement = movements_.at(qubit);
+      const auto aodCol = targetXToAodCol.at(qubitMovement.targetX);
+      aodColsToX_[aodCol] = qubitMovement.targetX + targetDx_ / 2;
+    }
+    code.emplaceBack<StoreOp>(atomsToStore);
+    aodRowsToY_.erase(it);
+  }
+}
+auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
+    const std::vector<std::reference_wrapper<const Atom>>& atoms,
+    NAComputation& code) -> void {
+  // Map collecting all atoms that must be stored within each target column
+  // (x-coordinate). It is intentionally an 'ordered' map to save the sorting
+  // afterward. This set is intentionally an 'ordered' map to ensure
+  // deterministic (ordered atoms) code generation.
+  std::map<int64_t, std::set<qc::Qubit>> xToQubitsToBeStored;
+
+  for (const auto& [qubit, movement] : movements_) {
+    // record the qubits in each column to be loaded
+    xToQubitsToBeStored.try_emplace(movement.targetX)
+        .first->second.emplace(qubit);
+  }
+
+  // A map from the target x-coordinate of the column to the AOD column that
+  // will store the atoms in this column. Here it is important that the moves
+  // are sorted by their initial x-coordinate.
+  std::unordered_map<int64_t, size_t> targetXToAodCol;
+  for (const auto& [aodCol, move] : enumerate(horizontalMoves_)) {
+    targetXToAodCol.emplace(move.second, aodCol);
+  }
+  // A set of y-coordinates of the rows to the AOD rows that
+  // will store the atoms in this column
+  std::set<int64_t> targetYs;
+  for (const auto v : verticalMoves_ | std::views::values) {
+    targetYs.emplace(v);
+  }
+  std::unordered_map<int64_t, size_t> targetYToAodRow;
+  for (const auto& [aodRow, y] : enumerate(targetYs)) {
+    targetYToAodRow.emplace(y, aodRow);
+    // Make a virtual move of all rows to their target y-coordinates
+    aodRowsToY_[aodRow] = y + targetDy_ / 2;
+  }
+
+  for (const auto& [targetX, qubitsToStore] : xToQubitsToBeStored) {
+    // Get the AOD column to store the atom from
+    assert(targetXToAodCol.contains(targetX));
+    const auto oldAodCol = targetXToAodCol[targetX];
+    const auto it = aodColsToX_.find(oldAodCol);
+    assert(it != aodColsToX_.end());
+    it->second = targetX;
+    if (const auto columnKind =
+            movements_.at(*qubitsToStore.begin()).targetSite;
+        columnKind == QubitMovement::SiteKind::STORAGE) {
+      // Push still activated columns away if necessary
+      auto nextX = targetX - (targetDx_ / 2);
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
+           ++lowerIt) {
+        lowerIt->second = nextX;
+        nextX -= nextX > 0 ? targetDx_ : targetDx_ / 2;
+      }
+      nextX = targetX + targetDx_ + (targetDx_ / 2);
+      for (auto upperIt = std::next(it);
+           upperIt != aodColsToX_.end() && upperIt->second < nextX;
+           ++upperIt) {
+        upperIt->second = nextX;
+        nextX += nextX < targetMaxX_ ? targetDx_ : targetDx_ / 2;
+      }
+    } else if (columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT) {
+      // Push already activated columns away if necessary.
+      bool odd = true;
+      auto nextX = targetX - (targetDx_ / 2);
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
+           ++lowerIt) {
+        lowerIt->second = nextX;
+        nextX -= nextX > 0 || odd ? targetDx_ - targetDx_ / 4 : targetDx_ / 4;
+        odd = !odd;
+      }
+      odd = false;
+      nextX = targetX + targetDx_ - (targetDx_ / 4);
+      for (auto upperIt = std::next(it);
+           upperIt != aodColsToX_.end() && upperIt->second < nextX;
+           ++upperIt) {
+        upperIt->second = nextX;
+        nextX += nextX < targetMaxX_ || odd ? targetDx_ - targetDx_ / 4
+                                            : targetDx_ / 4;
+        odd = !odd;
+      }
+    } else {
+      // Push already activated columns away if necessary.
+      bool odd = false;
+      auto nextX = targetX - targetDx_ + (targetDx_ / 4);
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
+           ++lowerIt) {
+        lowerIt->second = nextX;
+        nextX -= nextX > 0 || odd ? targetDx_ - targetDx_ / 4 : targetDx_ / 4;
+      }
+      odd = true;
+      nextX = targetX + (targetDx_ / 2);
+      for (auto upperIt = std::next(it);
+           upperIt != aodColsToX_.end() && upperIt->second < nextX;
+           ++upperIt) {
+        upperIt->second = nextX;
+        nextX += nextX < targetMaxX_ || odd ? targetDx_ - targetDx_ / 4
+                                            : targetDx_ / 4;
+        odd = !odd;
+      }
+    }
+    // Align aod rows
+    for (const auto qubit : qubitsToStore) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const auto aodRow = targetYToAodRow.at(qubitMovement.targetY);
+      aodRowsToY_[aodRow] = qubitMovement.targetY;
+    }
+    std::vector<const Atom*> atomsToOffset;
+    std::vector<Location> offsetTargetLocations;
+    for (auto& [qubit, location] : shuttlingQubitToCurrentLocation_) {
+      const auto& qubitMovement = movements_.at(qubit);
+      const std::pair newLocation{
+          aodColsToX_.at(targetXToAodCol.at(qubitMovement.targetX)),
+          aodRowsToY_.at(targetYToAodRow.at(qubitMovement.targetY))};
+      if (location != newLocation) {
+        atomsToOffset.emplace_back(&atoms[qubit].get());
+        offsetTargetLocations.emplace_back(
+            static_cast<double>(newLocation.first),
+            static_cast<double>(newLocation.second));
+        location = newLocation;
+      }
+    }
+    if (!atomsToOffset.empty()) {
+      code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    }
+    // Store old atoms
+    std::vector<const Atom*> atomsToStore;
+    for (const auto& qubit : qubitsToStore) {
+      atomsToStore.emplace_back(&atoms[qubit].get());
+      shuttlingQubitToCurrentLocation_.erase(qubit);
+      // Make a virtual offset of rows with old atoms
+      const auto& qubitMovement = movements_.at(qubit);
+      const auto aodRow = targetYToAodRow.at(qubitMovement.targetY);
+      aodRowsToY_[aodRow] = qubitMovement.targetY + targetDy_ / 2;
+    }
+    code.emplaceBack<StoreOp>(atomsToStore);
+    aodColsToX_.erase(it);
+  }
+}
+CodeGenerator::RearrangementGenerator::RearrangementGenerator(
+    const Architecture& arch, const Placement& sourcePlacement,
+    const Placement& targetPlacement, const std::vector<qc::Qubit>& qubits)
+    : architecture_(arch) {
+  // extract the movement of every single qubit
+  std::ranges::for_each(qubits, [&](const auto& qubit) {
+    const auto [sourceX, sourceY] = getLocationFromSite(sourcePlacement[qubit]);
+    const auto sourceSite = getSiteKindFromSite(sourcePlacement[qubit]);
+    const auto [targetX, targetY] = getLocationFromSite(targetPlacement[qubit]);
+    const auto targetSite = getSiteKindFromSite(targetPlacement[qubit]);
+    movements_.emplace(qubit, QubitMovement{sourceSite, sourceX, sourceY,
+                                            targetSite, targetX, targetY});
+  });
+
+  // We assume that all qubits to be loaded are in the same zone. We extract
+  // the vertical separation of the zone from the first qubit's zone.
+  const auto& sourceSlm = std::get<0>(sourcePlacement.at(qubits.front())).get();
+  sourceDx_ = static_cast<int64_t>(sourceSlm.siteSeparation.first);
+  sourceDy_ = static_cast<int64_t>(sourceSlm.siteSeparation.second);
+  sourceMaxX_ = sourceDx_ * static_cast<int64_t>(sourceSlm.nCols);
+  sourceMaxY_ = sourceDy_ * static_cast<int64_t>(sourceSlm.nRows);
+  // We do the same for the target zone
+  const auto& targetSlm = std::get<0>(targetPlacement.at(qubits.front())).get();
+  targetDx_ = static_cast<int64_t>(targetSlm.siteSeparation.first);
+  targetDy_ = static_cast<int64_t>(targetSlm.siteSeparation.second);
+  targetMaxX_ = targetDx_ * static_cast<int64_t>(targetSlm.nCols);
+  targetMaxY_ = targetDy_ * static_cast<int64_t>(targetSlm.nRows);
+
+  for (const auto& [qubit, movement] : movements_) {
+    // record the moves
+    const auto verticalIt =
+        verticalMoves_.try_emplace(movement.sourceY, movement.targetY).first;
+    // If this does not hold, the input was invalid for this generator.
+    // More precisely, this conditional `assert` ensures that rows do not
+    // split.
+    assert(verticalIt->second == movement.targetY);
+    const auto& horizontalIt =
+        horizontalMoves_.try_emplace(movement.sourceX, movement.targetX).first;
+    // If this does not hold, the input was invalid for this generator.
+    // More precisely, this conditional `assert` ensures that columns do not
+    // split.
+    assert(horizontalIt->second == movement.targetX);
+  }
+
+  // Check the vertical moves whether all rows remain in the same order
+  identicalRowOrder_ =
+      std::ranges::is_sorted(verticalMoves_ | std::views::values);
+  // Check the horizontal moves whether all columns remain in the same order
+  identicalColumnOrder_ =
+      std::ranges::is_sorted(horizontalMoves_ | std::views::values);
+}
+auto CodeGenerator::RearrangementGenerator::generate(
+    const std::vector<std::reference_wrapper<const Atom>>& atoms,
+    NAComputation& code) -> void {
+  if (identicalRowOrder_ && horizontalMoves_.size() < verticalMoves_.size()) {
+    loadColumnByColumn(atoms, code);
+    storeColumnByColumn(atoms, code);
+  } else if (identicalColumnOrder_ &&
+             verticalMoves_.size() < horizontalMoves_.size()) {
+    loadRowByRow(atoms, code);
+    storeRowByRow(atoms, code);
+  } else {
+    loadRowByRow(atoms, code);
+    storeColumnByColumn(atoms, code);
   }
 }
 auto CodeGenerator::generate(
