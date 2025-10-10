@@ -2281,11 +2281,16 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   }
 
   // move distance reduction
-  auto moveDistReduction =
-      moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling) +
-      (this->parameters->lookaheadWeightMoves *
-       moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling) /
-       this->parameters->lookaheadDepth);
+  auto moveDistReductionf =
+      moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling);
+
+  auto const moveDistReductionl = 0.0;
+  if (this->lookaheadLayerShuttling.size() != 0) {
+    (this->parameters->lookaheadWeightMoves *
+     moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling) /
+     this->lookaheadLayerShuttling.size());
+  }
+  auto moveDistReduction = moveDistReductionf + moveDistReductionl;
   // move
   auto const moveDist = this->arch->getMoveCombEuclideanDistance(bestMoveComb);
   auto const moveCombSize = bestMoveComb.size();
@@ -2300,8 +2305,8 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
        static_cast<qc::fp>(moveCombSize)) +
       (this->arch->getShuttlingTime(qc::OpType::AodDeactivate) *
        static_cast<qc::fp>(moveCombSize));
-  auto const moveDecoherence =
-      std::exp(-moveTime / this->arch->getDecoherenceTime());
+  auto const moveDecoherence = std::exp(-moveTime * this->arch->getNqubits() /
+                                        this->arch->getDecoherenceTime());
   auto const moveFidelity = moveOpFidelity * moveDecoherence;
 
   // fa
@@ -2316,14 +2321,15 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     // flying ancilla
     auto const faDist = this->arch->getFaEuclideanDistance(bestFaComb);
     auto const faCombSize = bestFaComb.moves.size();
-    auto const faOpFidelity =
-        std::pow(this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
-                     std::pow(this->arch->getGateAverageFidelity("cz"), 2) *
-                     std::pow(this->arch->getGateAverageFidelity("h"), 4),
-                 faCombSize);
-    auto const faDecoherence =
-        std::exp(-faDist / this->arch->getShuttlingTime(qc::OpType::AodMove) /
-                 this->arch->getDecoherenceTime());
+    auto const faOpFidelity = std::pow(
+        std::pow(this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove),
+                 3) *
+            std::pow(this->arch->getGateAverageFidelity("cz"), 2) *
+            std::pow(this->arch->getGateAverageFidelity("h"), 4),
+        faCombSize);
+    auto const faDecoherence = std::exp(
+        -faDist / this->arch->getShuttlingTime(qc::OpType::AodMove) *
+        this->arch->getNqubits() * 2 / this->arch->getDecoherenceTime());
     faFidelity = faOpFidelity * faDecoherence;
   }
 
@@ -2338,34 +2344,42 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
 
     auto const passByDist = this->arch->getPassByEuclideanDistance(bestPbComb);
     auto const passByTime =
-        (passByDist / this->arch->getShuttlingTime(qc::OpType::AodMove)) +
+        (passByDist / this->arch->getShuttlingTime(qc::OpType::AodMove)) * 2 +
         (this->arch->getShuttlingTime(qc::OpType::AodActivate) *
          static_cast<qc::fp>(pbCombSize)) +
         (this->arch->getShuttlingTime(qc::OpType::AodDeactivate) *
          static_cast<qc::fp>(pbCombSize));
-    passByFidelity =
-        std::pow(this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
-                     this->arch->getShuttlingAverageFidelity(
-                         qc::OpType::AodActivate) *
-                     this->arch->getShuttlingAverageFidelity(
-                         qc::OpType::AodDeactivate),
-                 pbCombSize) *
-        std::exp(-passByTime / this->arch->getDecoherenceTime());
+    passByFidelity = std::pow(std::pow(this->arch->getShuttlingAverageFidelity(
+                                           qc::OpType::AodMove),
+                                       2) *
+                                  this->arch->getShuttlingAverageFidelity(
+                                      qc::OpType::AodActivate) *
+                                  this->arch->getShuttlingAverageFidelity(
+                                      qc::OpType::AodDeactivate),
+                              pbCombSize) *
+                     std::exp(-passByTime * this->arch->getNqubits() /
+                              this->arch->getDecoherenceTime());
   }
 
   auto const minDistanceReduction =
       std::min({moveDistReduction, faDistReduction, pbDistReduction});
+  qc::fp const constant = 1;
   if (minDistanceReduction < 0) {
-    moveDistReduction -= minDistanceReduction;
-    faDistReduction -= minDistanceReduction;
-    pbDistReduction -= minDistanceReduction;
+    moveDistReduction -= minDistanceReduction - constant;
+    faDistReduction -= minDistanceReduction - constant;
+    pbDistReduction -= minDistanceReduction - constant;
+  } else {
+    moveDistReduction += constant;
+    faDistReduction += constant;
+    pbDistReduction += constant;
   }
 
   // higher is better
-  const auto move = std::log(moveFidelity) / moveDistReduction /
-                    parameters->dynamicMappingWeight;
+  auto a = parameters->dynamicMappingWeight;
+  const auto move = std::log(moveFidelity) / moveDistReduction / a;
+
   const auto fa = std::log(faFidelity) / faDistReduction;
-  const auto passBy = std::log(passByFidelity) / faDistReduction;
+  const auto passBy = std::log(passByFidelity) / pbDistReduction;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
