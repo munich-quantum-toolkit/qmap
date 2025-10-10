@@ -486,6 +486,7 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
   std::unordered_map<int64_t, size_t> targetYToAodRow;
   for (const auto& [aodRow, move] : enumerate(verticalMoves_)) {
     targetYToAodRow.emplace(move.second, aodRow);
+    aodRowsToY_[aodRow] = move.second;
   }
   // A set of target x-coordinate of the columns to the AOD columns that
   // will store the atoms in this column
@@ -613,6 +614,23 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
     targetYToAodRow.emplace(y, aodRow);
     // Make a virtual move of all rows to their target y-coordinates
     aodRowsToY_[aodRow] = y + targetDy_ / 2;
+  }
+
+  for (const auto& [targetX, qubitsToStore] : xToQubitsToBeStored) {
+    // Make a virtual move of all columns to their target x-coordinates
+    assert(targetXToAodCol.contains(targetX));
+    const auto aodCol = targetXToAodCol[targetX];
+    if (const auto columnKind =
+            movements_.at(*qubitsToStore.begin()).targetSite;
+        columnKind == QubitMovement::SiteKind::STORAGE) {
+      aodColsToX_[aodCol] = targetX + targetDx_ / 2;
+    } else {
+      if (columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT) {
+        aodColsToX_[aodCol] = targetX - targetDx_ / 4;
+      } else {
+        aodColsToX_[aodCol] = targetX + targetDx_ / 4;
+      }
+    }
   }
 
   for (const auto& [targetX, qubitsToStore] : xToQubitsToBeStored) {
