@@ -1208,7 +1208,8 @@ qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) const {
   }
   if (!this->lastMoves.empty()) {
     const auto parallelMovecost =
-        parameters->shuttlingTimeWeight * parallelMoveCost(moveComb);
+        parameters->shuttlingTimeWeight * parallelMoveCost(moveComb) /
+        static_cast<qc::fp>(this->frontLayerShuttling.size());
     costComb += parallelMovecost;
   }
   return costComb;
@@ -1216,48 +1217,47 @@ qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) const {
 
 qc::fp NeutralAtomMapper::parallelMoveCost(const MoveComb& moveComb) const {
   qc::fp parallelCost = 0;
-  for (const auto& move : moveComb.moves) {
-    const auto moveVector = this->arch->getVector(move.c1, move.c2);
-    std::vector<CoordIndex> lastEndingCoords;
-    if (this->lastMoves.empty()) {
-      parallelCost += arch->getVectorShuttlingTime(moveVector);
-    }
-    for (const auto& lastMove : this->lastMoves) {
-      lastEndingCoords.emplace_back(lastMove.c2);
-      // decide of shuttling can be done in parallel
-      auto lastMoveVector = this->arch->getVector(lastMove.c1, lastMove.c2);
-      if (moveVector.overlap(lastMoveVector)) {
-        if (moveVector.direction != lastMoveVector.direction) {
-          parallelCost += arch->getVectorShuttlingTime(moveVector);
-        } else {
-          // check if move can be done in parallel
-          if (moveVector.include(lastMoveVector)) {
-            parallelCost += arch->getVectorShuttlingTime(moveVector);
-          }
-        }
-      }
-    }
-    // check if in same row/column like last moves
-    // then can may be loaded in parallel
-    const auto moveCoordInit = this->arch->getCoordinate(move.c1);
-    const auto moveCoordEnd = this->arch->getCoordinate(move.c2);
-    parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
-                    arch->getShuttlingTime(qc::OpType::AodDeactivate);
-    for (const auto& lastMove : this->lastMoves) {
-      const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.c1);
-      const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.c2);
-      if (moveCoordInit.x == lastMoveCoordInit.x ||
-          moveCoordInit.y == lastMoveCoordInit.y) {
-        parallelCost -= arch->getShuttlingTime(qc::OpType::AodActivate);
-      }
-      if (moveCoordEnd.x == lastMoveCoordEnd.x ||
-          moveCoordEnd.y == lastMoveCoordEnd.y) {
-        parallelCost -= arch->getShuttlingTime(qc::OpType::AodDeactivate);
+  // only first move matters for parallelization
+  auto move = moveComb.moves.front();
+  const auto moveVector = this->arch->getVector(move.c1, move.c2);
+  parallelCost += arch->getVectorShuttlingTime(moveVector);
+  bool canBeDoneInParallel = true;
+  for (const auto& lastMove : this->lastMoves) {
+    // decide of shuttling can be done in parallel
+    auto lastMoveVector = this->arch->getVector(lastMove.c1, lastMove.c2);
+    if (moveVector.overlap(lastMoveVector)) {
+      if (moveVector.direction != lastMoveVector.direction) {
+        canBeDoneInParallel = false;
+        break;
+      } // check if move can be done in parallel
+      if (moveVector.include(lastMoveVector)) {
+        canBeDoneInParallel = false;
+        break;
       }
     }
   }
-  return parallelCost / static_cast<qc::fp>(this->lastMoves.size()) /
-         static_cast<qc::fp>(this->frontLayerShuttling.size());
+  if (canBeDoneInParallel) {
+    parallelCost -= arch->getVectorShuttlingTime(moveVector);
+  }
+  // check if in same row/column like last moves
+  // then can may be loaded in parallel
+  const auto moveCoordInit = this->arch->getCoordinate(move.c1);
+  const auto moveCoordEnd = this->arch->getCoordinate(move.c2);
+  parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
+                  arch->getShuttlingTime(qc::OpType::AodDeactivate);
+  for (const auto& lastMove : this->lastMoves) {
+    const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.c1);
+    const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.c2);
+    if (moveCoordInit.x == lastMoveCoordInit.x ||
+        moveCoordInit.y == lastMoveCoordInit.y) {
+      parallelCost -= arch->getShuttlingTime(qc::OpType::AodActivate);
+    }
+    if (moveCoordEnd.x == lastMoveCoordEnd.x ||
+        moveCoordEnd.y == lastMoveCoordEnd.y) {
+      parallelCost -= arch->getShuttlingTime(qc::OpType::AodDeactivate);
+    }
+  }
+  return parallelCost;
 }
 
 MultiQubitMovePos
