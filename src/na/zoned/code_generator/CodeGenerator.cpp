@@ -306,9 +306,8 @@ auto CodeGenerator::appendRearrangement(
           aodRowsToY.emplace(newAodRow, currentY + startD / 2).first;
       // Push already activated rows away if necessary.
       auto nextY = currentY - (startD / 2);
-      for (auto lowerIt = std::next(std::make_reverse_iterator(it));
-           lowerIt != aodRowsToY.crend() && lowerIt->second > nextY;
-           ++lowerIt) {
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodRowsToY.rend() && lowerIt->second > nextY; ++lowerIt) {
         lowerIt->second = nextY;
         nextY -= nextY > 0 ? startD : startD / 2;
       }
@@ -340,7 +339,9 @@ auto CodeGenerator::appendRearrangement(
           location = newLocation;
         }
       }
-      code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+      if (!atomsToOffset.empty()) {
+        code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+      }
       // Load new atoms
       std::vector<const Atom*> atomsToLoad;
       for (const auto& qubit : qubitsToLoad) {
@@ -368,8 +369,8 @@ auto CodeGenerator::appendRearrangement(
       assert(it != aodColsToX.end());
       // Push still activated columns away if necessary
       auto nextX = targetX - (targetD / 2);
-      for (auto lowerIt = std::next(std::make_reverse_iterator(it));
-           lowerIt != aodColsToX.crend() && lowerIt->first > nextX; ++lowerIt) {
+      for (auto lowerIt = std::make_reverse_iterator(it);
+           lowerIt != aodColsToX.rend() && lowerIt->second > nextX; ++lowerIt) {
         lowerIt->second = nextX;
         nextX -= nextX > 0 ? targetD : targetD / 2;
       }
@@ -391,8 +392,8 @@ auto CodeGenerator::appendRearrangement(
       for (auto& [qubit, location] : shuttlingQubitToCurrentLocation) {
         const auto& qubitMovement = movements.at(qubit);
         const std::pair newLocation{
-          aodColsToX[targetXToAodCol[qubitMovement.targetX]],
-          aodRowsToY[sourceYToAodRow[qubitMovement.sourceY]]};
+            aodColsToX[targetXToAodCol[qubitMovement.targetX]],
+            aodRowsToY[sourceYToAodRow[qubitMovement.sourceY]]};
         if (location != newLocation) {
           atomsToOffset.emplace_back(&atoms[qubit].get());
           offsetTargetLocations.emplace_back(
@@ -401,7 +402,9 @@ auto CodeGenerator::appendRearrangement(
           location = newLocation;
         }
       }
-      code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+      if (!atomsToOffset.empty()) {
+        code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+      }
       // Store new atoms
       std::vector<const Atom*> atomsToStore;
       for (const auto& qubit : qubitsToStore) {
