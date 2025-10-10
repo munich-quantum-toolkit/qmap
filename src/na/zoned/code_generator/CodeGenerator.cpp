@@ -259,21 +259,24 @@ auto CodeGenerator::RearrangementGenerator::loadRowByRow(
   }
 
   // Load the atoms row-wise
+  const int64_t sign = (rearrangementDirection_ ==
+                                  RearrangementDirection::UP ? 1 : -1);
   for (const auto& [sourceY, qubitsToLoad] : yToQubitsToBeLoaded) {
     // Get the AOD row to load the atoms in this row.
     assert(sourceYToAodRow.contains(sourceY));
     const auto newAodRow = sourceYToAodRow[sourceY];
     // already include a virtual offset move by `startD / 2`
+    const auto y = sourceY + (sign * sourceDy_ / 2);
     const auto it =
-        aodRowsToY_.emplace(newAodRow, sourceY + sourceDy_ / 2).first;
+        aodRowsToY_.emplace(newAodRow, y).first;
     // Push already activated rows away if necessary.
-    auto nextY = sourceY - (sourceDy_ / 2);
+    auto nextY = y - sourceDy_;
     for (auto lowerIt = std::make_reverse_iterator(it);
          lowerIt != aodRowsToY_.rend() && lowerIt->second > nextY; ++lowerIt) {
       lowerIt->second = nextY;
       nextY -= nextY > 0 ? sourceDy_ : sourceDy_ / 2;
     }
-    nextY = sourceY + sourceDy_ + (sourceDy_ / 2);
+    nextY = y + sourceDy_;
     for (auto upperIt = std::next(it);
          upperIt != aodRowsToY_.end() && upperIt->second < nextY; ++upperIt) {
       upperIt->second = nextY;
@@ -364,6 +367,8 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
     sourceYToAodRow.emplace(y, aodRow);
   }
 
+  const int64_t sign = (rearrangementDirection_ ==
+                                  RearrangementDirection::UP ? 1 : -1);
   // Load the atoms column-wise
   for (const auto& [sourceX, qubitsToLoad] : xToQubitsToBeLoaded) {
     // Get the AOD column to load the atoms in this column.
@@ -472,7 +477,7 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
           qubit, std::pair{qubitMovement.sourceX, qubitMovement.sourceY});
       // Make a virtual offset of rows with new atoms
       const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
-      aodRowsToY_[aodRow] = qubitMovement.sourceY + sourceDy_ / 2;
+      aodRowsToY_[aodRow] = qubitMovement.sourceY + (sign * sourceDy_ / 2);
     }
     code.emplaceBack<LoadOp>(atomsToLoad);
   }
@@ -483,10 +488,12 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
   // A map from the target y-coordinate of the row to the AOD row that
   // will store the atoms in this row. Here it is important that the moves
   // are sorted by their initial y-coordinate.
+  const int64_t sign = (rearrangementDirection_ ==
+                                  RearrangementDirection::DOWN ? 1 : -1);
   std::unordered_map<int64_t, size_t> targetYToAodRow;
   for (const auto& [aodRow, move] : enumerate(verticalMoves_)) {
     targetYToAodRow.emplace(move.second, aodRow);
-    aodRowsToY_[aodRow] = move.second;
+    aodRowsToY_[aodRow] = move.second + (sign * targetDy_ / 2);
   }
   // A set of target x-coordinate of the columns to the AOD columns that
   // will store the atoms in this column
@@ -530,14 +537,15 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
     const auto it = aodRowsToY_.find(oldAodRow);
     assert(it != aodRowsToY_.end());
     it->second = targetY;
+    const auto y = targetY + (sign * targetDy_ / 2);
     // Push still activated columns away if necessary
-    auto nextY = targetY - (targetDy_ / 2);
+    auto nextY = y - targetDy_;
     for (auto lowerIt = std::make_reverse_iterator(it);
          lowerIt != aodRowsToY_.rend() && lowerIt->second > nextY; ++lowerIt) {
       lowerIt->second = nextY;
       nextY -= nextY > 0 ? targetDy_ : targetDy_ / 2;
     }
-    nextY = targetY + targetDy_ + (targetDy_ / 2);
+    nextY = y + targetDy_;
     for (auto upperIt = std::next(it);
          upperIt != aodRowsToY_.end() && upperIt->second < nextY; ++upperIt) {
       upperIt->second = nextY;
@@ -610,10 +618,12 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
     targetYs.emplace(v);
   }
   std::unordered_map<int64_t, size_t> targetYToAodRow;
+  const int64_t sign = (rearrangementDirection_ ==
+                                  RearrangementDirection::DOWN ? 1 : -1);
   for (const auto& [aodRow, y] : enumerate(targetYs)) {
     targetYToAodRow.emplace(y, aodRow);
     // Make a virtual move of all rows to their target y-coordinates
-    aodRowsToY_[aodRow] = y + targetDy_ / 2;
+    aodRowsToY_[aodRow] = y + (sign * targetDy_ / 2);
   }
 
   for (const auto& [targetX, qubitsToStore] : xToQubitsToBeStored) {
@@ -732,7 +742,7 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
       // Make a virtual offset of rows with old atoms
       const auto& qubitMovement = movements_.at(qubit);
       const auto aodRow = targetYToAodRow.at(qubitMovement.targetY);
-      aodRowsToY_[aodRow] = qubitMovement.targetY + targetDy_ / 2;
+      aodRowsToY_[aodRow] = qubitMovement.targetY + (sign * targetDy_ / 2);
     }
     code.emplaceBack<StoreOp>(atomsToStore);
     aodColsToX_.erase(it);
@@ -788,6 +798,11 @@ CodeGenerator::RearrangementGenerator::RearrangementGenerator(
   // Check the horizontal moves whether all columns remain in the same order
   identicalColumnOrder_ =
       std::ranges::is_sorted(horizontalMoves_ | std::views::values);
+
+  const auto anyVerticalMove = verticalMoves_.begin();
+  rearrangementDirection_ = anyVerticalMove->first < anyVerticalMove->second
+                                ? RearrangementDirection::UP
+                                : RearrangementDirection::DOWN;
 }
 auto CodeGenerator::RearrangementGenerator::generate(
     const std::vector<std::reference_wrapper<const Atom>>& atoms,

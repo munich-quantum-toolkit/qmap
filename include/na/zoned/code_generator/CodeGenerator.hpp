@@ -137,6 +137,11 @@ private:
     std::map<int64_t, int64_t> horizontalMoves_;
     bool identicalRowOrder_ = false;
     bool identicalColumnOrder_ = false;
+    enum class RearrangementDirection {
+      UP,
+      DOWN,
+    };
+    RearrangementDirection rearrangementDirection_ = RearrangementDirection::UP;
     // A map from activated AOD columns to their current x-coordinate. This is
     // intentionally an 'ordered' map to ease the pushing of activated columns.
     std::map<size_t, int64_t> aodColsToX_;
