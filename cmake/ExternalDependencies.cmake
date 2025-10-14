@@ -8,6 +8,7 @@
 
 # Declare all external dependencies and make sure that they are available.
 
+include(CMakeDependentOption)
 include(FetchContent)
 set(FETCH_PACKAGES "")
 
@@ -71,6 +72,7 @@ set(JSON_URL https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}
 set(JSON_SystemInclude
     ON
     CACHE INTERNAL "Treat the library headers like system headers")
+cmake_dependent_option(JSON_Install "Install nlohmann_json library" ON "MQT_QMAP_INSTALL" OFF)
 FetchContent_Declare(nlohmann_json URL ${JSON_URL} FIND_PACKAGE_ARGS ${JSON_VERSION})
 list(APPEND FETCH_PACKAGES nlohmann_json)
 
