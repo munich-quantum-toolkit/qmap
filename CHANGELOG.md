@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+### Added
+
+- 👷 Enable testing on Python 3.14 ([#796]) ([**@denialhaag**])
+
 ### Fixed
 
 - 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
@@ -137,7 +141,6 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#793]: https://github.com/munich-quantum-toolkit/qmap/pull/793
 [#767]: https://github.com/munich-quantum-toolkit/qmap/pull/767
 [#760]: https://github.com/munich-quantum-toolkit/qmap/pull/760
 [#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728
