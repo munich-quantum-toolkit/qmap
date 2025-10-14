@@ -65,8 +65,8 @@ FetchContent_Declare(
 list(APPEND FETCH_PACKAGES mqt-core)
 
 set(JSON_VERSION
-    3.11.3
-    CACHE STRING "nlohmann_json version")
+        3.12.0
+        CACHE STRING "nlohmann_json version")
 set(JSON_URL https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/json.tar.xz)
 set(JSON_SystemInclude
     ON
