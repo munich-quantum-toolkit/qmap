@@ -119,7 +119,10 @@ auto AStarPlacer::aStarTreeSearch(
         "deepening_value and deepening_factor to reduce the number of explored "
         "nodes.");
   }
-  throw std::runtime_error("No path from start to any goal found.");
+  throw std::runtime_error("No path from start to any goal found. This may be "
+                           "caused by a too small window size. Try increasing,"
+                           "e.g., window_share to a higher value, e.g., 1.0"
+                           "in the compiler configuration.");
 }
 auto AStarPlacer::isGoal(const size_t nGates, const GateNode& node) -> bool {
   return node.level == nGates;
