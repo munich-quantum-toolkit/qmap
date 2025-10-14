@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 ### Fixed
 
 - 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
+- 📝 Improve Error Message in NA Compiler ([#804]) ([**@ystade**])
 
 ### Removed
 
@@ -141,6 +142,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804
 [#796]: https://github.com/munich-quantum-toolkit/qmap/pull/796
 [#793]: https://github.com/munich-quantum-toolkit/qmap/pull/793
 [#767]: https://github.com/munich-quantum-toolkit/qmap/pull/767
