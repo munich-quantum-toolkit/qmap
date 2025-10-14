@@ -238,7 +238,7 @@ constexpr std::string_view architectureSpecification792 = R"({
 constexpr std::string_view routingAwareConfiguration792 = R"({
   "layoutSynthesizerConfig" : {
     "placerConfig" : {
-      "windowMinWidth" : 14
+      "windowShare" : 1.0
     }
   }
 })";
