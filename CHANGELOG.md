@@ -15,8 +15,8 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Fixed
 
-- 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
 - 📝 Improve Error Message in NA Compiler ([#804]) ([**@ystade**])
+- 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
 
 ### Removed
 
