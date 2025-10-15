@@ -47,7 +47,7 @@ auto DFSPlacer::dfsTreeSearch(
     const std::function<bool(const Node&)>& isGoal,
     const std::function<double(const Node&)>& getCost,
     const std::function<double(const Node&)>& getHeuristic,
-    const size_t trials) -> std::vector<std::reference_wrapper<const Node>> {
+    const size_t trials) -> std::reference_wrapper<const Node> {
   //===--------------------------------------------------------------------===//
   // Setup open set structure
   //===--------------------------------------------------------------------===//
@@ -68,67 +68,15 @@ auto DFSPlacer::dfsTreeSearch(
       return a->priority_ > b->priority_;
     }
   };
-  // vector of items to store all items and keep them alive also after they
-  // are popped from the open set. they are required alive to reconstruct the
-  // path in the end.
-  std::vector<std::unique_ptr<Item>> items;
-  // open list of nodes to be evaluated as a minimum heap based on the
-  // priority. whenever an item is placed in the queue it is created in the
-  // vector `items` before and only a reference is placed in the queue
-  std::priority_queue<Item*, std::vector<Item*>, ItemCompare> openSet;
-  openSet.emplace(items
-                      .emplace_back(std::make_unique<Item>(getHeuristic(start),
-                                                           start, nullptr))
-                      .get());
-  //===--------------------------------------------------------------------===//
-  // Perform A* search
-  //===--------------------------------------------------------------------===//
-  while (items.size() < maxNodes && !openSet.empty()) {
-    Item* itm = openSet.top();
-    openSet.pop();
-    // if a goal is reached, that is the shortest path to a goal under the
-    // assumption that the heuristic is admissible
-    if (isGoal(*itm->node_)) {
-      // reconstruct the path from the goal to the start and then reverse it
-      std::vector<std::reference_wrapper<const Node>> path;
-      for (; itm != nullptr; itm = itm->parent_) {
-        path.emplace_back(*itm->node_);
-      }
-      std::reverse(path.begin(), path.end());
-      return path;
-    }
-    // expand the current node by adding all neighbors to the open set
-    const auto& neighbors = getNeighbors(*itm->node_);
-    if (!neighbors.empty()) {
-      for (const auto& neighbor : neighbors) {
-        // getCost returns the total cost to reach the current node
-        const auto cost = getCost(neighbor);
-        const auto heuristic = getHeuristic(neighbor);
-        openSet.emplace(items
-                            .emplace_back(std::make_unique<Item>(
-                                cost + heuristic, neighbor, itm))
-                            .get());
-      }
-    }
-  }
-  if (items.size() >= maxNodes) {
-    throw std::runtime_error(
-        "Maximum number of nodes reached. Increase max_nodes or increase "
-        "deepening_value and deepening_factor to reduce the number of explored "
-        "nodes.");
-  }
-  throw std::runtime_error("No path from start to any goal found. This may be "
-                           "caused by a too small window size. Try increasing,"
-                           "e.g., window_share to a higher value, e.g., 1.0"
-                           "in the compiler configuration.");
+
 }
-auto AStarPlacer::isGoal(const size_t nGates, const GateNode& node) -> bool {
+auto DFSPlacer::isGoal(const size_t nGates, const GateNode& node) -> bool {
   return node.level == nGates;
 }
-auto AStarPlacer::isGoal(const size_t nAtoms, const AtomNode& node) -> bool {
+auto DFSPlacer::isGoal(const size_t nAtoms, const AtomNode& node) -> bool {
   return node.level == nAtoms;
 }
-auto AStarPlacer::discretizePlacementOfAtoms(
+auto DFSPlacer::discretizePlacementOfAtoms(
     const Placement& placement, const std::vector<qc::Qubit>& atoms) const
     -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, RowColumnSet> rows;
@@ -158,7 +106,7 @@ auto AStarPlacer::discretizePlacementOfAtoms(
   return std::pair{rowIndices, columnIndices};
 }
 
-auto AStarPlacer::discretizeNonOccupiedStorageSites(
+auto DFSPlacer::discretizeNonOccupiedStorageSites(
     const SiteSet& occupiedSites) const
     -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>> rows;
@@ -201,7 +149,7 @@ auto AStarPlacer::discretizeNonOccupiedStorageSites(
   return std::pair{rowIndices, columnIndices};
 }
 
-auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
+auto DFSPlacer::discretizeNonOccupiedEntanglementSites(
     const SiteSet& occupiedSites) const
     -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, RowColumnSet> rows;
@@ -254,7 +202,7 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
   return std::pair{rowIndices, columnIndices};
 }
 
-auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
+auto DFSPlacer::makeInitialPlacement(const size_t nQubits) const
     -> Placement {
   auto slmIt = architecture_.get().storageZones.cbegin();
   std::size_t c = 0;
@@ -281,7 +229,7 @@ auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
   return initialPlacement;
 }
 
-auto AStarPlacer::makeIntermediatePlacement(
+auto DFSPlacer::makeIntermediatePlacement(
     const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& previousReuseQubits,
     const std::unordered_set<qc::Qubit>& reuseQubits,
@@ -296,7 +244,7 @@ auto AStarPlacer::makeIntermediatePlacement(
                                   nextTwoQubitGates)};
 }
 
-auto AStarPlacer::addGateOption(
+auto DFSPlacer::addGateOption(
     const RowColumnMap<uint8_t>& discreteTargetRows,
     const RowColumnMap<uint8_t>& discreteTargetColumns, const SLM& leftSLM,
     const size_t leftRow, const size_t leftCol, const SLM& rightSLM,
@@ -349,7 +297,7 @@ auto AStarPlacer::addGateOption(
   }
 }
 
-auto AStarPlacer::placeGatesInEntanglementZone(
+auto DFSPlacer::placeGatesInEntanglementZone(
     const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
     const TwoQubitGateLayer& twoQubitGates,
@@ -709,7 +657,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   nodes.emplace_back(std::make_unique<GateNode>());
   const auto deepeningFactor = config_.deepeningFactor;
   const auto deepeningValue = config_.deepeningValue;
-  const auto& path = aStarTreeSearch<GateNode>(
+  const auto& finalNode = dfsTreeSearch<GateNode>(
       *nodes.front(),
       [&nodes, &gateJobs](const auto& node) {
         return getNeighbors(nodes, gateJobs, std::move(node));
@@ -721,14 +669,14 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         return getHeuristic(gateJobs, deepeningFactor, deepeningValue,
                             scaleFactors, std::move(node));
       },
-      config_.maxNodes);
+      config_.trials);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
   assert(path.size() == nJobs + 1);
   for (size_t i = 0; i < nJobs; ++i) {
     const auto& job = gateJobs[i];
-    const auto& option = job.options[path[i + 1].get().option];
+    const auto& option = job.options[pat[i + 1].get().option];
     for (size_t j = 0; j < 2; ++j) {
       const auto atom = job.qubits[j];
       const auto& [row, col] = option.sites[j];
@@ -738,7 +686,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   return currentPlacement;
 }
 
-auto AStarPlacer::placeAtomsInStorageZone(
+auto DFSPlacer::placeAtomsInStorageZone(
     const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
     const TwoQubitGateLayer& twoQubitGates,
@@ -1114,7 +1062,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   nodes.emplace_back(std::make_unique<AtomNode>());
   const auto deepeningFactor = config_.deepeningFactor;
   const auto deepeningValue = config_.deepeningValue;
-  const auto& path = aStarTreeSearch<AtomNode>(
+  const auto& path = dfsTreeSearch<AtomNode>(
       *nodes.front(),
       [&nodes, &atomJobs](const auto& node) {
         return getNeighbors(nodes, atomJobs, std::move(node));
@@ -1126,14 +1074,14 @@ auto AStarPlacer::placeAtomsInStorageZone(
         return getHeuristic(atomJobs, deepeningFactor, deepeningValue,
                             scaleFactors, std::move(node));
       },
-      config_.maxNodes);
+      config_.trials);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
   assert(path.size() == nJobs + 1);
   for (size_t i = 0; i < nJobs; ++i) {
     const auto& job = atomJobs[i];
-    const auto& option = job.options[path[i + 1].get().option];
+    const auto& option = job.options[pat[i + 1].get().option];
     if (!option.reuse) {
       const auto atom = job.atom;
       const auto& [row, col] = option.site;
@@ -1143,7 +1091,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   return currentPlacement;
 }
 
-auto AStarPlacer::getCost(const GateNode& node) -> float {
+auto DFSPlacer::getCost(const GateNode& node) -> float {
   float cost = node.lookaheadCost;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += std::sqrt(d);
@@ -1151,7 +1099,7 @@ auto AStarPlacer::getCost(const GateNode& node) -> float {
   return cost;
 }
 
-auto AStarPlacer::getCost(const AtomNode& node) -> float {
+auto DFSPlacer::getCost(const AtomNode& node) -> float {
   float cost = node.lookaheadCost;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += std::sqrt(d);
@@ -1159,7 +1107,7 @@ auto AStarPlacer::getCost(const AtomNode& node) -> float {
   return cost;
 }
 
-auto AStarPlacer::sumStdDeviationForGroups(
+auto DFSPlacer::sumStdDeviationForGroups(
     const std::array<float, 2>& scaleFactors,
     const std::vector<CompatibilityGroup>& groups) -> float {
   float sumStdDev = 0.F;
@@ -1186,7 +1134,7 @@ auto AStarPlacer::sumStdDeviationForGroups(
   return sumStdDev;
 }
 
-auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
+auto DFSPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
                                const float deepeningFactor,
                                const float deepeningValue,
                                const std::array<float, 2>& scaleFactors,
@@ -1232,7 +1180,7 @@ auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
   return heuristic;
 }
 
-auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
+auto DFSPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
                                const float deepeningFactor,
                                const float deepeningValue,
                                const std::array<float, 2>& scaleFactors,
@@ -1277,7 +1225,7 @@ auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
   return heuristic;
 }
 
-auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
+auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
                                const std::vector<AtomJob>& atomJobs,
                                const AtomNode& node)
     -> std::vector<std::reference_wrapper<const AtomNode>> {
@@ -1313,7 +1261,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
   return neighbors;
 }
 
-auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
+auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
                                const std::vector<GateJob>& gateJobs,
                                const GateNode& node)
     -> std::vector<std::reference_wrapper<const GateNode>> {
@@ -1358,7 +1306,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
   return neighbors;
 }
 
-auto AStarPlacer::checkCompatibilityWithGroup(
+auto DFSPlacer::checkCompatibilityWithGroup(
     const uint8_t key, const uint8_t value,
     const std::map<uint8_t, uint8_t>& group)
     -> std::optional<
@@ -1399,7 +1347,7 @@ auto AStarPlacer::checkCompatibilityWithGroup(
   return std::nullopt;
 }
 
-auto AStarPlacer::checkCompatibilityAndAddPlacement(
+auto DFSPlacer::checkCompatibilityAndAddPlacement(
     const uint8_t hKey, const uint8_t hValue, const uint8_t vKey,
     const uint8_t vValue, const float distance,
     std::vector<CompatibilityGroup>& groups, std::vector<float>& maxDistances)
@@ -1435,7 +1383,7 @@ auto AStarPlacer::checkCompatibilityAndAddPlacement(
   return false;
 }
 
-AStarPlacer::AStarPlacer(const Architecture& architecture, const Config& config)
+DFSPlacer::DFSPlacer(const Architecture& architecture, const Config& config)
     : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSLM = *architecture_.get().storageZones.front();
@@ -1453,7 +1401,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture, const Config& config)
       config_.windowRatio * static_cast<double>(config_.windowMinWidth)));
 }
 
-auto AStarPlacer::place(
+auto DFSPlacer::place(
     const size_t nQubits,
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
     const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)

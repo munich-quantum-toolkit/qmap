@@ -16,6 +16,7 @@
 #include "ir/operations/Operation.hpp"
 #include "layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
 #include "layout_synthesizer/placer/AStarPlacer.hpp"
+#include "layout_synthesizer/placer/DFSPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
@@ -254,7 +255,7 @@ public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const Config& config)
       : Compiler(architecture, config) {}
-  RoutingAgnosticCompiler(const Architecture& architecture)
+  explicit RoutingAgnosticCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 
@@ -275,7 +276,28 @@ class RoutingAwareCompiler final
 public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
-  RoutingAwareCompiler(const Architecture& architecture)
+  explicit RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+
+class FlexibleSynthesizer
+    : public PlaceAndRouteSynthesizer<FlexibleSynthesizer, DFSPlacer,
+                                      IndependentSetRouter> {
+public:
+  FlexibleSynthesizer(const Architecture& architecture,
+                          const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit FlexibleSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
+};
+class FlexibleCompiler final
+    : public Compiler<FlexibleCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, FlexibleSynthesizer,
+                      CodeGenerator> {
+public:
+  FlexibleCompiler(const Architecture& architecture, const Config& config)
+      : Compiler(architecture, config) {}
+  explicit FlexibleCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned

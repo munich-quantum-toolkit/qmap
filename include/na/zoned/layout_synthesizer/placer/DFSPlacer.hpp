@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -295,49 +296,201 @@ public:
   place(size_t nQubits,
         const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
         const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-      -> std::vector<Placement>;
+      -> std::vector<Placement> override;
 
 private:
-  /**
-   * @brief A* search algorithm for trees
-   * @details A* is a graph traversal and path search algorithm that finds the
-   * shortest path between a start node and a goal node. It evaluates nodes by
-   * combining the cost to reach the node and the cost to get from the node to
-   * the goal estimated by a heuristic function.
-   * @par
-   * This implementation of the A* search algorithm has some particularities:
-   * - To increase performance for the special case of a tree, where there
-   * cannot be any cycles and a node can only be reached by one path, it does
-   * not keep visited nodes. This would require a hash set or similar data
-   * structure to store visited nodes and check if a node has already been
-   * visited. This check would take at least O(log(n)) time for a hash set and
-   * is superfluous for trees.
-   * - As a consequence of the first point, this implementation also does not
-   * check whether a node is already in the open set. This would also require an
-   * O(log(n)) check operation which is not necessary for trees as one path can
-   * only reach a node.
-   * @note This implementation of A* search can only handle trees and not
-   * general graphs. This is because it does not keep track of visited nodes and
-   * therefore cannot detect cycles. Also for DAGs it may expand nodes multiple
-   * times when they can be reached by different paths from the start node.
-   * @note @p getHeuristic must be admissible, meaning that it never
-   * overestimates the cost to reach the goal from the current node calculated
-   * by @p getCost for every edge on the path.
-   * @note The calling program has to make sure that the pointers passed to this
-   * function are valid and that the iterators are not invalidated during the
-   * search, e.g., by calling one of the passed functions like @p getNeighbors.
-   * @param start is a reference to the start node
-   * @param getNeighbors is a function that returns the neighbors of a node as
-   * references
-   * @param isGoal is a function that returns true if a node is one of
-   * potentially multiple goals
-   * @param getCost is a function that returns the total cost to reach that
-   * particular node from the start node
-   * @param getHeuristic is a function that returns the heuristic cost from the
-   * node to any goal.
-   * @return a vector of node references representing the path from the start to
-   * a goal
-   */
+  template <class T, class Compare = std::less<T>>
+  class BoundedQueueStack {
+  public:
+    using ValueType = T;
+    using SizeType = size_t;
+    using PriorityCompare = Compare;
+    using Reference = ValueType&;
+
+  private:
+    struct Node {
+      SizeType minHeapIndex;
+      SizeType maxHeapIndex;
+      ValueType value;
+    };
+    std::vector<std::shared_ptr<Node>> minHeap_;
+    std::vector<std::shared_ptr<Node>> maxHeap_;
+    SizeType heapCapacity_;
+    std::stack<ValueType> stack_;
+
+    auto heapifyMinHeapUp(SizeType i) -> void {
+      while (i > 0) {
+        size_t parent = (i - 1) / 2;
+        if (PriorityCompare{}(minHeap_[i]->value, minHeap_[parent]->value)) {
+          std::swap(minHeap_[i], minHeap_[parent]);
+          minHeap_[i]->minHeapIndex = i;
+          minHeap_[parent]->minHeapIndex = parent;
+          i = parent;
+        } else {
+          break;
+        }
+      }
+    }
+
+    auto heapifyMaxHeapUp(SizeType i) -> void {
+      while (i > 0) {
+        size_t parent = (i - 1) / 2;
+        if (PriorityCompare{}(maxHeap_[parent]->value, maxHeap_[i]->value)) {
+          std::swap(maxHeap_[i], maxHeap_[parent]);
+          maxHeap_[i]->maxHeapIndex = i;
+          maxHeap_[parent]->maxHeapIndex = parent;
+          i = parent;
+        } else {
+          break;
+        }
+      }
+    }
+
+    auto heapifyMinHeapDown(SizeType i) -> void {
+      while (true) {
+        size_t leftChild = (2 * i) + 1;
+        size_t rightChild = (2 * i) + 2;
+        size_t smallest = i;
+
+        if (leftChild < minHeap_.size() &&
+            PriorityCompare{}(minHeap_[leftChild]->value,
+                              minHeap_[smallest]->value)) {
+          smallest = leftChild;
+        }
+        if (rightChild < minHeap_.size() &&
+            PriorityCompare{}(minHeap_[rightChild]->value,
+                              minHeap_[smallest]->value)) {
+          smallest = rightChild;
+        }
+        if (smallest != i) {
+          std::swap(minHeap_[i], minHeap_[smallest]);
+          minHeap_[i]->minHeapIndex = i;
+          minHeap_[smallest]->minHeapIndex = smallest;
+          i = smallest;
+        } else {
+          break;
+        }
+      }
+    }
+
+    auto heapifyMaxHeapDown(SizeType i) -> void {
+      while (true) {
+        size_t leftChild = (2 * i) + 1;
+        size_t rightChild = (2 * i) + 2;
+        size_t largest = i;
+
+        if (leftChild < maxHeap_.size() &&
+            PriorityCompare{}(maxHeap_[largest]->value,
+                              maxHeap_[leftChild]->value)) {
+          largest = leftChild;
+        }
+        if (rightChild < maxHeap_.size() &&
+            PriorityCompare{}(maxHeap_[largest]->value,
+                              maxHeap_[rightChild]->value)) {
+          largest = rightChild;
+        }
+        if (largest != i) {
+          std::swap(maxHeap_[i], maxHeap_[largest]);
+          maxHeap_[i]->maxHeapIndex = i;
+          maxHeap_[largest]->maxHeapIndex = largest;
+          i = largest;
+        } else {
+          break;
+        }
+      }
+    }
+
+  public:
+    explicit BoundedQueueStack(const SizeType maxQueueSize)
+        : heapCapacity_(maxQueueSize) {
+      minHeap_.reserve(heapCapacity_);
+      maxHeap_.reserve(heapCapacity_);
+    }
+    /**
+     * @returns the top element of the stack.
+     * @note If @ref stackEmpty returns `true`, calling this function is
+     * undefined behavior.
+     */
+    [[nodiscard]] auto top() const -> const ValueType& {
+      return stack_.top();
+    }
+    /**
+     * @brief Removes the top element.
+     * @note If @ref stackEmpty returns `true`, calling this function is
+     * undefined behavior.
+     */
+    auto pop() -> void { stack_.pop(); }
+    /// @returns `true` if the stack is empty.
+    [[nodiscard]] auto stackEmpty() const -> bool { return stack_.empty(); }
+    /**
+     * @returns `true` if the queue is empty.
+     * @note This function returns `false` even though the actual queue might be
+     * empty. This function only returns `true` if the queue is empty and there
+     * is no element that can be added to the queue anymore, i.e., the capacity
+     * reached 0.
+     * @see clearAndSeedStackFromQueue
+     */
+    [[nodiscard]] auto queueEmpty() const -> bool { return heapCapacity_ == 0; }
+    /// @brief Inserts an element at the top.
+    auto push(const ValueType& value) -> void { emplace(value); }
+    /// @brief Constructs element in-place at the top
+    template <class... Args> auto emplace(Args&&... args) -> Reference {
+      return stack_.emplace(std::forward<Args...>(args...));
+    }
+    /**
+     * @brief Clears the stack and initializes with the minimal element from
+     * the queue.
+     * @details This function performs the following steps:
+     * (1) It pops all elements from the stack until the stack is empty and
+     *     pushes them to the queue respecting the maximum capacity of the
+     *     queue.
+     * (2) After the stack is cleared, it pops the first (minimal) element from
+     *     the queue and pushes it onto the stack.
+     * (3) It reduces the maximum capacity by one.
+     * @note The definition of this function implies that the queue is actually
+     * empty before calling this function for the first time. Nevertheless,
+     * @ref emptyQueue will return `false` (as long as @ref BoundedQueueStack was
+     * initialized with @p maxQueueSize greater than 0).
+     * @note If @ref emptyQueue returns `true`, calling this function is
+     * undefined behavior.
+     * @see emptyQueue
+     */
+    auto clearAndSeedStackFromQueue() -> void {
+      while (!stack_.empty()) {
+        if (minHeap_.size() < heapCapacity_) {
+          auto node = std::make_shared<Node>(0, 0, stack_.top());
+          minHeap_.push_back(node); // copy node
+          maxHeap_.push_back(std::move(node));
+          heapifyMinHeapUp(minHeap_.size() - 1);
+          heapifyMaxHeapUp(maxHeap_.size() - 1);
+        } else {
+          // if capacity is reached, only insert the value if smaller then max
+          const auto& value = stack_.top();
+          if (PriorityCompare{}(value, maxHeap_.front()->value)) {
+            auto node = std::make_shared<Node>(0, 0, value);
+            const auto i = maxHeap_.front()->minHeapIndex;
+            maxHeap_.front() = node; // copy node
+            heapifyMaxHeapDown(0);
+            minHeap_[i] = std::move(node);
+            heapifyMinHeapUp(i);
+          }
+        }
+        stack_.pop();
+      }
+      assert(!minHeap_.empty());
+      stack_.emplace(std::move(minHeap_.front()->value));
+      const auto i = minHeap_.front()->maxHeapIndex;
+      std::swap(minHeap_.front(), minHeap_.back());
+      minHeap_.pop_back();
+      heapifyMinHeapDown(0);
+      std::swap(maxHeap_[i], maxHeap_.back());
+      maxHeap_.pop_back();
+      heapifyMaxHeapDown(i);
+      --heapCapacity_;
+    }
+  };
+
+  // todo(yannick): add docstring
   template <class Node>
   [[nodiscard]] static auto dfsTreeSearch(
       const Node& start,
@@ -346,7 +499,7 @@ private:
       const std::function<bool(const Node&)>& isGoal,
       const std::function<double(const Node&)>& getCost,
       const std::function<double(const Node&)>& getHeuristic, size_t trials)
-      -> std::vector<std::reference_wrapper<const Node>>;
+      -> std::reference_wrapper<const Node>;
 
   /**
    * @brief This function takes a list of atoms together with their current
