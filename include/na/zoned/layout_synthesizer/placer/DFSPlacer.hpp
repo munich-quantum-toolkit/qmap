@@ -216,6 +216,8 @@ private:
    * stage
    */
   struct AtomNode {
+    /// The parent node.
+    std::optional<std::reference_wrapper<const AtomNode>> parent = std::nullopt;
     /**
      * The current level in the search tree. A level equal to the number of
      * atoms to be placed indicates that all atoms have been placed.
@@ -252,6 +254,8 @@ private:
    * stage.
    */
   struct GateNode {
+    /// The parent node.
+    std::optional<std::reference_wrapper<const GateNode>> parent = std::nullopt;
     /**
      * The current level in the search tree. A level equal to the number of
      * gates to be placed indicates that all gates have been placed.
@@ -423,19 +427,18 @@ private:
     /// @returns `true` if the stack is empty.
     [[nodiscard]] auto stackEmpty() const -> bool { return stack_.empty(); }
     /**
-     * @returns `true` if the queue is empty.
-     * @note This function returns `false` even though the actual queue might be
-     * empty. This function only returns `true` if the queue is empty and there
-     * is no element that can be added to the queue anymore, i.e., the capacity
-     * reached 0.
+     * @returns `true` if the stack is empty and cannot be refilled from the
+     * queue.
      * @see clearAndSeedStackFromQueue
      */
-    [[nodiscard]] auto queueEmpty() const -> bool { return heapCapacity_ == 0; }
+    [[nodiscard]] auto empty() const -> bool {
+      return stack_.empty() && minHeap_.empty();
+    }
     /// @brief Inserts an element at the top.
-    auto push(const ValueType& value) -> void { emplace(value); }
+    auto push(ValueType&& value) -> void { emplace(std::move(value)); }
     /// @brief Constructs element in-place at the top
     template <class... Args> auto emplace(Args&&... args) -> Reference {
-      return stack_.emplace(std::forward<Args...>(args...));
+      return stack_.emplace(std::forward<Args>(args)...);
     }
     /**
      * @brief Clears the stack and initializes with the minimal element from
@@ -447,12 +450,8 @@ private:
      * (2) After the stack is cleared, it pops the first (minimal) element from
      *     the queue and pushes it onto the stack.
      * (3) It reduces the maximum capacity by one.
-     * @note The definition of this function implies that the queue is actually
-     * empty before calling this function for the first time. Nevertheless,
-     * @ref emptyQueue will return `false` (as long as @ref BoundedQueueStack was
-     * initialized with @p maxQueueSize greater than 0).
-     * @note If @ref emptyQueue returns `true`, calling this function is
-     * undefined behavior.
+     * @note If @ref empty returns `true`, calling this function is undefined
+     * behavior.
      * @see emptyQueue
      */
     auto clearAndSeedStackFromQueue() -> void {
@@ -503,7 +502,7 @@ private:
       const std::function<bool(const Node&)>& isGoal,
       const std::function<double(const Node&)>& getCost,
       const std::function<double(const Node&)>& getHeuristic, size_t trials)
-      -> std::reference_wrapper<const Node>;
+      -> const Node&;
 
   /**
    * @brief This function takes a list of atoms together with their current
