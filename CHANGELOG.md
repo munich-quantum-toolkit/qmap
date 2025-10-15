@@ -19,6 +19,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
 
 ### Changed
 
+- 📝 Improve error message in the NA compiler ([#804]) ([**@ystade**])
 - ⬆️ Bump minimum required `mqt-core` version to `3.3.1` ([#803]) ([**@denialhaag**], [**@ystade**])
 
 ### Fixed
@@ -150,6 +151,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804
 [#803]: https://github.com/munich-quantum-toolkit/qmap/pull/803
 [#796]: https://github.com/munich-quantum-toolkit/qmap/pull/796
 [#793]: https://github.com/munich-quantum-toolkit/qmap/pull/793

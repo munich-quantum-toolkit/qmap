@@ -201,4 +201,100 @@ TEST(RoutingAwareCompilerTest, Issue727) {
   const auto& code = compiler.compile(circ);
   EXPECT_TRUE(code.validate().first);
 }
+
+// Tests that the bug described in issue
+// https://github.com/munich-quantum-toolkit/qmap/issues/792 is fixed.
+constexpr std::string_view architectureSpecification792 = R"({
+    "name": "Architecture with one entanglement and one storage zone",
+    "operation_duration": {"rydberg_gate": 5, "single_qubit_gate": 10, "atom_transfer": 15},
+    "operation_fidelity": {"rydberg_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999},
+    "qubit_spec": {"T": 1.5e6},
+    "storage_zones": [{
+      "zone_id": 0,
+      "slms": [{"id": 0, "site_separation": [3, 3], "r": 2, "c": 50, "location": [15, 0]}],
+      "offset": [15, 0],
+      "dimension": [260, 3]
+      }],
+    "entanglement_zones": [{
+          "zone_id": 0,
+          "slms": [
+              {"id": 1, "site_separation": [12, 10], "r": 1, "c": 27, "location": [5, 20]},
+              {"id": 2, "site_separation": [12, 10], "r": 1, "c": 27, "location": [7, 20]}
+          ],
+          "offset": [5, 20],
+          "dimension": [290, 10]
+      }],
+      "aods": [{"id": 0, "site_separation": 2, "r": 10, "c": 10}],
+      "rydberg_range": [
+          [
+              [0, 17],
+              [290, 33]
+          ]
+      ]
+  })";
+
+// this configuration was not used in the original issue. It purposefully
+// deviates from the default by increasing the window size to fix issue 792.
+constexpr std::string_view routingAwareConfiguration792 = R"({
+  "layoutSynthesizerConfig" : {
+    "placerConfig" : {
+      "windowShare" : 1.0
+    }
+  }
+})";
+
+// the QASM file is reduced
+constexpr std::string_view circuit792 = R"(OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[64];
+cz q[2],q[3];
+cz q[6],q[7];
+cz q[13],q[14];
+cz q[15],q[16];
+cz q[17],q[18];
+cz q[19],q[20];
+cz q[22],q[23];
+cz q[24],q[25];
+cz q[26],q[27];
+cz q[28],q[29];
+cz q[30],q[31];
+cz q[35],q[36];
+cz q[37],q[38];
+cz q[39],q[40];
+cz q[41],q[42];
+cz q[44],q[45];
+cz q[46],q[47];
+cz q[48],q[49];
+cz q[50],q[51];
+cz q[52],q[53];
+//============//
+cz q[1],q[2];
+cz q[3],q[13];
+cz q[5],q[6];
+cz q[7],q[17];
+cz q[12],q[22];
+cz q[14],q[15];
+cz q[16],q[26];
+cz q[18],q[19];
+cz q[20],q[30];
+cz q[23],q[24];
+cz q[25],q[35];
+cz q[27],q[28];
+cz q[29],q[39];
+cz q[34],q[44];
+cz q[36],q[37];
+cz q[38],q[48];
+cz q[40],q[41];
+cz q[42],q[52];
+cz q[45],q[46];
+cz q[49],q[50];
+)";
+
+TEST(RoutingAwareCompilerTest, Issue792) {
+  const auto qc = qasm3::Importer::imports(circuit792.data());
+  const auto arch = Architecture::fromJSONString(architectureSpecification792);
+  const auto config = nlohmann::json::parse(routingAwareConfiguration792);
+  RoutingAwareCompiler compiler(arch, config);
+  EXPECT_NO_THROW(std::ignore = compiler.compile(qc));
+}
 } // namespace na::zoned
