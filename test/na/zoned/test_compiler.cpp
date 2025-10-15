@@ -290,7 +290,7 @@ cz q[45],q[46];
 cz q[49],q[50];
 )";
 
-TEST(RoutingAwareCompielrTest, Issue792) {
+TEST(RoutingAwareCompilerTest, Issue792) {
   const auto& qc = qasm3::Importer::imports(circuit792.data());
   const auto arch = Architecture::fromJSONString(architectureSpecification792);
   const auto config = nlohmann::json::parse(routingAwareConfiguration792);
