@@ -152,4 +152,118 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       [](const na::zoned::RoutingAwareCompiler& self) -> nlohmann::json {
         return self.getStatistics();
       });
+
+  py::class_<na::zoned::FlexCompiler> flexCompiler(
+      m, "FlexCompiler");
+  flexCompiler.def(
+      py::init([](const na::zoned::Architecture& arch,
+                  const std::string& logLevel, const bool useWindow,
+                  const size_t windowMinWidth, const double windowRatio,
+                  const double windowShare, const float deepeningFactor,
+                  const float deepeningValue, const float lookaheadFactor,
+                  const float reuseLevel, const size_t maxNodes,
+                  const size_t parkingOffset, const bool warnUnsupportedGates)
+                   -> na::zoned::FlexCompiler {
+        na::zoned::FlexCompiler::Config config;
+        config.logLevel = spdlog::level::from_str(logLevel);
+        config.layoutSynthesizerConfig.placerConfig = {
+            .useWindow = useWindow,
+            .windowMinWidth = windowMinWidth,
+            .windowRatio = windowRatio,
+            .windowShare = windowShare,
+            .deepeningFactor = deepeningFactor,
+            .deepeningValue = deepeningValue,
+            .lookaheadFactor = lookaheadFactor,
+            .reuseLevel = reuseLevel,
+            .maxNodes = maxNodes};
+        config.codeGeneratorConfig = {.parkingOffset = parkingOffset,
+                                      .warnUnsupportedGates =
+                                          warnUnsupportedGates};
+        return {arch, config};
+      }),
+      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
+      "use_window"_a = true, "window_min_width"_a = 8, "window_ratio"_a = 1.0,
+      "window_share"_a = 0.6, "deepening_factor"_a = 0.8,
+      "deepening_value"_a = 0.2, "lookahead_factor"_a = 0.2,
+      "reuse_level"_a = 5.0, "max_nodes"_a = 50000000, "parking_offset"_a = 1,
+      "warn_unsupported_gates"_a = true);
+  flexCompiler.def_static(
+      "from_json_string",
+      [](const na::zoned::Architecture& arch,
+         const std::string& json) -> na::zoned::FlexCompiler {
+        // The correct header <nlohmann/json.hpp> is included, but clang-tidy
+        // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
+        // NOLINTNEXTLINE(misc-include-cleaner)
+        return {arch, nlohmann::json::parse(json)};
+      },
+      "arch"_a, "json"_a);
+  flexCompiler.def(
+      "compile",
+      [](na::zoned::FlexCompiler& self,
+         const qc::QuantumComputation& qc) -> std::string {
+        return self.compile(qc).toString();
+      },
+      "qc"_a);
+  flexCompiler.def(
+      "stats",
+      [](const na::zoned::FlexCompiler& self) -> nlohmann::json {
+        return self.getStatistics();
+      });
+
+  py::class_<na::zoned::ElasticCompiler> elasticCompiler(
+      m, "ElasticCompiler");
+  elasticCompiler.def(
+      py::init([](const na::zoned::Architecture& arch,
+                  const std::string& logLevel, const bool useWindow,
+                  const size_t windowMinWidth, const double windowRatio,
+                  const double windowShare, const float deepeningFactor,
+                  const float deepeningValue, const float lookaheadFactor,
+                  const float reuseLevel, const size_t trials,
+                  const size_t parkingOffset, const bool warnUnsupportedGates)
+                   -> na::zoned::ElasticCompiler {
+        na::zoned::ElasticCompiler::Config config;
+        config.logLevel = spdlog::level::from_str(logLevel);
+        config.layoutSynthesizerConfig.placerConfig = {
+            .useWindow = useWindow,
+            .windowMinWidth = windowMinWidth,
+            .windowRatio = windowRatio,
+            .windowShare = windowShare,
+            .deepeningFactor = deepeningFactor,
+            .deepeningValue = deepeningValue,
+            .lookaheadFactor = lookaheadFactor,
+            .reuseLevel = reuseLevel,
+            .trials = trials};
+        config.codeGeneratorConfig = {.parkingOffset = parkingOffset,
+                                      .warnUnsupportedGates =
+                                          warnUnsupportedGates};
+        return {arch, config};
+      }),
+      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
+      "use_window"_a = true, "window_min_width"_a = 8, "window_ratio"_a = 1.0,
+      "window_share"_a = 0.6, "deepening_factor"_a = 0.8,
+      "deepening_value"_a = 0.2, "lookahead_factor"_a = 0.2,
+      "reuse_level"_a = 5.0, "trials"_a = 10, "parking_offset"_a = 1,
+      "warn_unsupported_gates"_a = true);
+  elasticCompiler.def_static(
+      "from_json_string",
+      [](const na::zoned::Architecture& arch,
+         const std::string& json) -> na::zoned::ElasticCompiler {
+        // The correct header <nlohmann/json.hpp> is included, but clang-tidy
+        // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
+        // NOLINTNEXTLINE(misc-include-cleaner)
+        return {arch, nlohmann::json::parse(json)};
+      },
+      "arch"_a, "json"_a);
+  elasticCompiler.def(
+      "compile",
+      [](na::zoned::ElasticCompiler& self,
+         const qc::QuantumComputation& qc) -> std::string {
+        return self.compile(qc).toString();
+      },
+      "qc"_a);
+  elasticCompiler.def(
+      "stats",
+      [](const na::zoned::ElasticCompiler& self) -> nlohmann::json {
+        return self.getStatistics();
+      });
 }
