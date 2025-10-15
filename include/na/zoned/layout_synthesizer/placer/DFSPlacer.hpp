@@ -478,6 +478,8 @@ private:
         stack_.pop();
       }
       assert(!minHeap_.empty());
+      assert(minHeap_.size() == maxHeap_.size());
+      assert(minHeap_.size() <= heapCapacity_);
       stack_.emplace(std::move(minHeap_.front()->value));
       const auto i = minHeap_.front()->maxHeapIndex;
       std::swap(minHeap_.front(), minHeap_.back());
@@ -487,6 +489,8 @@ private:
       maxHeap_.pop_back();
       heapifyMaxHeapDown(i);
       --heapCapacity_;
+      assert(minHeap_.size() == maxHeap_.size());
+      assert(minHeap_.size() <= heapCapacity_);
     }
   };
 
