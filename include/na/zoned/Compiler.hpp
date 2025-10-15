@@ -281,24 +281,45 @@ public:
       : Compiler(architecture) {}
 };
 
-class FlexibleSynthesizer
-    : public PlaceAndRouteSynthesizer<FlexibleSynthesizer, DFSPlacer,
+class FlexSynthesizer
+    : public PlaceAndRouteSynthesizer<FlexSynthesizer, AStarPlacer,
                                       RelaxedIndependentSetRouter> {
 public:
-  FlexibleSynthesizer(const Architecture& architecture,
+  FlexSynthesizer(const Architecture& architecture,
                           const Config& config)
       : PlaceAndRouteSynthesizer(architecture, config) {}
-  explicit FlexibleSynthesizer(const Architecture& architecture)
+  explicit FlexSynthesizer(const Architecture& architecture)
       : PlaceAndRouteSynthesizer(architecture) {}
 };
-class FlexibleCompiler final
-    : public Compiler<FlexibleCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, FlexibleSynthesizer,
+class FlexCompiler final
+    : public Compiler<FlexCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, FlexSynthesizer,
                       CodeGenerator> {
 public:
-  FlexibleCompiler(const Architecture& architecture, const Config& config)
+  FlexCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
-  explicit FlexibleCompiler(const Architecture& architecture)
+  explicit FlexCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+
+class ElasticSynthesizer
+    : public PlaceAndRouteSynthesizer<ElasticSynthesizer, DFSPlacer,
+                                      RelaxedIndependentSetRouter> {
+public:
+  ElasticSynthesizer(const Architecture& architecture,
+                          const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit ElasticSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
+};
+class ElasticCompiler final
+    : public Compiler<ElasticCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, ElasticSynthesizer,
+                      CodeGenerator> {
+public:
+  ElasticCompiler(const Architecture& architecture, const Config& config)
+      : Compiler(architecture, config) {}
+  explicit ElasticCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned
