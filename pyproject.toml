@@ -11,7 +11,7 @@ requires = [
   "scikit-build-core>=0.11.2",
   "setuptools-scm>=8.3.1",
   "pybind11>=3.0.0",
-  "mqt.core~=3.2.1",
+  "mqt.core~=3.3.1",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -51,7 +51,7 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "mqt.core~=3.2.1",
+    "mqt.core~=3.3.1",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "typing_extensions>=4.6; python_version < '3.11'",
@@ -340,11 +340,11 @@ before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
     """auditwheel repair -w {dest_dir} {wheel} \
---exclude libmqt-core-ir.so.3.2 \
---exclude libmqt-core-qasm.so.3.2 \
---exclude libmqt-core-circuit-optimizer.so.3.2 \
---exclude libmqt-core-ds.so.3.2 \
---exclude libmqt-core-na.so.3.2""",
+--exclude libmqt-core-ir.so.3.3 \
+--exclude libmqt-core-qasm.so.3.3 \
+--exclude libmqt-core-circuit-optimizer.so.3.3 \
+--exclude libmqt-core-ds.so.3.3 \
+--exclude libmqt-core-na.so.3.3""",
 ]
 
 [tool.cibuildwheel.macos]
@@ -374,7 +374,7 @@ build = [
   "pybind11>=3.0.0",
   "scikit-build-core>=0.11.2",
   "setuptools-scm>=8.3.1",
-  "mqt.core~=3.2.1",
+  "mqt.core~=3.3.1",
 ]
 docs = [
   "networkx>=3.2.1",
@@ -405,7 +405,7 @@ test = [
   "pytest-cov>=6.1.1",
   "pytest-sugar>=1.0.0",
   "pytest-xdist>=3.7.0",
-  "mqt.qcec>=3.2.0",
+  "mqt.qcec>=3.3.0",
 ]
 dev = [
   {include-group = "build"},
