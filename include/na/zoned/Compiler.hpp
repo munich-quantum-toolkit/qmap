@@ -19,6 +19,7 @@
 #include "layout_synthesizer/placer/DFSPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
+#include "layout_synthesizer/router/RelaxedIndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 #include "scheduler/ASAPScheduler.hpp"
@@ -282,7 +283,7 @@ public:
 
 class FlexibleSynthesizer
     : public PlaceAndRouteSynthesizer<FlexibleSynthesizer, DFSPlacer,
-                                      IndependentSetRouter> {
+                                      RelaxedIndependentSetRouter> {
 public:
   FlexibleSynthesizer(const Architecture& architecture,
                           const Config& config)
