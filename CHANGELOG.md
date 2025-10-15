@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ### Changed
 
-- 📝 Improve Error Message in NA Compiler ([#804]) ([**@ystade**])
+- 📝 Improve error message in the NA compiler ([#804]) ([**@ystade**])
 - ⬆️ Bump minimum required `mqt-core` version to `3.3.1` ([#803]) ([**@denialhaag**], [**@ystade**])
 
 ### Fixed
