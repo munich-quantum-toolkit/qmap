@@ -317,12 +317,13 @@ private:
       SizeType maxHeapIndex;
       ValueType value;
     };
-    std::vector<std::shared_ptr<Node>> minHeap_;
-    std::vector<std::shared_ptr<Node>> maxHeap_;
+    std::vector<std::unique_ptr<Node>> minHeap_;
+    std::vector<Node*> maxHeap_;
     SizeType heapCapacity_;
     std::stack<ValueType> stack_;
 
     auto heapifyMinHeapUp(SizeType i) -> void {
+      assert(i < minHeap_.size());
       while (i > 0) {
         size_t parent = (i - 1) / 2;
         if (PriorityCompare{}(minHeap_[i]->value, minHeap_[parent]->value)) {
@@ -337,6 +338,7 @@ private:
     }
 
     auto heapifyMaxHeapUp(SizeType i) -> void {
+      assert(i < maxHeap_.size());
       while (i > 0) {
         size_t parent = (i - 1) / 2;
         if (PriorityCompare{}(maxHeap_[parent]->value, maxHeap_[i]->value)) {
@@ -416,6 +418,7 @@ private:
      * undefined behavior.
      */
     [[nodiscard]] auto top() const -> const ValueType& {
+      assert(!stack_.empty());
       return stack_.top();
     }
     /**
@@ -423,17 +426,12 @@ private:
      * @note If @ref stackEmpty returns `true`, calling this function is
      * undefined behavior.
      */
-    auto pop() -> void { stack_.pop(); }
-    /// @returns `true` if the stack is empty.
-    [[nodiscard]] auto stackEmpty() const -> bool { return stack_.empty(); }
-    /**
-     * @returns `true` if the stack is empty and cannot be refilled from the
-     * queue.
-     * @see clearAndSeedStackFromQueue
-     */
-    [[nodiscard]] auto empty() const -> bool {
-      return stack_.empty() && minHeap_.empty();
+    auto pop() -> void {
+      assert(!stack_.empty());
+      stack_.pop();
     }
+    /// @returns `true` if the stack is empty.
+    [[nodiscard]] auto empty() const -> bool { return stack_.empty(); }
     /// @brief Inserts an element at the top.
     auto push(ValueType&& value) -> void { emplace(std::move(value)); }
     /// @brief Constructs element in-place at the top
@@ -457,26 +455,25 @@ private:
         assert(minHeap_.size() == maxHeap_.size());
         if (heapCapacity_ > 0) {
           if (minHeap_.size() < heapCapacity_) {
-            auto node = std::make_shared<Node>(0, 0, stack_.top());
-            minHeap_.push_back(node); // copy node
-            maxHeap_.push_back(std::move(node));
+            minHeap_.emplace_back(std::make_unique<Node>(0, 0, top()));
+            maxHeap_.emplace_back(minHeap_.back().get());
             heapifyMinHeapUp(minHeap_.size() - 1);
             heapifyMaxHeapUp(maxHeap_.size() - 1);
           } else {
             assert(minHeap_.size() == heapCapacity_);
-            // if capacity is reached, only insert the value if smaller then max
-            const auto& value = stack_.top();
+            // if capacity is reached, only insert the value if smaller than max
+            const auto& value = top();
             if (PriorityCompare{}(value, maxHeap_.front()->value)) {
-              auto node = std::make_shared<Node>(0, 0, value);
               const auto i = maxHeap_.front()->minHeapIndex;
-              maxHeap_.front() = node; // copy node
+              assert(i < minHeap_.size());
+              minHeap_[i] = std::make_unique<Node>(0, 0, value);
+              maxHeap_.front() = minHeap_[i].get();
               heapifyMaxHeapDown(0);
-              minHeap_[i] = std::move(node);
               heapifyMinHeapUp(i);
             }
           }
         }
-        stack_.pop();
+        pop();
       }
       if (!minHeap_.empty()) {
         assert(minHeap_.size() == maxHeap_.size());
