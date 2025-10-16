@@ -188,7 +188,7 @@ class RoutingAwareCompiler:
             the statistics as a dictionary
         """
 
-class FlexCompiler:
+class RelaxedRoutingAwareCompiler:
     """MQT QMAP's flexible Zoned Neutral Atom Compiler."""
 
     def __init__(
@@ -207,7 +207,7 @@ class FlexCompiler:
         parking_offset: int = ...,
         warn_unsupported_gates: bool = ...,
     ) -> None:
-        """Create a flexible compiler for the given architecture and configurations.
+        """Create a relaxed, routing-aware compiler for the given architecture and configurations.
 
         Args:
             arch: is the zoned neutral atom architecture
@@ -240,7 +240,7 @@ class FlexCompiler:
                 in the code generator
         """
     @classmethod
-    def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> FlexCompiler:
+    def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> RelaxedRoutingAwareCompiler:
         """Create a flexible compiler for the given architecture and configurations from a JSON string.
 
         Args:
@@ -269,7 +269,7 @@ class FlexCompiler:
             the statistics as a dictionary
         """
 
-class ElasticCompiler:
+class FastRelaxedRoutingAwareCompiler:
     """MQT QMAP's elastic Zoned Neutral Atom Compiler."""
 
     def __init__(
@@ -288,7 +288,7 @@ class ElasticCompiler:
         parking_offset: int = ...,
         warn_unsupported_gates: bool = ...,
     ) -> None:
-        """Create a elastic compiler for the given architecture and configurations.
+        """Create a fast, relaxed, routing-aware compiler for the given architecture and configurations.
 
         Args:
             arch: is the zoned neutral atom architecture
@@ -317,7 +317,7 @@ class ElasticCompiler:
                 in the code generator
         """
     @classmethod
-    def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> ElasticCompiler:
+    def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> FastRelaxedRoutingAwareCompiler:
         """Create a elastic compiler for the given architecture and configurations from a JSON string.
 
         Args:

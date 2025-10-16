@@ -281,45 +281,45 @@ public:
       : Compiler(architecture) {}
 };
 
-class FlexSynthesizer
-    : public PlaceAndRouteSynthesizer<FlexSynthesizer, AStarPlacer,
+class RelaxedRoutingAwareSynthesizer
+    : public PlaceAndRouteSynthesizer<RelaxedRoutingAwareSynthesizer, AStarPlacer,
                                       RelaxedIndependentSetRouter> {
 public:
-  FlexSynthesizer(const Architecture& architecture,
+  RelaxedRoutingAwareSynthesizer(const Architecture& architecture,
                           const Config& config)
       : PlaceAndRouteSynthesizer(architecture, config) {}
-  explicit FlexSynthesizer(const Architecture& architecture)
+  explicit RelaxedRoutingAwareSynthesizer(const Architecture& architecture)
       : PlaceAndRouteSynthesizer(architecture) {}
 };
-class FlexCompiler final
-    : public Compiler<FlexCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, FlexSynthesizer,
+class RelaxedRoutingAwareCompiler final
+    : public Compiler<RelaxedRoutingAwareCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, RelaxedRoutingAwareSynthesizer,
                       CodeGenerator> {
 public:
-  FlexCompiler(const Architecture& architecture, const Config& config)
+  RelaxedRoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
-  explicit FlexCompiler(const Architecture& architecture)
+  explicit RelaxedRoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 
-class ElasticSynthesizer
-    : public PlaceAndRouteSynthesizer<ElasticSynthesizer, DFSPlacer,
+class FastRelaxedRoutingAwareSynthesizer
+    : public PlaceAndRouteSynthesizer<FastRelaxedRoutingAwareSynthesizer, DFSPlacer,
                                       RelaxedIndependentSetRouter> {
 public:
-  ElasticSynthesizer(const Architecture& architecture,
+  FastRelaxedRoutingAwareSynthesizer(const Architecture& architecture,
                           const Config& config)
       : PlaceAndRouteSynthesizer(architecture, config) {}
-  explicit ElasticSynthesizer(const Architecture& architecture)
+  explicit FastRelaxedRoutingAwareSynthesizer(const Architecture& architecture)
       : PlaceAndRouteSynthesizer(architecture) {}
 };
-class ElasticCompiler final
-    : public Compiler<ElasticCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer, ElasticSynthesizer,
+class FastRelexedRoutingAwareCompiler final
+    : public Compiler<FastRelexedRoutingAwareCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer, FastRelaxedRoutingAwareSynthesizer,
                       CodeGenerator> {
 public:
-  ElasticCompiler(const Architecture& architecture, const Config& config)
+  FastRelexedRoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
-  explicit ElasticCompiler(const Architecture& architecture)
+  explicit FastRelexedRoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned

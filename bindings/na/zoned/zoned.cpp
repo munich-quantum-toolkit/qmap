@@ -153,9 +153,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         return self.getStatistics();
       });
 
-  py::class_<na::zoned::FlexCompiler> flexCompiler(
-      m, "FlexCompiler");
-  flexCompiler.def(
+  py::class_<na::zoned::RelaxedRoutingAwareCompiler> relaxedRoutingAwareCompiler(
+      m, "RelaxedRoutingAwareCompiler");
+  relaxedRoutingAwareCompiler.def(
       py::init([](const na::zoned::Architecture& arch,
                   const std::string& logLevel, const bool useWindow,
                   const size_t windowMinWidth, const double windowRatio,
@@ -163,8 +163,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   const float deepeningValue, const float lookaheadFactor,
                   const float reuseLevel, const size_t maxNodes,
                   const size_t parkingOffset, const bool warnUnsupportedGates)
-                   -> na::zoned::FlexCompiler {
-        na::zoned::FlexCompiler::Config config;
+                   -> na::zoned::RelaxedRoutingAwareCompiler {
+        na::zoned::RelaxedRoutingAwareCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
         config.layoutSynthesizerConfig.placerConfig = {
             .useWindow = useWindow,
@@ -187,32 +187,32 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       "deepening_value"_a = 0.2, "lookahead_factor"_a = 0.2,
       "reuse_level"_a = 5.0, "max_nodes"_a = 50000000, "parking_offset"_a = 1,
       "warn_unsupported_gates"_a = true);
-  flexCompiler.def_static(
+  relaxedRoutingAwareCompiler.def_static(
       "from_json_string",
       [](const na::zoned::Architecture& arch,
-         const std::string& json) -> na::zoned::FlexCompiler {
+         const std::string& json) -> na::zoned::RelaxedRoutingAwareCompiler {
         // The correct header <nlohmann/json.hpp> is included, but clang-tidy
         // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
       "arch"_a, "json"_a);
-  flexCompiler.def(
+  relaxedRoutingAwareCompiler.def(
       "compile",
-      [](na::zoned::FlexCompiler& self,
+      [](na::zoned::RelaxedRoutingAwareCompiler& self,
          const qc::QuantumComputation& qc) -> std::string {
         return self.compile(qc).toString();
       },
       "qc"_a);
-  flexCompiler.def(
+  relaxedRoutingAwareCompiler.def(
       "stats",
-      [](const na::zoned::FlexCompiler& self) -> nlohmann::json {
+      [](const na::zoned::RelaxedRoutingAwareCompiler& self) -> nlohmann::json {
         return self.getStatistics();
       });
 
-  py::class_<na::zoned::ElasticCompiler> elasticCompiler(
-      m, "ElasticCompiler");
-  elasticCompiler.def(
+  py::class_<na::zoned::FastRelexedRoutingAwareCompiler> fastRelaxedRoutingAwareCompiler(
+      m, "FastRelexedRoutingAwareCompiler");
+  fastRelaxedRoutingAwareCompiler.def(
       py::init([](const na::zoned::Architecture& arch,
                   const std::string& logLevel, const bool useWindow,
                   const size_t windowMinWidth, const double windowRatio,
@@ -220,8 +220,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   const float deepeningValue, const float lookaheadFactor,
                   const float reuseLevel, const size_t trials,
                   const size_t parkingOffset, const bool warnUnsupportedGates)
-                   -> na::zoned::ElasticCompiler {
-        na::zoned::ElasticCompiler::Config config;
+                   -> na::zoned::FastRelexedRoutingAwareCompiler {
+        na::zoned::FastRelexedRoutingAwareCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
         config.layoutSynthesizerConfig.placerConfig = {
             .useWindow = useWindow,
@@ -244,26 +244,26 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       "deepening_value"_a = 0.2, "lookahead_factor"_a = 0.2,
       "reuse_level"_a = 5.0, "trials"_a = 10, "parking_offset"_a = 1,
       "warn_unsupported_gates"_a = true);
-  elasticCompiler.def_static(
+  fastRelaxedRoutingAwareCompiler.def_static(
       "from_json_string",
       [](const na::zoned::Architecture& arch,
-         const std::string& json) -> na::zoned::ElasticCompiler {
+         const std::string& json) -> na::zoned::FastRelexedRoutingAwareCompiler {
         // The correct header <nlohmann/json.hpp> is included, but clang-tidy
         // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
       "arch"_a, "json"_a);
-  elasticCompiler.def(
+  fastRelaxedRoutingAwareCompiler.def(
       "compile",
-      [](na::zoned::ElasticCompiler& self,
+      [](na::zoned::FastRelexedRoutingAwareCompiler& self,
          const qc::QuantumComputation& qc) -> std::string {
         return self.compile(qc).toString();
       },
       "qc"_a);
-  elasticCompiler.def(
+  fastRelaxedRoutingAwareCompiler.def(
       "stats",
-      [](const na::zoned::ElasticCompiler& self) -> nlohmann::json {
+      [](const na::zoned::FastRelexedRoutingAwareCompiler& self) -> nlohmann::json {
         return self.getStatistics();
       });
 }
