@@ -344,20 +344,14 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
         .first->second.emplace(qubit);
   }
 
-  // Since columns cannot split, this map collects the end (key) and start
-  // (value) x-position of each column that must be moved. It is intentionally
-  // an 'ordered' map to save the sorting afterward.
-  std::map<int64_t, int64_t> revHorizontalMoves;
-  for (const auto& [k, v] : horizontalMoves_) {
-    revHorizontalMoves.emplace(v, k);
-  }
-
   // A map from the source x-coordinate of the column to the AOD column that
-  // will load the atoms in this column. Here it is important that the moves are
-  // sorted by their final x-coordinate.
+  // will load the atoms in this column. Since loadColumnByColumn is always
+  // followed by storeColumnByColumn, see `generate(...)`, we do not attempt
+  // reordering columns while loading. Hence, we enumerate and sort the columns
+  // by their initial x-coordinate
   std::unordered_map<int64_t, size_t> sourceXToAodCol;
-  for (const auto& [aodCol, revMove] : enumerate(revHorizontalMoves)) {
-    sourceXToAodCol.emplace(revMove.second, aodCol);
+  for (const auto& [aodCol, revMove] : enumerate(horizontalMoves_)) {
+    sourceXToAodCol.emplace(revMove.first, aodCol);
   }
   // A map from the source y-coordinate of the row to the AOD row that
   // will load the atoms in this column.
