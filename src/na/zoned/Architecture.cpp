@@ -199,7 +199,7 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
         }
       } else {
         throw std::invalid_argument(
-            "Operation duration must contain rydberg duration");
+            "Operation duration must contain data for 'rydberg_gate'");
       }
       if (json["operation_duration"].contains("atom_transfer")) {
         if (json["operation_duration"]["atom_transfer"].is_number()) {
@@ -211,7 +211,7 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
         }
       } else {
         throw std::invalid_argument(
-            "Operation duration must contain atom transfer duration");
+            "Operation duration must contain data for 'atom_transfer'");
       }
       if (json["operation_duration"].contains("single_qubit_gate")) {
         if (json["operation_duration"]["single_qubit_gate"].is_number()) {
@@ -223,7 +223,7 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
         }
       } else {
         throw std::invalid_argument(
-            "Operation duration must contain single_qubit_gate duration");
+            "Operation duration must contain data for 'single_qubit_gate'");
       }
     } else {
       throw std::invalid_argument(
@@ -252,8 +252,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
                                       "in architecture spec");
         }
       } else {
-        throw std::invalid_argument("Operation fidelity must contain two qubit "
-                                    "gate fidelity");
+        throw std::invalid_argument("Operation fidelity must contain data for "
+                                    "'rydberg_gate'");
       }
       if (json["operation_fidelity"].contains("atom_transfer")) {
         if (json["operation_fidelity"]["atom_transfer"].is_number()) {
@@ -264,8 +264,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
                                       "in architecture spec");
         }
       } else {
-        throw std::invalid_argument("Operation fidelity must contain atom "
-                                    "transfer fidelity");
+        throw std::invalid_argument("Operation fidelity must contain data for "
+                                    "'atom_transfer'");
       }
       if (json["operation_fidelity"].contains("single_qubit_gate")) {
         if (json["operation_fidelity"]["single_qubit_gate"].is_number()) {
@@ -276,8 +276,8 @@ auto Architecture::fromJSON(const nlohmann::json& json) -> Architecture {
                                       "in architecture spec");
         }
       } else {
-        throw std::invalid_argument("Operation fidelity must contain one qubit "
-                                    "gate fidelity");
+        throw std::invalid_argument("Operation fidelity must contain data for "
+                                    "'single_qubit_gate'");
       }
     } else {
       throw std::invalid_argument(

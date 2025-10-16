@@ -70,7 +70,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                                           warnUnsupportedGates};
         return {arch, config};
       }),
-      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
+      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "warning",
       "use_window"_a = true, "window_size"_a = 10, "dynamic_placement"_a = true,
       "parking_offset"_a = 1, "warn_unsupported_gates"_a = true);
   routingAgnosticCompiler.def_static(
@@ -124,7 +124,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                                           warnUnsupportedGates};
         return {arch, config};
       }),
-      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "WARN",
+      py::keep_alive<1, 2>(), "arch"_a, "log_level"_a = "warning",
       "use_window"_a = true, "window_min_width"_a = 8, "window_ratio"_a = 1.0,
       "window_share"_a = 0.6, "deepening_factor"_a = 0.8,
       "deepening_value"_a = 0.2, "lookahead_factor"_a = 0.2,
