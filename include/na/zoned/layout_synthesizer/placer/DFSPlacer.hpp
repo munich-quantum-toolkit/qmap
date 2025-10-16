@@ -450,44 +450,48 @@ private:
      * (2) After the stack is cleared, it pops the first (minimal) element from
      *     the queue and pushes it onto the stack.
      * (3) It reduces the maximum capacity by one.
-     * @note If @ref empty returns `true`, calling this function is undefined
-     * behavior.
      * @see emptyQueue
      */
     auto clearAndSeedStackFromQueue() -> void {
       while (!stack_.empty()) {
-        if (minHeap_.size() < heapCapacity_) {
-          auto node = std::make_shared<Node>(0, 0, stack_.top());
-          minHeap_.push_back(node); // copy node
-          maxHeap_.push_back(std::move(node));
-          heapifyMinHeapUp(minHeap_.size() - 1);
-          heapifyMaxHeapUp(maxHeap_.size() - 1);
-        } else {
-          // if capacity is reached, only insert the value if smaller then max
-          const auto& value = stack_.top();
-          if (PriorityCompare{}(value, maxHeap_.front()->value)) {
-            auto node = std::make_shared<Node>(0, 0, value);
-            const auto i = maxHeap_.front()->minHeapIndex;
-            maxHeap_.front() = node; // copy node
-            heapifyMaxHeapDown(0);
-            minHeap_[i] = std::move(node);
-            heapifyMinHeapUp(i);
+        assert(minHeap_.size() == maxHeap_.size());
+        if (heapCapacity_ > 0) {
+          if (minHeap_.size() < heapCapacity_) {
+            auto node = std::make_shared<Node>(0, 0, stack_.top());
+            minHeap_.push_back(node); // copy node
+            maxHeap_.push_back(std::move(node));
+            heapifyMinHeapUp(minHeap_.size() - 1);
+            heapifyMaxHeapUp(maxHeap_.size() - 1);
+          } else {
+            assert(minHeap_.size() == heapCapacity_);
+            // if capacity is reached, only insert the value if smaller then max
+            const auto& value = stack_.top();
+            if (PriorityCompare{}(value, maxHeap_.front()->value)) {
+              auto node = std::make_shared<Node>(0, 0, value);
+              const auto i = maxHeap_.front()->minHeapIndex;
+              maxHeap_.front() = node; // copy node
+              heapifyMaxHeapDown(0);
+              minHeap_[i] = std::move(node);
+              heapifyMinHeapUp(i);
+            }
           }
         }
         stack_.pop();
       }
-      assert(!minHeap_.empty());
-      assert(minHeap_.size() == maxHeap_.size());
-      assert(minHeap_.size() <= heapCapacity_);
-      stack_.emplace(std::move(minHeap_.front()->value));
-      const auto i = minHeap_.front()->maxHeapIndex;
-      std::swap(minHeap_.front(), minHeap_.back());
-      minHeap_.pop_back();
-      heapifyMinHeapDown(0);
-      std::swap(maxHeap_[i], maxHeap_.back());
-      maxHeap_.pop_back();
-      heapifyMaxHeapDown(i);
-      --heapCapacity_;
+      if (!minHeap_.empty()) {
+        assert(minHeap_.size() == maxHeap_.size());
+        assert(minHeap_.size() <= heapCapacity_);
+        stack_.emplace(std::move(minHeap_.front()->value));
+        const auto i = minHeap_.front()->maxHeapIndex;
+        std::swap(minHeap_.front(), minHeap_.back());
+        minHeap_.pop_back();
+        heapifyMinHeapDown(0);
+        std::swap(maxHeap_[i], maxHeap_.back());
+        maxHeap_.pop_back();
+        heapifyMaxHeapDown(i);
+        assert(heapCapacity_ > 0);
+        --heapCapacity_;
+      }
       assert(minHeap_.size() == maxHeap_.size());
       assert(minHeap_.size() <= heapCapacity_);
     }

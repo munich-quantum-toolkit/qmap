@@ -49,10 +49,6 @@ auto DFSPlacer::dfsTreeSearch(
     const std::function<double(const Node&)>& getCost,
     const std::function<double(const Node&)>& getHeuristic, const size_t trials)
     -> const Node& {
-  //===--------------------------------------------------------------------===//
-  // Setup open set structure
-  //===--------------------------------------------------------------------===//
-  // struct for items in the open set
   struct Item {
     double priority;  //< sum of cost and heuristic
     const Node* node; //< pointer to the node
@@ -78,6 +74,7 @@ auto DFSPlacer::dfsTreeSearch(
         if (!goal.has_value() || currentItem.priority < goal->priority) {
           goal = std::move(currentItem);
         }
+        queueStack.clearAndSeedStackFromQueue();
       } else {
         // Expand the current node by adding all neighbors to the open set
         const auto& neighbors = getNeighbors(*currentItem.node);
