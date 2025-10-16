@@ -18,10 +18,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <deque>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -30,14 +28,12 @@
 #include <optional>
 #include <queue>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <z3++.h>
 
 namespace na::zoned {
 template <class Node>
@@ -1274,7 +1270,7 @@ auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
     const auto& [site, reuse, distance, lookaheadCost] = option;
     // skip the sites that are already consumed
     if (!reuse &&
-        node.consumedFreeSites.find(site) != node.consumedFreeSites.end()) {
+        node.consumedFreeSites.contains(site)) {
       continue;
     }
     // make a copy of the node, the parent of the child
@@ -1315,9 +1311,8 @@ auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
     const auto& [sites, distances, lookaheadCost] = option;
     const auto& [leftSite, rightSite] = sites;
     // skip if one of the sites is already consumed
-    if (node.consumedFreeSites.find(leftSite) != node.consumedFreeSites.end() ||
-        node.consumedFreeSites.find(rightSite) !=
-            node.consumedFreeSites.end()) {
+    if (node.consumedFreeSites.contains(leftSite) ||
+        node.consumedFreeSites.contains(rightSite)) {
       continue;
     }
     // make a copy of the node, the parent of the child as use this as a

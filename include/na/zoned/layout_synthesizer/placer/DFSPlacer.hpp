@@ -303,8 +303,7 @@ public:
       -> std::vector<Placement> override;
 
 private:
-  template <class T, class Compare = std::less<T>>
-  class BoundedQueueStack {
+  template <class T, class Compare = std::less<T>> class BoundedQueueStack {
   public:
     using ValueType = T;
     using SizeType = size_t;
@@ -421,6 +420,10 @@ private:
       assert(!stack_.empty());
       return stack_.top();
     }
+    [[nodiscard]] auto top() -> ValueType& {
+      assert(!stack_.empty());
+      return stack_.top();
+    }
     /**
      * @brief Removes the top element.
      * @note If @ref stackEmpty returns `true`, calling this function is
@@ -455,7 +458,8 @@ private:
         assert(minHeap_.size() == maxHeap_.size());
         if (heapCapacity_ > 0) {
           if (minHeap_.size() < heapCapacity_) {
-            minHeap_.emplace_back(std::make_unique<Node>(0, 0, top()));
+            minHeap_.emplace_back(std::make_unique<Node>(
+                minHeap_.size(), maxHeap_.size(), std::move(top())));
             maxHeap_.emplace_back(minHeap_.back().get());
             heapifyMinHeapUp(minHeap_.size() - 1);
             heapifyMaxHeapUp(maxHeap_.size() - 1);
@@ -466,10 +470,10 @@ private:
             if (PriorityCompare{}(value, maxHeap_.front()->value)) {
               const auto i = maxHeap_.front()->minHeapIndex;
               assert(i < minHeap_.size());
-              minHeap_[i] = std::make_unique<Node>(0, 0, value);
+              minHeap_[i] = std::make_unique<Node>(i, 0, value);
               maxHeap_.front() = minHeap_[i].get();
-              heapifyMaxHeapDown(0);
               heapifyMinHeapUp(i);
+              heapifyMaxHeapDown(0);
             }
           }
         }
@@ -478,15 +482,28 @@ private:
       if (!minHeap_.empty()) {
         assert(minHeap_.size() == maxHeap_.size());
         assert(minHeap_.size() <= heapCapacity_);
-        stack_.emplace(std::move(minHeap_.front()->value));
-        const auto i = minHeap_.front()->maxHeapIndex;
-        std::swap(minHeap_.front(), minHeap_.back());
-        minHeap_.pop_back();
-        heapifyMinHeapDown(0);
-        std::swap(maxHeap_[i], maxHeap_.back());
-        maxHeap_.pop_back();
-        heapifyMaxHeapDown(i);
-        assert(heapCapacity_ > 0);
+        push(std::move(minHeap_.front()->value));
+        if (minHeap_.size() == 1) {
+          minHeap_.pop_back();
+          maxHeap_.pop_back();
+        } else {
+          assert(minHeap_.size() > 1);
+          const auto i = minHeap_.front()->maxHeapIndex;
+          std::swap(minHeap_.front(), minHeap_.back());
+          minHeap_.pop_back();
+          minHeap_.front()->minHeapIndex = 0;
+          heapifyMinHeapDown(0);
+          if (i == maxHeap_.size() - 1) {
+            maxHeap_.pop_back();
+          } else {
+            std::swap(maxHeap_[i], maxHeap_.back());
+            maxHeap_.pop_back();
+            maxHeap_[i]->maxHeapIndex = i;
+            heapifyMaxHeapDown(i);
+          }
+        }
+      }
+      if (heapCapacity_ > 0) {
         --heapCapacity_;
       }
       assert(minHeap_.size() == maxHeap_.size());
