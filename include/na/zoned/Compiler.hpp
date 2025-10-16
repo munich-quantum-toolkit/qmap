@@ -312,14 +312,14 @@ public:
   explicit FastRelaxedRoutingAwareSynthesizer(const Architecture& architecture)
       : PlaceAndRouteSynthesizer(architecture) {}
 };
-class FastRelexedRoutingAwareCompiler final
-    : public Compiler<FastRelexedRoutingAwareCompiler, ASAPScheduler,
+class FastRelaxedRoutingAwareCompiler final
+    : public Compiler<FastRelaxedRoutingAwareCompiler, ASAPScheduler,
                       VertexMatchingReuseAnalyzer, FastRelaxedRoutingAwareSynthesizer,
                       CodeGenerator> {
 public:
-  FastRelexedRoutingAwareCompiler(const Architecture& architecture, const Config& config)
+  FastRelaxedRoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
-  explicit FastRelexedRoutingAwareCompiler(const Architecture& architecture)
+  explicit FastRelaxedRoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned
