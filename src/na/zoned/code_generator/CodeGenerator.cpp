@@ -259,16 +259,15 @@ auto CodeGenerator::RearrangementGenerator::loadRowByRow(
   }
 
   // Load the atoms row-wise
-  const int64_t sign = (rearrangementDirection_ ==
-                                  RearrangementDirection::UP ? 1 : -1);
+  const int64_t sign =
+      (rearrangementDirection_ == RearrangementDirection::UP ? 1 : -1);
   for (const auto& [sourceY, qubitsToLoad] : yToQubitsToBeLoaded) {
     // Get the AOD row to load the atoms in this row.
     assert(sourceYToAodRow.contains(sourceY));
     const auto newAodRow = sourceYToAodRow[sourceY];
     // already include a virtual offset move by `startD / 2`
     const auto y = sourceY + (sign * sourceDy_ / 2);
-    const auto it =
-        aodRowsToY_.emplace(newAodRow, y).first;
+    const auto it = aodRowsToY_.emplace(newAodRow, y).first;
     // Push already activated rows away if necessary.
     auto nextY = y - sourceDy_;
     for (auto lowerIt = std::make_reverse_iterator(it);
@@ -367,8 +366,8 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
     sourceYToAodRow.emplace(y, aodRow);
   }
 
-  const int64_t sign = (rearrangementDirection_ ==
-                                  RearrangementDirection::UP ? 1 : -1);
+  const int64_t sign =
+      (rearrangementDirection_ == RearrangementDirection::UP ? 1 : -1);
   // Load the atoms column-wise
   for (const auto& [sourceX, qubitsToLoad] : xToQubitsToBeLoaded) {
     // Get the AOD column to load the atoms in this column.
@@ -389,8 +388,7 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
       }
       nextX = sourceX + sourceDx_ + (sourceDx_ / 2);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX_.end() && upperIt->second < nextX;
-           ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX; ++upperIt) {
         upperIt->second = nextX;
         nextX += nextX < sourceMaxX_ ? sourceDx_ : sourceDx_ / 2;
       }
@@ -405,16 +403,15 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
            lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
            ++lowerIt) {
         lowerIt->second = nextX;
-        nextX -= nextX > 0 || odd ? sourceDx_ - sourceDx_ / 4 : sourceDx_ / 4;
+        nextX -= nextX > 0 && odd ? sourceDx_ - sourceDx_ / 4 : sourceDx_ / 4;
         odd = !odd;
       }
       odd = false;
       nextX = sourceX + sourceDx_ - (sourceDx_ / 4);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX_.end() && upperIt->second < nextX;
-           ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX; ++upperIt) {
         upperIt->second = nextX;
-        nextX += nextX < sourceMaxX_ || odd ? sourceDx_ - sourceDx_ / 4
+        nextX += nextX < sourceMaxX_ && odd ? sourceDx_ - sourceDx_ / 4
                                             : sourceDx_ / 4;
         odd = !odd;
       }
@@ -429,16 +426,15 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
            lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
            ++lowerIt) {
         lowerIt->second = nextX;
-        nextX -= nextX > 0 || odd ? sourceDx_ - sourceDx_ / 4 : sourceDx_ / 4;
+        nextX -= nextX > 0 && odd ? sourceDx_ - sourceDx_ / 4 : sourceDx_ / 4;
         odd = !odd;
       }
       odd = true;
       nextX = sourceX + (sourceDx_ / 2);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX_.end() && upperIt->second < nextX;
-           ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX; ++upperIt) {
         upperIt->second = nextX;
-        nextX += nextX < sourceMaxX_ || odd ? sourceDx_ - sourceDx_ / 4
+        nextX += nextX < sourceMaxX_ && odd ? sourceDx_ - sourceDx_ / 4
                                             : sourceDx_ / 4;
         odd = !odd;
       }
@@ -488,8 +484,8 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
   // A map from the target y-coordinate of the row to the AOD row that
   // will store the atoms in this row. Here it is important that the moves
   // are sorted by their initial y-coordinate.
-  const int64_t sign = (rearrangementDirection_ ==
-                                  RearrangementDirection::DOWN ? 1 : -1);
+  const int64_t sign =
+      (rearrangementDirection_ == RearrangementDirection::DOWN ? 1 : -1);
   std::unordered_map<int64_t, size_t> targetYToAodRow;
   for (const auto& [aodRow, move] : enumerate(verticalMoves_)) {
     targetYToAodRow.emplace(move.second, aodRow);
@@ -526,6 +522,34 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
         aodColsToX_[aodCol] = x - targetDx_ / 4;
       } else {
         aodColsToX_[aodCol] = x + targetDx_ / 4;
+      }
+    }
+  }
+
+  {
+    const auto firstTargetY = yToQubitsToBeStored.cbegin()->first;
+    assert(targetYToAodRow.contains(firstTargetY));
+    const auto oldAodRow = targetYToAodRow[firstTargetY];
+    const auto it = aodRowsToY_.find(oldAodRow);
+    const auto y = it->second;
+    auto nextY = y;
+    for (auto lowerIt = std::make_reverse_iterator(it);
+         lowerIt != aodRowsToY_.rend(); ++lowerIt) {
+      nextY -= nextY > 0 ? targetDy_ : targetDy_ / 2;
+      if (lowerIt->second > nextY) {
+        lowerIt->second = nextY;
+      } else {
+        nextY = lowerIt->second;
+      }
+    }
+    nextY = y;
+    for (auto upperIt = std::next(it); upperIt != aodRowsToY_.end();
+         ++upperIt) {
+      nextY += nextY < targetMaxY_ ? targetDy_ : targetDy_ / 2;
+      if (upperIt->second < nextY) {
+        upperIt->second = nextY;
+      } else {
+        nextY = upperIt->second;
       }
     }
   }
@@ -618,8 +642,8 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
     targetYs.emplace(v);
   }
   std::unordered_map<int64_t, size_t> targetYToAodRow;
-  const int64_t sign = (rearrangementDirection_ ==
-                                  RearrangementDirection::DOWN ? 1 : -1);
+  const int64_t sign =
+      (rearrangementDirection_ == RearrangementDirection::DOWN ? 1 : -1);
   for (const auto& [aodRow, y] : enumerate(targetYs)) {
     targetYToAodRow.emplace(y, aodRow);
     // Make a virtual move of all rows to their target y-coordinates
@@ -639,6 +663,69 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
         aodColsToX_[aodCol] = targetX - targetDx_ / 4;
       } else {
         aodColsToX_[aodCol] = targetX + targetDx_ / 4;
+      }
+    }
+  }
+
+  {
+    const auto& [firstTargetX, firstQubitsToStore] =
+        *xToQubitsToBeStored.cbegin();
+    assert(targetXToAodCol.contains(firstTargetX));
+    const auto oldAodCol = targetXToAodCol[firstTargetX];
+    const auto it = aodColsToX_.find(oldAodCol);
+    const auto x = it->second;
+    auto columnKind = movements_.at(*firstQubitsToStore.begin()).targetSite;
+    auto nextX = x;
+    for (auto lowerIt = std::make_reverse_iterator(it);
+         lowerIt != aodColsToX_.rend(); ++lowerIt) {
+      if (columnKind == QubitMovement::SiteKind::STORAGE) {
+        nextX -= nextX > 0 ? targetDx_ : targetDx_ / 2;
+      } else {
+        nextX -= nextX > 0 && columnKind ==
+                                  QubitMovement::SiteKind::ENTANGLEMENT_RIGHT
+                     ? targetDx_ - targetDx_ / 4
+                     : targetDx_ / 4;
+        columnKind = columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT
+                            ? QubitMovement::SiteKind::ENTANGLEMENT_RIGHT
+                            : QubitMovement::SiteKind::ENTANGLEMENT_LEFT;
+      }
+      if (lowerIt->second > nextX) {
+        lowerIt->second = nextX;
+      } else {
+        if (columnKind != QubitMovement::SiteKind::STORAGE
+          && (nextX - lowerIt->second) % targetDx_ != 0) {
+          columnKind = columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT
+                              ? QubitMovement::SiteKind::ENTANGLEMENT_RIGHT
+                              : QubitMovement::SiteKind::ENTANGLEMENT_LEFT;
+        }
+        nextX = lowerIt->second;
+      }
+    }
+    columnKind = movements_.at(*firstQubitsToStore.begin()).targetSite;
+    nextX = x;
+    for (auto upperIt = std::next(it); upperIt != aodColsToX_.end();
+         ++upperIt) {
+      if (columnKind == QubitMovement::SiteKind::STORAGE) {
+        nextX += nextX > 0 ? targetDx_ : targetDx_ / 2;
+      } else {
+        nextX += nextX > 0 && columnKind ==
+                                  QubitMovement::SiteKind::ENTANGLEMENT_LEFT
+                     ? targetDx_ - targetDx_ / 4
+                     : targetDx_ / 4;
+        columnKind = columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT
+                            ? QubitMovement::SiteKind::ENTANGLEMENT_RIGHT
+                            : QubitMovement::SiteKind::ENTANGLEMENT_LEFT;
+      }
+      if (upperIt->second < nextX) {
+        upperIt->second = nextX;
+      } else {
+        if (columnKind != QubitMovement::SiteKind::STORAGE
+          && (upperIt->second - nextX) % targetDx_ != 0) {
+          columnKind = columnKind == QubitMovement::SiteKind::ENTANGLEMENT_LEFT
+                              ? QubitMovement::SiteKind::ENTANGLEMENT_RIGHT
+                              : QubitMovement::SiteKind::ENTANGLEMENT_LEFT;
+          }
+        nextX = upperIt->second;
       }
     }
   }
@@ -663,8 +750,7 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
       }
       nextX = targetX + targetDx_ + (targetDx_ / 2);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX_.end() && upperIt->second < nextX;
-           ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX; ++upperIt) {
         upperIt->second = nextX;
         nextX += nextX < targetMaxX_ ? targetDx_ : targetDx_ / 2;
       }
@@ -676,16 +762,15 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
            lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
            ++lowerIt) {
         lowerIt->second = nextX;
-        nextX -= nextX > 0 || odd ? targetDx_ - targetDx_ / 4 : targetDx_ / 4;
+        nextX -= nextX > 0 && odd ? targetDx_ - targetDx_ / 4 : targetDx_ / 4;
         odd = !odd;
       }
       odd = false;
       nextX = targetX + targetDx_ - (targetDx_ / 4);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX_.end() && upperIt->second < nextX;
-           ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX; ++upperIt) {
         upperIt->second = nextX;
-        nextX += nextX < targetMaxX_ || odd ? targetDx_ - targetDx_ / 4
+        nextX += nextX < targetMaxX_ && odd ? targetDx_ - targetDx_ / 4
                                             : targetDx_ / 4;
         odd = !odd;
       }
@@ -697,15 +782,15 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
            lowerIt != aodColsToX_.rend() && lowerIt->second > nextX;
            ++lowerIt) {
         lowerIt->second = nextX;
-        nextX -= nextX > 0 || odd ? targetDx_ - targetDx_ / 4 : targetDx_ / 4;
+        nextX -= nextX > 0 && odd ? targetDx_ - targetDx_ / 4 : targetDx_ / 4;
+        odd = !odd;
       }
       odd = true;
       nextX = targetX + (targetDx_ / 2);
       for (auto upperIt = std::next(it);
-           upperIt != aodColsToX_.end() && upperIt->second < nextX;
-           ++upperIt) {
+           upperIt != aodColsToX_.end() && upperIt->second < nextX; ++upperIt) {
         upperIt->second = nextX;
-        nextX += nextX < targetMaxX_ || odd ? targetDx_ - targetDx_ / 4
+        nextX += nextX < targetMaxX_ && odd ? targetDx_ - targetDx_ / 4
                                             : targetDx_ / 4;
         odd = !odd;
       }
