@@ -127,7 +127,7 @@ private:
     int64_t targetDy_ = 0;
     int64_t targetMaxX_ = 0;
     int64_t targetMaxY_ = 0;
-    // Since rows cannot split, this map collects the end (key) and start
+    // Since rows cannot split, this map collects the start (key) and end
     // (value) y-position of each row that must be moved. It is intentionally an
     // 'ordered' map to save the sorting afterward.
     std::map<int64_t, int64_t> verticalMoves_;

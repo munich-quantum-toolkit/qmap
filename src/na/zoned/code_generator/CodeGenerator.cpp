@@ -481,15 +481,21 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
 auto CodeGenerator::RearrangementGenerator::storeRowByRow(
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) -> void {
-  // A map from the target y-coordinate of the row to the AOD row that
-  // will store the atoms in this row. Here it is important that the moves
-  // are sorted by their initial y-coordinate.
   const int64_t sign =
       (rearrangementDirection_ == RearrangementDirection::DOWN ? 1 : -1);
+  // Since storeRowByRow is only called after loadRowByRow, the rows are already
+  // in order. Hence, the AOD rows must be enumerated and sorted by their final
+  // y-coordinate. See also `generate(...)`.
+  std::map<int64_t, int64_t> revVerticalMoves;
+  for (const auto& [k, v] : verticalMoves_) {
+    revVerticalMoves.emplace(v, k);
+  }
+  // A map from the target y-coordinate of the row to the AOD row that
+  // will store the atoms in this row.
   std::unordered_map<int64_t, size_t> targetYToAodRow;
-  for (const auto& [aodRow, move] : enumerate(verticalMoves_)) {
-    targetYToAodRow.emplace(move.second, aodRow);
-    aodRowsToY_[aodRow] = move.second + (sign * targetDy_ / 2);
+  for (const auto& [aodRow, move] : enumerate(revVerticalMoves)) {
+    targetYToAodRow.emplace(move.first, aodRow);
+    aodRowsToY_[aodRow] = move.first + (sign * targetDy_ / 2);
   }
   // A set of target x-coordinate of the columns to the AOD columns that
   // will store the atoms in this column
