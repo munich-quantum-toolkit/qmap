@@ -210,8 +210,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         return self.getStatistics();
       });
 
-  py::class_<na::zoned::FastRelexedRoutingAwareCompiler> fastRelaxedRoutingAwareCompiler(
-      m, "FastRelexedRoutingAwareCompiler");
+  py::class_<na::zoned::FastRelaxedRoutingAwareCompiler> fastRelaxedRoutingAwareCompiler(
+      m, "FastRelaxedRoutingAwareCompiler");
   fastRelaxedRoutingAwareCompiler.def(
       py::init([](const na::zoned::Architecture& arch,
                   const std::string& logLevel, const bool useWindow,
@@ -220,8 +220,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   const float deepeningValue, const float lookaheadFactor,
                   const float reuseLevel, const size_t trials,
                   const size_t parkingOffset, const bool warnUnsupportedGates)
-                   -> na::zoned::FastRelexedRoutingAwareCompiler {
-        na::zoned::FastRelexedRoutingAwareCompiler::Config config;
+                   -> na::zoned::FastRelaxedRoutingAwareCompiler {
+        na::zoned::FastRelaxedRoutingAwareCompiler::Config config;
         config.logLevel = spdlog::level::from_str(logLevel);
         config.layoutSynthesizerConfig.placerConfig = {
             .useWindow = useWindow,
@@ -247,7 +247,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   fastRelaxedRoutingAwareCompiler.def_static(
       "from_json_string",
       [](const na::zoned::Architecture& arch,
-         const std::string& json) -> na::zoned::FastRelexedRoutingAwareCompiler {
+         const std::string& json) -> na::zoned::FastRelaxedRoutingAwareCompiler {
         // The correct header <nlohmann/json.hpp> is included, but clang-tidy
         // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
         // NOLINTNEXTLINE(misc-include-cleaner)
@@ -256,14 +256,14 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       "arch"_a, "json"_a);
   fastRelaxedRoutingAwareCompiler.def(
       "compile",
-      [](na::zoned::FastRelexedRoutingAwareCompiler& self,
+      [](na::zoned::FastRelaxedRoutingAwareCompiler& self,
          const qc::QuantumComputation& qc) -> std::string {
         return self.compile(qc).toString();
       },
       "qc"_a);
   fastRelaxedRoutingAwareCompiler.def(
       "stats",
-      [](const na::zoned::FastRelexedRoutingAwareCompiler& self) -> nlohmann::json {
+      [](const na::zoned::FastRelaxedRoutingAwareCompiler& self) -> nlohmann::json {
         return self.getStatistics();
       });
 }
