@@ -117,7 +117,7 @@ auto DFSPlacer::discretizePlacementOfAtoms(
   }
   RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
-  for (const auto& [_, sites] : rows) {
+  for (const auto& sites : rows | std::views::values) {
     for (const auto& site : sites) {
       rowIndices.emplace(site, rowIndex);
     }
@@ -125,7 +125,7 @@ auto DFSPlacer::discretizePlacementOfAtoms(
   }
   RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
-  for (const auto& [_, sites] : columns) {
+  for (const auto& sites : columns | std::views::values) {
     for (const auto& site : sites) {
       columnIndices.emplace(site, columnIndex);
     }
@@ -143,7 +143,7 @@ auto DFSPlacer::discretizeNonOccupiedStorageSites(const SiteSet& occupiedSites)
     // find rows with free sites
     for (size_t r = 0; r < slm->nRows; ++r) {
       for (size_t c = 0; c < slm->nCols; ++c) {
-        if (occupiedSites.find(std::tie(*slm, r, c)) == occupiedSites.end()) {
+        if (!occupiedSites.contains(std::tie(*slm, r, c))) {
           // free site in row r found at column c
           rows.emplace(slm->location.second + (slm->siteSeparation.second * r),
                        std::pair{std::cref(*slm), r});
@@ -154,7 +154,7 @@ auto DFSPlacer::discretizeNonOccupiedStorageSites(const SiteSet& occupiedSites)
     // find columns with free sites
     for (size_t c = 0; c < slm->nCols; ++c) {
       for (size_t r = 0; r < slm->nRows; ++r) {
-        if (occupiedSites.find(std::tie(*slm, r, c)) == occupiedSites.end()) {
+        if (!occupiedSites.contains(std::tie(*slm, r, c))) {
           // free site in column c found at row r
           columns.emplace(slm->location.first + (slm->siteSeparation.first * c),
                           std::pair{std::cref(*slm), c});
@@ -165,12 +165,12 @@ auto DFSPlacer::discretizeNonOccupiedStorageSites(const SiteSet& occupiedSites)
   }
   RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
-  for (const auto& [_, site] : rows) {
+  for (const auto& site : rows | std::views::values) {
     rowIndices.emplace(site, rowIndex++);
   }
   RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
-  for (const auto& [_, site] : columns) {
+  for (const auto& site : columns | std::views::values) {
     columnIndices.emplace(site, columnIndex++);
   }
   return std::pair{rowIndices, columnIndices};
@@ -186,11 +186,11 @@ auto DFSPlacer::discretizeNonOccupiedEntanglementSites(
       // find rows with free sites
       for (size_t r = 0; r < slm.nRows; ++r) {
         for (size_t c = 0; c < slm.nCols; ++c) {
-          if (occupiedSites.find(std::tie(slm, r, c)) == occupiedSites.end()) {
+          if (!occupiedSites.contains(std::tie(slm, r, c))) {
             // free site in row r found at column c
             rows.try_emplace(slm.location.second +
                              (slm.siteSeparation.second * r))
-                .first->second.emplace(std::pair{std::cref(slm), r});
+                .first->second.emplace(std::cref(slm), r);
             break;
           }
         }
@@ -198,12 +198,12 @@ auto DFSPlacer::discretizeNonOccupiedEntanglementSites(
       // find columns with free sites
       for (size_t c = 0; c < slm.nCols; ++c) {
         for (size_t r = 0; r < slm.nRows; ++r) {
-          if (occupiedSites.find(std::tie(slm, r, c)) == occupiedSites.end()) {
+          if (!occupiedSites.contains(std::tie(slm, r, c))) {
             // free site in column c found at row r
             columns
                 .try_emplace(slm.location.first +
                              (slm.siteSeparation.first * c))
-                .first->second.emplace(std::pair{std::cref(slm), c});
+                .first->second.emplace(std::cref(slm), c);
             break;
           }
         }
@@ -212,7 +212,7 @@ auto DFSPlacer::discretizeNonOccupiedEntanglementSites(
   }
   RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
-  for (const auto& [_, sites] : rows) {
+  for (const auto& sites : rows | std::views::values) {
     for (const auto& site : sites) {
       rowIndices.emplace(site, rowIndex);
     }
@@ -220,7 +220,7 @@ auto DFSPlacer::discretizeNonOccupiedEntanglementSites(
   }
   RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
-  for (const auto& [_, sites] : columns) {
+  for (const auto& sites : columns | std::views::values) {
     for (const auto& site : sites) {
       columnIndices.emplace(site, columnIndex);
     }
@@ -339,10 +339,10 @@ auto DFSPlacer::placeGatesInEntanglementZone(
   for (const auto& gate : twoQubitGates) {
     const auto& [first, second] = gate;
     if (const auto firstQubitReuse =
-            reuseQubits.find(first) != reuseQubits.end() &&
+            reuseQubits.contains(first) &&
             std::get<0>(previousPlacement[first]).get().isEntanglement();
         !firstQubitReuse &&
-        (reuseQubits.find(second) == reuseQubits.end() ||
+        (!reuseQubits.contains(second) ||
          std::get<0>(previousPlacement[second]).get().isStorage())) {
       const auto& [storageSLM1, storageRow1, storageCol1] =
           previousPlacement[first];
@@ -397,7 +397,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
         currentPlacement[second] =
             architecture_.get().otherEntanglementSite(slm, r, c);
       } else {
-        // second qubit is reused
+        // the second qubit is reused
         const auto& [slm, r, c] = previousPlacement[second];
         currentPlacement[first] =
             architecture_.get().otherEntanglementSite(slm, r, c);
@@ -456,7 +456,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
    */
   std::vector<GateJob> gateJobs;
   gateJobs.reserve(nJobs);
-  for (const auto& [_, gate] : gatesToPlace) {
+  for (const auto& gate : gatesToPlace | std::views::values) {
     const auto& [leftAtom, rightAtom] = gate;
     const auto& [leftSLM, leftRow, leftCol] = previousPlacement[leftAtom];
     const auto& [rightSLM, rightRow, rightCol] = previousPlacement[rightAtom];
@@ -489,8 +489,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
     }
     for (size_t r = rLow; r < rHigh; ++r) {
       for (size_t c = cLow; c < cHigh; ++c) {
-        if (occupiedEntanglementSites.find(std::tie(nearestSLM, r, c)) ==
-            occupiedEntanglementSites.end()) {
+        if (!occupiedEntanglementSites.contains(std::tie(nearestSLM, r, c))) {
           addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
                         leftRow, leftCol, rightSLM, rightRow, rightCol,
                         nearestSLM, r, c, job);
@@ -501,17 +500,17 @@ auto DFSPlacer::placeGatesInEntanglementZone(
     while (config_.useWindow &&
            static_cast<double>(job.options.size()) <
                config_.windowShare * static_cast<double>(nJobs)) {
-      // window does not contain enough options, so expand it
+      // the window does not contain enough options, so expand it
       ++expansion;
       size_t windowWidth = 0;
       size_t windowHeight = 0;
       if (config_.windowRatio < 1.0) {
-        // landscape ==> expand width and adjust height
+        // landscapes ==> expand width and adjust height
         windowWidth = config_.windowMinWidth + expansion;
         windowHeight = static_cast<size_t>(
             std::round(config_.windowRatio * static_cast<double>(windowWidth)));
       } else {
-        // portrait ==> expand height and adjust width
+        // portraits ==> expand height and adjust width
         windowHeight = windowMinHeight_ + expansion;
         windowWidth = static_cast<size_t>(std::round(
             static_cast<double>(windowHeight) / config_.windowRatio));
@@ -527,8 +526,8 @@ auto DFSPlacer::placeGatesInEntanglementZone(
       if (rLowNew < rLow) {
         assert(rLow - rLowNew == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
-          if (occupiedEntanglementSites.find(std::tie(
-                  nearestSLM, rLowNew, c)) == occupiedEntanglementSites.end()) {
+          if (!occupiedEntanglementSites.contains(
+                  std::tie(nearestSLM, rLowNew, c))) {
             addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
                           leftRow, leftCol, rightSLM, rightRow, rightCol,
                           nearestSLM, rLowNew, c, job);
@@ -539,8 +538,8 @@ auto DFSPlacer::placeGatesInEntanglementZone(
         assert(rHighNew - rHigh == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
           // NOTE: we have to use rHighNew - 1 here, which is equal to rHigh
-          if (occupiedEntanglementSites.find(std::tie(nearestSLM, rHigh, c)) ==
-              occupiedEntanglementSites.end()) {
+          if (!occupiedEntanglementSites.contains(
+                  std::tie(nearestSLM, rHigh, c))) {
             addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
                           leftRow, leftCol, rightSLM, rightRow, rightCol,
                           nearestSLM, rHigh, c, job);
@@ -550,8 +549,8 @@ auto DFSPlacer::placeGatesInEntanglementZone(
       if (cLowNew < cLow) {
         assert(cLow - cLowNew == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
-          if (occupiedEntanglementSites.find(std::tie(
-                  nearestSLM, r, cLowNew)) == occupiedEntanglementSites.end()) {
+          if (!occupiedEntanglementSites.contains(
+                  std::tie(nearestSLM, r, cLowNew))) {
             addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
                           leftRow, leftCol, rightSLM, rightRow, rightCol,
                           nearestSLM, r, cLowNew, job);
@@ -562,8 +561,8 @@ auto DFSPlacer::placeGatesInEntanglementZone(
         assert(cHighNew - cHigh == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
-          if (occupiedEntanglementSites.find(std::tie(nearestSLM, r, cHigh)) ==
-              occupiedEntanglementSites.end()) {
+          if (!occupiedEntanglementSites.contains(
+                  std::tie(nearestSLM, r, cHigh))) {
             addGateOption(discreteTargetRows, discreteTargetColumns, leftSLM,
                           leftRow, leftCol, rightSLM, rightRow, rightCol,
                           nearestSLM, r, cHigh, job);
@@ -575,19 +574,19 @@ auto DFSPlacer::placeGatesInEntanglementZone(
       cLow = cLowNew;
       cHigh = cHighNew;
     }
-    std::sort(
-        job.options.begin(), job.options.end(),
+    std::ranges::sort(
+        job.options,
         [](const GateJob::Option& lhs, const GateJob::Option& rhs) -> bool {
           return lhs.distance < rhs.distance;
         });
-    // Determine whether lookahead for the gate should be considered.
+    // Determine whether a lookahead for the gate should be considered.
     // That is the case if the gate to be placed contains a reuse qubit
     // because then we do not only decide the position of the gate in this layer
     // but also of the gate in the next layer.
-    bool leftReuse = nextReuseQubits.find(leftAtom) != nextReuseQubits.end();
-    bool rightReuse = nextReuseQubits.find(rightAtom) != nextReuseQubits.end();
-    qc::Qubit nextInteractionPartner = 0;
+    bool leftReuse = nextReuseQubits.contains(leftAtom);
+    bool rightReuse = nextReuseQubits.contains(rightAtom);
     if (leftReuse || rightReuse) {
+      qc::Qubit nextInteractionPartner = 0;
       for (const auto& nextGate : nextTwoQubitGates) {
         const auto& [nextLeftAtom, nextRightAtom] = nextGate;
         if (leftReuse) {
@@ -632,7 +631,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
   assert(!discreteRows.empty()); // ==> the following std::max_element does not
                                  // return a nullptr
   const uint8_t maxDiscreteSourceRow =
-      std::max_element(discreteRows.begin(), discreteRows.end(),
+      std::ranges::max_element(discreteRows,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -641,7 +640,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
       !discreteColumns.empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteSourceColumn =
-      std::max_element(discreteColumns.begin(), discreteColumns.end(),
+      std::ranges::max_element(discreteColumns,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -650,7 +649,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetRow =
-      std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
+      std::ranges::max_element(discreteTargetRows,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -659,8 +658,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetColumn =
-      std::max_element(discreteTargetColumns.begin(),
-                       discreteTargetColumns.end(),
+      std::ranges::max_element(discreteTargetColumns,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -754,7 +752,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
         architecture_.get().distance(slm, r, c, frontSLM, frontRow, frontCol);
     atomsWithoutFirstAtom.emplace(distance, *atomIt);
   }
-  std::transform(atomsWithoutFirstAtom.cbegin(), atomsWithoutFirstAtom.cend(),
+  std::ranges::transform(std::as_const(atomsWithoutFirstAtom),
                  atomsToPlace.begin() + 1,
                  [](const auto& pair) { return pair.second; });
   // Discretize the previous placement of the atoms to be placed that are
@@ -836,7 +834,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
     job.currentSite = std::array{
         discreteRows.at(std::pair{std::cref(previousSLM), previousRow}),
         discreteColumns.at(std::pair{std::cref(previousSLM), previousCol})};
-    if (reuseQubits.find(atom) != reuseQubits.end()) {
+    if (reuseQubits.contains(atom)) {
       // atom can be reused, so we add an option for the atom to stay at the
       // current site
       job.options.emplace_back(AtomJob::Option{{0, 0}, true, 0.0F});
@@ -859,8 +857,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
     }
     for (size_t r = rLow; r < rHigh; ++r) {
       for (size_t c = cLow; c < cHigh; ++c) {
-        if (occupiedStorageSites.find(std::tie(nearestSLM, r, c)) ==
-            occupiedStorageSites.end()) {
+        if (!occupiedStorageSites.contains(std::tie(nearestSLM, r, c))) {
           const auto distance = static_cast<float>(architecture_.get().distance(
               previousSLM, previousRow, previousCol, nearestSLM, r, c));
           job.options.emplace_back(AtomJob::Option{
@@ -875,19 +872,19 @@ auto DFSPlacer::placeAtomsInStorageZone(
     while (config_.useWindow &&
            static_cast<double>(job.options.size()) <
                config_.windowShare * static_cast<double>(nJobs)) {
-      // window does not contain enough options, so expand it
+      // the window does not contain enough options, so expand it
       ++expansion;
       size_t windowWidth = 0;
       size_t windowHeight = 0;
       if (config_.windowRatio < 1.0) {
-        // landscpe ==> expand width and adjust height
+        // landscape ==> expand width and adjust height
         // the overall width and height is divided by 2 later, hence an
         // expansion of 2 is needed to actually increase the window size
         windowWidth = config_.windowMinWidth + 2 * expansion;
         windowHeight = static_cast<size_t>(
             std::round(config_.windowRatio * static_cast<double>(windowWidth)));
       } else {
-        // portrait ==> expand height and adjust width
+        // portraits ==> expand height and adjust width
         // the overall width and height is divided by 2 later, hence an
         // expansion of 2 is needed to actually increase the window size
         windowHeight = windowMinHeight_ + 2 * expansion;
@@ -905,8 +902,8 @@ auto DFSPlacer::placeAtomsInStorageZone(
       if (rLowNew < rLow) {
         assert(rLow - rLowNew == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
-          if (occupiedStorageSites.find(std::tie(nearestSLM, rLowNew, c)) ==
-              occupiedStorageSites.end()) {
+          if (!occupiedStorageSites.contains(
+                  std::tie(nearestSLM, rLowNew, c))) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
                     previousSLM, previousRow, previousCol, nearestSLM, rLowNew,
@@ -924,8 +921,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
         assert(rHighNew - rHigh == 1);
         for (size_t c = cLowNew; c < cHighNew; ++c) {
           // NOTE: we have to use rHighNew - 1 here, which is equal to rHigh
-          if (occupiedStorageSites.find(std::tie(nearestSLM, rHigh, c)) ==
-              occupiedStorageSites.end()) {
+          if (!occupiedStorageSites.contains(std::tie(nearestSLM, rHigh, c))) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
                     previousSLM, previousRow, previousCol, nearestSLM, rHigh,
@@ -941,8 +937,8 @@ auto DFSPlacer::placeAtomsInStorageZone(
       if (cLowNew < cLow) {
         assert(cLow - cLowNew == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
-          if (occupiedStorageSites.find(std::tie(nearestSLM, r, cLowNew)) ==
-              occupiedStorageSites.end()) {
+          if (!occupiedStorageSites.contains(
+                  std::tie(nearestSLM, r, cLowNew))) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
                     previousSLM, previousRow, previousCol, nearestSLM, r,
@@ -960,8 +956,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
         assert(cHighNew - cHigh == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
-          if (occupiedStorageSites.find(std::tie(nearestSLM, r, cHigh)) ==
-              occupiedStorageSites.end()) {
+          if (!occupiedStorageSites.contains(std::tie(nearestSLM, r, cHigh))) {
             const auto distance =
                 static_cast<float>(architecture_.get().distance(
                     previousSLM, previousRow, previousCol, nearestSLM, r,
@@ -980,8 +975,8 @@ auto DFSPlacer::placeAtomsInStorageZone(
       cLow = cLowNew;
       cHigh = cHighNew;
     }
-    std::sort(
-        job.options.begin(), job.options.end(),
+    std::ranges::sort(
+        job.options,
         [](const AtomJob::Option& lhs, const AtomJob::Option& rhs) -> bool {
           return lhs.distance < rhs.distance;
         });
@@ -1030,7 +1025,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
   assert(!discreteRows.empty()); // ==> the following std::max_element does not
                                  // return a nullptr
   const uint8_t maxDiscreteSourceRow =
-      std::max_element(discreteRows.begin(), discreteRows.end(),
+      std::ranges::max_element(discreteRows,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -1039,7 +1034,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
       !discreteColumns.empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteSourceColumn =
-      std::max_element(discreteColumns.begin(), discreteColumns.end(),
+      std::ranges::max_element(discreteColumns,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -1048,7 +1043,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetRow =
-      std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
+      std::ranges::max_element(discreteTargetRows,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -1057,8 +1052,7 @@ auto DFSPlacer::placeAtomsInStorageZone(
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetColumn =
-      std::max_element(discreteTargetColumns.begin(),
-                       discreteTargetColumns.end(),
+      std::ranges::max_element(discreteTargetColumns,
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
@@ -1172,8 +1166,7 @@ auto DFSPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
         // first one for atoms that may be reused
         break;
       }
-      if (node.consumedFreeSites.find(option.site) ==
-          node.consumedFreeSites.end()) {
+      if (!node.consumedFreeSites.contains(option.site)) {
         // this assumes that the first found free site is the nearest free site
         // for that atom. This requires that the job options are sorted by
         // distance.
@@ -1215,15 +1208,13 @@ auto DFSPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
       // this assumes that the first found pair of free sites is the nearest
       // pair of free sites for that gate. This requires that the job options
       // are sorted by distance.
-      if (std::all_of(option.sites.cbegin(), option.sites.cend(),
+      if (std::ranges::all_of(option.sites,
                       [&node](const DiscreteSite& site) -> bool {
-                        return node.consumedFreeSites.find(site) ==
-                               node.consumedFreeSites.end();
+                        return !node.consumedFreeSites.contains(site);
                       })) {
         maxDistanceOfUnplacedAtom =
             std::max(maxDistanceOfUnplacedAtom,
-                     *std::max_element(option.distance.cbegin(),
-                                       option.distance.cend()));
+                     *std::ranges::max_element(option.distance));
         break; // exit when the first free site pair is found
       }
     }
@@ -1245,7 +1236,7 @@ auto DFSPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
 }
 
 auto DFSPlacer::getNeighbors(const std::vector<AtomJob>& atomJobs,
-                             std::shared_ptr<const AtomNode> node)
+                             const std::shared_ptr<const AtomNode>& node)
     -> std::vector<std::shared_ptr<const AtomNode>> {
   const size_t atomToBePlacedNext = node->level;
   assert(atomToBePlacedNext < atomJobs.size());
@@ -1282,7 +1273,7 @@ auto DFSPlacer::getNeighbors(const std::vector<AtomJob>& atomJobs,
 }
 
 auto DFSPlacer::getNeighbors(const std::vector<GateJob>& gateJobs,
-                             std::shared_ptr<const GateNode> node)
+                             const std::shared_ptr<const GateNode>& node)
     -> std::vector<std::shared_ptr<const GateNode>> {
   const size_t gateToBePlacedNext = node->level;
   assert(gateToBePlacedNext < gateJobs.size());
@@ -1335,7 +1326,7 @@ auto DFSPlacer::checkCompatibilityWithGroup(
     // an assignment for this key already exists in this group
     if (const auto& [upperKey, upperValue] = *it; upperKey == key) {
       if (upperValue == value) {
-        // new placement is compatible with this group and key already exists
+        // the new placement is compatible with this group and key already exists
         return std::pair{it, true};
       }
     } else {
@@ -1344,13 +1335,13 @@ auto DFSPlacer::checkCompatibilityWithGroup(
         // it can be safely decremented
         if (const auto lowerValue = std::prev(it)->second;
             lowerValue < value && value < upperValue) {
-          // new placement is compatible with this group
+          // the new placement is compatible with this group
           return std::pair{it, false};
         }
       } else {
         // if (it == hGroup.begin())
         if (value < upperValue) {
-          // new placement is compatible with this group
+          // the new placement is compatible with this group
           return std::pair{it, false};
         }
       }
@@ -1360,7 +1351,7 @@ auto DFSPlacer::checkCompatibilityWithGroup(
     // it can be safely decremented because the group must contain
     // at least one element
     if (const auto lowerValue = std::prev(it)->second; lowerValue < value) {
-      // new placement is compatible with this group
+      // the new placement is compatible with this group
       return std::pair{it, false};
     }
   }
@@ -1382,7 +1373,7 @@ auto DFSPlacer::checkCompatibilityAndAddPlacement(
               checkCompatibilityWithGroup(vKey, vValue, vGroup)) {
         const auto& [hIt, hExists] = *hCompatible;
         const auto& [vIt, vExists] = *vCompatible;
-        // new placement is compatible with this group
+        // the new placement is compatible with this group
         if (!hExists) {
           hGroup.emplace_hint(hIt, hKey, hValue);
         }
@@ -1395,7 +1386,7 @@ auto DFSPlacer::checkCompatibilityAndAddPlacement(
     }
     ++i;
   }
-  // no compatible group could be found and a new group is created
+  // no compatible group could be found, and a new group is created
   auto& [hGroup, vGroup] = groups.emplace_back();
   hGroup.emplace(hKey, hValue);
   vGroup.emplace(vKey, vValue);
@@ -1412,7 +1403,7 @@ DFSPlacer::DFSPlacer(const Architecture& architecture, const Config& config)
   // check which side of the first storage SLM is closer to the entanglement
   // SLM
   if (firstStorageSLM.location.second < firstEntanglementSLM.location.second) {
-    // if the entanglement SLM is closer to the last row of the storage SLM
+    // if the entanglement SLM is closer to the last row of the storage, SLM
     // start initial placement of the atoms in the last row instead of the
     // first and hence revert initial placement
     reverseInitialPlacement_ = true;

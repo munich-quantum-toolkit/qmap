@@ -755,7 +755,8 @@ private:
    * @return a list of references to the neighbors of the given node
    */
   [[nodiscard]] static auto
-  getNeighbors(const std::vector<AtomJob>& atomJobs, std::shared_ptr<const AtomNode> node)
+  getNeighbors(const std::vector<AtomJob>& atomJobs,
+               const std::shared_ptr<const AtomNode>& node)
       -> std::vector<std::shared_ptr<const AtomNode>>;
 
   /**
@@ -778,7 +779,8 @@ private:
    * @return a list of references to the neighbors of the given node
    */
   [[nodiscard]] static auto
-  getNeighbors(const std::vector<GateJob>& gateJobs, std::shared_ptr<const GateNode> node)
+  getNeighbors(const std::vector<GateJob>& gateJobs,
+               const std::shared_ptr<const GateNode>& node)
       -> std::vector<std::shared_ptr<const GateNode>>;
 
   /**
