@@ -28,6 +28,7 @@
 #include <optional>
 #include <queue>
 #include <set>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
@@ -39,14 +40,14 @@ namespace na::zoned {
 template <class Node>
 auto DFSPlacer::dfsTreeSearch(
     std::shared_ptr<const Node> start,
-    const std::function<std::vector<std::shared_ptr<const Node>>(std::shared_ptr<const Node>)>&
-        getNeighbors,
+    const std::function<std::vector<std::shared_ptr<const Node>>(
+        std::shared_ptr<const Node>)>& getNeighbors,
     const std::function<bool(const Node&)>& isGoal,
     const std::function<double(const Node&)>& getCost,
     const std::function<double(const Node&)>& getHeuristic, const size_t trials)
     -> std::shared_ptr<const Node> {
   struct Item {
-    double priority;  //< sum of cost and heuristic
+    double priority;                  //< sum of cost and heuristic
     std::shared_ptr<const Node> node; //< pointer to the node
 
     Item(const double priority, std::shared_ptr<const Node> node)
@@ -62,6 +63,7 @@ auto DFSPlacer::dfsTreeSearch(
   BoundedQueueStack<Item, ItemCompare> queueStack(trials);
   queueStack.emplace(getHeuristic(*start), start);
   std::optional<Item> goal;
+  SPDLOG_DEBUG("=== Start DFS ===");
   while (!queueStack.empty()) {
     const auto currentItem = queueStack.top();
     queueStack.pop();
@@ -69,6 +71,7 @@ auto DFSPlacer::dfsTreeSearch(
       if (!goal.has_value() || currentItem.priority < goal->priority) {
         goal = std::move(currentItem);
       }
+      SPDLOG_DEBUG("=== Restart DFS ===");
       queueStack.clearAndSeedStackFromQueue();
     } else {
       // Expand the current node by adding all neighbors to the open set
@@ -631,38 +634,34 @@ auto DFSPlacer::placeGatesInEntanglementZone(
   assert(!discreteRows.empty()); // ==> the following std::max_element does not
                                  // return a nullptr
   const uint8_t maxDiscreteSourceRow =
-      std::ranges::max_element(discreteRows,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteRows, [](const auto& lhs,
+                                                const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   assert(
       !discreteColumns.empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteSourceColumn =
-      std::ranges::max_element(discreteColumns,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteColumns, [](const auto& lhs,
+                                                   const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   assert(!discreteTargetRows
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetRow =
-      std::ranges::max_element(discreteTargetRows,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteTargetRows, [](const auto& lhs,
+                                                      const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   assert(!discreteTargetColumns
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetColumn =
-      std::ranges::max_element(discreteTargetColumns,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteTargetColumns, [](const auto& lhs,
+                                                         const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   // return a nullptr
   const std::array<float, 2> scaleFactors{
       std::min(1.F, static_cast<float>(1 + maxDiscreteTargetRow) /
@@ -676,9 +675,7 @@ auto DFSPlacer::placeGatesInEntanglementZone(
   const auto deepeningValue = config_.deepeningValue;
   auto node = dfsTreeSearch<GateNode>(
       std::make_shared<const GateNode>(),
-      [&gateJobs](const auto& node) {
-        return getNeighbors(gateJobs, node);
-      },
+      [&gateJobs](const auto& node) { return getNeighbors(gateJobs, node); },
       [nJobs](const auto& node) { return isGoal(nJobs, node); },
       [](const auto& node) { return getCost(node); },
       [&gateJobs, deepeningFactor, deepeningValue,
@@ -753,8 +750,8 @@ auto DFSPlacer::placeAtomsInStorageZone(
     atomsWithoutFirstAtom.emplace(distance, *atomIt);
   }
   std::ranges::transform(std::as_const(atomsWithoutFirstAtom),
-                 atomsToPlace.begin() + 1,
-                 [](const auto& pair) { return pair.second; });
+                         atomsToPlace.begin() + 1,
+                         [](const auto& pair) { return pair.second; });
   // Discretize the previous placement of the atoms to be placed that are
   // ordered now
   const auto& [discreteRows, discreteColumns] =
@@ -1025,38 +1022,34 @@ auto DFSPlacer::placeAtomsInStorageZone(
   assert(!discreteRows.empty()); // ==> the following std::max_element does not
                                  // return a nullptr
   const uint8_t maxDiscreteSourceRow =
-      std::ranges::max_element(discreteRows,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteRows, [](const auto& lhs,
+                                                const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   assert(
       !discreteColumns.empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteSourceColumn =
-      std::ranges::max_element(discreteColumns,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteColumns, [](const auto& lhs,
+                                                   const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   assert(!discreteTargetRows
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetRow =
-      std::ranges::max_element(discreteTargetRows,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteTargetRows, [](const auto& lhs,
+                                                      const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   assert(!discreteTargetColumns
               .empty()); // ==> the following std::max_element does not
   // return a nullptr
   const uint8_t maxDiscreteTargetColumn =
-      std::ranges::max_element(discreteTargetColumns,
-                       [](const auto& lhs, const auto& rhs) {
-                         return lhs.second < rhs.second;
-                       })
-          ->second;
+      std::ranges::max_element(discreteTargetColumns, [](const auto& lhs,
+                                                         const auto& rhs) {
+        return lhs.second < rhs.second;
+      })->second;
   const std::array<float, 2> scaleFactors{
       std::min(1.F, static_cast<float>(1 + maxDiscreteTargetRow) /
                         static_cast<float>(1 + maxDiscreteSourceRow)),
@@ -1075,10 +1068,9 @@ auto DFSPlacer::placeAtomsInStorageZone(
    */
   const auto deepeningFactor = config_.deepeningFactor;
   const auto deepeningValue = config_.deepeningValue;
-  auto node = dfsTreeSearch<AtomNode>(std::make_shared<const AtomNode>(),
-      [&atomJobs](const auto& node) {
-        return getNeighbors(atomJobs, node);
-      },
+  auto node = dfsTreeSearch<AtomNode>(
+      std::make_shared<const AtomNode>(),
+      [&atomJobs](const auto& node) { return getNeighbors(atomJobs, node); },
       [nJobs](const auto& node) { return isGoal(nJobs, node); },
       [](const auto& node) { return getCost(node); },
       [&atomJobs, deepeningFactor, deepeningValue,
@@ -1096,9 +1088,11 @@ auto DFSPlacer::placeAtomsInStorageZone(
     const auto& job = atomJobs[node->level - 1];
     assert(node->option < job.options.size());
     const auto& option = job.options[node->option];
-    const auto atom = job.atom;
-    const auto& [row, col] = option.site;
-    currentPlacement[atom] = targetSites.at(row).at(col);
+    if (!option.reuse) {
+      const auto atom = job.atom;
+      const auto& [row, col] = option.site;
+      currentPlacement[atom] = targetSites.at(row).at(col);
+    }
     node = node->parent;
   }
   return currentPlacement;
@@ -1209,9 +1203,9 @@ auto DFSPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
       // pair of free sites for that gate. This requires that the job options
       // are sorted by distance.
       if (std::ranges::all_of(option.sites,
-                      [&node](const DiscreteSite& site) -> bool {
-                        return !node.consumedFreeSites.contains(site);
-                      })) {
+                              [&node](const DiscreteSite& site) -> bool {
+                                return !node.consumedFreeSites.contains(site);
+                              })) {
         maxDistanceOfUnplacedAtom =
             std::max(maxDistanceOfUnplacedAtom,
                      *std::ranges::max_element(option.distance));
@@ -1239,6 +1233,7 @@ auto DFSPlacer::getNeighbors(const std::vector<AtomJob>& atomJobs,
                              const std::shared_ptr<const AtomNode>& node)
     -> std::vector<std::shared_ptr<const AtomNode>> {
   const size_t atomToBePlacedNext = node->level;
+  SPDLOG_DEBUG("Expand node on level: {}", atomToBePlacedNext);
   assert(atomToBePlacedNext < atomJobs.size());
   const auto& atomJob = atomJobs[atomToBePlacedNext];
   std::vector<std::shared_ptr<const AtomNode>> neighbors;
@@ -1247,8 +1242,7 @@ auto DFSPlacer::getNeighbors(const std::vector<AtomJob>& atomJobs,
     const auto& option = atomJob.options[i];
     const auto& [site, reuse, distance, lookaheadCost] = option;
     // skip the sites that are already consumed
-    if (!reuse &&
-        node->consumedFreeSites.contains(site)) {
+    if (!reuse && node->consumedFreeSites.contains(site)) {
       continue;
     }
     // make a copy of the node, the parent of the child
@@ -1276,6 +1270,7 @@ auto DFSPlacer::getNeighbors(const std::vector<GateJob>& gateJobs,
                              const std::shared_ptr<const GateNode>& node)
     -> std::vector<std::shared_ptr<const GateNode>> {
   const size_t gateToBePlacedNext = node->level;
+  SPDLOG_DEBUG("Expand node on level: {}", gateToBePlacedNext);
   assert(gateToBePlacedNext < gateJobs.size());
   const auto& gateJob = gateJobs[gateToBePlacedNext];
   std::vector<std::shared_ptr<const GateNode>> neighbors;
@@ -1326,7 +1321,8 @@ auto DFSPlacer::checkCompatibilityWithGroup(
     // an assignment for this key already exists in this group
     if (const auto& [upperKey, upperValue] = *it; upperKey == key) {
       if (upperValue == value) {
-        // the new placement is compatible with this group and key already exists
+        // the new placement is compatible with this group and key already
+        // exists
         return std::pair{it, true};
       }
     } else {
