@@ -217,7 +217,7 @@ private:
    */
   struct AtomNode {
     /// The parent node.
-    std::optional<std::reference_wrapper<const AtomNode>> parent = std::nullopt;
+    std::shared_ptr<const AtomNode> parent = nullptr;
     /**
      * The current level in the search tree. A level equal to the number of
      * atoms to be placed indicates that all atoms have been placed.
@@ -255,7 +255,7 @@ private:
    */
   struct GateNode {
     /// The parent node.
-    std::optional<std::reference_wrapper<const GateNode>> parent = std::nullopt;
+    std::shared_ptr<const GateNode> parent = nullptr;
     /**
      * The current level in the search tree. A level equal to the number of
      * gates to be placed indicates that all gates have been placed.
@@ -513,14 +513,13 @@ private:
 
   // todo(yannick): add docstring
   template <class Node>
-  [[nodiscard]] static auto dfsTreeSearch(
-      const Node& start,
-      const std::function<std::vector<std::reference_wrapper<const Node>>(
-          const Node&)>& getNeighbors,
-      const std::function<bool(const Node&)>& isGoal,
-      const std::function<double(const Node&)>& getCost,
-      const std::function<double(const Node&)>& getHeuristic, size_t trials)
-      -> const Node&;
+  [[nodiscard]] static auto dfsTreeSearch(std::shared_ptr<const Node> start,
+                const std::function<std::vector<std::shared_ptr<const Node>>(
+                    std::shared_ptr<const Node>)>& getNeighbors,
+                const std::function<bool(const Node&)>& isGoal,
+                const std::function<double(const Node&)>& getCost,
+                const std::function<double(const Node&)>& getHeuristic,
+                size_t trials) -> std::shared_ptr<const Node>;
 
   /**
    * @brief This function takes a list of atoms together with their current
@@ -756,9 +755,8 @@ private:
    * @return a list of references to the neighbors of the given node
    */
   [[nodiscard]] static auto
-  getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
-               const std::vector<AtomJob>& atomJobs, const AtomNode& node)
-      -> std::vector<std::reference_wrapper<const AtomNode>>;
+  getNeighbors(const std::vector<AtomJob>& atomJobs, std::shared_ptr<const AtomNode> node)
+      -> std::vector<std::shared_ptr<const AtomNode>>;
 
   /**
    * @brief Return references to all neighbors of the given node.
@@ -780,9 +778,8 @@ private:
    * @return a list of references to the neighbors of the given node
    */
   [[nodiscard]] static auto
-  getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
-               const std::vector<GateJob>& gateJobs, const GateNode& node)
-      -> std::vector<std::reference_wrapper<const GateNode>>;
+  getNeighbors(const std::vector<GateJob>& gateJobs, std::shared_ptr<const GateNode> node)
+      -> std::vector<std::shared_ptr<const GateNode>>;
 
   /**
    * Checks the compatibility with a new assignment, i.e., a key-value pair,

@@ -38,19 +38,19 @@
 namespace na::zoned {
 template <class Node>
 auto DFSPlacer::dfsTreeSearch(
-    const Node& start,
-    const std::function<std::vector<std::reference_wrapper<const Node>>(
-        const Node&)>& getNeighbors,
+    std::shared_ptr<const Node> start,
+    const std::function<std::vector<std::shared_ptr<const Node>>(std::shared_ptr<const Node>)>&
+        getNeighbors,
     const std::function<bool(const Node&)>& isGoal,
     const std::function<double(const Node&)>& getCost,
     const std::function<double(const Node&)>& getHeuristic, const size_t trials)
-    -> const Node& {
+    -> std::shared_ptr<const Node> {
   struct Item {
     double priority;  //< sum of cost and heuristic
-    const Node* node; //< pointer to the node
+    std::shared_ptr<const Node> node; //< pointer to the node
 
-    Item(const double priority, const Node& node)
-        : priority(priority), node(&node) {
+    Item(const double priority, std::shared_ptr<const Node> node)
+        : priority(priority), node(node) {
       assert(!std::isnan(priority));
     }
   };
@@ -60,7 +60,7 @@ auto DFSPlacer::dfsTreeSearch(
     }
   };
   BoundedQueueStack<Item, ItemCompare> queueStack(trials);
-  queueStack.emplace(getHeuristic(start), start);
+  queueStack.emplace(getHeuristic(*start), start);
   std::optional<Item> goal;
   while (!queueStack.empty()) {
     const auto currentItem = queueStack.top();
@@ -72,14 +72,14 @@ auto DFSPlacer::dfsTreeSearch(
       queueStack.clearAndSeedStackFromQueue();
     } else {
       // Expand the current node by adding all neighbors to the open set
-      const auto& neighbors = getNeighbors(*currentItem.node);
+      const auto& neighbors = getNeighbors(currentItem.node);
       if (!neighbors.empty()) {
         std::vector<Item> nextItems;
-        for (const auto& neighbor : neighbors) {
+        for (auto& neighbor : neighbors) {
           // getCost returns the total cost to reach the current node
-          const auto cost = getCost(neighbor);
-          const auto heuristic = getHeuristic(neighbor);
-          nextItems.emplace_back(cost + heuristic, neighbor);
+          const auto cost = getCost(*neighbor);
+          const auto heuristic = getHeuristic(*neighbor);
+          nextItems.emplace_back(cost + heuristic, std::move(neighbor));
         }
         std::ranges::sort(nextItems, ItemCompare{});
         for (auto& nextItem : nextItems | std::views::reverse) {
@@ -96,7 +96,7 @@ auto DFSPlacer::dfsTreeSearch(
         "narrow window size. Try adjusting the window_share compiler "
         "configuration option to a higher value, such as 1.0.");
   }
-  return *goal->node;
+  return goal->node;
 }
 auto DFSPlacer::isGoal(const size_t nGates, const GateNode& node) -> bool {
   return node.level == nGates;
@@ -674,43 +674,35 @@ auto DFSPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   // Run the DFS algorithm
   //===------------------------------------------------------------------===//
-  /**
-   * A list of all nodes that have been created so far.
-   * This happens when a node is expanded by calling getNeighbors.
-   */
-  std::deque<std::unique_ptr<GateNode>> nodes;
-  // make the root node
-  nodes.emplace_back(std::make_unique<GateNode>());
   const auto deepeningFactor = config_.deepeningFactor;
   const auto deepeningValue = config_.deepeningValue;
-  const auto& finalNode = dfsTreeSearch<GateNode>(
-      *nodes.front(),
-      [&nodes, &gateJobs](const auto& node) {
-        return getNeighbors(nodes, gateJobs, std::move(node));
+  auto node = dfsTreeSearch<GateNode>(
+      std::make_shared<const GateNode>(),
+      [&gateJobs](const auto& node) {
+        return getNeighbors(gateJobs, node);
       },
-      [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
-      [](const auto& node) { return getCost(std::move(node)); },
+      [nJobs](const auto& node) { return isGoal(nJobs, node); },
+      [](const auto& node) { return getCost(node); },
       [&gateJobs, deepeningFactor, deepeningValue,
        &scaleFactors](const auto& node) {
         return getHeuristic(gateJobs, deepeningFactor, deepeningValue,
-                            scaleFactors, std::move(node));
+                            scaleFactors, node);
       },
       config_.trials);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
-  std::reference_wrapper<const GateNode> node = finalNode;
-  while (node.get().parent != std::nullopt) {
-    assert(0 < node.get().level);
-    assert(node.get().level <= gateJobs.size());
-    const auto& job = gateJobs[node.get().level - 1];
-    const auto& option = job.options[node.get().option];
+  while (node->parent != nullptr) {
+    assert(0 < node->level);
+    assert(node->level <= gateJobs.size());
+    const auto& job = gateJobs[node->level - 1];
+    const auto& option = job.options[node->option];
     for (size_t j = 0; j < 2; ++j) {
       const auto atom = job.qubits[j];
       const auto& [row, col] = option.sites[j];
       currentPlacement[atom] = targetSites.at(row).at(col);
     }
-    node = *node.get().parent;
+    node = node->parent;
   }
   return currentPlacement;
 }
@@ -1087,37 +1079,33 @@ auto DFSPlacer::placeAtomsInStorageZone(
    * A list of all nodes that have been created so far.
    * This happens when a node is expanded by calling getNeighbors.
    */
-  std::deque<std::unique_ptr<AtomNode>> nodes;
-  nodes.emplace_back(std::make_unique<AtomNode>());
   const auto deepeningFactor = config_.deepeningFactor;
   const auto deepeningValue = config_.deepeningValue;
-  const auto& finalNode = dfsTreeSearch<AtomNode>(
-      *nodes.front(),
-      [&nodes, &atomJobs](const auto& node) {
-        return getNeighbors(nodes, atomJobs, std::move(node));
+  auto node = dfsTreeSearch<AtomNode>(std::make_shared<const AtomNode>(),
+      [&atomJobs](const auto& node) {
+        return getNeighbors(atomJobs, node);
       },
-      [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
-      [](const auto& node) { return getCost(std::move(node)); },
+      [nJobs](const auto& node) { return isGoal(nJobs, node); },
+      [](const auto& node) { return getCost(node); },
       [&atomJobs, deepeningFactor, deepeningValue,
        &scaleFactors](const auto& node) {
         return getHeuristic(atomJobs, deepeningFactor, deepeningValue,
-                            scaleFactors, std::move(node));
+                            scaleFactors, node);
       },
       config_.trials);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
-  std::reference_wrapper<const AtomNode> node = finalNode;
-  while (node.get().parent != std::nullopt) {
-    assert(0 < node.get().level);
-    assert(node.get().level <= atomJobs.size());
-    const auto& job = atomJobs[node.get().level - 1];
-    assert(node.get().option < job.options.size());
-    const auto& option = job.options[node.get().option];
+  while (node->parent != nullptr) {
+    assert(0 < node->level);
+    assert(node->level <= atomJobs.size());
+    const auto& job = atomJobs[node->level - 1];
+    assert(node->option < job.options.size());
+    const auto& option = job.options[node->option];
     const auto atom = job.atom;
     const auto& [row, col] = option.site;
     currentPlacement[atom] = targetSites.at(row).at(col);
-    node = *node.get().parent;
+    node = node->parent;
   }
   return currentPlacement;
 }
@@ -1256,25 +1244,24 @@ auto DFSPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
   return heuristic;
 }
 
-auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
-                             const std::vector<AtomJob>& atomJobs,
-                             const AtomNode& node)
-    -> std::vector<std::reference_wrapper<const AtomNode>> {
-  const size_t atomToBePlacedNext = node.level;
+auto DFSPlacer::getNeighbors(const std::vector<AtomJob>& atomJobs,
+                             std::shared_ptr<const AtomNode> node)
+    -> std::vector<std::shared_ptr<const AtomNode>> {
+  const size_t atomToBePlacedNext = node->level;
   assert(atomToBePlacedNext < atomJobs.size());
   const auto& atomJob = atomJobs[atomToBePlacedNext];
-  std::vector<std::reference_wrapper<const AtomNode>> neighbors;
+  std::vector<std::shared_ptr<const AtomNode>> neighbors;
   assert(atomJob.options.size() <= std::numeric_limits<uint16_t>::max());
   for (uint16_t i = 0; i < static_cast<uint16_t>(atomJob.options.size()); ++i) {
     const auto& option = atomJob.options[i];
     const auto& [site, reuse, distance, lookaheadCost] = option;
     // skip the sites that are already consumed
     if (!reuse &&
-        node.consumedFreeSites.contains(site)) {
+        node->consumedFreeSites.contains(site)) {
       continue;
     }
     // make a copy of the node, the parent of the child
-    AtomNode& child = *nodes.emplace_back(std::make_unique<AtomNode>(node));
+    AtomNode child = *node; // make a copy
     child.parent = node;
     if (!reuse) {
       child.consumedFreeSites.emplace(site);
@@ -1289,19 +1276,18 @@ auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
     ++child.level;
     child.lookaheadCost += lookaheadCost;
     // add the child to the list of children to be returned
-    neighbors.emplace_back(child);
+    neighbors.emplace_back(std::make_shared<const AtomNode>(std::move(child)));
   }
   return neighbors;
 }
 
-auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
-                             const std::vector<GateJob>& gateJobs,
-                             const GateNode& node)
-    -> std::vector<std::reference_wrapper<const GateNode>> {
-  const size_t gateToBePlacedNext = node.level;
+auto DFSPlacer::getNeighbors(const std::vector<GateJob>& gateJobs,
+                             std::shared_ptr<const GateNode> node)
+    -> std::vector<std::shared_ptr<const GateNode>> {
+  const size_t gateToBePlacedNext = node->level;
   assert(gateToBePlacedNext < gateJobs.size());
   const auto& gateJob = gateJobs[gateToBePlacedNext];
-  std::vector<std::reference_wrapper<const GateNode>> neighbors;
+  std::vector<std::shared_ptr<const GateNode>> neighbors;
   // Get the current placement of the atoms that must be placed next
   const auto& [currentSiteOfLeftAtom, currentSiteOfRightAtom] =
       gateJob.currentSites;
@@ -1311,13 +1297,13 @@ auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
     const auto& [sites, distances, lookaheadCost] = option;
     const auto& [leftSite, rightSite] = sites;
     // skip if one of the sites is already consumed
-    if (node.consumedFreeSites.contains(leftSite) ||
-        node.consumedFreeSites.contains(rightSite)) {
+    if (node->consumedFreeSites.contains(leftSite) ||
+        node->consumedFreeSites.contains(rightSite)) {
       continue;
     }
     // make a copy of the node, the parent of the child as use this as a
     // starting point for the new node
-    GateNode& child = *nodes.emplace_back(std::make_unique<GateNode>(node));
+    GateNode child = *node; // make a copy
     child.parent = node;
     ++child.level;
     child.option = i;
@@ -1335,7 +1321,7 @@ auto DFSPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
         child.groups, child.maxDistancesOfPlacedAtomsPerGroup);
     child.lookaheadCost += lookaheadCost;
     // add the final child to the list of children to be returned
-    neighbors.emplace_back(child);
+    neighbors.emplace_back(std::make_shared<GateNode>(std::move(child)));
   }
   return neighbors;
 }
