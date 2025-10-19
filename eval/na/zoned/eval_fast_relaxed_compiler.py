@@ -416,7 +416,8 @@ if __name__ == '__main__':
     evaluator = Evaluator(arch_dict, 'results.csv')
     evaluator.print_header()
     for benchmark, qc in benchmarks():
-        process_benchmark(compiler_default, 'RoutingAwareCompiler', 'default', qc, benchmark)
+        if not (benchmark == 'graphstate' and qc.num_qubits > 50) and not qc.num_qubits > 100:
+            process_benchmark(compiler_default, 'RoutingAwareCompiler', 'default', qc, benchmark)
         process_benchmark(relaxed_compiler_default, 'RelaxedRoutingAwareCompiler', 'default', qc, benchmark)
         process_benchmark(fast_compiler_default, 'FastRelaxedRoutingAwareCompiler', 'default', qc, benchmark)
         process_benchmark(fast_compiler_half_deepening, 'FastRelaxedRoutingAwareCompiler', 'half_deepening', qc, benchmark)
