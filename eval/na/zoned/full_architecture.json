@@ -1,0 +1,115 @@
+{
+  "name": "full_compute_store_architecture",
+  "operation_duration": {
+    "rydberg_gate": 0.36,
+    "single_qubit_gate": 52,
+    "atom_transfer": 15
+  },
+  "operation_fidelity": {
+    "rydberg_gate": 0.995,
+    "single_qubit_gate": 0.9997,
+    "atom_transfer": 0.999
+  },
+  "qubit_spec": {
+    "T": 1.5e6
+  },
+  "storage_zones": [
+    {
+      "zone_id": 0,
+      "slms": [
+        {
+          "id": 0,
+          "site_separation": [
+            3,
+            3
+          ],
+          "r": 20,
+          "c": 100,
+          "location": [
+            0,
+            0
+          ]
+        }
+      ],
+      "offset": [
+        0,
+        0
+      ],
+      "dimension": [
+        297,
+        57
+      ]
+    }
+  ],
+  "entanglement_zones": [
+    {
+      "zone_id": 0,
+      "slms": [
+        {
+          "id": 1,
+          "site_separation": [
+            12,
+            10
+          ],
+          "r": 7,
+          "c": 20,
+          "location": [
+            35,
+            67
+          ]
+        },
+        {
+          "id": 2,
+          "site_separation": [
+            12,
+            10
+          ],
+          "r": 7,
+          "c": 20,
+          "location": [
+            37,
+            67
+          ]
+        }
+      ],
+      "offset": [
+        35,
+        67
+      ],
+      "dimension": [
+        230,
+        60
+      ]
+    }
+  ],
+  "aods": [
+    {
+      "id": 0,
+      "site_separation": 2,
+      "r": 100,
+      "c": 100
+    }
+  ],
+  "arch_range": [
+    [
+      0,
+      0
+    ],
+    [
+      297,
+      162
+    ]
+  ],
+  "rydberg_range": [
+    [
+      [
+        30,
+        62
+      ],
+      [
+        270,
+        132
+      ]
+    ]
+  ]
+}
