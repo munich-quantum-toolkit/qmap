@@ -10,14 +10,15 @@ from qiskit import QuantumCircuit, transpile
 from mqt.core import load
 from mqt.core.ir import QuantumComputation
 from mqt.bench.benchmark_generation import get_benchmark
+from mqt.bench import BenchmarkLevel
 from mqt.qmap.na.zoned import ZonedNeutralAtomArchitecture, RoutingAwareCompiler, RelaxedRoutingAwareCompiler, \
     FastRelaxedRoutingAwareCompiler
 
 BENCHMARKS = {
-    # 'graphstate': ('indep', {20, 40, 60, 80, 100}),
-    # 'qft': ('indep', {100, 200, 500}),
-    'qpeexact': ('indep', {100, 200}),
-    # 'wstate': ('indep', {50, 100, 200, 500}),
+    'graphstate': (BenchmarkLevel.INDEP, {20, 40, 60, 80, 100}),
+    'qft': (BenchmarkLevel.INDEP, {100, 200, 500}),
+    'qpeexact': (BenchmarkLevel.INDEP, {100, 200}),
+    'wstate': (BenchmarkLevel.INDEP, {50, 100, 200, 500}),
 }
 
 
@@ -63,8 +64,9 @@ def process_benchmark(compiler, compiler_name: str, setting_name: str, qc: Quant
 
 
 class Evaluator:
-    def __init__(self, arch: Mapping[str, Any]):
+    def __init__(self, arch: Mapping[str, Any], filename: str):
         self.arch = arch
+        self.filename = filename
 
         self.circuit_name = ''
         self.compiler = ''
@@ -105,7 +107,7 @@ class Evaluator:
         self.atom_busy_rearrangement_times = {}
 
     def reset(self):
-        self.__init__(self.arch)
+        self.__init__(self.arch, self.filename)
 
     def _process_load(self, line: str, it: Iterator[str]):
         # Extract atoms from the load operation
@@ -142,14 +144,14 @@ class Evaluator:
                 if move_match:
                     x, y, atom = move_match.groups()
                     assert atom in self.atom_locations.keys(), f'Atom {atom} not found in atom locations'
-                    moves.append((atom, (int(x), int(y))))
+                    moves.append((atom, (int(float(x)), int(float(y)))))
         else:
             # Single atom move
             match = re.match(r'@\+ move \((-?\d+\.\d+), (-?\d+\.\d+)\) (\w+)', line)
             if match:
                 x, y, atom = match.groups()
                 assert atom in self.atom_locations.keys(), f'Atom {atom} not found in atom locations'
-                moves.append((atom, (int(x), int(y))))
+                moves.append((atom, (int(float(x)), int(float(y)))))
         self._apply_move(moves)
 
     def _process_store(self, line: str, it: Iterator[str]):
@@ -221,8 +223,8 @@ class Evaluator:
             match = re.match(r'@\+ rz \d\.\d+ (\w+)', line)
             if match:
                 assert match.group(
-                    2) in self.atom_locations.keys(), f'Atom {match.group(2)} not found in atom locations'
-                atoms.append(match.group(2))
+                    1) in self.atom_locations.keys(), f'Atom {match.group(1)} not found in atom locations'
+                atoms.append(match.group(1))
         self._apply_rz(atoms)
 
     def _apply_load(self, atoms: list[str]):
@@ -279,9 +281,9 @@ class Evaluator:
         # entanglement zone, n/2 gates are executed and there is no idling atom
         self.two_qubit_gate_fidelity *= self.arch['operation_fidelity']['rydberg_gate'] ** (len(atoms) / 2)
 
-        self.circuit_duration += self.arch['operation_durations']['rydberg_gate']
+        self.circuit_duration += self.arch['operation_duration']['rydberg_gate']
         for atom in atoms:
-            self.atom_busy_times[atom] += self.arch['operation_durations']['single_qubit_gate']
+            self.atom_busy_times[atom] += self.arch['operation_duration']['single_qubit_gate']
 
         self.two_qubit_gate_layer += 1
         self.min_two_qubit_gates = min(self.min_two_qubit_gates, len(atoms) / 2) if self.min_two_qubit_gates else len(
@@ -296,9 +298,9 @@ class Evaluator:
 
         self.one_qubit_gate_fidelity *= self.arch['operation_fidelity']['single_qubit_gate'] ** len(atoms)
 
-        self.circuit_duration += self.arch['operation_durations']['single_qubit_gate']
+        self.circuit_duration += self.arch['operation_duration']['single_qubit_gate']
         for atom in atoms:
-            self.atom_busy_times[atom] += self.arch['operation_durations']['single_qubit_gate']
+            self.atom_busy_times[atom] += self.arch['operation_duration']['single_qubit_gate']
 
     def _apply_global_u(self):
         self.last_op_is_shuttling = False
@@ -306,9 +308,9 @@ class Evaluator:
 
         self.one_qubit_gate_fidelity *= self.arch['operation_fidelity']['single_qubit_gate'] ** len(self.atom_locations)
 
-        self.circuit_duration += self.arch['operation_durations']['single_qubit_gate']
+        self.circuit_duration += self.arch['operation_duration']['single_qubit_gate']
         for atom in self.atom_locations.keys():
-            self.atom_busy_times[atom] += self.arch['operation_durations']['single_qubit_gate']
+            self.atom_busy_times[atom] += self.arch['operation_duration']['single_qubit_gate']
 
     def _apply_global_ry(self):
         self._apply_global_u()
@@ -324,12 +326,12 @@ class Evaluator:
         self.one_qubit_gates = sum(len(op.get_used_qubits()) == 1 for op in qc)
         self.two_qubit_gates = sum(len(op.get_used_qubits()) == 2 for op in qc)
 
-        self.scheduling_time = stats['scheduling_time']
-        self.reuse_analysis_time = stats['reuse_analysis_time']
-        self.placement_time = stats['placement_time']
-        self.routing_time = stats['routing_time']
-        self.code_generation_time = stats['code_generation_time']
-        self.total_time = stats['total_time']
+        self.scheduling_time = stats['schedulingTime']
+        self.reuse_analysis_time = stats['reuseAnalysisTime']
+        self.placement_time = stats['layoutSynthesizerStatistics']['placementTime']
+        self.routing_time = stats['layoutSynthesizerStatistics']['routingTime']
+        self.code_generation_time = stats['codeGenerationTime']
+        self.total_time = stats['totalTime']
 
         it = iter(code.splitlines())
 
@@ -337,7 +339,7 @@ class Evaluator:
             match = re.match(r'atom\s+\((-?\d+\.\d+),\s*(-?\d+\.\d+)\)\s+(\w+)', line)
             if match:
                 x, y, atom_name = match.groups()
-                self.atom_locations[atom_name] = (int(x), int(y))
+                self.atom_locations[atom_name] = (int(float(x)), int(float(y)))
             else:
                 # put line back on top of iterator
                 it = iter([line] + list(it))
@@ -375,16 +377,28 @@ class Evaluator:
             self.coherence_fidelity *= exp(-idle_time / t_eff)
         self.mean_two_qubit_gates = self.sum_two_qubit_gates / self.two_qubit_gate_layer
 
+    def print_header(self):
+        with open(self.filename, "w") as csv:
+            csv.write(
+                f'circuit_name,compiler,setting,one_qubit_gates,two_qubit_gates,scheduling_time,reuse_analysis_time,'
+                f'placement_time,routing_time,code_generation_time,total_time,two_qubit_gate_layer,'
+                f'min_two_qubit_gates,mean_two_qubit_gates,max_two_qubit_gates,one_qubit_gate_fidelity,'
+                f'two_qubit_gate_fidelity,transfer_fidelity,coherence_fidelity,total_fidelity,'
+                f'rearrangement_layer,rearrangement_steps,rearrangement_duration,rearrangement_fidelity,'
+                f'circuit_duration\n')
+
     def print_data(self):
-        print(f'{self.circuit_name},{self.compiler},{self.setting},{self.one_qubit_gates},{self.two_qubit_gates},'
-              f'{self.scheduling_time},{self.reuse_analysis_time},{self.placement_time},{self.routing_time},'
-              f'{self.code_generation_time},{self.total_time},{self.two_qubit_gate_layer},{self.min_two_qubit_gates},'
-              f'{self.mean_two_qubit_gates},{self.max_two_qubit_gates},{self.one_qubit_gate_fidelity},'
-              f'{self.two_qubit_gate_fidelity},{self.transfer_fidelity},{self.coherence_fidelity},'
-              f'{self.one_qubit_gate_fidelity * self.two_qubit_gate_fidelity * self.transfer_fidelity * \
-                 self.coherence_fidelity},'
-              f'{self.rearrangement_layer},{self.rearrangement_steps},{self.rearrangement_duration},'
-              f'{self.rearrangement_fidelity},{self.circuit_duration}\n')
+        with open(self.filename, "a") as csv:
+            csv.write(
+                f'{self.circuit_name},{self.compiler},{self.setting},{self.one_qubit_gates},{self.two_qubit_gates},'
+                f'{self.scheduling_time},{self.reuse_analysis_time},{self.placement_time},{self.routing_time},'
+                f'{self.code_generation_time},{self.total_time},{self.two_qubit_gate_layer},{self.min_two_qubit_gates},'
+                f'{self.mean_two_qubit_gates},{self.max_two_qubit_gates},{self.one_qubit_gate_fidelity},'
+                f'{self.two_qubit_gate_fidelity},{self.transfer_fidelity},{self.coherence_fidelity},'
+                f'{self.one_qubit_gate_fidelity * self.two_qubit_gate_fidelity * self.transfer_fidelity * \
+                   self.coherence_fidelity},'
+                f'{self.rearrangement_layer},{self.rearrangement_steps},{self.rearrangement_duration},'
+                f'{self.rearrangement_fidelity},{self.circuit_duration}\n')
 
 
 if __name__ == '__main__':
@@ -394,7 +408,16 @@ if __name__ == '__main__':
     arch = ZonedNeutralAtomArchitecture.from_json_file('full_architecture.json')
     arch.to_namachine_file('arch.namachine')
     print(' Done')
-    fast_compiler = FastRelaxedRoutingAwareCompiler(arch, deepening_value=0, trials=100, log_level='debug')
-    evaluator = Evaluator(arch_dict)
+    compiler_default = RoutingAwareCompiler(arch, log_level='error')
+    relaxed_compiler_default = RelaxedRoutingAwareCompiler(arch, log_level='error')
+    fast_compiler_default = FastRelaxedRoutingAwareCompiler(arch, trials=100, log_level='error')
+    fast_compiler_half_deepening = FastRelaxedRoutingAwareCompiler(arch, deepening_value=0.1, trials=100, log_level='error')
+    fast_compiler_no_deepening = FastRelaxedRoutingAwareCompiler(arch, deepening_value=0, trials=100, log_level='error')
+    evaluator = Evaluator(arch_dict, 'results.csv')
+    evaluator.print_header()
     for benchmark, qc in benchmarks():
-        process_benchmark(fast_compiler, 'FastRelaxedRoutingAwareCompiler', 'default', qc, benchmark)
+        process_benchmark(compiler_default, 'RoutingAwareCompiler', 'default', qc, benchmark)
+        process_benchmark(relaxed_compiler_default, 'RelaxedRoutingAwareCompiler', 'default', qc, benchmark)
+        process_benchmark(fast_compiler_default, 'FastRelaxedRoutingAwareCompiler', 'default', qc, benchmark)
+        process_benchmark(fast_compiler_half_deepening, 'FastRelaxedRoutingAwareCompiler', 'half_deepening', qc, benchmark)
+        process_benchmark(fast_compiler_no_deepening, 'FastRelaxedRoutingAwareCompiler', 'no_deepening', qc, benchmark)
