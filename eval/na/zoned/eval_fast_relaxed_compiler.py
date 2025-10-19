@@ -418,7 +418,7 @@ if __name__ == '__main__':
     for benchmark, qc in benchmarks():
         if not (benchmark == 'graphstate' and qc.num_qubits > 50) and not qc.num_qubits > 100:
             process_benchmark(compiler_default, 'RoutingAwareCompiler', 'default', qc, benchmark)
-        process_benchmark(relaxed_compiler_default, 'RelaxedRoutingAwareCompiler', 'default', qc, benchmark)
+            process_benchmark(relaxed_compiler_default, 'RelaxedRoutingAwareCompiler', 'default', qc, benchmark)
         process_benchmark(fast_compiler_default, 'FastRelaxedRoutingAwareCompiler', 'default', qc, benchmark)
         process_benchmark(fast_compiler_half_deepening, 'FastRelaxedRoutingAwareCompiler', 'half_deepening', qc, benchmark)
         process_benchmark(fast_compiler_no_deepening, 'FastRelaxedRoutingAwareCompiler', 'no_deepening', qc, benchmark)
