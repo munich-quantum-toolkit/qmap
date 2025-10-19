@@ -242,7 +242,8 @@ class Evaluator:
 
     def _apply_move(self, moves: list[tuple[str, tuple[int, int]]]):
         self.last_op_is_shuttling = True
-        self.last_op_is_store = False
+        # do not change this value to ignore intermediate moves between store operations
+        # self.last_op_is_store = False
 
         max_distance = 0.0
         for atom, coord in moves:
