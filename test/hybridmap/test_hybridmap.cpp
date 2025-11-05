@@ -54,7 +54,7 @@ TEST_P(NeutralAtomArchitectureTest, LoadArchitectures) {
 
 INSTANTIATE_TEST_SUITE_P(NeutralAtomArchitectureTestSuite,
                          NeutralAtomArchitectureTest,
-                         ::testing::Values("rubidium", "rubidium_hybrid",
+                         ::testing::Values("rubidium_gate", "rubidium_hybrid",
                                            "rubidium_shuttling"));
 class NeutralAtomMapperTestParams
     // parameters are architecture, circuit, gateWeight, shuttlingWeight,
@@ -117,7 +117,8 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
 INSTANTIATE_TEST_SUITE_P(
     NeutralAtomMapperTestSuite, NeutralAtomMapperTestParams,
     ::testing::Combine(
-        ::testing::Values("rubidium", "rubidium_hybrid", "rubidium_shuttling"),
+        ::testing::Values("rubidium_gate", "rubidium_hybrid",
+                          "rubidium_shuttling"),
         ::testing::Values("dj_nativegates_rigetti_qiskit_opt3_10", "modulo_2",
                           "multiply_2",
                           "qft_nativegates_rigetti_qiskit_opt3_10",

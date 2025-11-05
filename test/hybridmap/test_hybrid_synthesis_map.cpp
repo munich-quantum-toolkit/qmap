@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 //
 // This file is part of the MQT QMAP library released under the MIT license.
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
@@ -57,13 +67,13 @@ TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
 
 INSTANTIATE_TEST_SUITE_P(HybridSynthesisMapperTestSuite,
                          TestParametrizedHybridSynthesisMapper,
-                         ::testing::Values("rubidium", "rubidium_hybrid",
+                         ::testing::Values("rubidium_gate", "rubidium_hybrid",
                                            "rubidium_shuttling"));
 
 class TestHybridSynthesisMapper : public ::testing::Test {
 protected:
   NeutralAtomArchitecture arch =
-      NeutralAtomArchitecture("architectures/rubidium.json");
+      NeutralAtomArchitecture("architectures/rubidium_gate.json");
   HybridSynthesisMapper mapper = HybridSynthesisMapper(arch);
   qc::QuantumComputation qc;
 
