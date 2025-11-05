@@ -306,7 +306,6 @@ protected:
   // Methods for flying ancilla operations mapping
   std::vector<CoordIndices>
   findBestFlyingAncillaComb(const qc::Operation* targetOp);
-  std::set<std::set<qc::Qubit>> findQtargetSet(std::set<qc::Qubit>& usedQubits);
   [[nodiscard]] MappingMethod compareSwapAndBridge(const Swap& bestSwap,
                                                    const Bridge& bestBridge);
   [[nodiscard]] MappingMethod

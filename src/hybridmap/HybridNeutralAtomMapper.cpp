@@ -2112,60 +2112,6 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
 //   }
 // }
 
-std::set<std::set<qc::Qubit>>
-NeutralAtomMapper::findQtargetSet(std::set<qc::Qubit>& usedQubits) {
-  std::set<std::set<qc::Qubit>> qTargetSet;
-  const auto numUsedQubits = usedQubits.size();
-  qc::SymmetricMatrix<qc::fp> gateQubitDistances(numUsedQubits);
-  for (uint32_t i = 0; i < numUsedQubits; ++i) {
-    for (uint32_t j = 0; j <= i; ++j) {
-      if (i == j) {
-        gateQubitDistances(i, j) = 0;
-      }
-      const qc::Qubit qi = *(std::next(usedQubits.begin(), i));
-      const qc::Qubit qj = *(std::next(usedQubits.begin(), j));
-      gateQubitDistances(i, j) = this->hardwareQubits.getSwapDistance(
-          this->mapping.getHwQubit(qi), this->mapping.getHwQubit(qj));
-    }
-  }
-
-  size_t maxSize = 0;
-  for (int i = 0; i < numUsedQubits; ++i) {
-    std::vector<qc::Qubit> currentVec;
-    const qc::Qubit qi = *(std::next(usedQubits.begin(), i));
-    currentVec.push_back(qi);
-    for (int j = 0; j < numUsedQubits; ++j) {
-      if (i != j) {
-        const qc::Qubit qj = *(std::next(usedQubits.begin(), j));
-        bool isInteractable = true;
-        for (auto& q : currentVec) {
-          auto it = usedQubits.find(q);
-          uint32_t idx = 0;
-          if (it != usedQubits.end()) {
-            idx = std::distance(usedQubits.begin(), it);
-          }
-          if (gateQubitDistances(idx, j) != 0) {
-            isInteractable = false;
-            break;
-          }
-        }
-        if (isInteractable) {
-          currentVec.push_back(qj);
-        }
-      }
-    }
-    if (const std::set currentSet(currentVec.begin(), currentVec.end());
-        currentSet.size() > maxSize) {
-      maxSize = currentSet.size();
-      qTargetSet.clear();
-      qTargetSet.insert(currentSet);
-    } else if (currentSet.size() == maxSize) {
-      qTargetSet.insert(currentSet);
-    }
-  }
-  return qTargetSet;
-}
-
 MappingMethod
 NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
                                         const Bridge& bestBridge) {
