@@ -121,6 +121,8 @@ protected:
   std::deque<AtomMove> lastMoves;
   // Precomputed decay weights
   std::vector<qc::fp> decayWeights;
+  // indicates if multi-qubit gates are in the circuit
+  bool multiQubitGates = false;
 
   // The current placement of the hardware qubits onto the coordinates
   HardwareQubits hardwareQubits;

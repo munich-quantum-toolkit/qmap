@@ -47,6 +47,14 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     throw std::runtime_error(
         "Not enough qubits in architecture for circuit and flying ancillas");
   }
+  // check if multi-qubit gates are present
+  for (const auto& op : qc) {
+    if (op->getUsedQubits().size() > 2) {
+      // deactivate static mapping
+      multiQubitGates = true;
+      break;
+    }
+  }
   mappedQc.addAncillaryRegister(this->arch->getNpositions());
   mappedQc.addAncillaryRegister(this->arch->getNpositions(), "fa");
 
@@ -1755,7 +1763,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
 
       auto bestSwap = findBestSwap(lastSwap);
       MappingMethod bestMethod = MappingMethod::SwapMethod;
-      if (parameters->maxBridgeDistance > 0) {
+      if (parameters->maxBridgeDistance > 0 && !multiQubitGates) {
         auto bestBridge = findBestBridge(bestSwap);
         bestMethod = compareSwapAndBridge(bestSwap, bestBridge);
         if (bestMethod == MappingMethod::BridgeMethod) {
@@ -2209,6 +2217,9 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     const MoveComb& bestMoveComb, const FlyingAncillaComb& bestFaComb,
     const PassByComb& bestPbComb) const {
   if (flyingAncillas.getNumQubits() == 0 && !parameters->usePassBy) {
+    return MappingMethod::MoveMethod;
+  }
+  if (multiQubitGates) {
     return MappingMethod::MoveMethod;
   }
 
