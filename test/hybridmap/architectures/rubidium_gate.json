@@ -53,8 +53,8 @@
     "shuttlingAverageFidelities": {
       "move": 1,
       "aod_move": 1,
-      "aod_activate": 1,
-      "aod_deactivate": 1
+      "aod_activate": 0.98,
+      "aod_deactivate": 0.98
     }
   }
 }
