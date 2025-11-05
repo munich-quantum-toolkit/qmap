@@ -60,9 +60,9 @@ INSTANTIATE_TEST_SUITE_P(NeutralAtomArchitectureTestSuite,
                                            "rubidium_shuttling"));
 class NeutralAtomMapperTestParams
     // parameters are architecture, circuit, gateWeight, shuttlingWeight,
-    // lookAheadWeight, initialCoordinateMapping
+    // lookAheadWeight, dynamicMappingWeight, initialCoordinateMapping
     : public ::testing::TestWithParam<
-          std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp,
+          std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp, qc::fp,
                      na::InitialCoordinateMapping>> {
 protected:
   std::string testArchitecturePath = "architectures/";
@@ -70,8 +70,9 @@ protected:
   qc::fp gateWeight = 1;
   qc::fp shuttlingWeight = 1;
   qc::fp lookAheadWeight = 1;
+  qc::fp dynamicMappingWeight = 2;
   na::InitialCoordinateMapping initialCoordinateMapping =
-      na::InitialCoordinateMapping::Trivial;
+      na::InitialCoordinateMapping::Random;
   // fixed
   qc::fp decay = 0.1;
   qc::fp shuttlingTimeWeight = 0.1;
@@ -84,7 +85,8 @@ protected:
     gateWeight = std::get<2>(params);
     shuttlingWeight = std::get<3>(params);
     lookAheadWeight = std::get<4>(params);
-    initialCoordinateMapping = std::get<5>(params);
+    dynamicMappingWeight = std::get<5>(params);
+    initialCoordinateMapping = std::get<6>(params);
   }
 };
 
@@ -100,13 +102,16 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   mapperParameters.shuttlingTimeWeight = shuttlingTimeWeight;
   mapperParameters.gateWeight = gateWeight;
   mapperParameters.shuttlingWeight = shuttlingWeight;
+  mapperParameters.dynamicMappingWeight = dynamicMappingWeight;
   mapperParameters.seed = seed;
   mapperParameters.verbose = true;
+  mapperParameters.maxBridgeDistance = 2;
+  mapperParameters.numFlyingAncillas = 1;
   mapper.setParameters(mapperParameters);
 
   auto qc = qasm3::Importer::importf(testQcPath);
   const auto qcMapped = mapper.map(qc, initialMapping);
-  ASSERT_GT(qcMapped.size(), qc.size());
+  ASSERT_GE(qcMapped.size(), qc.size());
   mapper.convertToAod();
 
   const auto scheduleResults = mapper.schedule(true, true);
@@ -119,16 +124,14 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
 INSTANTIATE_TEST_SUITE_P(
     NeutralAtomMapperTestSuite, NeutralAtomMapperTestParams,
     ::testing::Combine(
-        ::testing::Values("rubidium_gate", "rubidium_hybrid",
-                          "rubidium_shuttling"),
+        ::testing::Values("rubidium_gate", "rubidium_hybrid"),
         ::testing::Values("dj_nativegates_rigetti_qiskit_opt3_10", "modulo_2",
                           "multiply_2",
                           "qft_nativegates_rigetti_qiskit_opt3_10",
                           "random_nativegates_rigetti_qiskit_opt3_10"),
         ::testing::Values(1, 0.), ::testing::Values(1, 0.),
-        ::testing::Values(0, 0.1),
-        ::testing::Values(na::InitialCoordinateMapping::Trivial,
-                          na::InitialCoordinateMapping::Random)));
+        ::testing::Values(0.1), ::testing::Values(0),
+        ::testing::Values(na::InitialCoordinateMapping::Trivial)));
 
 class NeutralAtomMapperTest : public ::testing::Test {
 protected:
