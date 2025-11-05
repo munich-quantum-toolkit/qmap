@@ -2166,16 +2166,6 @@ NeutralAtomMapper::findQtargetSet(std::set<qc::Qubit>& usedQubits) {
   return qTargetSet;
 }
 
-CoordIndex NeutralAtomMapper::returnClosestAncillaCoord(
-    const CoordIndex& cTarget, const CoordIndices& excludeCoords,
-    const qc::QuantumComputation& qc) const {
-  auto const originalVector = this->arch->getVector(
-      cTarget + arch->getNcolumns(), cTarget); // startCoord, targetCoord
-  auto const originalDirection = originalVector.direction;
-  const auto ancillaTargets = this->hardwareQubits.findClosestAncillaCoord(
-      cTarget, originalDirection, qc.getNqubits(), excludeCoords);
-  return ancillaTargets[0];
-}
 MappingMethod
 NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
                                         const Bridge& bestBridge) {

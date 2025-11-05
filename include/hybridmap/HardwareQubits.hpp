@@ -334,11 +334,6 @@ public:
   findClosestFreeCoord(HwQubit coord, Direction direction,
                        const CoordIndices& excludedCoords = {}) const;
 
-  [[nodiscard]] std::vector<CoordIndex>
-  findClosestAncillaCoord(CoordIndex coord, Direction direction,
-                          int circQubitSize,
-                          const CoordIndices& excludedCoords = {}) const;
-
   [[nodiscard]] HwQubit getClosestQubit(CoordIndex coord,
                                         HwQubits ignored) const;
 

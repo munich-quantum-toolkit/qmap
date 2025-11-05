@@ -307,10 +307,6 @@ protected:
   std::vector<CoordIndices>
   findBestFlyingAncillaComb(const qc::Operation* targetOp);
   std::set<std::set<qc::Qubit>> findQtargetSet(std::set<qc::Qubit>& usedQubits);
-  [[nodiscard]] CoordIndex
-  returnClosestAncillaCoord(const CoordIndex& cTarget,
-                            const CoordIndices& excludeCoords,
-                            const qc::QuantumComputation& qc) const;
   [[nodiscard]] MappingMethod compareSwapAndBridge(const Swap& bestSwap,
                                                    const Bridge& bestBridge);
   [[nodiscard]] MappingMethod
