@@ -485,6 +485,7 @@ public:
     this->lastMoves = mapper.lastMoves;
     this->lastBlockedQubits = mapper.lastBlockedQubits;
     this->scheduler = mapper.scheduler;
+    this->decayWeights = mapper.decayWeights;
   }
 
   /**
