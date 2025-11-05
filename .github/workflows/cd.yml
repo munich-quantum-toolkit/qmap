@@ -26,6 +26,7 @@ jobs:
           [
             ubuntu-24.04,
             ubuntu-24.04-arm,
+            macos-15-intel,
             macos-14,
             windows-2022,
             windows-11-arm,
@@ -47,7 +48,7 @@ jobs:
       url: https://pypi.org/p/mqt.qmap
     needs: [build-sdist, build-wheel]
     steps:
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           pattern: cibw-*
           path: dist
@@ -55,5 +56,5 @@ jobs:
       - name: Generate artifact attestation for sdist and wheel(s)
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
-          subject-path: "dist/*"
+          subject-path: dist/*
       - uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0

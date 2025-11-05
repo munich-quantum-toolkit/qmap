@@ -9,10 +9,26 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.4.0] - 2025-10-15
+
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
+
+### Added
+
+- 👷 Enable testing on Python 3.14 ([#796]) ([**@denialhaag**])
+
+### Changed
+
+- 📝 Improve error message in the NA compiler ([#804]) ([**@ystade**])
+- ⬆️ Bump minimum required `mqt-core` version to `3.3.1` ([#803]) ([**@denialhaag**], [**@ystade**])
+
+### Fixed
+
+- 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
+
 ### Removed
 
 - 🔥 Drop support for Python 3.9 ([#767]) ([**@denialhaag**])
-- 🔥 Stop testing on and shipping wheels for x86 macOS systems ([#760]) ([**@denialhaag**])
 
 ## [3.3.1] - 2025-08-07
 
@@ -30,10 +46,10 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#330)._
 
 ### Changed
 
-- **Breaking**: ⬆️ Bump minimum required `mqt-core` version to `3.2.1` ([#720]) ([**@denialhaag**])
-- **Breaking**: ⬆️ Require C++20 ([#720]) ([**@denialhaag**])
-- **Breaking**: ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
-- **Breaking**: ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
+- ⬆️ Bump minimum required `mqt-core` version to `3.2.1` ([#720]) ([**@denialhaag**])
+- ⬆️ Require C++20 ([#720]) ([**@denialhaag**])
+- ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
+- ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
 
 ### Fixed
 
@@ -46,10 +62,10 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Changed
 
-- **Breaking**: ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
+- ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
 - ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
-- **Breaking**: ⬆️ Bump minimum required `mqt-core` version to `3.1.0` ([#694]) ([**@denialhaag**])
-- **Breaking**: ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
+- ⬆️ Bump minimum required `mqt-core` version to `3.1.0` ([#694]) ([**@denialhaag**])
+- ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
 
 ### Fixed
 
@@ -101,19 +117,19 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#300)._
 
 ### Changed
 
-- **Breaking**: 🚚 Move MQT QMAP to the [munich-quantum-toolkit] GitHub organization
-- **Breaking**: ♻️ Use the `mqt-core` Python package for handling circuits ([#418]) ([**@burgholzer**])
-- **Breaking**: ⬆️ Bump minimum required CMake version to `3.24.0` ([#621]) ([**@burgholzer**])
-- **Breaking**: ♻️ Adopt new `NAComputation` in NASP tool ([#608]) ([**@ystade**])
-- **Breaking**: ♻️ Isolate NALAC from the main library ([#608], [#609]) ([**@ystade**])
+- 🚚 Move MQT QMAP to the [munich-quantum-toolkit] GitHub organization
+- ♻️ Use the `mqt-core` Python package for handling circuits ([#418]) ([**@burgholzer**])
+- ⬆️ Bump minimum required CMake version to `3.24.0` ([#621]) ([**@burgholzer**])
+- ♻️ Adopt new `NAComputation` in NASP tool ([#608]) ([**@ystade**])
+- ♻️ Isolate NALAC from the main library ([#608], [#609]) ([**@ystade**])
 - 📝 Rework existing project documentation ([#614]) ([**@burgholzer**])
 
 ### Removed
 
-- **Breaking**: 🔥 Remove teleportation support for the heuristic mapping ([#621]) ([**@burgholzer**])
-- **Breaking**: 🔥 Remove support for `BackendV1` Qiskit backends ([#610]) ([**@burgholzer**])
-- **Breaking**: 🔥 Remove support for `.real`, `.qc`, `.tfc`, and `GRCS` files ([#621]) ([**@burgholzer**])
-- **Breaking**: 🔥 Remove `yaml-cpp` dependency ([#608]) ([**@ystade**])
+- 🔥 Remove teleportation support for the heuristic mapping ([#621]) ([**@burgholzer**])
+- 🔥 Remove support for `BackendV1` Qiskit backends ([#610]) ([**@burgholzer**])
+- 🔥 Remove support for `.real`, `.qc`, `.tfc`, and `GRCS` files ([#621]) ([**@burgholzer**])
+- 🔥 Remove `yaml-cpp` dependency ([#608]) ([**@ystade**])
 
 ## [2.8.0] - 2024-11-18
 
@@ -121,7 +137,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.3.1...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.4.0
 [3.3.1]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.3.1
 [3.3.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.3.0
 [3.2.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.2.0
@@ -134,6 +151,10 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804
+[#803]: https://github.com/munich-quantum-toolkit/qmap/pull/803
+[#796]: https://github.com/munich-quantum-toolkit/qmap/pull/796
+[#793]: https://github.com/munich-quantum-toolkit/qmap/pull/793
 [#767]: https://github.com/munich-quantum-toolkit/qmap/pull/767
 [#760]: https://github.com/munich-quantum-toolkit/qmap/pull/760
 [#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728

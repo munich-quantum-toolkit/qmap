@@ -70,7 +70,7 @@ class RoutingAgnosticCompiler:
         Args:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
-                "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+                "debug", "info", "warning", "error", "critical"
             use_window: whether to use a window for the placer
             window_size: the size of the window for the placer
             dynamic_placement: whether to use dynamic placement for the placer
@@ -131,7 +131,7 @@ class RoutingAwareCompiler:
         Args:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
-                "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+                "debug", "info", "warning", "error", "critical"
             use_window: is a flag whether to use a window for the placer
             window_min_width: is the minimum width of the window for the placer
             window_ratio: is the ratio between the height and the width of the window
