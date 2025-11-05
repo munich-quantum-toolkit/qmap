@@ -274,7 +274,16 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord,
     }
   }
   if (freeCoordsInDirection.empty()) {
-    freeCoordsInDirection = freeCoordinates;
+    // return all free coords except excluded
+    auto allFreeCoords = freeCoordinates;
+    for (const auto& excludedCoord : excludedCoords) {
+      if (const auto pos = std::find(allFreeCoords.begin(), allFreeCoords.end(),
+                                     excludedCoord);
+          pos != allFreeCoords.end()) {
+        allFreeCoords.erase(pos);
+      }
+    }
+    return allFreeCoords;
   }
   auto minDistance = std::numeric_limits<qc::fp>::max();
   CoordIndex minCoord = freeCoordsInDirection.front();
