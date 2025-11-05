@@ -1494,6 +1494,8 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
     }
   }
 
+  // save coords where atoms have been moved away to
+  CoordIndices movedAwayCoords = remainingCoords;
   while (!remainingGateCoords.empty()) {
     auto currentGateQubit = *remainingGateCoords.begin();
     // compute costs and find best coord
@@ -1501,7 +1503,7 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
     for (const auto& remainingCoord : remainingCoords) {
       if (this->hardwareQubits.isMapped(remainingCoord)) {
         const auto moveAwayComb = getMoveAwayCombinations(
-            currentGateQubit, remainingCoord, remainingCoords);
+            currentGateQubit, remainingCoord, movedAwayCoords);
         for (const auto& moveAway : moveAwayComb) {
           auto cost = moveCostComb(moveAway);
           costs.emplace_back(remainingCoord, cost);
@@ -1520,11 +1522,9 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
     auto bestCoord = bestCost->first;
     if (this->hardwareQubits.isMapped(bestCoord)) {
       auto moveAwayComb =
-          getMoveAwayCombinations(currentGateQubit, bestCoord, remainingCoords);
-      // for (const auto& moveAway : moveAwayComb) {
-      //   moveComb.append(moveAway);
-      // }
+          getMoveAwayCombinations(currentGateQubit, bestCoord, movedAwayCoords);
       moveComb.append(moveAwayComb.moveCombs[0]);
+      movedAwayCoords.emplace_back(moveAwayComb.moveCombs[0].moves[0].c2);
     } else {
       moveComb.append(AtomMove{currentGateQubit, bestCoord});
     }
