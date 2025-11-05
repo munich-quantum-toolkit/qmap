@@ -57,9 +57,11 @@ TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
 
 TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
   auto arch = NeutralAtomArchitecture(testArchitecturePath);
-  auto mapper = HybridSynthesisMapper(arch);
+  auto params = MapperParameters();
+  params.verbose = true;
+  auto mapper = HybridSynthesisMapper(arch, params);
   mapper.initMapping(3);
-  auto best = mapper.evaluateSynthesisSteps(circuits, false);
+  auto best = mapper.evaluateSynthesisSteps(circuits, true);
   EXPECT_EQ(best.size(), 2);
   EXPECT_GE(best[0], 0);
   EXPECT_GE(best[1], 0);
