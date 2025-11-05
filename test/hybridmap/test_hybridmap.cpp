@@ -21,6 +21,8 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+// additional include for direct Mapping test
+#include "hybridmap/Mapping.hpp"
 
 class NeutralAtomArchitectureTest
     : public ::testing::TestWithParam<std::string> {
@@ -156,7 +158,7 @@ protected:
     // mapperParameters.useBridge = true;
     mapperParameters.usePassBy = true;
     mapper.setParameters(mapperParameters);
-    auto qc = qasm3::Importer::importf(
+    qc = qasm3::Importer::importf(
         "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   }
 };
@@ -164,7 +166,7 @@ protected:
 TEST_F(NeutralAtomMapperTest, Output) {
   setvbuf(stdout, NULL, _IONBF, 0);
   auto qcMapped = mapper.map(qc, initialMapping);
-  // qcMapped.dumpOpenQASM(std::cout, false);
+  qcMapped.dumpOpenQASM(std::cout, false);
   // write to file
   std::ofstream ofs("test.qasm");
   qcMapped.dumpOpenQASM(ofs, false);

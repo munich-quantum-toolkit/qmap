@@ -184,20 +184,6 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     circGraphQueue.pop();
   }
 
-  // for debug
-  for (size_t i = 0; i < dag.size(); ++i) {
-    if (qubitIndices[i] == std::numeric_limits<unsigned int>::max()) {
-      for (HwQubit hw = 0; hw < hwQubits.getNumQubits(); ++hw) {
-        if (hwIndices[hw] == std::numeric_limits<unsigned int>::max()) {
-          qubitIndices[i] = hw;
-          hwIndices[hw] = i;
-          break;
-        }
-      }
-    }
-  }
-
   return qubitIndices;
 }
-
 } // namespace na
