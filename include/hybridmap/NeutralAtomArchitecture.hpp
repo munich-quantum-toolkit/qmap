@@ -505,28 +505,6 @@ public:
    */
   [[nodiscard]] std::vector<CoordIndex> getNN(CoordIndex idx) const;
 
-  /**
-   * @brief Get the maximum gate size for multi-qubit size. Gets derived
-   * from the interaction radius.
-   * @return The maximum gate size for multi-qubit size
-   */
-  [[nodiscard]] size_t getMaxGateSize() const {
-    size_t maxGateSize = 0;
-    const auto intRad = getInteractionRadius();
-    const auto xMax = static_cast<size_t>(intRad);
-    auto y = static_cast<size_t>(intRad);
-    size_t x = 0;
-    while (x <= xMax) {
-      if (static_cast<double>((x * x) + (y * y)) > intRad * intRad) {
-        y--;
-      } else {
-        maxGateSize += y + 1;
-        x++;
-      }
-    }
-    return maxGateSize;
-  }
-
   // MoveVector functions
   /**
    * @brief Get the MoveVector between two coordinate indices

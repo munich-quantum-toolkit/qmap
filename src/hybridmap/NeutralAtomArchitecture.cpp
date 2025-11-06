@@ -308,7 +308,7 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   for (size_t i = 0; i < op->getNqubits() - 1; ++i) {
     opName += "c";
   }
-  if (op->getType() == qc::OpType::P) {
+  if (op->getType() == qc::OpType::P || op->getType() == qc::OpType::RZ) {
     // use time of theta = pi and linearly scale
     opName += "z";
     auto param = abs(op->getParameter().back());

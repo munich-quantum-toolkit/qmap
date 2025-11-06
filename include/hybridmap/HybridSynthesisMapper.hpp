@@ -148,13 +148,5 @@ public:
    * @return The current adjacency matrix of the neutral atom hardware.
    */
   [[nodiscard]] AdjacencyMatrix getCircuitAdjacencyMatrix() const;
-
-  /**
-   * @brief Returns the maximum gate size of the neutral atom hardware.
-   * @return The maximum gate size of the neutral atom hardware.
-   */
-  [[nodiscard]] size_t getMaxGateSize() const {
-    return this->arch->getMaxGateSize();
-  }
 };
 } // namespace na
