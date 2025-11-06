@@ -576,13 +576,6 @@ public:
   }
 
   /**
-   * @brief Returns the mapped quantum circuit with AOD operations.
-   */
-  [[nodiscard]] qc::QuantumComputation getMappedQcAod() const {
-    return mappedQcAOD;
-  }
-
-  /**
    * @brief Prints the mapped circuit with AOD operations as an extended
    * OpenQASM
    * @return The mapped quantum circuit with native AOD operations

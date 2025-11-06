@@ -170,19 +170,26 @@ protected:
 TEST_F(NeutralAtomMapperTest, Output) {
   setvbuf(stdout, NULL, _IONBF, 0);
   auto qcMapped = mapper.map(qc, initialMapping);
-  qcMapped.dumpOpenQASM(std::cout, false);
   // write to file
-  std::ofstream ofs("test.qasm");
-  qcMapped.dumpOpenQASM(ofs, false);
-  ofs.close();
+  mapper.saveMappedQcQasm("test.qasm");
+  const auto qcMappedFromFile = mapper.getMappedQcQasm();
+  mapper.saveMappedQcAodQasm("test_aod.qasm");
+  const auto qcMappedAod = mapper.getMappedQcAodQasm();
 
-  auto qcAodMapped = mapper.convertToAod();
-  qcAodMapped.dumpOpenQASM(std::cout, false);
-  std::ofstream ofsAod("test_aod.qasm");
-  qcAodMapped.dumpOpenQASM(ofsAod, false);
-  ofsAod.close();
+  const auto MapperStats = mapper.getStats();
+  EXPECT_GE(MapperStats.nSwaps + MapperStats.nBridges + MapperStats.nFAncillas +
+                MapperStats.nMoves + MapperStats.nPassBy,
+            0);
+  const auto MapperStatsMap = mapper.getStatsMap();
+  EXPECT_GE(MapperStatsMap.at("nSwaps") + MapperStatsMap.at("nBridges") +
+                MapperStatsMap.at("nFAncillas") + MapperStatsMap.at("nMoves") +
+                MapperStatsMap.at("nPassBy"),
+            0);
+  const auto initHwPos = mapper.getInitHwPos();
+  EXPECT_EQ(initHwPos.size(), arch.getNqubits() - 1 /* flying ancilla */);
 
   const auto scheduleResults = mapper.schedule(true, true);
+  const auto animationViz = mapper.getAnimationViz();
   mapper.saveAnimationFiles("test");
 
   std::cout << scheduleResults.toCsv();
