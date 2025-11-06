@@ -24,6 +24,7 @@
 #include <map>
 #include <numeric>
 #include <random>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -60,7 +61,7 @@ protected:
   /**
    * @brief Initializes the nearby qubits for each hardware qubit.
    * @details Nearby qubits are the qubits that are closer than the interaction
-   * radius. Therefore they can be swapped with a single swap operation.
+   * radius. Therefore, they can be swapped with a single swap operation.
    */
   void initNearbyQubits();
   /**
@@ -93,11 +94,10 @@ public:
   HardwareQubits() = default;
   explicit HardwareQubits(
       const NeutralAtomArchitecture& architecture, const CoordIndex nQubits = 0,
-      const InitialCoordinateMapping initialCoordinateMapping =
-          InitialCoordinateMapping::Trivial,
+      const InitialCoordinateMapping initialCoordinateMapping = Trivial,
       uint32_t seed = 0)
-      : arch(&architecture) {
-    this->nQubits = nQubits;
+      : arch(&architecture), nQubits(nQubits) {
+
     swapDistances = qc::SymmetricMatrix<SwapDistance>(this->nQubits);
 
     switch (initialCoordinateMapping) {
@@ -115,7 +115,7 @@ public:
         seed = std::random_device()();
       }
       std::mt19937 g(seed);
-      std::shuffle(indices.begin(), indices.end(), g);
+      std::ranges::shuffle(indices, g);
       for (uint32_t i = 0; i < this->nQubits; ++i) {
         hwToCoordIdx.emplace(i, indices[i]);
         occupiedCoordinates.emplace_back(indices[i]);
@@ -126,8 +126,8 @@ public:
     initNearbyQubits();
 
     for (uint32_t i = 0; i < architecture.getNpositions(); ++i) {
-      if (std::find(occupiedCoordinates.begin(), occupiedCoordinates.end(),
-                    i) == occupiedCoordinates.end()) {
+      if (std::ranges::find(occupiedCoordinates, i) ==
+          occupiedCoordinates.end()) {
         freeCoordinates.emplace_back(i);
       }
     }
@@ -145,12 +145,9 @@ public:
    * @param idx The coordinate index.
    * @return Boolean indicating if the hardware qubit is mapped to a coordinate.
    */
-  [[nodiscard]] bool isMapped(CoordIndex idx) const {
-    if (std::find(occupiedCoordinates.begin(), occupiedCoordinates.end(),
-                  idx) != occupiedCoordinates.end()) {
-      return true;
-    }
-    return false;
+  [[nodiscard]] bool isMapped(const CoordIndex idx) const {
+    return std::ranges::find(occupiedCoordinates, idx) !=
+           occupiedCoordinates.end();
   }
   /**
    * @brief Updates mapping after moving a hardware qubit to a coordinate.
@@ -172,7 +169,7 @@ public:
       swapDistances(i, hwQubit) = -1;
     }
     nearbyQubits.erase(hwQubit);
-    for (auto& [qubit, nearby] : nearbyQubits) {
+    for (auto& nearby : nearbyQubits | std::views::values) {
       nearby.erase(hwQubit);
     }
   }
@@ -319,7 +316,7 @@ public:
                        const CoordIndices& excludedCoords = {}) const;
 
   [[nodiscard]] HwQubit getClosestQubit(CoordIndex coord,
-                                        HwQubits ignored) const;
+                                        const HwQubits& ignored) const;
 
   // Blocking
   /**

@@ -21,6 +21,7 @@
 #include <iterator>
 #include <limits>
 #include <queue>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <vector>
@@ -117,8 +118,7 @@ HardwareQubits::computeAllShortestPaths(const HwQubit q1,
     }
 
     for (const auto& neighbor : this->getNearbyQubits(currentQubit)) {
-      if (std::find(currentPath.begin(), currentPath.end(), neighbor) ==
-          currentPath.end()) {
+      if (std::ranges::find(currentPath, neighbor) == currentPath.end()) {
         auto newPath = currentPath;
         newPath.push_back(neighbor);
         pathsQueue.push(newPath);
@@ -139,20 +139,20 @@ void HardwareQubits::move(HwQubit hwQubit, const CoordIndex newCoord) {
     throw std::runtime_error("Invalid coordinate");
   }
   // check if new coordinate is already occupied
-  for (const auto& [qubit, coord] : hwToCoordIdx) {
+  for (const auto& coord : hwToCoordIdx | std::views::values) {
     if (coord == newCoord) {
       throw std::runtime_error("Coordinate already occupied");
     }
   }
 
   const auto oldCoord = hwToCoordIdx.at(hwQubit);
-  if (auto it = std::ranges::find(occupiedCoordinates, oldCoord);
+  if (const auto it = std::ranges::find(occupiedCoordinates, oldCoord);
       it != occupiedCoordinates.end()) {
     occupiedCoordinates.erase(it);
   }
   occupiedCoordinates.emplace_back(newCoord);
   freeCoordinates.emplace_back(oldCoord);
-  if (auto it2 = std::ranges::find(freeCoordinates, newCoord);
+  if (const auto it2 = std::ranges::find(freeCoordinates, newCoord);
       it2 != freeCoordinates.end()) {
     freeCoordinates.erase(it2);
   }
@@ -259,7 +259,7 @@ std::set<CoordIndex> HardwareQubits::getNearbyOccupiedCoordinatesByCoord(
 }
 
 std::vector<CoordIndex>
-HardwareQubits::findClosestFreeCoord(CoordIndex coord,
+HardwareQubits::findClosestFreeCoord(const CoordIndex coord,
                                      const Direction direction,
                                      const CoordIndices& excludedCoords) const {
   std::vector<CoordIndex> freeCoordsInDirection;
@@ -295,7 +295,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord,
 }
 
 HwQubit HardwareQubits::getClosestQubit(const CoordIndex coord,
-                                        HwQubits ignored) const {
+                                        const HwQubits& ignored) const {
   HwQubit closestQubit = 0;
   auto minDistance = std::numeric_limits<qc::fp>::max();
   for (auto const& [qubit, idx] : hwToCoordIdx) {
