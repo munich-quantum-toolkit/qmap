@@ -16,7 +16,6 @@
 #include "ir/Definitions.hpp"
 #include "ir/operations/Operation.hpp"
 
-#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -27,7 +26,7 @@ class AnimationAtoms {
 protected:
   std::map<CoordIndex, HwQubit> coordIdxToId;
   std::map<HwQubit, std::pair<qc::fp, qc::fp>> idToCoord;
-  const NeutralAtomArchitecture& arch;
+  const NeutralAtomArchitecture* arch;
 
   void initPositions(const std::map<HwQubit, CoordIndex>& initHwPos,
                      const std::map<HwQubit, CoordIndex>& initFaPos);
@@ -35,8 +34,8 @@ protected:
 public:
   AnimationAtoms(const std::map<HwQubit, CoordIndex>& initHwPos,
                  const std::map<HwQubit, CoordIndex>& initFaPos,
-                 const NeutralAtomArchitecture& arch)
-      : arch(arch) {
+                 const NeutralAtomArchitecture& architecture)
+      : arch(&architecture) {
     initPositions(initHwPos, initFaPos);
   }
 

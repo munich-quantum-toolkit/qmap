@@ -17,40 +17,41 @@
 #include "ir/operations/OpType.hpp"
 
 #include <cstddef>
-#include <cstdint>
 #include <cstdlib>
-#include <limits> // added
+#include <limits>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 namespace na {
 void AnimationAtoms::initPositions(
     const std::map<HwQubit, CoordIndex>& initHwPos,
     const std::map<HwQubit, CoordIndex>& initFaPos) {
-  const auto nCols = arch.getNcolumns();
+  const auto nCols = arch->getNcolumns();
   for (const auto& [id, coord] : initHwPos) {
     coordIdxToId[coord] = id;
     const auto column = coord % nCols;
     const auto row = coord / nCols;
-    idToCoord[id] = {column * arch.getInterQubitDistance(),
-                     row * arch.getInterQubitDistance()};
+    idToCoord[id] = {column * arch->getInterQubitDistance(),
+                     row * arch->getInterQubitDistance()};
   }
 
-  auto flyingAncillaidxPlusOne = 0;
+  auto flyingAncillaIdxPlusOne = 0;
+  const auto hwCount = static_cast<HwQubit>(initHwPos.size());
   for (const auto& [id, coord] : initFaPos) {
-    flyingAncillaidxPlusOne++;
-    coordIdxToId[coord + (2 * arch.getNpositions())] = id + initHwPos.size();
+    flyingAncillaIdxPlusOne++;
+    coordIdxToId[static_cast<CoordIndex>(
+        coord + static_cast<CoordIndex>(2 * arch->getNpositions()))] =
+        static_cast<HwQubit>(id + hwCount);
     const auto column = coord % nCols;
     const auto row = coord / nCols;
     const auto offset =
-        arch.getInterQubitDistance() / arch.getNAodIntermediateLevels();
-    idToCoord[id + initHwPos.size()] = {
-        (column * arch.getInterQubitDistance()) +
-            flyingAncillaidxPlusOne * offset,
-        (row * arch.getInterQubitDistance()) +
-            flyingAncillaidxPlusOne * offset};
+        arch->getInterQubitDistance() / arch->getNAodIntermediateLevels();
+    idToCoord[static_cast<HwQubit>(id + hwCount)] = {
+        (column * arch->getInterQubitDistance()) +
+            flyingAncillaIdxPlusOne * offset,
+        (row * arch->getInterQubitDistance()) +
+            flyingAncillaIdxPlusOne * offset};
   }
 }
 
@@ -127,7 +128,9 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
         opString += "@" + std::to_string(startTime) + " move (" +
                     std::to_string(newX) + ", " + std::to_string(newY) +
                     ") atom" + std::to_string(id) + "\n";
-        idToCoord.at(id) = {newX, newY};
+        auto& coords = idToCoord.at(id);
+        coords.first = newX;
+        coords.second = newY;
       } else {
         // this is the target index -> update coordIdxToId
         const auto coordIdx = coordIndices[i];
