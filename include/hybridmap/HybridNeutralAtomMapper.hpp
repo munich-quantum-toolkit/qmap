@@ -253,16 +253,6 @@ protected:
   [[nodiscard]] PassByComb
   convertMoveCombToPassByComb(const MoveComb& moveComb) const;
 
-  // std::vector<std::pair<const qc::Operation*, Bridge>>
-  // findAllBridges(qc::QuantumComputation& qc);
-  // std::vector<std::pair<const qc::Operation*, Bridge>>
-  // bridgeCostCompareWithSwap(
-  //     std::vector<std::pair<const qc::Operation*, Bridge>> allBridges,
-  //     Swap bestSwap, const qc::DAG& dag, NeutralAtomLayer& frontLayer);
-  // void updateMappingBridge(
-  //     std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges,
-  //     NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer);
-
   /**
    * @brief Returns the next best shuttling move operation for the front layer.
    * @return The next best shuttling move operation for the front layer
@@ -285,8 +275,6 @@ protected:
    * @return Vector of possible move combinations for the front layer
    */
   MoveCombs getAllMoveCombinations();
-  // std::vector<std::pair<MoveComb, MoveInfo>>
-  // getAllMoveCombinationsWithOp();
   /**
    * @brief Returns all possible move away combinations for a move from start to
    * target.

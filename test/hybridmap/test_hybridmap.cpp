@@ -57,7 +57,7 @@ TEST_P(NeutralAtomArchitectureTest, LoadArchitectures) {
 INSTANTIATE_TEST_SUITE_P(NeutralAtomArchitectureTestSuite,
                          NeutralAtomArchitectureTest,
                          ::testing::Values("rubidium_gate", "rubidium_hybrid",
-                                           "rubidium_shuttling"));
+                                           "arch_minimal"));
 class NeutralAtomMapperTestParams
     // parameters are architecture, circuit, gateWeight, shuttlingWeight,
     // lookAheadWeight, dynamicMappingWeight, initialCoordinateMapping
@@ -188,4 +188,55 @@ TEST_F(NeutralAtomMapperTest, Output) {
   std::cout << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
+}
+
+// Exception tests for HybridNeutralAtomMapper
+
+TEST(NeutralAtomMapperExceptions, NotEnoughQubitsForCircuitAndAncillas) {
+  const auto arch =
+      na::NeutralAtomArchitecture("architectures/rubidium_hybrid.json");
+  na::MapperParameters p;
+  p.initialCoordMapping = na::InitialCoordinateMapping::Trivial;
+  p.shuttlingWeight = 0;   // avoid free-coords check interference
+  p.numFlyingAncillas = 1; // allowed by ctor
+  na::NeutralAtomMapper mapper(arch, p);
+
+  // Circuit uses exactly all hardware qubits; +1 ancilla should trigger
+  qc::QuantumComputation qc1(static_cast<unsigned int>(arch.getNqubits()));
+  EXPECT_THROW((void)mapper.map(qc1, na::InitialMapping::Identity),
+               std::runtime_error);
+
+  // Circuit bigger than architecture should throw
+  qc::QuantumComputation qc2(static_cast<unsigned int>(arch.getNqubits() + 1));
+  EXPECT_THROW((void)mapper.map(qc2, na::InitialMapping::Identity),
+               std::runtime_error);
+}
+
+// for now, only one flying ancilla is supported
+TEST(NeutralAtomMapperExceptions, OnlyOneFlyingAncillaSupported) {
+  const auto arch =
+      na::NeutralAtomArchitecture("architectures/rubidium_hybrid.json");
+  na::MapperParameters p;
+  p.initialCoordMapping = na::InitialCoordinateMapping::Trivial;
+  p.shuttlingWeight = 0;   // avoid free-coords check interference
+  p.numFlyingAncillas = 2; // should be rejected
+  EXPECT_THROW((void)na::NeutralAtomMapper(arch, p), std::runtime_error);
+}
+
+TEST(NeutralAtomMapperExceptions, NoFreeCoordsForShuttlingConstructor) {
+  // Create minimal arch JSON: 1x1 positions, nQubits = 1 => no free coords
+  const auto arch =
+      na::NeutralAtomArchitecture("architectures/arch_minimal.json");
+
+  na::MapperParameters p;
+  p.initialCoordMapping = na::InitialCoordinateMapping::Trivial;
+  p.shuttlingWeight = 1.0; // triggers constructor check
+  EXPECT_THROW((void)na::NeutralAtomMapper(arch, p), std::runtime_error);
+
+  na::MapperParameters p1 = p;
+  ;
+  p1.shuttlingWeight = 0.0; // construct ok
+  na::NeutralAtomMapper mapper(arch, p1);
+  p1.shuttlingWeight = 0.5; // triggers setParameters check
+  EXPECT_THROW(mapper.setParameters(p1), std::runtime_error);
 }

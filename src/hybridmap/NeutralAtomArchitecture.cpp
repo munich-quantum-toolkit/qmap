@@ -72,11 +72,24 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     for (const auto& [key, value] : jsonDataParameters["gateTimes"].items()) {
       gateTimes.emplace(key, value);
     }
+    // check if cz and h gates are present
+    if (gateTimes.find("cz") == gateTimes.end()) {
+      gateTimes["cz"] = gateTimes["none"];
+    }
+    if (gateTimes.find("h") == gateTimes.end()) {
+      gateTimes["h"] = gateTimes["none"];
+    }
     this->parameters.gateTimes = gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["gateAverageFidelities"].items()) {
       gateAverageFidelities.emplace(key, value);
+    }
+    if (gateAverageFidelities.find("cz") == gateAverageFidelities.end()) {
+      gateAverageFidelities["cz"] = gateAverageFidelities["none"];
+    }
+    if (gateAverageFidelities.find("h") == gateAverageFidelities.end()) {
+      gateAverageFidelities["h"] = gateAverageFidelities["none"];
     }
     this->parameters.gateAverageFidelities = gateAverageFidelities;
     std::map<qc::OpType, qc::fp> shuttlingTimes;
