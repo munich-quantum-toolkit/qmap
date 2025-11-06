@@ -34,11 +34,10 @@ namespace na {
 
 /**
  * @brief Class that represents the hardware qubits of a neutral atom quantum
- * @details Class that represents the hardware qubits of a neutral atom quantum
- * computer. It stores the mapping from the circuit qubits to the hardware
- * qubits and the mapping from the hardware qubits to the coordinates of the
- * neutral atoms. It also stores the swap distances between the hardware
- * qubits.
+ * computer.
+ * @details Stores the mapping from circuit qubits to hardware qubits and from
+ * hardware qubits to atom coordinates. Maintains cached swap distances and
+ * nearby-qubit relations derived from the architecture's interaction radius.
  */
 class HardwareQubits {
 protected:
@@ -66,9 +65,8 @@ protected:
   void initNearbyQubits();
   /**
    * @brief Computes the nearby qubits for a single hardware qubit.
-   * @details Computes the nearby qubits for a single hardware qubit. This
-   * function is called by initNearbyQubits(). It uses the nearby coordinates
-   * of the neutral atom architecture to compute the nearby qubits.
+   * @details Determines nearby qubits by comparing Euclidean distance to the
+   * architecture's interaction radius. Called by initNearbyQubits().
    * @param qubit The hardware qubit for which the nearby qubits are computed.
    */
   void computeNearbyQubits(HwQubit qubit);
@@ -85,13 +83,27 @@ protected:
 
   /**
    * @brief Resets the swap distances between the hardware qubits.
-   * @details Used after each shuttling operation to reset the swap distances.
+   * @details Used after each shuttling operation to invalidate all cached swap
+   * distances (set to -1), forcing recomputation on demand.
    */
   void resetSwapDistances();
 
 public:
   // Constructors
   HardwareQubits() = default;
+  /**
+   * @brief Construct hardware qubit layout and caches.
+   * @param architecture Reference to the neutral atom architecture.
+   * @param nQubits Number of hardware qubits managed in the mapping.
+   * @param initialCoordinateMapping Strategy for initial coordinate assignment:
+   * Trivial assigns coordinates 0..nQubits-1 in order; Random shuffles over
+   * all positions.
+   * @param seed Random seed used for Random initial mapping. If 0, a
+   * std::random_device() seeds the RNG.
+   * @details Initializes nearby-qubit relations and occupied/free coordinate
+   * lists. For Trivial mapping, swap distances are precomputed; for Random,
+   * swap distances are left invalid (-1) to be computed lazily.
+   */
   explicit HardwareQubits(
       const NeutralAtomArchitecture& architecture, const CoordIndex nQubits = 0,
       const InitialCoordinateMapping initialCoordinateMapping = Trivial,
@@ -135,9 +147,16 @@ public:
     initialHwPos = hwToCoordIdx;
   }
 
+  /**
+   * @brief Compute all shortest paths between two hardware qubits.
+   * @details Performs a breadth-first exploration over the nearby-qubit graph
+   * (edges exist between qubits within the interaction radius) and returns all
+   * minimal-length paths from q1 to q2 as sequences of hardware qubits.
+   */
   [[nodiscard]] std::vector<HwQubitsVector>
   computeAllShortestPaths(HwQubit q1, HwQubit q2) const;
 
+  /** Get number of hardware qubits tracked by this instance. */
   [[nodiscard]] CoordIndex getNumQubits() const { return nQubits; }
 
   /**
@@ -151,13 +170,19 @@ public:
   }
   /**
    * @brief Updates mapping after moving a hardware qubit to a coordinate.
-   * @details Checks if the coordinate is valid and free. If yes, the mapping is
-   * updated.
+   * @details Verifies that the coordinate exists and is unoccupied, updates the
+   * mapping, refreshes nearby-qubit relations for the moved qubit and its
+   * neighbors, and invalidates cached swap distances.
    * @param hwQubit The hardware qubit to be moved.
    * @param newCoord The new coordinate of the hardware qubit.
    */
   void move(HwQubit hwQubit, CoordIndex newCoord);
 
+  /**
+   * @brief Remove a hardware qubit from the mapping and caches.
+   * @details Erases the qubit from the coordinate mapping and nearby lists and
+   * invalidates swap distances involving that qubit.
+   */
   void removeHwQubit(const HwQubit hwQubit) {
     hwToCoordIdx.erase(hwQubit);
     freeCoordinates.emplace_back(initialHwPos.at(hwQubit));
@@ -175,8 +200,8 @@ public:
   }
 
   /**
-   * @brief Converts gate qubits from hardware qubits to coordinate indices.
-   * @param op The operation.
+   * @brief Convert operation's qubits from hardware indices to coordinates.
+   * @param op The operation to be updated in-place.
    */
   void mapToCoordIdx(qc::Operation* op) const {
     op->setTargets(hwToCoordIdx.apply(op->getTargets()));
@@ -218,9 +243,8 @@ public:
   }
 
   /**
-   * @brief Returns the hardware qubit at a coordinate.
-   * @details Returns the hardware qubit at a coordinate. Throws an exception if
-   * there is no hardware qubit at the coordinate.
+   * @brief Return the hardware qubit at a given coordinate.
+   * @details Throws std::runtime_error if no hardware qubit is mapped there.
    * @param coordIndex The coordinate index.
    * @return The hardware qubit at the coordinate.
    */
@@ -238,14 +262,15 @@ public:
 
   /**
    * @brief Returns the swap distance between two hardware qubits.
-   * @details Returns the swap distance between two hardware qubits. If the
-   * swap distance is not yet computed, it is computed using a breadth-first
-   * search.
+   * @details If not computed yet, uses a breadth-first search over nearby
+   * qubits to compute the minimal number of intermediate swaps. When closeBy
+   * is false, one additional step is allowed to stop in the vicinity of q2.
    * @param q1 The first hardware qubit.
    * @param q2 The second hardware qubit.
    * @param closeBy If the swap should be performed to the exact position of q2
    * or just to its vicinity.
-   * @return The swap distance between the two hardware qubits.
+   * @return The swap distance between the two hardware qubits (0 if equal). If
+   * closeBy==false, returns the distance plus one.
    */
   [[nodiscard]] SwapDistance getSwapDistance(const HwQubit q1, const HwQubit q2,
                                              const bool closeBy = true) {
@@ -297,24 +322,33 @@ public:
    * @brief Computes the summed swap distance between all hardware qubits in a
    * set.
    * @param qubits The set of hardware qubits.
-   * @return The summed swap distance between all hardware qubits in the set.
+   * @return The summed pairwise swap distance among all qubits in the set.
+   * For two qubits, this reduces to their swap distance.
    */
   qc::fp getAllToAllSwapDistance(std::set<HwQubit>& qubits);
 
   /**
-   * @brief Computes the closest free coordinate in a given direction.
-   * @details Uses a breadth-first search to find the closest free coordinate in
-   * a given direction.
-   * @param coord The hardware qubit to start the search from.
+   * @brief Find free coordinates in a given direction from a coordinate.
+   * @details Returns the nearest free coordinate along the specified direction
+   * (as a single-element vector). If no free coordinate exists in that
+   * direction, returns all currently free coordinates excluding the provided
+   * exclusions.
+   * @param coord The starting coordinate index.
    * @param direction The direction in which the search is performed
-   * (Left/Right, Down/Up)
+   * (Left/Right, Down/Up).
    * @param excludedCoords Coordinates to be ignored in the search.
-   * @return The closest free coordinate in the given direction.
+   * @return Either a singleton containing the closest free coordinate in the
+   * given direction, or a list of all free coordinates if none exist in that
+   * direction.
    */
   [[nodiscard]] std::vector<CoordIndex>
-  findClosestFreeCoord(HwQubit coord, Direction direction,
+  findClosestFreeCoord(CoordIndex coord, Direction direction,
                        const CoordIndices& excludedCoords = {}) const;
 
+  /**
+   * @brief Find the hardware qubit closest (by Euclidean distance) to a
+   * coordinate, ignoring a set of qubits.
+   */
   [[nodiscard]] HwQubit getClosestQubit(CoordIndex coord,
                                         const HwQubits& ignored) const;
 
@@ -328,6 +362,10 @@ public:
   [[nodiscard]] std::set<HwQubit>
   getBlockedQubits(const std::set<HwQubit>& qubits) const;
 
+  /**
+   * @brief Get the initial hardware-to-coordinate mapping (at construction).
+   * @return A map from hardware qubit to its initial coordinate index.
+   */
   [[nodiscard]] std::map<HwQubit, CoordIndex> getInitHwPos() const {
     std::map<HwQubit, HwQubit> initialHwPosMap;
     for (auto const& pair : initialHwPos) {

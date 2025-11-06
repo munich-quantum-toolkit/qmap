@@ -28,9 +28,19 @@
 
 namespace na {
 
-// Enums for the different initial mappings strategies
+// Enums for the different initial mapping strategies
+/**
+ * @brief Strategy for assigning initial physical coordinates to atoms.
+ */
 enum InitialCoordinateMapping : uint8_t { Trivial, Random };
+/**
+ * @brief Strategy for initializing the logical-to-physical qubit mapping.
+ */
 enum InitialMapping : uint8_t { Identity, Graph };
+/**
+ * @brief Method used to realize two-qubit interactions that are not adjacent
+ * under the current mapping.
+ */
 enum MappingMethod : uint8_t {
   SwapMethod,
   BridgeMethod,
@@ -39,6 +49,13 @@ enum MappingMethod : uint8_t {
   PassByMethod
 };
 
+/**
+ * @brief Parse an InitialCoordinateMapping from string.
+ * @param initialCoordinateMapping Accepted values: "trivial"/"0" or
+ * "random"/"1" (case-sensitive).
+ * @return Corresponding InitialCoordinateMapping enum.
+ * @throws std::invalid_argument if the value is not recognized.
+ */
 [[maybe_unused]] static InitialCoordinateMapping
 initialCoordinateMappingFromString(
     const std::string& initialCoordinateMapping) {
@@ -53,6 +70,13 @@ initialCoordinateMappingFromString(
                               initialCoordinateMapping);
 }
 
+/**
+ * @brief Parse an InitialMapping from string.
+ * @param initialMapping Accepted values: "identity"/"0" or "graph"/"1"
+ * (case-sensitive).
+ * @return Corresponding InitialMapping enum.
+ * @throws std::invalid_argument if the value is not recognized.
+ */
 [[maybe_unused]] static InitialMapping
 initialMappingFromString(const std::string& initialMapping) {
   if (initialMapping == "identity" || initialMapping == "0") {
@@ -67,7 +91,9 @@ initialMappingFromString(const std::string& initialMapping) {
 
 /**
  * @brief Helper class to represent a direction in x and y coordinates.
- * @details The boolean value corresponds to right/left and down/up.
+ * @details Booleans encode the sign: x=true means right (>=0), x=false means
+ * left (<0); y=true means down (>=0) or up depending on the chosen
+ * coordinate convention.
  */
 struct Direction {
   bool x;
@@ -92,7 +118,8 @@ struct Direction {
 /**
  * @brief Helper class to represent a move of an atom from one position to
  * another.
- * @details Each move consists in a start and end coordinate and the direction.
+ * @details A move is defined by start/end coordinates and an implied
+ * direction. Utility predicates support spatial reasoning on moves.
  */
 struct MoveVector {
   qc::fp xStart;
@@ -113,36 +140,59 @@ struct MoveVector {
   [[nodiscard]] qc::fp getLength() const {
     return std::hypot(xEnd - xStart, yEnd - yStart);
   }
+  /**
+   * @brief Check whether the axis-aligned projections of two moves overlap.
+   * @details Ignores direction; returns true if the x-intervals overlap or the
+   * y-intervals overlap, considering inclusive bounds.
+   */
   [[nodiscard]] bool overlap(const MoveVector& other) const;
+  /**
+   * @brief Check whether this move is strictly included within another move in
+   * at least one dimension.
+   * @details Returns true if the other move's x-interval strictly contains this
+   * move's x-interval OR the other move's y-interval strictly contains this
+   * move's y-interval.
+   */
   [[nodiscard]] bool include(const MoveVector& other) const;
 };
 
 struct FlyingAncilla {
+  /** Origin coordinate index of the flying ancilla. */
   CoordIndex origin;
+  /** First data atom coordinate involved in interaction. */
   CoordIndex q1;
+  /** Second data atom coordinate involved in interaction. */
   CoordIndex q2;
+  /** Optional bookkeeping index to order/identify moves. */
   size_t index;
 };
 
 struct FlyingAncillaComb {
+  /** Sequence of flying ancilla moves realizing an interaction. */
   std::vector<FlyingAncilla> moves;
+  /** Operation this combination implements or is associated with. */
   const qc::Operation* op;
 };
 
 struct PassByComb {
+  /** Sequence of atom moves realizing a pass-by maneuver. */
   std::vector<AtomMove> moves;
+  /** Operation this combination implements or is associated with. */
   const qc::Operation* op;
 };
 
 /**
  * @brief Helper class to manage multiple atom moves which belong together.
  * @details E.g. a move-away combined with the actual move. These are combined
- * in a MoveComb to facilitate the cost calculation.
+ * in a MoveComb to facilitate the cost calculation and selection.
  */
 struct MoveComb {
   std::vector<AtomMove> moves;
+  /** Aggregated cost heuristic; defaults to +inf until computed. */
   qc::fp cost = std::numeric_limits<qc::fp>::max();
+  /** Operation this move combination aims to realize (optional). */
   const qc::Operation* op = nullptr;
+  /** Best known positions for the operation after applying the moves. */
   CoordIndices bestPos;
 
   MoveComb(std::vector<AtomMove> mov, const qc::fp c, const qc::Operation* o,
@@ -166,7 +216,8 @@ struct MoveComb {
 
   /**
    * @brief Append a single move to the end of the combination.
-   * @param addMove The move to append
+   * @param addMove The move to append.
+   * @note Resets cost to +inf to signal it needs recomputation.
    */
   void append(AtomMove addMove) {
     moves.emplace_back(addMove);
@@ -174,7 +225,8 @@ struct MoveComb {
   }
   /**
    * @brief Append all moves of another combination to the end of this one.
-   * @param addMoveComb The other combination to append
+   * @param addMoveComb The other combination to append.
+   * @note Resets cost to +inf to signal it needs recomputation.
    */
   void append(const MoveComb& addMoveComb) {
     moves.insert(moves.end(), addMoveComb.moves.begin(),
@@ -186,7 +238,7 @@ struct MoveComb {
 };
 
 /**
- * @brief Helper class to manage multiple move combinations.
+ * @brief Container to manage and deduplicate multiple move combinations.
  */
 struct MoveCombs {
   std::vector<MoveComb> moveCombs;
@@ -215,6 +267,9 @@ struct MoveCombs {
 
   /**
    * @brief Add a move combination to the list of move combinations.
+   * @details If an equal combination (same sequence of moves) already exists,
+   * it will not be duplicated; instead, its cost is invalidated to force
+   * recomputation.
    * @param moveComb The move combination to add.
    */
   void addMoveComb(const MoveComb& moveComb);
@@ -225,8 +280,9 @@ struct MoveCombs {
    */
   void addMoveCombs(const MoveCombs& otherMoveCombs);
   /**
-   * @brief Remove all move combinations that are longer than the shortest move
-   * combination.
+   * @brief Keep only the shortest move combinations.
+   * @details Computes the minimum number of moves among all combinations and
+   * erases any combination with a larger length.
    */
   void removeLongerMoveCombs();
 };
@@ -240,12 +296,23 @@ struct MultiQubitMovePos {
   size_t nMoves{0};
 };
 
+/**
+ * @brief Precomputed bridge circuits and their simple gate metrics.
+ * @details For linear chains of increasing length, stores a CZ-based bridge
+ * circuit and counts of H and Z gates and their per-qubit maxima. The
+ * constructor precomputes entries for lengths in [3, maxLength).
+ */
 class BridgeCircuits {
 public:
+  /** Bridge circuits indexed by chain length (number of qubits). */
   std::vector<qc::QuantumComputation> bridgeCircuits;
+  /** Total number of H gates per length. */
   std::vector<size_t> hs;
+  /** Total number of CZ gates per length (counted via Z after MCX->MCZ). */
   std::vector<size_t> czs;
+  /** Maximum number of H gates on any single qubit for a given length. */
   std::vector<size_t> hDepth;
+  /** Maximum number of CZ involvements on any single qubit for a length. */
   std::vector<size_t> czDepth;
 
   explicit BridgeCircuits(const size_t maxLength) {
@@ -261,12 +328,26 @@ public:
   }
 
 protected:
+  /**
+   * @brief Compute aggregate H/CZ counts and per-qubit maxima for a length.
+   */
   void computeGates(size_t length);
+  /**
+   * @brief Build the base bridge circuit for a given linear chain length.
+   * @details Starts from a 3-qubit pattern and recursively expands.
+   */
   void computeBridgeCircuit(size_t length);
 
+  /**
+   * @brief Recursively expand a bridge circuit by inserting new qubits where
+   * the current gate load is minimal.
+   */
   static qc::QuantumComputation
   recursiveBridgeIncrease(qc::QuantumComputation qcBridge, size_t length);
 
+  /**
+   * @brief Expand the circuit by one qubit between positions qubit and qubit+1.
+   */
   static qc::QuantumComputation
   bridgeExpand(const qc::QuantumComputation& qcBridge, size_t qubit);
 };
