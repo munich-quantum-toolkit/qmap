@@ -39,10 +39,11 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     std::cout << "\n* schedule start!\n";
   }
 
-  std::vector<qc::fp> totalExecutionTimes(3 * arch->getNpositions(), 0);
-  // saves for each coord the time slots that are blocked by a multi qubit gate
-  std::vector rydbergBlockedQubitsTimes(
-      3 * arch->getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
+  const auto nPositions = static_cast<std::size_t>(arch->getNpositions());
+  const std::size_t numCoords = 3ULL * nPositions;
+  std::vector totalExecutionTimes(numCoords, qc::fp{0});
+  std::vector<std::deque<std::pair<qc::fp, qc::fp>>> rydbergBlockedQubitsTimes(
+      numCoords);
   qc::fp aodLastBlockedTime = 0;
   qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
@@ -172,7 +173,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
   const auto maxExecutionTime = *std::ranges::max_element(totalExecutionTimes);
   const auto totalIdleTime =
-      (maxExecutionTime * arch->getNqubits()) - totalGateTime;
+      maxExecutionTime * arch->getNqubits() - totalGateTime;
   const auto totalFidelities =
       totalGateFidelities *
       std::exp(-totalIdleTime / arch->getDecoherenceTime());
