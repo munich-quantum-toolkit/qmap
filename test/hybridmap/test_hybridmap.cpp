@@ -273,3 +273,16 @@ TEST(NeutralAtomMapperExceptions, ImpossibleSwaps) {
   EXPECT_THROW(auto circ = mapper.map(qc, na::InitialMapping::Identity),
                std::runtime_error);
 }
+
+TEST(NeutralAtomMapperExceptions, LongShuttling) {
+  const auto arch =
+      na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
+  na::MapperParameters p;
+  p.gateWeight = 0.0;
+  p.verbose = true;
+  na::NeutralAtomMapper mapper(arch, p);
+  qc::QuantumComputation qc =
+      qasm3::Importer::importf("circuits/long_random.qasm");
+  const auto circ = mapper.map(qc, na::InitialMapping::Graph);
+  mapper.convertToAod();
+}
