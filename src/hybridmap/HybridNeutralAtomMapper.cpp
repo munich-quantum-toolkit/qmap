@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <iomanip> // added
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -183,11 +184,11 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
     if (this->parameters->verbose) {
       std::cout << "passby " << passBy.c1 << " " << passBy.c2 << '\n';
     }
-    auto itT = std::find(targetCoords.begin(), targetCoords.end(), passBy.c1);
+    auto itT = std::ranges::find(targetCoords, passBy.c1);
     if (itT != targetCoords.end()) {
       *itT = passBy.c2 + arch->getNpositions();
     }
-    auto itC = std::find(controlCoords.begin(), controlCoords.end(), passBy.c1);
+    auto itC = std::ranges::find(controlCoords, passBy.c1);
     if (itC != controlCoords.end()) {
       *itC = passBy.c2 + arch->getNpositions();
     }
@@ -416,13 +417,11 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     mappedQc.h(ancQ1);
     mappedQc.move(ancQ1, ancQ2);
 
-    auto itT =
-        std::find(targetCoords.begin(), targetCoords.end(), allCoords[i]);
+    auto itT = std::ranges::find(targetCoords, allCoords[i]);
     if (itT != targetCoords.end()) {
       *itT = ancQ2;
     }
-    auto itC =
-        std::find(controlCoords.begin(), controlCoords.end(), allCoords[i]);
+    auto itC = std::ranges::find(controlCoords, allCoords[i]);
     if (itC != controlCoords.end()) {
       *itC = ancQ2;
     }
@@ -681,10 +680,11 @@ NeutralAtomMapper::convertMoveCombToPassByComb(const MoveComb& moveComb) const {
   std::vector<AtomMove> bestPbs;
   for (const auto move : moveComb.moves) {
     if (usedCoords.find(move.c1) != usedCoords.end()) {
-      bestPbs.emplace_back(AtomMove{move.c1, move.c2, true, false});
+      bestPbs.emplace_back(AtomMove{
+          .c1 = move.c1, .c2 = move.c2, .load1 = true, .load2 = false});
     }
   }
-  return {bestPbs, moveComb.op};
+  return PassByComb{.moves = bestPbs, .op = moveComb.op};
 }
 
 qc::fp NeutralAtomMapper::swapCost(
@@ -1676,7 +1676,8 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
        this->parameters->lookaheadDepth);
 
   // bridge distance reduction
-  qc::fp const bridgeDistReduction = bestBridge.second.size() - 2;
+  qc::fp const bridgeDistReduction =
+      static_cast<qc::fp>(bestBridge.second.size()) - 2;
 
   // fidelity comparison
   qc::fp const swapFidelity = this->arch->getGateAverageFidelity("swap") *

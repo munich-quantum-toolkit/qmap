@@ -28,6 +28,7 @@
 #include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <numbers> // added
 #include <ranges>
 #include <set>
 #include <stdexcept>
@@ -73,10 +74,10 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       gateTimes.emplace(key, value);
     }
     // check if cz and h gates are present
-    if (gateTimes.find("cz") == gateTimes.end()) {
+    if (!gateTimes.contains("cz")) {
       gateTimes["cz"] = gateTimes["none"];
     }
-    if (gateTimes.find("h") == gateTimes.end()) {
+    if (!gateTimes.contains("h")) {
       gateTimes["h"] = gateTimes["none"];
     }
     this->parameters.gateTimes = gateTimes;
@@ -85,10 +86,10 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
          jsonDataParameters["gateAverageFidelities"].items()) {
       gateAverageFidelities.emplace(key, value);
     }
-    if (gateAverageFidelities.find("cz") == gateAverageFidelities.end()) {
+    if (!gateAverageFidelities.contains("cz")) {
       gateAverageFidelities["cz"] = gateAverageFidelities["none"];
     }
-    if (gateAverageFidelities.find("h") == gateAverageFidelities.end()) {
+    if (!gateAverageFidelities.contains("h")) {
       gateAverageFidelities["h"] = gateAverageFidelities["none"];
     }
     this->parameters.gateAverageFidelities = gateAverageFidelities;
@@ -295,10 +296,14 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
   for (size_t colIdx = 0; colIdx < this->getNcolumns(); colIdx++) {
     for (size_t rowIdx = 0; rowIdx < this->getNrows(); rowIdx++) {
       const auto coordIdx = colIdx + (rowIdx * this->getNcolumns());
-      animationMachine +=
-          "trap trap" + std::to_string(coordIdx) + " {\n\tposition: (" +
-          std::to_string(colIdx * this->getInterQubitDistance()) + ", " +
-          std::to_string(rowIdx * this->getInterQubitDistance()) + ")\n}\n";
+      animationMachine += "trap trap" + std::to_string(coordIdx) +
+                          " {\n\tposition: (" +
+                          std::to_string(static_cast<qc::fp>(colIdx) *
+                                         this->getInterQubitDistance()) +
+                          ", " +
+                          std::to_string(static_cast<qc::fp>(rowIdx) *
+                                         this->getInterQubitDistance()) +
+                          ")\n}\n";
     }
   }
 
@@ -324,12 +329,12 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   if (op->getType() == qc::OpType::P || op->getType() == qc::OpType::RZ) {
     // use time of theta = pi and linearly scale
     opName += "z";
-    auto param = abs(op->getParameter().back());
-    constexpr auto pi = 3.14159265358979323846;
+    auto param = std::abs(op->getParameter().back());
+    constexpr auto pi = std::numbers::pi_v<qc::fp>;
     while (param > pi) {
-      param = abs(param - (2 * pi));
+      param = std::abs(param - (2 * pi));
     }
-    return getGateTime(opName) * param / 3.14159265358979323846;
+    return getGateTime(opName) * param / std::numbers::pi_v<qc::fp>;
   }
   opName += op->getName();
   return getGateTime(opName);

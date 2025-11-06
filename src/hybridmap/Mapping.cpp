@@ -55,11 +55,10 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
   for (auto& [qubit, neighbors] : hwGraph) {
-    std::sort(neighbors.begin(), neighbors.end(),
-              [this](const uint32_t a, const uint32_t b) {
-                return hwQubits.getNearbyQubits(a).size() >
-                       hwQubits.getNearbyQubits(b).size();
-              });
+    std::ranges::sort(neighbors, [this](const uint32_t a, const uint32_t b) {
+      return hwQubits.getNearbyQubits(a).size() >
+             hwQubits.getNearbyQubits(b).size();
+    });
   }
 
   uint32_t hwCenter = std::numeric_limits<unsigned int>::max();
@@ -88,11 +87,10 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     }
     std::vector<std::pair<qc::Qubit, double>> neighbors(weightMap.begin(),
                                                         weightMap.end());
-    std::sort(neighbors.begin(), neighbors.end(),
-              [](const std::pair<qc::Qubit, double>& a,
-                 const std::pair<qc::Qubit, double>& b) {
-                return a.second > b.second;
-              });
+    std::ranges::sort(neighbors, [](const std::pair<qc::Qubit, double>& a,
+                                    const std::pair<qc::Qubit, double>& b) {
+      return a.second > b.second;
+    });
     circGraph[qubit] = std::move(neighbors);
   }
 
@@ -106,14 +104,14 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     }
     nodes.emplace_back(i, std::make_pair(degree, weightSum));
   }
-  std::sort(nodes.begin(), nodes.end(),
-            [](const std::pair<int, std::pair<int, double>>& a,
-               const std::pair<int, std::pair<int, double>>& b) {
-              if (a.second.first == b.second.first) {
-                return a.second.second > b.second.second;
-              }
-              return a.second.first > b.second.first;
-            });
+  std::ranges::sort(nodes.begin(), nodes.end(),
+                    [](const std::pair<int, std::pair<int, double>>& a,
+                       const std::pair<int, std::pair<int, double>>& b) {
+                      if (a.second.first == b.second.first) {
+                        return a.second.second > b.second.second;
+                      }
+                      return a.second.first > b.second.first;
+                    });
   std::queue<int> circGraphQueue;
   for (const auto& node : nodes) {
     circGraphQueue.push(node.first);

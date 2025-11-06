@@ -20,12 +20,12 @@
 #include "na/entities/Location.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
 #include <set>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -77,7 +77,7 @@ AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) {
   while (q2 >= arch.getNpositions()) {
     q2 -= arch.getNpositions();
   }
-  return {q1, q2, load1, load2};
+  return {.c1 = q1, .c2 = q2, .load1 = load1, .load2 = load2};
 }
 void MoveToAodConverter::initFlyingAncillas() {
   std::vector<CoordIndex> coords;
@@ -151,16 +151,11 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
     return false;
   }
   // checks if the op can be executed in parallel
-  std::vector<std::pair<AtomMove, uint32_t>>* movesToCheck;
-  if (move.load1 || move.load2) {
-    movesToCheck = &moves;
-  } else {
-    movesToCheck = &movesFa;
-  }
+  const auto& movesToCheck = (move.load1 || move.load2) ? moves : movesFa;
   return std::ranges::all_of(
-      *movesToCheck,
-      [&move, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
-        auto moveGroup = opPair.first;
+      movesToCheck,
+      [&move, &archArg](const std::pair<AtomMove, uint32_t> const& opPair) {
+        const auto& moveGroup = opPair.first;
         // check that passby and move are not in same group
         if (move.load1 != moveGroup.load1 || move.load2 != moveGroup.load2) {
           return false;
@@ -322,7 +317,7 @@ MoveToAodConverter::canAddActivation(
       static_cast<std::uint32_t>(dim == Dimension::X ? origin.x : origin.y);
   auto end =
       static_cast<std::uint32_t>(dim == Dimension::X ? final.x : final.y);
-  const qc::fp delta = static_cast<qc::fp>(end - start);
+  auto delta = static_cast<qc::fp>(end - start);
 
   // Get Moves that start/end at the same position as the current move
   auto aodMovesActivation = activationHelper.getAodMovesFromInit(dim, start);
@@ -439,8 +434,8 @@ MoveToAodConverter::processMoves(
 
   MoveGroup possibleNewMoveGroup;
   std::vector<AtomMove> movesToRemove;
-  for (auto& movePair : moves) {
-    auto& move = movePair.first;
+  for (const auto& movePair : moves) {
+    const auto& move = movePair.first;
     const auto idx = movePair.second;
     auto origin = arch.getCoordinate(move.c1);
     auto target = arch.getCoordinate(move.c2);
@@ -476,7 +471,6 @@ void MoveToAodConverter::processMovesFa(
     AodActivationHelper& aodDeactivationHelper) const {
   for (const auto& moveFaPair : movesFa) {
     const auto& moveFa = moveFaPair.first;
-    const auto idx = moveFaPair.second;
     auto origin = arch.getCoordinate(moveFa.c1);
     auto target = arch.getCoordinate(moveFa.c2);
     const auto v = arch.getVector(moveFa.c1, moveFa.c2);
@@ -501,7 +495,8 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   auto interD = aodActivationHelper.arch->getInterQubitDistance() /
                 aodActivationHelper.arch->getNAodIntermediateLevels();
 
-  std::vector<na::Dimension> dimensions = {na::Dimension::X, na::Dimension::Y};
+  constexpr std::array<na::Dimension, 2> dimensions{na::Dimension::X,
+                                                    na::Dimension::Y};
 
   // connect move operations
   for (const auto& activation : aodActivationHelper.allActivations) {
@@ -718,7 +713,7 @@ MoveToAodConverter::AodActivationHelper::getAodOperations() const {
   if (type == qc::OpType::AodActivate) {
     return aodOperations;
   }
-  std::reverse(aodOperations.begin(), aodOperations.end());
+  std::ranges::reverse(aodOperations);
   return aodOperations;
 }
 } // namespace na

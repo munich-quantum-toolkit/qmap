@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <limits> // added
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -90,11 +91,11 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
         dynamic_cast<AodOperation*>(op.get())->getStarts(Dimension::Y);
     const auto endsY =
         dynamic_cast<AodOperation*>(op.get())->getEnds(Dimension::Y);
-    const auto CoordIndices = op->getTargets();
+    const auto coordIndices = op->getTargets(); // renamed
     // use that coord indices are pairs of origin and target indices
-    for (size_t i = 0; i < CoordIndices.size(); i++) {
+    for (size_t i = 0; i < coordIndices.size(); i++) {
       if (i % 2 == 0) {
-        const auto coordIdx = CoordIndices[i];
+        const auto coordIdx = coordIndices[i];
         const auto id = coordIdxToId.at(coordIdx);
         bool foundX = false;
         auto newX = std::numeric_limits<qc::fp>::max();
@@ -129,9 +130,9 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
         idToCoord.at(id) = {newX, newY};
       } else {
         // this is the target index -> update coordIdxToId
-        const auto coordIdx = CoordIndices[i];
-        const auto id = coordIdxToId.at(CoordIndices[i - 1]);
-        coordIdxToId.erase(CoordIndices[i - 1]);
+        const auto coordIdx = coordIndices[i];
+        const auto id = coordIdxToId.at(coordIndices[i - 1]);
+        coordIdxToId.erase(coordIndices[i - 1]);
         coordIdxToId[coordIdx] = id;
       }
     }

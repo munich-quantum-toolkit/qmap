@@ -21,7 +21,6 @@
 #include <iterator>
 #include <limits>
 #include <queue>
-#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <vector>
@@ -93,35 +92,31 @@ HardwareQubits::computeAllShortestPaths(const HwQubit q1,
                                         const HwQubit q2) const {
   std::vector<HwQubitsVector> allPaths;
   std::queue<HwQubitsVector> pathsQueue;
-  size_t shortestPathLength = -1;
+  auto shortestPathLength = std::numeric_limits<std::size_t>::max();
 
-  // Initialize the queue with the starting qubit
   pathsQueue.push(HwQubitsVector{q1});
 
   while (!pathsQueue.empty()) {
     auto currentPath = pathsQueue.front();
     pathsQueue.pop();
 
+    if (currentPath.size() > shortestPathLength) {
+      continue;
+    }
+
     HwQubit const currentQubit = currentPath.back();
 
-    // Check if the destination is reached
     if (currentQubit == q2) {
-      if (shortestPathLength == -1 ||
-          currentPath.size() == shortestPathLength) {
+      if (shortestPathLength == std::numeric_limits<std::size_t>::max()) {
         shortestPathLength = currentPath.size();
+      }
+      if (currentPath.size() == shortestPathLength) {
         allPaths.push_back(currentPath);
-        break;
-      } else if (currentPath.size() > shortestPathLength) {
-        // Since we use BFS, once a path longer than the shortest length is
-        // found, stop exploring
-        break;
       }
       continue;
     }
 
-    // Get nearby qubits and explore paths
     for (const auto& neighbor : this->getNearbyQubits(currentQubit)) {
-      // Avoid cycles by ensuring the neighbor isn't already in the current path
       if (std::find(currentPath.begin(), currentPath.end(), neighbor) ==
           currentPath.end()) {
         auto newPath = currentPath;
@@ -151,18 +146,24 @@ void HardwareQubits::move(HwQubit hwQubit, const CoordIndex newCoord) {
   }
 
   const auto oldCoord = hwToCoordIdx.at(hwQubit);
-  occupiedCoordinates.erase(std::find(occupiedCoordinates.begin(),
-                                      occupiedCoordinates.end(), oldCoord));
+  if (auto it = std::ranges::find(occupiedCoordinates, oldCoord);
+      it != occupiedCoordinates.end()) {
+    occupiedCoordinates.erase(it);
+  }
   occupiedCoordinates.emplace_back(newCoord);
   freeCoordinates.emplace_back(oldCoord);
-  freeCoordinates.erase(
-      std::find(freeCoordinates.begin(), freeCoordinates.end(), newCoord));
+  if (auto it2 = std::ranges::find(freeCoordinates, newCoord);
+      it2 != freeCoordinates.end()) {
+    freeCoordinates.erase(it2);
+  }
 
   // remove qubit from old nearby qubits
   const auto prevNearbyQubits = nearbyQubits.at(hwQubit);
   for (const auto& qubit : prevNearbyQubits) {
-    nearbyQubits.at(qubit).erase(std::find(
-        nearbyQubits.at(qubit).begin(), nearbyQubits.at(qubit).end(), hwQubit));
+    auto& neigh = nearbyQubits.at(qubit);
+    if (auto it3 = std::ranges::find(neigh, hwQubit); it3 != neigh.end()) {
+      neigh.erase(it3);
+    }
   }
   // move qubit and compute new nearby qubits
   hwToCoordIdx.at(hwQubit) = newCoord;
@@ -261,12 +262,9 @@ std::vector<CoordIndex>
 HardwareQubits::findClosestFreeCoord(CoordIndex coord,
                                      const Direction direction,
                                      const CoordIndices& excludedCoords) const {
-  // return the closest free coord in general
-  // and the closest free coord in the given direction
   std::vector<CoordIndex> freeCoordsInDirection;
   for (const auto& freeCoord : freeCoordinates) {
-    if (std::find(excludedCoords.begin(), excludedCoords.end(), freeCoord) !=
-        excludedCoords.end()) {
+    if (std::ranges::find(excludedCoords, freeCoord) != excludedCoords.end()) {
       continue;
     }
     if (direction == arch->getVector(coord, freeCoord).direction) {
@@ -277,8 +275,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord,
     // return all free coords except excluded
     auto allFreeCoords = freeCoordinates;
     for (const auto& excludedCoord : excludedCoords) {
-      if (const auto pos = std::find(allFreeCoords.begin(), allFreeCoords.end(),
-                                     excludedCoord);
+      if (const auto pos = std::ranges::find(allFreeCoords, excludedCoord);
           pos != allFreeCoords.end()) {
         allFreeCoords.erase(pos);
       }
@@ -302,7 +299,7 @@ HwQubit HardwareQubits::getClosestQubit(const CoordIndex coord,
   HwQubit closestQubit = 0;
   auto minDistance = std::numeric_limits<qc::fp>::max();
   for (auto const& [qubit, idx] : hwToCoordIdx) {
-    if (ignored.find(qubit) != ignored.end()) {
+    if (ignored.contains(qubit)) {
       continue;
     }
     if (const auto distance = arch->getEuclideanDistance(coord, idx);
