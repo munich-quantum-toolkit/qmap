@@ -430,28 +430,6 @@ void MoveToAodConverter::processMoveGroups() {
         aodActivationHelper, aodDeactivationHelper);
   }
 }
-void MoveToAodConverter::postProcessMoveGroups() {
-  for (auto groupIt = moveGroups.begin(); groupIt != moveGroups.end() - 1;
-       ++groupIt) {
-    auto nextGroupIt = groupIt + 1;
-    for (const auto& move : groupIt->moves) {
-      for (const auto& moveNext : nextGroupIt->moves) {
-        if (move.first.c2 == moveNext.first.c1 && move.first.load2 &&
-            moveNext.first.load1) {
-          // moveNext is dependent on move
-          // moveNext can only be executed
-          if (groupIt->processedOpsFinal.size() == 2 &&
-              groupIt->processedOpsInit.size() == 2) {
-            groupIt->processedOpsFinal.pop_back();
-            // next remove first move from next group
-            nextGroupIt->processedOpsInit.erase(
-                nextGroupIt->processedOpsInit.begin());
-          }
-        }
-      }
-    }
-  }
-}
 
 std::pair<std::vector<AtomMove>, MoveToAodConverter::MoveGroup>
 MoveToAodConverter::processMoves(

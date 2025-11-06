@@ -343,7 +343,6 @@ protected:
    * is created for the remaining moves.
    */
   void processMoveGroups();
-  void postProcessMoveGroups();
 
   std::pair<std::vector<AtomMove>, MoveGroup>
   processMoves(const std::vector<std::pair<AtomMove, uint32_t>>& moves,
@@ -364,12 +363,6 @@ public:
         hardwareQubits(hardwareQubitsArg) {
     qcScheduled.addAncillaryRegister(arch.getNpositions());
     qcScheduled.addAncillaryRegister(arch.getNpositions(), "fa");
-    if (flyingAncillas.getNumQubits() > arch.getNcolumns() ||
-        flyingAncillas.getNumQubits() > arch.getNrows()) {
-      throw std::invalid_argument(
-          "Number of flying ancillas must be smaller than the number of "
-          "columns and rows of the neutral atom architecture.");
-    }
     for (auto i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
       const auto coord =
           flyingAncillas.getInitHwPos().at(i) + (2 * arch.getNpositions());
