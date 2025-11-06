@@ -29,16 +29,6 @@ void NeutralAtomLayer::updateByQubits(
   candidatesToGates(qubitsToUpdate);
 }
 
-std::vector<uint32_t> NeutralAtomLayer::getIteratorOffset() {
-  std::vector<uint32_t> offset;
-  offset.reserve(dag.size());
-  for (uint32_t i = 0; i < this->dag.size(); ++i) {
-    offset.emplace_back(static_cast<uint32_t>(
-        std::distance(this->dag[i].begin(), this->iterators[i])));
-  }
-  return offset;
-}
-
 void NeutralAtomLayer::initAllQubits() {
   std::set<qc::Qubit> allQubits;
   for (uint32_t i = 0; i < this->dag.size(); ++i) {
@@ -180,12 +170,6 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
       (op2->getControls().find(qubit) != op2->getControls().end() &&
        op1->getType() == qc::OpType::Z)) {
     return true;
-  }
-
-  // Swaps never commute
-  if (op1->getType() == qc::OpType::SWAP ||
-      op2->getType() == qc::OpType::SWAP) {
-    return false;
   }
 
   // check targets

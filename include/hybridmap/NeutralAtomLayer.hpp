@@ -87,11 +87,6 @@ public:
   GateList getGates() const { return gates; }
   GateList getNewGates() const { return newGates; }
   /**
-   * @brief Returns a vector of the iterator indices for debugging
-   * @return A copy of the current iterator indices
-   */
-  std::vector<uint32_t> getIteratorOffset();
-  /**
    * @brief Initializes the layer by updating all qubits starting
    */
   void initAllQubits();
@@ -102,12 +97,6 @@ public:
    * @param commuteWith Gates the new gates should commute with
    */
   void removeGatesAndUpdate(const GateList& gatesToRemove);
-
-  /**
-   * @brief Returns the mapped single qubit gates
-   * @return The mapped single qubit gates
-   */
-  GateList getMappedSingleQubitGates() { return mappedSingleQubitGates; }
 };
 
 // Commutation checks
