@@ -270,5 +270,6 @@ TEST(NeutralAtomMapperExceptions, ImpossibleSwaps) {
   na::NeutralAtomMapper mapper(arch, p);
   qc::QuantumComputation qc =
       qasm3::Importer::importf("circuits/modulo_2.qasm");
-  auto circ = mapper.map(qc, na::InitialMapping::Identity);
+  EXPECT_THROW(auto circ = mapper.map(qc, na::InitialMapping::Identity),
+               std::runtime_error);
 }
