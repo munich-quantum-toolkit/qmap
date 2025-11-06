@@ -201,18 +201,3 @@ void na::NeutralAtomScheduler::printSchedulerResults(
   std::cout << "nAodActivate: " << nAodActivate << "\n";
   std::cout << "nAodMove: " << nAodMove << "\n";
 }
-
-void na::NeutralAtomScheduler::printTotalExecutionTimes(
-    const std::vector<qc::fp>& totalExecutionTimes,
-    const std::vector<std::deque<std::pair<qc::fp, qc::fp>>>&
-        blockedQubitsTimes) {
-  std::cout << "ExecutionTime: "
-            << "\n";
-  for (size_t qubit = 0; qubit < totalExecutionTimes.size(); qubit++) {
-    std::cout << "[" << qubit << "] " << totalExecutionTimes[qubit] << " \t";
-    for (const auto& blockedTime : blockedQubitsTimes[qubit]) {
-      std::cout << blockedTime.first << "-" << blockedTime.second << " \t";
-    }
-    std::cout << "\n";
-  }
-}

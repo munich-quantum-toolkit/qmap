@@ -46,13 +46,6 @@ struct SchedulerResults {
         totalGateFidelities(gateFidelities), totalFidelities(fidelities),
         nCZs(cZs), nAodActivate(aodActivate), nAodMove(aodMove) {}
 
-  [[nodiscard]] std::string toString() const {
-    std::stringstream ss;
-    ss << "Total execution time: " << totalExecutionTime;
-    ss << "\nTotal idle time: " << totalIdleTime
-       << "\nTotal fidelities: " << totalFidelities;
-    return ss.str();
-  }
   [[nodiscard]] std::string toCsv() const {
     std::stringstream ss;
     ss << totalExecutionTime << ", " << totalIdleTime << "," << totalFidelities;
@@ -138,10 +131,6 @@ public:
                                     qc::fp totalGateFidelities,
                                     qc::fp totalFidelities, uint32_t nCZs,
                                     uint32_t nAodActivate, uint32_t nAodMove);
-  static void printTotalExecutionTimes(
-      const std::vector<qc::fp>& totalExecutionTimes,
-      const std::vector<std::deque<std::pair<qc::fp, qc::fp>>>&
-          blockedQubitsTimes);
 };
 
 } // namespace na
