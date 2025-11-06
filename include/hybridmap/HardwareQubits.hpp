@@ -137,11 +137,6 @@ public:
   [[nodiscard]] std::vector<HwQubitsVector>
   computeAllShortestPaths(HwQubit q1, HwQubit q2) const;
 
-  // Mapping
-  [[nodiscard]] const qc::Permutation& getHwToCoordIdx() const {
-    return hwToCoordIdx;
-  }
-
   [[nodiscard]] CoordIndex getNumQubits() const { return nQubits; }
 
   /**
@@ -239,18 +234,6 @@ public:
     }
     throw std::runtime_error("There is no qubit at this coordinate " +
                              std::to_string(coordIndex));
-  }
-
-  // Forwards from architecture class
-
-  /**
-   * @brief Returns the nearby coordinates of a hardware qubit.
-   * @param q The hardware qubit.
-   * @return The nearby coordinates of the hardware qubit.
-   */
-  [[nodiscard]] [[maybe_unused]] std::set<CoordIndex>
-  getNearbyCoordinates(const HwQubit q) const {
-    return this->arch->getNearbyCoordinates(this->getCoordIndex(q));
   }
 
   // Swap Distances and Nearby qc::Qubits
