@@ -42,11 +42,6 @@
 namespace na {
 void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
                                   const Mapping& initialMapping) {
-  if (qc.getNqubits() + this->parameters->numFlyingAncillas >
-      arch->getNqubits()) {
-    throw std::runtime_error(
-        "Not enough qubits in architecture for circuit and flying ancillas");
-  }
   // check if multi-qubit gates are present
   for (const auto& op : qc) {
     if (op->getUsedQubits().size() > 2) {
@@ -1047,25 +1042,6 @@ NeutralAtomMapper::getExactSwapsToPosition(const qc::Operation* op,
           minimalDistancePosQubit.emplace(posQubit);
         }
       }
-      if (minimalDistance == std::numeric_limits<SwapDistance>::max()) {
-        // not possible to move to position
-        // move gate to shuttling layer
-        const auto idxFrontGate = std::find(this->frontLayerGate.begin(),
-                                            this->frontLayerGate.end(), op);
-        if (idxFrontGate != this->frontLayerGate.end()) {
-          this->frontLayerGate.erase(idxFrontGate);
-          this->frontLayerShuttling.emplace_back(op);
-        }
-        // remove from lookahead layer if there
-        const auto idxLookaheadGate =
-            std::find(this->lookaheadLayerGate.begin(),
-                      this->lookaheadLayerGate.end(), op);
-        if (idxLookaheadGate != this->lookaheadLayerGate.end()) {
-          this->lookaheadLayerGate.erase(idxLookaheadGate);
-          this->lookaheadLayerShuttling.emplace_back(op);
-        }
-        return {};
-      }
       minimalDistances.emplace_back(gateQubit, minimalDistancePosQubit,
                                     minimalDistance);
     }
@@ -1394,15 +1370,8 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
     }
   }
   if (finalBestPos.coords.empty()) {
-    // check if interaction radius too small
-    if (std::sqrt(gateCoords.size()) > this->arch->getInteractionRadius()) {
-      throw std::runtime_error(
-          "Interaction radius too small for the given gate size of " +
-          std::to_string(gateCoords.size()));
-    } else {
-      throw std::runtime_error(
-          "No move position found (check if enough free coords are available)");
-    }
+    throw std::runtime_error(
+        "No move position found (check if enough free coords are available)");
   }
   return finalBestPos.coords;
 }

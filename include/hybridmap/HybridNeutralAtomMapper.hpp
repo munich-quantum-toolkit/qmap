@@ -46,7 +46,7 @@ struct MapperParameters {
   qc::fp dynamicMappingWeight = 2;
   qc::fp gateWeight = 1;
   qc::fp shuttlingWeight = 1;
-  uint32_t seed = 0;
+  uint32_t seed = 42;
   uint32_t numFlyingAncillas = 0;
   uint32_t limitShuttlingLayer = 10;
   uint32_t maxBridgeDistance = 1;
