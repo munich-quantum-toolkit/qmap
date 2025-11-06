@@ -16,8 +16,7 @@
 #include "ir/operations/Operation.hpp"
 
 #include <algorithm>
-#include <cstdint>
-#include <iterator>
+#include <cstddef>
 #include <set>
 #include <vector>
 
@@ -31,8 +30,8 @@ void NeutralAtomLayer::updateByQubits(
 
 void NeutralAtomLayer::initAllQubits() {
   std::set<qc::Qubit> allQubits;
-  for (uint32_t i = 0; i < this->dag.size(); ++i) {
-    allQubits.emplace(i);
+  for (std::size_t i = 0; i < this->dag.size(); ++i) {
+    allQubits.emplace(static_cast<qc::Qubit>(i));
   }
   updateByQubits(allQubits);
 }
@@ -41,14 +40,14 @@ void NeutralAtomLayer::updateCandidatesByQubits(
     const std::set<qc::Qubit>& qubitsToUpdate) {
   for (const auto& qubit : qubitsToUpdate) {
     if (isFrontLayer) {
-      while (iterators[qubit] < ends[qubit]) {
+      while (iterators[qubit] != ends[qubit]) {
         auto* op = (*iterators[qubit])->get();
         // check if operation commutes with gates and candidates
-        auto commutes = commutesWithAtQubit(gates, op, qubit) &&
-                        commutesWithAtQubit(candidates[qubit], op, qubit);
+        const auto commutes = commutesWithAtQubit(gates, op, qubit) &&
+                              commutesWithAtQubit(candidates[qubit], op, qubit);
         if (commutes) {
           candidates[qubit].emplace_back(op);
-          iterators[qubit]++;
+          ++iterators[qubit];
         } else {
           break;
         }
@@ -56,12 +55,12 @@ void NeutralAtomLayer::updateCandidatesByQubits(
     }
     // for lookahead layer, take the next k multi-qubit gates
     else {
-      size_t multiQubitGatesFound = 0;
-      while (iterators[qubit] < ends[qubit] &&
+      std::size_t multiQubitGatesFound = 0;
+      while (iterators[qubit] != ends[qubit] &&
              multiQubitGatesFound < lookaheadDepth) {
         auto* op = (*iterators[qubit])->get();
         candidates[qubit].emplace_back(op);
-        iterators[qubit]++;
+        ++iterators[qubit];
         if (op->getUsedQubits().size() > 1) {
           multiQubitGatesFound++;
         }
@@ -83,8 +82,8 @@ void NeutralAtomLayer::candidatesToGates(
         if (qubit == opQubit) {
           continue;
         }
-        if (std::find(candidates[opQubit].begin(), candidates[opQubit].end(),
-                      opPointer) == candidates[opQubit].end()) {
+        if (std::ranges::find(candidates[opQubit], opPointer) ==
+            candidates[opQubit].end()) {
           inFrontLayer = false;
           break;
         }
@@ -97,9 +96,8 @@ void NeutralAtomLayer::candidatesToGates(
           if (qubit == opQubit) {
             continue;
           }
-          candidates[opQubit].erase(std::find(candidates[opQubit].begin(),
-                                              candidates[opQubit].end(),
-                                              opPointer));
+          candidates[opQubit].erase(
+              std::ranges::find(candidates[opQubit], opPointer));
         }
 
         toRemove.emplace_back(opPointer);
@@ -108,8 +106,7 @@ void NeutralAtomLayer::candidatesToGates(
     // remove from candidacy of this qubit
     // has to be done now to not change iterating list
     for (const auto* opPointer : toRemove) {
-      candidates[qubit].erase(std::find(candidates[qubit].begin(),
-                                        candidates[qubit].end(), opPointer));
+      candidates[qubit].erase(std::ranges::find(candidates[qubit], opPointer));
     }
   }
 }
@@ -117,8 +114,9 @@ void NeutralAtomLayer::candidatesToGates(
 void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
   std::set<qc::Qubit> qubitsToUpdate;
   for (const auto& gate : gatesToRemove) {
-    if (std::ranges::find(gates, gate) != gates.end()) {
-      gates.erase(std::ranges::find(gates, gate));
+    const auto it = std::ranges::find(gates, gate);
+    if (it != gates.end()) {
+      gates.erase(it);
       auto usedQubits = gate->getUsedQubits();
       qubitsToUpdate.insert(usedQubits.begin(), usedQubits.end());
     }
@@ -151,8 +149,8 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
   }
 
   // commutes at qubit if at least one of the two gates does not use qubit
-  auto usedQubits1 = op1->getUsedQubits();
-  auto usedQubits2 = op2->getUsedQubits();
+  const auto usedQubits1 = op1->getUsedQubits();
+  const auto usedQubits2 = op2->getUsedQubits();
   if (!usedQubits1.contains(qubit) || !usedQubits2.contains(qubit)) {
     return true;
   }
@@ -165,19 +163,15 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
     return true;
   }
   // control and Z also commute
-  if ((op1->getControls().find(qubit) != op1->getControls().end() &&
-       op2->getType() == qc::OpType::Z) ||
-      (op2->getControls().find(qubit) != op2->getControls().end() &&
-       op1->getType() == qc::OpType::Z)) {
+  if ((op1->getControls().contains(qubit) && op2->getType() == qc::OpType::Z) ||
+      (op2->getControls().contains(qubit) && op1->getType() == qc::OpType::Z)) {
     return true;
   }
 
   // check targets
-  if (std::find(op1->getTargets().begin(), op1->getTargets().end(), qubit) !=
-          op1->getTargets().end() &&
-      (std::find(op2->getTargets().begin(), op2->getTargets().end(), qubit) !=
-       op2->getTargets().end()) &&
-      (op1->getType() == op2->getType())) {
+  if (std::ranges::find(op1->getTargets(), qubit) != op1->getTargets().end() &&
+      std::ranges::find(op2->getTargets(), qubit) != op2->getTargets().end() &&
+      op1->getType() == op2->getType()) {
     return true;
   }
   return false;
