@@ -50,11 +50,6 @@ using WeightedSwap = std::pair<Swap, qc::fp>;
 using WeightedSwaps = std::vector<WeightedSwap>;
 // The distance between two hardware qubits using SWAP gates.
 using SwapDistance = int32_t;
-// Bridges
-// using Bridge =
-//     std::tuple<qc::Qubit, qc::Qubit, Qubits>; // q_control, q_target,
-//     Q_between
-// using Bridges = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
 struct AtomMove {
   CoordIndex c1;
@@ -68,13 +63,6 @@ struct AtomMove {
            load2 == other.load2;
   }
   bool operator!=(const AtomMove& other) const { return !(*this == other); }
-};
-
-// Moves for FlyingAncilla
-struct fPoint {
-  qc::fp x;
-  qc::fp y;
-  fPoint(qc::fp x_val, qc::fp y_val) : x(x_val), y(y_val) {}
 };
 
 // Used to represent operations
