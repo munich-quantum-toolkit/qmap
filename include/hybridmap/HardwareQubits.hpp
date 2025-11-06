@@ -8,7 +8,8 @@
  * Licensed under the MIT License
  */
 
-#pragma once
+#ifndef HYBRIDMAP_HARDWARE_QUBITS_HPP
+#define HYBRIDMAP_HARDWARE_QUBITS_HPP
 
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
@@ -339,3 +340,5 @@ public:
   }
 };
 } // namespace na
+
+#endif // HYBRIDMAP_HARDWARE_QUBITS_HPP

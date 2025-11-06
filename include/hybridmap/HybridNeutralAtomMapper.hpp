@@ -8,7 +8,8 @@
  * Licensed under the MIT License
  */
 
-#pragma once
+#ifndef HYBRIDMAP_HYBRID_NEUTRAL_ATOM_MAPPER_HPP
+#define HYBRIDMAP_HYBRID_NEUTRAL_ATOM_MAPPER_HPP
 
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/HardwareQubits.hpp"
@@ -658,3 +659,5 @@ public:
 };
 
 } // namespace na
+
+#endif // HYBRIDMAP_HYBRID_NEUTRAL_ATOM_MAPPER_HPP

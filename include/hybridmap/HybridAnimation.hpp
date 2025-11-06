@@ -8,7 +8,8 @@
  * Licensed under the MIT License
  */
 
-#pragma once
+#ifndef HYBRIDMAP_HYBRID_ANIMATION_HPP
+#define HYBRIDMAP_HYBRID_ANIMATION_HPP
 
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomDefinitions.hpp"
@@ -45,3 +46,5 @@ public:
 };
 
 } // namespace na
+
+#endif // HYBRIDMAP_HYBRID_ANIMATION_HPP

@@ -8,7 +8,8 @@
  * Licensed under the MIT License
  */
 
-#pragma once
+#ifndef HYBRIDMAP_MOVE_TO_AOD_CONVERTER_HPP
+#define HYBRIDMAP_MOVE_TO_AOD_CONVERTER_HPP
 
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
@@ -391,3 +392,5 @@ public:
 };
 
 } // namespace na
+
+#endif // HYBRIDMAP_MOVE_TO_AOD_CONVERTER_HPP
