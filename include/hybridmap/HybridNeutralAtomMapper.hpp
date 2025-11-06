@@ -304,8 +304,6 @@ protected:
                           const CoordIndices& excludedCoords) const;
 
   // Methods for flying ancilla operations mapping
-  std::vector<CoordIndices>
-  findBestFlyingAncillaComb(const qc::Operation* targetOp);
   [[nodiscard]] MappingMethod compareSwapAndBridge(const Swap& bestSwap,
                                                    const Bridge& bestBridge);
   [[nodiscard]] MappingMethod
@@ -546,18 +544,6 @@ public:
    * hardware qubits
    */
   void mapAppend(qc::QuantumComputation& qc, const Mapping& initialMapping);
-
-  /**
-   * @brief Maps the given quantum circuit to the given architecture and
-   * converts it to the AOD level.
-   * @param qc  The quantum circuit to be mapped
-   * @param initialMapping The initial mapping of the circuit qubits to the
-   * hardware qubits
-   */
-  [[maybe_unused]] void mapWithoutReturn(qc::QuantumComputation& qc,
-                                         const InitialMapping initialMapping) {
-    map(qc, initialMapping);
-  }
 
   /**
    * @brief Returns the statistics of the mapping.

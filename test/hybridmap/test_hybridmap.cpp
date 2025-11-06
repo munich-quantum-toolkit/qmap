@@ -107,6 +107,8 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   mapperParameters.verbose = true;
   mapperParameters.maxBridgeDistance = 2;
   mapperParameters.numFlyingAncillas = 1;
+  mapperParameters.usePassBy = false;
+  mapperParameters.limitShuttlingLayer = 1;
   mapper.setParameters(mapperParameters);
 
   auto qc = qasm3::Importer::importf(testQcPath);
@@ -156,9 +158,8 @@ protected:
     mapperParameters.shuttlingWeight = 0;
     mapperParameters.seed = 43;
     mapperParameters.verbose = false;
-    mapperParameters.numFlyingAncillas = 2;
+    mapperParameters.numFlyingAncillas = 1;
     mapperParameters.limitShuttlingLayer = 1;
-    // mapperParameters.useBridge = true;
     mapperParameters.usePassBy = true;
     mapper.setParameters(mapperParameters);
     qc = qasm3::Importer::importf(
