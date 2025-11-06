@@ -27,19 +27,6 @@
 
 namespace na {
 
-class NeutralAtomException final : public std::runtime_error {
-  std::string msg;
-
-public:
-  explicit NeutralAtomException(std::string m)
-      : std::runtime_error("Neutral Atom Mapper Exception"), msg(std::move(m)) {
-  }
-
-  [[nodiscard]] const char* what() const noexcept override {
-    return msg.c_str();
-  }
-};
-
 // Enums for the different initial mappings strategies
 enum InitialCoordinateMapping : uint8_t { Trivial, Random };
 enum InitialMapping : uint8_t { Identity, Graph };
@@ -85,8 +72,6 @@ struct Direction {
   bool x;
   bool y;
 
-  [[maybe_unused]] Direction(const bool xDir, const bool yDir)
-      : x(xDir), y(yDir) {}
   Direction(const qc::fp deltaX, const qc::fp deltaY)
       : x(deltaX >= 0), y(deltaY >= 0) {}
 
@@ -119,13 +104,6 @@ struct MoveVector {
              const qc::fp yEnd)
       : xStart(xStart), yStart(yStart), xEnd(xEnd), yEnd(yEnd),
         direction(xEnd - xStart, yEnd - yStart) {}
-  MoveVector(const std::int64_t xStart, const std::int64_t yStart,
-             const std::int64_t xEnd, const std::int64_t yEnd)
-      : xStart(static_cast<qc::fp>(xStart)),
-        yStart(static_cast<qc::fp>(yStart)), xEnd(static_cast<qc::fp>(xEnd)),
-        yEnd(static_cast<qc::fp>(yEnd)),
-        direction(static_cast<qc::fp>(xEnd - xStart),
-                  static_cast<qc::fp>(yEnd - yStart)) {}
 
   [[nodiscard]] [[maybe_unused]] bool
   sameDirection(const MoveVector& other) const {
@@ -176,20 +154,6 @@ struct MoveComb {
   MoveComb() = default;
   explicit MoveComb(std::vector<AtomMove> mov) : moves(std::move(mov)) {}
   explicit MoveComb(AtomMove mov) : moves({std::move(mov)}) {}
-
-  /**
-   * @brief Get the first move of the combination
-   * @return The first move of the combination
-   */
-  [[nodiscard]] AtomMove getFirstMove() const { return moves.front(); }
-
-  /**
-   * @brief Get the last move of the combination
-   * @return The last move of the combination
-   */
-  [[nodiscard]] [[maybe_unused]] AtomMove getLastMove() const {
-    return moves.back();
-  }
 
   // implement == operator for AtomMove
   [[nodiscard]] bool operator==(const MoveComb& other) const {
