@@ -56,9 +56,9 @@ bool MoveVector::overlap(const MoveVector& other) const {
   const auto overlapYSecondEnd =
       secondEndY >= firstStartY && secondEndY <= firstEndY;
 
-  return (overlapXFirstStart || overlapXFirstEnd || overlapXSecondStart ||
-          overlapXSecondEnd || overlapYFirstStart || overlapYFirstEnd ||
-          overlapYSecondStart || overlapYSecondEnd);
+  return overlapXFirstStart || overlapXFirstEnd || overlapXSecondStart ||
+         overlapXSecondEnd || overlapYFirstStart || overlapYFirstEnd ||
+         overlapYSecondStart || overlapYSecondEnd;
 }
 
 bool MoveVector::include(const MoveVector& other) const {
@@ -71,10 +71,8 @@ bool MoveVector::include(const MoveVector& other) const {
   const auto secondStartY = std::min(other.yStart, other.yEnd);
   const auto secondEndY = std::max(other.yStart, other.yEnd);
 
-  const auto includeX =
-      (secondStartX < firstStartX) && (firstEndX < secondEndX);
-  const auto includeY =
-      (secondStartY < firstStartY) && (firstEndY < secondEndY);
+  const auto includeX = secondStartX < firstStartX && firstEndX < secondEndX;
+  const auto includeY = secondStartY < firstStartY && firstEndY < secondEndY;
 
   return includeX || includeY;
 }
@@ -124,10 +122,9 @@ void BridgeCircuits::computeGates(const size_t length) {
   }
   // find max depth
   const auto maxHcZ =
-      std::max_element(hsCzsPerQubit.begin(), hsCzsPerQubit.end(),
-                       [](const auto& a, const auto& b) {
-                         return a.first + a.second < b.first + b.second;
-                       });
+      std::ranges::max_element(hsCzsPerQubit, [](const auto& a, const auto& b) {
+        return a.first + a.second < b.first + b.second;
+      });
   hDepth[length] = maxHcZ->first;
   czDepth[length] = maxHcZ->second;
 }
@@ -141,7 +138,7 @@ void BridgeCircuits::computeBridgeCircuit(const size_t length) {
 
   qcBridge = recursiveBridgeIncrease(qcBridge, length - 3);
   // convert to CZ on qubit 0
-  qcBridge.h(qcBridge.getNqubits() - 1);
+  qcBridge.h(static_cast<qc::Qubit>(qcBridge.getNqubits() - 1));
   qcBridge.insert(qcBridge.begin(), std::make_unique<qc::StandardOperation>(
                                         qcBridge.getNqubits() - 1, qc::H));
 
@@ -162,7 +159,7 @@ BridgeCircuits::recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
     gates[*gate->getUsedQubits().begin()]++;
   }
   const auto minIndex =
-      std::min_element(gates.begin(), gates.end()) - gates.begin();
+      static_cast<size_t>(std::ranges::min_element(gates) - gates.begin());
 
   qcBridge = bridgeExpand(qcBridge, minIndex);
 

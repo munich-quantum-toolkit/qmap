@@ -44,10 +44,10 @@ initialCoordinateMappingFromString(
     const std::string& initialCoordinateMapping) {
   if (initialCoordinateMapping == "trivial" ||
       initialCoordinateMapping == "0") {
-    return InitialCoordinateMapping::Trivial;
+    return Trivial;
   }
   if (initialCoordinateMapping == "random" || initialCoordinateMapping == "1") {
-    return InitialCoordinateMapping::Random;
+    return Random;
   }
   throw std::invalid_argument("Invalid initial coordinate mapping value: " +
                               initialCoordinateMapping);
@@ -56,10 +56,10 @@ initialCoordinateMappingFromString(
 [[maybe_unused]] static InitialMapping
 initialMappingFromString(const std::string& initialMapping) {
   if (initialMapping == "identity" || initialMapping == "0") {
-    return InitialMapping::Identity;
+    return Identity;
   }
   if (initialMapping == "graph" || initialMapping == "1") {
-    return InitialMapping::Graph;
+    return Graph;
   }
   throw std::invalid_argument("Invalid initial mapping value: " +
                               initialMapping);
@@ -150,11 +150,11 @@ struct MoveComb {
       : moves(std::move(mov)), cost(c), op(o), bestPos(std::move(pos)) {}
   MoveComb(AtomMove mov, const qc::fp c, const qc::Operation* o,
            CoordIndices pos)
-      : moves({std::move(mov)}), cost(c), op(o), bestPos(std::move(pos)) {}
+      : moves({mov}), cost(c), op(o), bestPos(std::move(pos)) {}
 
   MoveComb() = default;
   explicit MoveComb(std::vector<AtomMove> mov) : moves(std::move(mov)) {}
-  explicit MoveComb(AtomMove mov) : moves({std::move(mov)}) {}
+  explicit MoveComb(AtomMove mov) : moves({mov}) {}
 
   // implement == operator for AtomMove
   [[nodiscard]] bool operator==(const MoveComb& other) const {
