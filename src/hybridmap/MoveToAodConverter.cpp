@@ -538,7 +538,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             targetQubits.emplace_back(starts[i]);
             targetQubits.emplace_back(ends[i]);
           } else {
-            // insert before one before the found position
+            // insert one before the found position
             const auto newPos = targetQubits.insert(pos - 1, ends[i]);
             targetQubits.insert(newPos, starts[i]);
           }
@@ -553,9 +553,6 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             const auto& end = deactivationDim[i]->init * d +
                               deactivationDim[i]->offset * interD;
             if (std::abs(start - end) > 0.0001) {
-              if (start > 10000) {
-                int i = 0;
-              }
               aodOperations.emplace_back(dim, start, end);
             }
           }
@@ -584,9 +581,6 @@ MoveToAodConverter::AodActivationHelper::getAodMovesFromInit(
 uint32_t MoveToAodConverter::AodActivationHelper::getMaxOffsetAtInit(
     Dimension dim, uint32_t init, int32_t sign) const {
   auto aodMoves = getAodMovesFromInit(dim, init);
-  if (aodMoves.empty()) {
-    return 0;
-  }
   uint32_t maxOffset = 0;
   for (const auto& aodMove : aodMoves) {
     auto offset = aodMove->offset;
@@ -607,13 +601,6 @@ bool MoveToAodConverter::AodActivationHelper::checkIntermediateSpaceAtInit(
   }
   auto aodMoves = getAodMovesFromInit(dim, init);
   auto aodMovesNeighbor = getAodMovesFromInit(dim, neighborX);
-  if (aodMoves.empty() && aodMovesNeighbor.empty()) {
-    return true;
-  }
-  if (aodMoves.empty()) {
-    return getMaxOffsetAtInit(dim, neighborX, sign) <
-           arch->getNAodIntermediateLevels();
-  }
   if (aodMovesNeighbor.empty()) {
     return getMaxOffsetAtInit(dim, init, sign) <
            arch->getNAodIntermediateLevels();
@@ -715,12 +702,6 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   }
   std::vector<AodOperation> aodOperations;
 
-  if (initOperations.empty()) {
-    return {AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
-  }
-  if (offsetOperations.empty()) {
-    return {AodOperation(type, qubitsActivation, initOperations)};
-  }
   return {AodOperation(type, qubitsActivation, initOperations),
           AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
 }
