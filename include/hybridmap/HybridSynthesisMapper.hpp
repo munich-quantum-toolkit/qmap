@@ -83,11 +83,8 @@ public:
    * @brief Returns the mapped QuantumComputation.
    * @return The mapped QuantumComputation.
    */
-  void
-  completeRemap(InitialMapping initMapping = InitialMapping::Identity,
-                InitialCoordinateMapping initialCoordinateMapping = Trivial) {
+  void completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
     this->map(synthesizedQc, initMapping);
-    this->convertToAod();
   }
 
   /**

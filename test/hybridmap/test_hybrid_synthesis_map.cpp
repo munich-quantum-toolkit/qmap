@@ -100,10 +100,12 @@ TEST_F(TestHybridSynthesisMapper, completelyRemap) {
   mapper.appendWithoutMapping(qc);
   mapper.appendWithoutMapping(qc);
   auto mappedQc = mapper.getMappedQc();
-  EXPECT_EQ(mappedQc.getNqubits(), arch.getNpositions());
+  EXPECT_EQ(mappedQc.getNqubitsWithoutAncillae(), arch.getNpositions());
   EXPECT_GE(mappedQc.getNops(), 3);
+
+  mapper.completeRemap(InitialMapping::Identity);
   auto mappedQcRemapped = mapper.getMappedQc();
-  EXPECT_EQ(mappedQcRemapped.getNqubits(), arch.getNpositions());
+  EXPECT_EQ(mappedQcRemapped.getNqubitsWithoutAncillae(), arch.getNpositions());
   EXPECT_GE(mappedQcRemapped.getNops(), 3);
 }
 
@@ -112,6 +114,13 @@ TEST_F(TestHybridSynthesisMapper, MapAppend) {
   auto synthesizedQc = mapper.getSynthesizedQc();
   EXPECT_EQ(synthesizedQc.getNqubits(), 3);
   EXPECT_GE(synthesizedQc.getNops(), 3);
+}
+
+TEST_F(TestHybridSynthesisMapper, Output) {
+  mapper.appendWithMapping(qc);
+  const auto qasm = mapper.getSynthesizedQcQASM();
+  EXPECT_FALSE(qasm.empty());
+  mapper.saveSynthesizedQc("test_output.qasm");
 }
 
 } // namespace na
