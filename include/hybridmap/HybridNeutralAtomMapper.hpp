@@ -224,10 +224,10 @@ protected:
   // Methods for swap gates mapping
   /**
    * @brief Select best swap minimizing composite cost (distance + decay).
-   * @param lastSwap Previously applied swap (for decay context).
+   * @param lastSwapUsed Previously applied swap (for decay context).
    * @return Best swap candidate.
    */
-  Swap findBestSwap(const Swap& lastSwap);
+  Swap findBestSwap(const Swap& lastSwapUsed);
   /**
    * @brief Enumerate candidate swaps derived from front layer proximity.
    * @param swapsFront Pair of (close-by swaps, weighted exact swaps).
