@@ -40,18 +40,16 @@ void AnimationAtoms::initPositions(
   const auto hwCount = static_cast<HwQubit>(initHwPos.size());
   for (const auto& [id, coord] : initFaPos) {
     flyingAncillaIdxPlusOne++;
-    coordIdxToId[static_cast<CoordIndex>(
-        coord + static_cast<CoordIndex>(2 * arch->getNpositions()))] =
-        static_cast<HwQubit>(id + hwCount);
+    coordIdxToId[(coord + static_cast<CoordIndex>(2 * arch->getNpositions()))] =
+        id + hwCount;
     const auto column = coord % nCols;
     const auto row = coord / nCols;
     const auto offset =
         arch->getInterQubitDistance() / arch->getNAodIntermediateLevels();
-    idToCoord[static_cast<HwQubit>(id + hwCount)] = {
-        (column * arch->getInterQubitDistance()) +
-            flyingAncillaIdxPlusOne * offset,
-        (row * arch->getInterQubitDistance()) +
-            flyingAncillaIdxPlusOne * offset};
+    idToCoord[(id + hwCount)] = {(column * arch->getInterQubitDistance()) +
+                                     flyingAncillaIdxPlusOne * offset,
+                                 (row * arch->getInterQubitDistance()) +
+                                     flyingAncillaIdxPlusOne * offset};
   }
 }
 
