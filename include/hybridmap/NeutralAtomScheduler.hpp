@@ -28,7 +28,11 @@
 
 namespace na {
 /**
- * @brief Struct to store the results of the scheduler
+ * @brief Aggregated metrics produced by the neutral atom scheduler.
+ * @details Captures timing and fidelity information over the entire scheduled
+ * circuit: total execution (makespan), accumulated idle time, raw gate fidelity
+ * product (excluding decoherence), overall fidelity (including idle
+ * decoherence), and counts of selected operation types.
  */
 struct SchedulerResults {
   qc::fp totalExecutionTime;
@@ -40,16 +44,16 @@ struct SchedulerResults {
   uint32_t nAodMove = 0;
 
   /**
-   * @brief Create a new results object.
-   * @param executionTime The overall makespan (end time of the last operation).
-   * @param idleTime The sum of all idling time across qubits: end_time *
-   * n_qubits - total_gate_time.
-   * @param gateFidelities Product of native gate fidelities (excludes
+   * @brief Construct and initialize scheduler result metrics.
+   * @param executionTime Overall makespan (end time of last operation).
+   * @param idleTime Sum of idle time across qubits: end_time * n_qubits -
+   * total_gate_time.
+   * @param gateFidelities Product of native gate fidelities (excluding
    * decoherence).
-   * @param fidelities Overall fidelity including decoherence during idle time.
-   * @param cZs The number of CZ operations encountered.
-   * @param aodActivate The number of AOD activation operations encountered.
-   * @param aodMove The number of AOD shuttling/move operations encountered.
+   * @param fidelities Overall fidelity including idle-time decoherence.
+   * @param cZs Number of CZ operations.
+   * @param aodActivate Number of AOD activation operations.
+   * @param aodMove Number of AOD shuttling/move operations.
    */
   SchedulerResults(const qc::fp executionTime, const qc::fp idleTime,
                    const qc::fp gateFidelities, const qc::fp fidelities,
@@ -60,10 +64,9 @@ struct SchedulerResults {
         nCZs(cZs), nAodActivate(aodActivate), nAodMove(aodMove) {}
 
   /**
-   * @brief Export a compact CSV line with execution time, idle time, and
-   * overall fidelity.
-   * @return A string in the format "totalExecutionTime, totalIdleTime,
-   * totalFidelities".
+   * @brief Export a compact CSV line with execution time, idle time, fidelity.
+   * @return String formatted as: totalExecutionTime, totalIdleTime,
+   * totalFidelities
    */
   [[nodiscard]] std::string toCsv() const {
     std::stringstream ss;
@@ -73,10 +76,9 @@ struct SchedulerResults {
 
   /**
    * @brief Export selected metrics to a key-value map.
-   * @details Currently includes totalExecutionTime, totalIdleTime,
-   * totalGateFidelities, totalFidelities, and nCZs. Counts for
-   * nAodActivate/nAodMove are not included.
-   * @return An unordered_map from metric names to values.
+   * @details Includes totalExecutionTime, totalIdleTime, totalGateFidelities,
+   * totalFidelities, and nCZs (omits AOD counts for brevity).
+   * @return Unordered map from metric names to numeric values.
    */
   [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, qc::fp>
   toMap() const {
@@ -91,11 +93,11 @@ struct SchedulerResults {
 };
 
 /**
- * @brief Class to schedule a quantum circuit on a neutral atom architecture
- * @details For each gate/operation in the input circuit, the scheduler checks
- * the earliest possible time slot for execution. If the gate is a multi qubit
- * gate, also the blocking of other qubits is taken into consideration. The
- * execution times are read from the neutral atom architecture.
+ * @brief Schedules quantum circuits on a neutral atom architecture.
+ * @details Iterates operations chronologically assigning earliest feasible
+ * start times respecting per-gate durations, multi-qubit blocking windows (e.g.
+ * Rydberg interaction zones), and AOD move/activation timing. Optionally
+ * records visualization artifacts for animation.
  */
 class NeutralAtomScheduler {
 protected:
@@ -105,32 +107,33 @@ protected:
   std::string animationStyle;
 
 public:
-  // Constructor
+  /**
+   * @brief Default constructor (no associated architecture yet).
+   */
   NeutralAtomScheduler() = default;
+  /**
+   * @brief Construct with a given neutral atom architecture.
+   * @param architecture Architecture reference whose timing data is used.
+   */
   explicit NeutralAtomScheduler(const NeutralAtomArchitecture& architecture)
       : arch(&architecture) {}
 
   /**
-   * @brief Schedules the given quantum circuit on the neutral atom architecture
-   * @details For each gate/operation in the input circuit, the scheduler checks
-   * the earliest possible time slot for execution. If the gate is a multi qubit
-   * gate, also the blocking of other qubits is taken into consideration. The
-   * execution times are read from the neutral atom architecture.
-   * Blocking windows for multi-qubit Rydberg interactions and AOD moves are
-   * respected; optional animation traces can be produced.
-   *
+   * @brief Schedule a quantum circuit on the architecture.
+   * @details Greedily assigns earliest feasible start times to each operation
+   * while tracking per-qubit availability and multi-qubit blocking intervals.
+   * Generates optional animation traces.
    * @param qc Quantum circuit to schedule.
-   * @param initHwPos Initial positions of atoms on the hardware grid (by
-   * hardware qubit).
-   * @param initFaPos Initial positions of the addressing focus array (by
-   * hardware qubit).
-   * @param verbose If true, prints progress and a summary to std::cout.
-   * @param createAnimationCsv If true, records animation artifacts for
-   * visualization.
-   * @param shuttlingSpeedFactor Scale factor applied to AOD
-   * move/activate/deactivate durations (e.g., 0.5 for twice as fast shuttling).
-   * @return Aggregated scheduling results including makespan, idle time, and
-   * fidelities.
+   * @param initHwPos Initial atom positions indexed by hardware qubit.
+   * @param initFaPos Initial AOD focus array positions indexed by hardware
+   * qubit.
+   * @param verbose If true, prints progress and summary to stdout.
+   * @param createAnimationCsv If true, records animation artifacts
+   * (.naviz/.namachine/.nastyle).
+   * @param shuttlingSpeedFactor Factor scaling AOD move/activation durations
+   * (1.0 = unchanged).
+   * @return SchedulerResults containing makespan, idle time, fidelity metrics,
+   * and operation counts.
    */
   SchedulerResults schedule(const qc::QuantumComputation& qc,
                             const std::map<HwQubit, CoordIndex>& initHwPos,
@@ -139,36 +142,32 @@ public:
                             qc::fp shuttlingSpeedFactor = 1.0);
 
   /**
-   * @brief Get the machine description for the animation output.
-   * @note Only populated when schedule(...) was run with
-   * createAnimationCsv=true.
+   * @brief Retrieve machine/layout description (.namachine content).
+   * @return Machine description string.
+   * @note Populated only if schedule() ran with createAnimationCsv=true.
    */
   [[nodiscard]] std::string getAnimationMachine() const {
     return animationMachine;
   }
   /**
-   * @brief Get the visualization event log in .naviz format.
-   * @note Only populated when schedule(...) was run with
-   * createAnimationCsv=true.
+   * @brief Retrieve visualization event log (.naviz content).
+   * @return Event log string.
+   * @note Populated only if schedule() ran with createAnimationCsv=true.
    */
   [[nodiscard]] std::string getAnimationViz() const { return animation; }
   /**
-   * @brief Get the visualization style sheet for the animation.
-   * @note Only populated when schedule(...) was run with
-   * createAnimationCsv=true.
+   * @brief Retrieve visualization style sheet (.nastyle content).
+   * @return Style sheet string.
+   * @note Populated only if schedule() ran with createAnimationCsv=true.
    */
   [[nodiscard]] std::string getAnimationStyle() const { return animationStyle; }
 
   /**
-   * @brief Persist the generated animation artifacts to disk.
-   * @details Creates three files next to the provided filename (without its
-   * extension):
-   *  - .naviz     (visualization event log)
-   *  - .namachine (machine/layout description)
-   *  - .nastyle   (visual style configuration)
-   * The contents are derived from
-   * getAnimationViz()/getAnimationMachine()/getAnimationStyle().
-   * @param filename Base filename whose stem is reused for the three outputs.
+   * @brief Write animation artifacts (.naviz/.namachine/.nastyle) to disk.
+   * @details Uses the stem of the provided filename to derive target paths for
+   * each artifact.
+   * @param filename Base filename (its extension is stripped before appending
+   * artifact extensions).
    */
   void saveAnimationFiles(const std::string& filename) const {
     const auto filenameWithoutExtension =
@@ -194,15 +193,13 @@ public:
   // Helper Print functions
   /**
    * @brief Print a human-readable summary of scheduling results.
-   * @param totalExecutionTimes Per-qubit accumulated execution/makespan
-   * timeline.
+   * @param totalExecutionTimes Per-qubit cumulative execution times.
    * @param totalIdleTime Sum of idle time across all qubits.
    * @param totalGateFidelities Product of native gate fidelities.
-   * @param totalFidelities Overall fidelity including decoherence during idle
-   * time.
-   * @param nCZs Number of CZ gates in the circuit.
-   * @param nAodActivate Number of AOD activation operations.
-   * @param nAodMove Number of AOD move operations.
+   * @param totalFidelities Overall fidelity including idle-time decoherence.
+   * @param nCZs Count of CZ gates.
+   * @param nAodActivate Count of AOD activation operations.
+   * @param nAodMove Count of AOD move operations.
    */
   static void printSchedulerResults(std::vector<qc::fp>& totalExecutionTimes,
                                     qc::fp totalIdleTime,
