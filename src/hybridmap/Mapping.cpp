@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <limits>
 #include <queue>
+#include <ranges>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -43,10 +44,9 @@ void Mapping::applySwap(const Swap& swap) {
 
 std::vector<CoordIndex> Mapping::graphMatching() {
 
-  std::vector qubitIndices(dag.size(),
-                           std::numeric_limits<unsigned int>::max());
+  std::vector qubitIndices(dag.size(), std::numeric_limits<uint32_t>::max());
   std::vector hwIndices(hwQubits.getNumQubits(),
-                        std::numeric_limits<unsigned int>::max());
+                        std::numeric_limits<uint32_t>::max());
 
   // make hardware graph
   std::unordered_map<uint32_t, std::vector<uint32_t>> hwGraph;
@@ -54,7 +54,7 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     auto neighbors = hwQubits.getNearbyQubits(i);
     hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
-  for (auto& [qubit, neighbors] : hwGraph) {
+  for (auto& neighbors : hwGraph | std::views::values) {
     std::ranges::sort(neighbors, [this](const uint32_t a, const uint32_t b) {
       return hwQubits.getNearbyQubits(a).size() >
              hwQubits.getNearbyQubits(b).size();
@@ -95,12 +95,12 @@ std::vector<CoordIndex> Mapping::graphMatching() {
   }
 
   // circuit queue for graph matching
-  std::vector<std::pair<int, std::pair<int, double>>> nodes;
+  std::vector<std::pair<uint32_t, std::pair<int, double>>> nodes;
   for (size_t i = 0; i < circGraph.size(); ++i) {
     const auto degree = circGraph[i].size();
     double weightSum = 0;
-    for (const auto& neighbor : circGraph[i]) {
-      weightSum += neighbor.second;
+    for (const auto& val : circGraph[i] | std::views::values) {
+      weightSum += val;
     }
     nodes.emplace_back(i, std::make_pair(degree, weightSum));
   }
@@ -112,9 +112,9 @@ std::vector<CoordIndex> Mapping::graphMatching() {
                       }
                       return a.second.first > b.second.first;
                     });
-  std::queue<int> circGraphQueue;
-  for (const auto& node : nodes) {
-    circGraphQueue.push(node.first);
+  std::queue<uint32_t> circGraphQueue;
+  for (const auto& key : nodes | std::views::keys) {
+    circGraphQueue.push(key);
   }
 
   // graph matching -> return qubit Indices
@@ -134,7 +134,7 @@ std::vector<CoordIndex> Mapping::graphMatching() {
       else {
         auto minDistance = std::numeric_limits<qc::fp>::max();
         for (HwQubit qCandi = 0; qCandi < hwQubits.getNumQubits(); ++qCandi) {
-          if (hwIndices[qCandi] != std::numeric_limits<unsigned int>::max()) {
+          if (hwIndices[qCandi] != std::numeric_limits<uint32_t>::max()) {
             continue;
           }
           auto weightDistance = 0.0;
@@ -161,8 +161,8 @@ std::vector<CoordIndex> Mapping::graphMatching() {
       qI = qubitIndices[qi];
     }
     // neighbor mapping
-    for (auto& qnPair : circGraph[qi]) {
-      auto const qn = qnPair.first;
+    for (auto& key : circGraph[qi] | std::views::keys) {
+      auto const qn = key;
       if (qubitIndices[qn] != std::numeric_limits<unsigned int>::max()) {
         continue;
       }

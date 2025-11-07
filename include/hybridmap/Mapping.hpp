@@ -50,7 +50,7 @@ protected:
    * @details Matches circuit interaction structure to device structure to
    * reduce expected routing overhead.
    * @return Vector mapping logical qubit index i -> chosen hardware index for
-   * i.
+   * qubit index i.
    */
   [[nodiscard]]
   std::vector<CoordIndex> graphMatching();
@@ -74,14 +74,14 @@ public:
    * @param nQubits Number of logical qubits to map.
    * @param initialMapping Initialization strategy (Identity or Graph).
    * @param qc Circuit used to derive structure for graph-based initialization.
-   * @param hwQubits Target hardware description (capacity/topology
+   * @param hwQubitsArg Target hardware description (capacity/topology
    * constraints).
    * @throw std::runtime_error If the circuit has more qubits than available
    * hardware qubits.
    */
   Mapping(const size_t nQubits, const InitialMapping initialMapping,
-          qc::QuantumComputation qc, HardwareQubits hwQubits)
-      : hwQubits(std::move(hwQubits)),
+          qc::QuantumComputation qc, HardwareQubits hwQubitsArg)
+      : hwQubits(std::move(hwQubitsArg)),
         dag(qc::CircuitOptimizer::constructDAG(qc)) {
 
     if (qc.getNqubits() > hwQubits.getNumQubits()) {
@@ -131,11 +131,11 @@ public:
    */
   [[nodiscard]] std::set<HwQubit>
   getHwQubits(const std::set<qc::Qubit>& qubits) const {
-    std::set<HwQubit> hwQubits;
+    std::set<HwQubit> hw;
     for (const auto& qubit : qubits) {
-      hwQubits.emplace(this->getHwQubit(qubit));
+      hw.emplace(this->getHwQubit(qubit));
     }
-    return hwQubits;
+    return hw;
   }
 
   /**
@@ -147,11 +147,12 @@ public:
    */
   [[nodiscard]] std::vector<HwQubit>
   getHwQubits(const std::vector<qc::Qubit>& qubits) const {
-    std::vector<HwQubit> hwQubits;
+    std::vector<HwQubit> hw;
+    hw.reserve(qubits.size());
     for (const auto& qubit : qubits) {
-      hwQubits.emplace_back(this->getHwQubit(qubit));
+      hw.emplace_back(this->getHwQubit(qubit));
     }
-    return hwQubits;
+    return hw;
   }
 
   /**
@@ -181,9 +182,8 @@ public:
    * false otherwise.
    */
   [[nodiscard]] bool isMapped(HwQubit qubit) const {
-    return std::any_of(
-        circToHw.begin(), circToHw.end(),
-        [qubit](const auto& pair) { return pair.second == qubit; });
+    return std::ranges::any_of(
+        circToHw, [qubit](const auto& pair) { return pair.second == qubit; });
   }
 
   /**
