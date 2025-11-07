@@ -32,16 +32,13 @@
 namespace na {
 
 /**
- * @brief Class to manage information exchange between the neutral atom mapper
- * and the ZX extraction.
- * @deteils This class is derived from the HybridNeutralAtomMapper and stores
- * all the information about the neutral atom hardware and the current status of
- * the mapping. The ZX (or another synthesis algorithm) can propose different
- * possible next synthesis steps, which are then evaluated by the
- * HybridNeutralAtomMapper regarding the "effort" to map this synthesis step. It
- * also provides additional functionality to exchange information between the ZX
- * and the HybridNeutralAtomMapper.
- *
+ * @brief Bridges circuit synthesis (e.g., ZX extraction) with neutral-atom
+ * mapping.
+ * @details Derived from NeutralAtomMapper, this class maintains device state
+ * and current mapping while accepting proposed synthesis steps. It evaluates
+ * steps by mapping effort (e.g., required swaps/shuttling and timing), can
+ * append steps with or without mapping, and exposes utilities to exchange
+ * information with the synthesis algorithm.
  */
 class HybridSynthesisMapper : public NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
@@ -49,18 +46,22 @@ class HybridSynthesisMapper : public NeutralAtomMapper {
   qc::QuantumComputation synthesizedQc;
 
   /**
-   * @brief Evaluates a single synthesis step proposed by the ZX extraction.
-   * @details The effort is calculated by the NeutralAtomMapper, taking into
-   * account the number of SWAP gates or shuttling moves and the time needed to
-   * execute the mapped synthesis step.
-   * @param qc The synthesis step to be evaluated.
-   * @return The cost/effort to map the synthesis step.
+   * @brief Evaluate a single proposed synthesis step.
+   * @details Effort considers swaps/shuttling and execution time estimated by
+   * the mapper.
+   * @param qc Proposed synthesis subcircuit.
+   * @return Scalar cost/effort score for mapping qc.
    */
   qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc);
 
 public:
   // Constructors
   HybridSynthesisMapper() = delete;
+  /**
+   * @brief Construct with device and optional mapper parameters.
+   * @param arch Neutral atom architecture.
+   * @param params Optional mapper configuration parameters.
+   */
   explicit HybridSynthesisMapper(
       const NeutralAtomArchitecture& arch,
       const MapperParameters& params = MapperParameters())
@@ -69,10 +70,8 @@ public:
   // Functions
 
   /**
-   * @brief Initializes the mapping with the given number of qubits and the
-   * initial mapping.
-   * @param nQubits The number of qubits to be mapped.
-   * @param initialMapping The initial mapping to be used.
+   * @brief Initialize synthesized and mapped circuits and mapping structures.
+   * @param nQubits Number of logical qubits to synthesize.
    */
   void initMapping(size_t nQubits) {
     mappedQc = qc::QuantumComputation(arch->getNpositions());
@@ -81,25 +80,24 @@ public:
   }
 
   /**
-   * @brief Returns the mapped QuantumComputation.
-   * @return The mapped QuantumComputation.
+   * @brief Complete a (re-)mapping of the synthesized circuit to hardware.
+   * @param initMapping Initial mapping heuristic (defaults to Identity).
    */
   void completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
     this->map(synthesizedQc, initMapping);
   }
 
   /**
-   * @brief Returns the synthesized QuantumComputation with all gates but not
-   * mapped to the hardware.
-   * @return The synthesized QuantumComputation.
+   * @brief Get the currently synthesized (unmapped) circuit.
+   * @return Synthesized QuantumComputation.
    */
   [[nodiscard]] qc::QuantumComputation getSynthesizedQc() const {
     return this->synthesizedQc;
   }
 
   /**
-   * @brief Returns the synthesized QuantumComputation as a string.
-   * @return The synthesized QuantumComputation as a string.
+   * @brief Export synthesized circuit as OpenQASM string.
+   * @return QASM representation of the synthesized circuit.
    */
   [[maybe_unused]] std::string getSynthesizedQcQASM() {
     std::stringstream ss;
@@ -108,8 +106,9 @@ public:
   }
 
   /**
-   * @brief Saves the synthesized QuantumComputation to the given file.
-   * @param filename The file to save the synthesized QuantumComputation to.
+   * @brief Save synthesized circuit as OpenQASM to a file.
+   * @param filename Output filename.
+   * @throw std::ios_base::failure If the file cannot be opened for writing.
    */
   [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) {
     std::ofstream ofs(filename);
@@ -118,32 +117,29 @@ public:
   }
 
   /**
-   * @brief Evaluates the synthesis steps proposed by the ZX extraction.
-   * @param synthesisSteps The synthesis steps proposed by the ZX extraction.
-   * @param alsoMap If true, the best synthesis step is directly mapped to the
-   * hardware.
-   * @return Returns a list of fidelities of the mapped synthesis steps.
+   * @brief Evaluate candidate synthesis steps and optionally map the best.
+   * @param synthesisSteps Vector of candidate subcircuits.
+   * @param alsoMap If true, append and map the best candidate.
+   * @return List of fidelity scores for mapped steps (order matches input).
    */
   std::vector<qc::fp> evaluateSynthesisSteps(qcs& synthesisSteps,
                                              bool alsoMap = false);
 
   /**
-   * @brief Directly maps the given QuantumComputation to the hardware NOT
-   * inserting SWAP gates or shuttling move operations.
-   * @param qc The gates (QuantumComputation) to be mapped.
+   * @brief Append gates without mapping (no SWAPs/shuttling inserted).
+   * @param qc Subcircuit to append as-is.
    */
   void appendWithoutMapping(const qc::QuantumComputation& qc);
 
   /**
-   * @brief Appends the given QuantumComputation to the synthesized
-   * QuantumComputation and maps the gates to the hardware.
-   * @param qc The gates (QuantumComputation) to be appended and mapped.
+   * @brief Append and map a subcircuit to hardware (may insert moves/SWAPs).
+   * @param qc Subcircuit to append and map.
    */
   void appendWithMapping(qc::QuantumComputation& qc);
 
   /**
-   * @brief Returns the current adjacency matrix of the neutral atom hardware.
-   * @return The current adjacency matrix of the neutral atom hardware.
+   * @brief Get the current device adjacency (connectivity) matrix.
+   * @return Symmetric adjacency matrix for the neutral atom hardware.
    */
   [[nodiscard]] AdjacencyMatrix getCircuitAdjacencyMatrix() const;
 };
