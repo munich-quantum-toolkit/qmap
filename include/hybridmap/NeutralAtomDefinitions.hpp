@@ -77,8 +77,8 @@ using SwapDistance = int32_t;
  * load1/load2 specify load/unload actions (e.g., addressing focus).
  */
 struct AtomMove {
-  CoordIndex c1;
-  CoordIndex c2;
+  CoordIndex c1 = 0;
+  CoordIndex c2 = 0;
   bool load1 = true;
   bool load2 = true;
 

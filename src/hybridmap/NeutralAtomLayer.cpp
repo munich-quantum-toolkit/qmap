@@ -158,8 +158,8 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
   // for two-qubit gates, check if they commute at qubit
   // commute if both are controlled at qubit or const Operation* on qubit is
   // same check controls
-  if (op1->getControls().find(qubit) != op1->getControls().end() &&
-      op2->getControls().find(qubit) != op2->getControls().end()) {
+  if (op1->getControls().contains(qubit) &&
+      op2->getControls().contains(qubit)) {
     return true;
   }
   // control and Z also commute
