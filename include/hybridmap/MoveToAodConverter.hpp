@@ -29,18 +29,23 @@
 #include <vector>
 
 namespace na {
-// Possible types two Move combination can be combined to
+/**
+ * @brief Result type for merging two move-derived activations.
+ * @details Indicates whether merging is impossible, trivial, a full merge, or
+ * requires appending.
+ */
 enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
-// Used to indicate how AodOperations can be merged
+/**
+ * @brief Pair of merge types for X and Y dimensions.
+ */
 using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
 
 /**
- * @brief Class to convert abstract move operations to AOD movements on a
- * neutral atom architecture
- * @details The scheduler takes a quantum circuit containing abstract move
- * operations and tries to merge them into parallel AO movements. It also
- * manages the small offset movements required while loading or unloading of
- * AODs.
+ * @brief Converts abstract atom moves into concrete AOD activation/move
+ * sequences.
+ * @details Groups parallelizable moves, computes safe offset maneuvers for
+ * loading/unloading AODs, and emits AOD operations (activate, move, deactivate)
+ * respecting device constraints.
  */
 class MoveToAodConverter {
   struct AncillaAtom {
@@ -62,18 +67,15 @@ class MoveToAodConverter {
 
 protected:
   /**
-   * @brief Struct to store information about specific AOD activations.
-   * @details It contains:
-   * - the offset moves in x and y direction
-   * - the actual moves
+   * @brief Helper for constructing and merging AOD activations/moves.
+   * @details Tracks per-dimension AOD moves with offsets and associated atom
+   * moves; produces AodOperation sequences for activation/move/deactivation.
    */
   struct AodActivationHelper {
     /**
-     * @brief Describes a single AOD movement in either x or y direction
-     * @details It contains:
-     * - the initial position of the AOD
-     * - the delta of the AOD movement
-     * - the size of the offset of the AOD movement
+     * @brief Single AOD movement in one dimension (x or y).
+     * @details Stores initial position, movement delta, required offset to
+     * avoid crossing, and whether a load/unload is needed.
      */
     struct AodMove {
       // start of the move
@@ -93,9 +95,10 @@ protected:
             load(loadMove) {}
     };
     /**
-     * @brief Manages the activation of an atom using an AOD.
-     * @details The same struct is used also to deactivate the AOD, just
-     * reversed.
+     * @brief Aggregate of per-dimension activation moves plus logical atom
+     * move.
+     * @details Represents either activation or deactivation depending on
+     * context. Holds x- and y- dimension AOD moves and the associated AtomMove.
      */
     struct AodActivation {
       // first: x, second: delta x, third: offset x
@@ -128,7 +131,6 @@ protected:
       }
     };
 
-    // AODScheduler
     // NeutralAtomArchitecture to call necessary hardware information
     const NeutralAtomArchitecture* arch;
     std::vector<AodActivation> allActivations;
@@ -147,25 +149,27 @@ protected:
     // Methods
 
     /**
-     * @brief Returns all AOD moves in the given dimension/direction which start
-     * at the given initial position
-     * @param dim The dimension/direction to check
-     * @param init The initial position to check
-     * @return A vector of AOD moves
+     * @brief Return all AOD moves along a dimension that start at a given
+     * position.
+     * @param dim Dimension (X or Y).
+     * @param init Initial position index.
+     * @return Vector of matching AOD move descriptors.
      */
     [[nodiscard]] std::vector<std::shared_ptr<AodMove>>
     getAodMovesFromInit(Dimension dim, uint32_t init) const;
 
     // Activation management
     /**
-     * @brief Adds the move to the current activations
-     * @details The move is merged into the current activations depending on the
-     * given merge types
-     * @param merge The merge types in x and y direction
-     * @param origin The origin of the move
-     * @param move The move to add
-     * @param v The move vector of the move
-     * @param needLoad
+     * @brief Merge an atom move into current activations according to merge
+     * policy.
+     * @details Uses per-dimension merge types to either merge, append, or
+     * reject combining with in-flight activations; records offsets and
+     * load/unload handling.
+     * @param merge Merge policy for X and Y.
+     * @param origin Origin location.
+     * @param move Atom move descriptor.
+     * @param v Geometric move vector.
+     * @param needLoad Whether an AOD load is required.
      */
     void
     addActivation(std::pair<ActivationMergeType, ActivationMergeType> merge,
@@ -175,42 +179,38 @@ protected:
     void addActivationFa(const Location& origin, const AtomMove& move,
                          MoveVector v, bool needLoad);
     /**
-     * @brief Merges the given activation into the current activations
-     * @param dim The dimension/direction of the activation
-     * @param activationDim The activation to merge in the given
-     * dimension/direction
-     * @param activationOtherDim The activation to merge/add in the other
-     * dimension/direction
+     * @brief Merge an activation into the aggregate along a specific dimension.
+     * @param dim Dimension of the activation.
+     * @param activationDim Activation to merge for the specified dimension.
+     * @param activationOtherDim Complementary activation for the other
+     * dimension.
      */
     void mergeActivationDim(Dimension dim, const AodActivation& activationDim,
                             const AodActivation& activationOtherDim);
     /**
-     * @brief Orders the aod offset moves such that they will not cross each
-     * other
-     * @param aodMoves The aod offset moves to order
-     * @param sign The direction of the offset moves (right/left or down/up)
+     * @brief Reorder offset moves to avoid crossing.
+     * @param aodMoves Collection of offset moves to reorder.
+     * @param sign Direction of offsets (+1/-1 for right/left or down/up).
      */
     static void reAssignOffsets(std::vector<std::shared_ptr<AodMove>>& aodMoves,
                                 int32_t sign);
 
     /**
-     * @brief Returns the maximum offset in the given dimension/direction from
-     * the given initial position
-     * @param dim The dimension/direction to check
-     * @param init The initial position to check
-     * @param sign The direction of the offset moves (right/left or down/up)
-     * @return The maximum offset
+     * @brief Maximum absolute offset at a position along a dimension.
+     * @param dim Dimension.
+     * @param init Initial position.
+     * @param sign Direction (+1/-1).
+     * @return Maximum offset value.
      */
     [[nodiscard]] uint32_t getMaxOffsetAtInit(Dimension dim, uint32_t init,
                                               int32_t sign) const;
 
     /**
-     * @brief Checks if there is still space at the given initial position and
-     * the given direction
-     * @param dim The dimension/direction to check
-     * @param init The initial position to check
-     * @param sign The direction of the offset moves (right/left or down/up)
-     * @return True if there is still space, false otherwise
+     * @brief Check whether additional offset space is available at a position.
+     * @param dim Dimension.
+     * @param init Initial position.
+     * @param sign Direction (+1/-1).
+     * @return True if more offset steps fit; false otherwise.
      */
     [[nodiscard]] bool checkIntermediateSpaceAtInit(Dimension dim,
                                                     uint32_t init,
@@ -222,19 +222,16 @@ protected:
         std::vector<SingleOperation>& offsetOperations) const;
     // Convert activation to AOD operations
     /**
-     * @brief Converts activation into AOD operation (activate, move,
-     * deactivate)
-     * @param activation The activation to convert
-     * @param arch The neutral atom architecture to call necessary hardware
-     * information
-     * @param type The type of the activation (loading or unloading)
-     * @return The activation as AOD operation
+     * @brief Convert a single activation aggregate into AOD operations.
+     * @details Emission order: activate, move, deactivate.
+     * @param activation Activation aggregate to convert.
+     * @return Vector of emitted AOD operations.
      */
     [[nodiscard]] std::vector<AodOperation>
     getAodOperation(const AodActivation& activation) const;
     /**
-     * @brief Converts all activations into AOD operations
-     * @return All activations of the AOD activation helper as AOD operations
+     * @brief Convert all stored activations into AOD operations.
+     * @return Concatenated vector of emitted AOD operations.
      */
     [[nodiscard]] std::vector<AodOperation> getAodOperations() const;
 
@@ -271,21 +268,22 @@ protected:
 
     // Methods
     /**
-     * @brief Checks if the given move can be added to the move group
-     * @param move Move to check
-     * @return True if the move can be added, false otherwise
+     * @brief Check if a move can be added to the current group.
+     * @param move Move to check.
+     * @param archArg Architecture for geometric/constraint checks.
+     * @return True if compatible with group; false otherwise.
      */
     bool canAddMove(const AtomMove& move,
                     const NeutralAtomArchitecture& archArg);
     /**
-     * @brief Adds the given move to the move group
-     * @param move Move to add
-     * @param idx Index of the move in the original quantum circuit
+     * @brief Add a move to the group.
+     * @param move Move to add.
+     * @param idx Circuit index of the move.
      */
     void addMove(const AtomMove& move, uint32_t idx);
     /**
-     * @brief Returns the circuit index of the first move in the move group
-     * @return Circuit index of the first move in the move group
+     * @brief Circuit index of the earliest move in the group.
+     * @return Minimum circuit index across stored moves.
      */
 
     [[nodiscard]] uint32_t getFirstIdx() const {
@@ -298,21 +296,18 @@ protected:
       return std::min(moves.front().second, movesFa.front().second);
     }
     /**
-     * @brief Checks if the two moves can be executed in parallel
-     * @param v1 The first move
-     * @param v2 The second move
-     * @return True if the moves can be executed in parallel, false otherwise
+     * @brief Check if two moves are parallelizable.
+     * @param v1 First move vector.
+     * @param v2 Second move vector.
+     * @return True if they can execute in parallel; false otherwise.
      */
     static bool parallelCheck(const MoveVector& v1, const MoveVector& v2);
 
     /**
-     * @brief Helper function to create the actual shuttling operation between
-     * the loading at the initial position and the unloading at the final
-     * position
-     * @param opsInit Loading operations
-     * @param opsFinal Unloading operations
-     * @return The shuttling operation between the loading and unloading
-     * operations
+     * @brief Build the shuttling operation connecting load and unload phases.
+     * @param aodActivationHelper Activation helper (loading phase info).
+     * @param aodDeactivationHelper Deactivation helper (unloading phase info).
+     * @return Constructed AOD shuttling operation.
      */
     static AodOperation
     connectAodOperations(const AodActivationHelper& aodActivationHelper,
@@ -330,18 +325,15 @@ protected:
   void initFlyingAncillas();
 
   /**
-   * @brief Assigns move operations into groups that can be executed in parallel
-   * @param qc Quantum circuit to schedule
+   * @brief Partition moves into groups that can execute in parallel.
+   * @param qc Quantum circuit to schedule.
    */
   void initMoveGroups(
       qc::QuantumComputation& qc); //, qc::Permutation& hwToCoordIdx);
   /**
-   * @brief Converts the move groups into the actual AOD operations
-   * @details For this the following steps are performed:
-   * - ActivationHelper to manage the loading
-   * - ActivationHelper to manage the unloading
-   * If not the whole move group can be executed in parallel, a new move group
-   * is created for the remaining moves.
+   * @brief Convert move groups into concrete AOD operations.
+   * @details Uses activation/deactivation helpers to emit load/move/unload
+   * sequences; splits groups when parallelism constraints require it.
    */
   void processMoveGroups();
 
@@ -377,16 +369,16 @@ public:
   }
 
   /**
-   * @brief Schedules the given quantum circuit using AODs
-   * @param qc Quantum circuit to schedule
-   * @return Scheduled quantum circuit, containing AOD operations
+   * @brief Schedule a circuit: replace abstract moves by AOD load/move/unload.
+   * @param qc Quantum circuit to schedule.
+   * @return New circuit containing AOD operations.
    */
   qc::QuantumComputation
   schedule(qc::QuantumComputation& qc); //, qc::Permutation hwToCoordIdx);
 
   /**
-   * @brief Returns the number of move groups
-   * @return Number of move groups
+   * @brief Get number of constructed move groups.
+   * @return Count of move groups.
    */
   [[nodiscard]] auto getNMoveGroups() const { return moveGroups.size(); }
 };
