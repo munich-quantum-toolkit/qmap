@@ -12,6 +12,7 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 using namespace na;
 
@@ -50,7 +51,7 @@ TEST(NeutralAtomUtils, MoveCombConstructorsAndEquality) {
   // vector-based constructor
   const MoveComb cvec({m1, m2}, /*cost*/ 1.23, /*op*/ nullptr, pos);
   EXPECT_FALSE(cvec.empty());
-  EXPECT_EQ(cvec.moves.size(), 2u);
+  EXPECT_EQ(cvec.moves.size(), 2U);
   EXPECT_DOUBLE_EQ(cvec.cost, 1.23);
   EXPECT_EQ(cvec.op, nullptr);
   EXPECT_EQ(cvec.bestPos, pos);

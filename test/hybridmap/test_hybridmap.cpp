@@ -19,13 +19,11 @@
 #include <filesystem>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
-// additional include for direct Mapping test
-#include "hybridmap/Mapping.hpp"
 
-class NeutralAtomArchitectureTest
-    : public ::testing::TestWithParam<std::string> {
+class NeutralAtomArchitectureTest : public testing::TestWithParam<std::string> {
 protected:
   std::string testArchitecturePath = "architectures/";
 
@@ -61,7 +59,7 @@ INSTANTIATE_TEST_SUITE_P(NeutralAtomArchitectureTestSuite,
 class NeutralAtomMapperTestParams
     // parameters are architecture, circuit, gateWeight, shuttlingWeight,
     // lookAheadWeight, dynamicMappingWeight, initialCoordinateMapping
-    : public ::testing::TestWithParam<
+    : public testing::TestWithParam<
           std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp, qc::fp,
                      na::InitialCoordinateMapping>> {
 protected:
@@ -79,7 +77,7 @@ protected:
   uint32_t seed = 42;
 
   void SetUp() override {
-    const auto params = GetParam();
+    const auto& params = GetParam();
     testArchitecturePath += std::get<0>(params) + ".json";
     testQcPath += std::get<1>(params) + ".qasm";
     gateWeight = std::get<2>(params);
@@ -135,7 +133,7 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(0.1), ::testing::Values(0),
         ::testing::Values(na::InitialCoordinateMapping::Trivial)));
 
-class NeutralAtomMapperTest : public ::testing::Test {
+class NeutralAtomMapperTest : public testing::Test {
 protected:
   std::string testArchitecturePath = "architectures/rubidium_shuttling.json";
   const na::NeutralAtomArchitecture arch =
@@ -168,28 +166,30 @@ protected:
 };
 
 TEST_F(NeutralAtomMapperTest, Output) {
-  setvbuf(stdout, NULL, _IONBF, 0);
   auto qcMapped = mapper.map(qc, initialMapping);
   // write to file
   mapper.saveMappedQcQasm("test.qasm");
   const auto qcMappedFromFile = mapper.getMappedQcQasm();
+  EXPECT_GT(qcMappedFromFile.size(), 0);
   mapper.saveMappedQcAodQasm("test_aod.qasm");
   const auto qcMappedAod = mapper.getMappedQcAodQasm();
+  EXPECT_GT(qcMappedAod.size(), 0);
 
-  const auto MapperStats = mapper.getStats();
-  EXPECT_GE(MapperStats.nSwaps + MapperStats.nBridges + MapperStats.nFAncillas +
-                MapperStats.nMoves + MapperStats.nPassBy,
+  const auto mapperStats = mapper.getStats();
+  EXPECT_GE(mapperStats.nSwaps + mapperStats.nBridges + mapperStats.nFAncillas +
+                mapperStats.nMoves + mapperStats.nPassBy,
             0);
-  const auto MapperStatsMap = mapper.getStatsMap();
-  EXPECT_GE(MapperStatsMap.at("nSwaps") + MapperStatsMap.at("nBridges") +
-                MapperStatsMap.at("nFAncillas") + MapperStatsMap.at("nMoves") +
-                MapperStatsMap.at("nPassBy"),
+  const auto mapperStatsMap = mapper.getStatsMap();
+  EXPECT_GE(mapperStatsMap.at("nSwaps") + mapperStatsMap.at("nBridges") +
+                mapperStatsMap.at("nFAncillas") + mapperStatsMap.at("nMoves") +
+                mapperStatsMap.at("nPassBy"),
             0);
   const auto initHwPos = mapper.getInitHwPos();
   EXPECT_EQ(initHwPos.size(), arch.getNqubits() - 1 /* flying ancilla */);
 
   const auto scheduleResults = mapper.schedule(true, true);
   const auto animationViz = mapper.getAnimationViz();
+  EXPECT_GT(animationViz.size(), 0);
   mapper.saveAnimationFiles("test");
 
   std::cout << scheduleResults.toCsv();
@@ -209,12 +209,12 @@ TEST(NeutralAtomMapperExceptions, NotEnoughQubitsForCircuitAndAncillas) {
   na::NeutralAtomMapper mapper(arch, p);
 
   // Circuit uses exactly all hardware qubits; +1 ancilla should trigger
-  qc::QuantumComputation qc1(static_cast<unsigned int>(arch.getNqubits()));
+  qc::QuantumComputation qc1((arch.getNqubits()));
   EXPECT_THROW((void)mapper.map(qc1, na::InitialMapping::Identity),
                std::runtime_error);
 
   // Circuit bigger than architecture should throw
-  qc::QuantumComputation qc2(static_cast<unsigned int>(arch.getNqubits() + 1));
+  qc::QuantumComputation qc2(arch.getNqubits() + 1);
   EXPECT_THROW((void)mapper.map(qc2, na::InitialMapping::Identity),
                std::runtime_error);
 }
@@ -241,7 +241,6 @@ TEST(NeutralAtomMapperExceptions, NoFreeCoordsForShuttlingConstructor) {
   EXPECT_THROW((void)na::NeutralAtomMapper(arch, p), std::runtime_error);
 
   na::MapperParameters p1 = p;
-  ;
   p1.shuttlingWeight = 0.0; // construct ok
   na::NeutralAtomMapper mapper(arch, p1);
   p1.shuttlingWeight = 0.5; // triggers setParameters check
@@ -251,7 +250,7 @@ TEST(NeutralAtomMapperExceptions, NoMultiQubitSpace) {
   // Create minimal arch JSON: 1x1 positions, nQubits = 1 => no free coords
   const auto arch =
       na::NeutralAtomArchitecture("architectures/rubidium_gate.json");
-  na::MapperParameters p;
+  constexpr na::MapperParameters p;
   na::NeutralAtomMapper mapper(arch, p);
   qc::QuantumComputation qc =
       qasm3::Importer::importf("circuits/multi_qubit.qasm");

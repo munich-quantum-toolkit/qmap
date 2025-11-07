@@ -15,7 +15,7 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <ranges>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 
@@ -119,7 +119,8 @@ TEST(NeutralAtomArchitectureExceptions, TooManyQubitsThrows) {
   const auto tmp =
       std::filesystem::temp_directory_path() / "too_many_qubits.json";
   // Minimal JSON: 1x1 positions but nQubits = 2 -> should throw
-  const char* content = R"JSON({
+  {
+    const auto* content = R"JSON({
 		"name": "test",
 		"properties": {
 			"nRows": 1,
@@ -135,7 +136,6 @@ TEST(NeutralAtomArchitectureExceptions, TooManyQubitsThrows) {
 			"nQubits": 2
 		}
 	})JSON";
-  {
     std::ofstream ofs(tmp);
     ofs << content;
   }

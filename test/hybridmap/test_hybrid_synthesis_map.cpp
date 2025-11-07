@@ -15,6 +15,7 @@
 
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
@@ -24,7 +25,7 @@
 
 namespace na {
 class TestParametrizedHybridSynthesisMapper
-    : public ::testing::TestWithParam<std::string> {
+    : public testing::TestWithParam<std::string> {
 protected:
   std::string testArchitecturePath = "architectures/";
   std::vector<qc::QuantumComputation> circuits;
@@ -47,7 +48,7 @@ protected:
 };
 
 TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
-  auto arch = NeutralAtomArchitecture(testArchitecturePath);
+  const auto arch = NeutralAtomArchitecture(testArchitecturePath);
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
   auto adjMatrix = mapper.getCircuitAdjacencyMatrix();
@@ -56,12 +57,12 @@ TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
 }
 
 TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
-  auto arch = NeutralAtomArchitecture(testArchitecturePath);
+  const auto arch = NeutralAtomArchitecture(testArchitecturePath);
   auto params = MapperParameters();
   params.verbose = true;
   auto mapper = HybridSynthesisMapper(arch, params);
   mapper.initMapping(3);
-  auto best = mapper.evaluateSynthesisSteps(circuits, true);
+  const auto best = mapper.evaluateSynthesisSteps(circuits, true);
   EXPECT_EQ(best.size(), 2);
   EXPECT_GE(best[0], 0);
   EXPECT_GE(best[1], 0);
@@ -72,7 +73,7 @@ INSTANTIATE_TEST_SUITE_P(HybridSynthesisMapperTestSuite,
                          ::testing::Values("rubidium_gate", "rubidium_hybrid",
                                            "rubidium_shuttling"));
 
-class TestHybridSynthesisMapper : public ::testing::Test {
+class TestHybridSynthesisMapper : public testing::Test {
 protected:
   NeutralAtomArchitecture arch =
       NeutralAtomArchitecture("architectures/rubidium_gate.json");
@@ -91,7 +92,7 @@ protected:
 
 TEST_F(TestHybridSynthesisMapper, DirectlyMap) {
   mapper.appendWithoutMapping(qc);
-  auto synthesizedQc = mapper.getSynthesizedQc();
+  const auto synthesizedQc = mapper.getSynthesizedQc();
   EXPECT_EQ(synthesizedQc.getNqubits(), 3);
   EXPECT_EQ(synthesizedQc.getNops(), 3);
 }
@@ -99,19 +100,19 @@ TEST_F(TestHybridSynthesisMapper, DirectlyMap) {
 TEST_F(TestHybridSynthesisMapper, completelyRemap) {
   mapper.appendWithoutMapping(qc);
   mapper.appendWithoutMapping(qc);
-  auto mappedQc = mapper.getMappedQc();
+  const auto mappedQc = mapper.getMappedQc();
   EXPECT_EQ(mappedQc.getNqubitsWithoutAncillae(), arch.getNpositions());
   EXPECT_GE(mappedQc.getNops(), 3);
 
-  mapper.completeRemap(InitialMapping::Identity);
-  auto mappedQcRemapped = mapper.getMappedQc();
+  mapper.completeRemap(Identity);
+  const auto mappedQcRemapped = mapper.getMappedQc();
   EXPECT_EQ(mappedQcRemapped.getNqubitsWithoutAncillae(), arch.getNpositions());
   EXPECT_GE(mappedQcRemapped.getNops(), 3);
 }
 
 TEST_F(TestHybridSynthesisMapper, MapAppend) {
   mapper.appendWithMapping(qc);
-  auto synthesizedQc = mapper.getSynthesizedQc();
+  const auto synthesizedQc = mapper.getSynthesizedQc();
   EXPECT_EQ(synthesizedQc.getNqubits(), 3);
   EXPECT_GE(synthesizedQc.getNops(), 3);
 }

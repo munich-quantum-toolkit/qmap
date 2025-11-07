@@ -10,8 +10,13 @@
 
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
 
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <set>
+#include <stdexcept>
 
 namespace {
 
@@ -59,7 +64,7 @@ TEST(HardwareQubitsBehavior, RemoveHwQubitRemovesMappingsAndNeighbors) {
   EXPECT_THROW((void)hw.getCoordIndex(1), std::out_of_range);
 
   // Remaining qubits neighbor lists should not contain the removed qubit
-  for (na::HwQubit q : {0U, 2U}) {
+  for (na::HwQubit const q : {0U, 2U}) {
     const auto neighbors = hw.getNearbyQubits(q);
     EXPECT_TRUE(!neighbors.contains(1U));
   }
@@ -70,8 +75,8 @@ TEST(HardwareQubitsBehavior, RandomInitializationIsDeterministicPerSeed) {
       na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
   constexpr na::CoordIndex nQ = 4;
 
-  na::HardwareQubits hw(arch, nQ, na::InitialCoordinateMapping::Random,
-                        /*seed*/ 0);
+  na::HardwareQubits const hw(arch, nQ, na::InitialCoordinateMapping::Random,
+                              /*seed*/ 0);
 
   // All assigned coordinates are unique and within bounds
   std::set<na::CoordIndex> coords;
