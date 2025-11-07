@@ -23,11 +23,12 @@
 
 namespace na {
 /**
- * @brief Class to manage the creation of layers when traversing a quantum
- * circuit.
- * @details The class uses the qc::DAG of the circuit to create layers of gates
- * that can be executed at the same time. It can be used to create the front or
- * look ahead layer.
+ * @brief Helper for constructing executable or look-ahead layers from a circuit
+ * DAG.
+ * @details Consumes a per-qubit DAG representation and maintains frontier
+ * iterators to build either (a) the front layer of mutually commuting gates
+ * (ready to execute) or (b) look-ahead layers containing a bounded depth of
+ * forthcoming multi-qubit gates per qubit for heuristic evaluation.
  */
 
 class NeutralAtomLayer {
@@ -46,52 +47,43 @@ protected:
   bool isFrontLayer;
 
   /**
-   * @brief Update layer state for a set of qubits.
-   * @details Advances the internal iterators of the qc::DAG for the provided
-   * qubits, updates the per-qubit candidate lists, and moves operations that
-   * are ready across all their used qubits into the current layer.
-   * In front-layer mode, only commuting operations are considered; in
-   * look-ahead mode, up to @ref lookaheadDepth multi-qubit gates ahead are
-   * considered for each qubit.
-   * @param qubitsToUpdate Logical qubits whose frontier should be advanced and
-   * whose candidates/gates should be refreshed.
+   * @brief Advance frontier and refresh candidates/gates for specified qubits.
+   * @details Moves DAG iterators forward for each qubit, replenishes candidate
+   * queues and promotes ready operations into the current layer (all involved
+   * qubits agree). Front-layer mode restricts to commuting operations;
+   * look-ahead mode gathers up to lookaheadDepth multi-qubit gates.
+   * @param qubitsToUpdate Logical qubits whose DAG frontier and candidate sets
+   * are updated.
    */
   void updateByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
 
   /**
-   * @brief Update the per-qubit candidate queues.
-   * @details For front-layer construction, keep pulling operations from each
-   * qubit's DAG column while they commute with both the already selected
-   * gates and the existing candidates at that qubit. For look-ahead
-   * construction, pull forward operations until @ref lookaheadDepth
-   * multi-qubit operations have been encountered (single-qubit operations in
-   * between are included as well).
+   * @brief Extend per-qubit candidate queues from DAG columns.
+   * @details Front-layer: continue pulling while new ops commute with existing
+   * layer and per-qubit candidates. Look-ahead: pull until lookaheadDepth
+   * multi-qubit ops encountered (including intervening single-qubit ops).
    * @param qubitsToUpdate Logical qubits whose candidate queues should be
    * extended.
    */
   void updateCandidatesByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
   /**
-   * @brief Promote eligible candidates to the current layer.
-   * @details For each provided qubit, move an operation from the candidate
-   * list to the current layer if and only if it appears as a candidate on
-   * all qubits it uses. Newly added operations are also tracked in
-   * @ref newGates, and removed from the candidate lists of all their
-   * constituent qubits.
-   * @param qubitsToUpdate Logical qubits whose candidate lists should be
-   * evaluated.
+   * @brief Promote multi-qubit candidates that are ready on all their qubits.
+   * @details Checks for each qubit whether the head candidate appears across
+   * candidate lists of all its operand qubits; if so, moves it to the layer and
+   * records it in newGates, removing from all candidate lists.
+   * @param qubitsToUpdate Logical qubits whose candidate lists are evaluated
+   * for promotion.
    */
   void candidatesToGates(const std::set<qc::Qubit>& qubitsToUpdate);
 
 public:
   /**
-   * @brief Construct a NeutralAtomLayer helper.
-   * @param graph The per-qubit DAG representation of the circuit (each entry
-   * corresponds to one qubit line).
-   * @param isFrontLayer If true, build the executable front layer (only
-   * commuting operations are pulled); if false, build a look-ahead layer.
-   * @param lookaheadDepth For look-ahead mode, the number of multi-qubit
-   * operations to consider ahead for each qubit (defaults to 1). Ignored in
-   * front-layer mode.
+   * @brief Construct a layer builder over a per-qubit DAG.
+   * @param graph Per-qubit DAG columns (each deque owns operation pointers).
+   * @param isFrontLayer True for executable front layer mode; false for
+   * look-ahead mode.
+   * @param lookaheadDepth Max number of multi-qubit gates to look ahead per
+   * qubit.
    */
   explicit NeutralAtomLayer(DAG graph, const bool isFrontLayer,
                             const uint32_t lookaheadDepth = 1)
@@ -108,58 +100,53 @@ public:
   }
 
   /**
-   * @brief Returns the current layer of gates
-   * @return The current layer of gates
+   * @brief Get the current executable/look-ahead layer gate list.
+   * @return Copy of current layer gates.
    */
   [[nodiscard]] GateList getGates() const { return gates; }
   /**
-   * @brief Return the gates that were added the last time the layer was
-   * updated.
-   * @details This is populated during the most recent call to
-   * updateByQubits()/candidatesToGates() and is cleared and repopulated on
-   * subsequent updates.
-   * @return The subset of gates newly added to the layer during the last
-   * update.
+   * @brief Get gates newly added during the latest update.
+   * @details Populated by the most recent update invocation then refreshed each
+   * subsequent update.
+   * @return Copy of gates added since prior update.
    */
   [[nodiscard]] GateList getNewGates() const { return newGates; }
   /**
-   * @brief Initialize the layer by updating all qubits from their current
-   * DAG-frontier.
+   * @brief Initialize internal frontiers and populate initial candidates/gates.
+   * @details Advances all qubit DAG iterators, builds candidate queues and
+   * promotes ready operations.
    */
   void initAllQubits();
   /**
-   * @brief Remove gates from the current layer and advance affected qubits.
-   * @details Erases the provided gates from the layer, then advances the DAG
-   * frontier for all qubits touched by those gates, updating candidates and
-   * possibly pulling in new gates.
-   * @param gatesToRemove Gates to remove from the current layer.
+   * @brief Remove specified gates then advance affected qubit frontiers.
+   * @details After erasing gates, updates candidates/gates for all qubits they
+   * touched, potentially adding new ready operations.
+   * @param gatesToRemove Gates to erase from current layer.
    */
   void removeGatesAndUpdate(const GateList& gatesToRemove);
 };
 
 // Commutation checks
 /**
- * @brief Check whether an operation commutes at a specific qubit with all
- * operations already present in a layer.
- * @param layer The current layer (list of operations) to check against.
- * @param opPointer The operation to be tested for commutation.
- * @param qubit The qubit at which commutation is assessed.
- * @return true if @p opPointer commutes with every operation in @p layer at
- * @p qubit; false otherwise.
+ * @brief Determine if an operation commutes with all layer operations at a
+ * qubit.
+ * @param layer Current layer gate list.
+ * @param opPointer Operation to test.
+ * @param qubit Qubit index for commutation assessment.
+ * @return True if opPointer commutes with every gate in layer at qubit; false
+ * otherwise.
  */
 bool commutesWithAtQubit(const GateList& layer, const qc::Operation* opPointer,
                          const qc::Qubit& qubit);
 /**
- * @brief Check whether two operations commute at a specific qubit.
- * @details Applies simple syntactic rules: non-unitaries never commute;
- * single-qubit gates commute; identities commute; gates that do not act on the
- * qubit commute; for two-qubit gates, certain control/target patterns commute
- * (both controlled on the qubit, control with Z on the qubit, or equal target
- * types on the qubit).
+ * @brief Check pairwise commutation of two operations at a qubit.
+ * @details Simple syntactic rules: non-unitaries never commute; identities and
+ * single-qubit ops commute; ops not acting on the qubit commute; specific
+ * two-qubit control/target patterns are considered commuting.
  * @param op1 First operation.
  * @param op2 Second operation.
- * @param qubit The qubit at which commutation is assessed.
- * @return true if the operations commute at @p qubit; false otherwise.
+ * @param qubit Qubit index for commutation assessment.
+ * @return True if operations commute at qubit; false otherwise.
  */
 bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
                     const qc::Qubit& qubit);
