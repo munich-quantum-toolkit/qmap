@@ -52,7 +52,7 @@ class HybridSynthesisMapper : public NeutralAtomMapper {
    * @param qc Proposed synthesis subcircuit.
    * @return Scalar cost/effort score for mapping qc.
    */
-  qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc);
+  qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc) const;
 
 public:
   // Constructors
@@ -73,7 +73,7 @@ public:
    * @brief Initialize synthesized and mapped circuits and mapping structures.
    * @param nQubits Number of logical qubits to synthesize.
    */
-  void initMapping(size_t nQubits) {
+  void initMapping(const size_t nQubits) {
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     synthesizedQc = qc::QuantumComputation(nQubits);
     mapping = Mapping(nQubits);
@@ -83,7 +83,7 @@ public:
    * @brief Complete a (re-)mapping of the synthesized circuit to hardware.
    * @param initMapping Initial mapping heuristic (defaults to Identity).
    */
-  void completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
+  void completeRemap(const InitialMapping initMapping = Identity) {
     this->map(synthesizedQc, initMapping);
   }
 
@@ -99,7 +99,7 @@ public:
    * @brief Export synthesized circuit as OpenQASM string.
    * @return QASM representation of the synthesized circuit.
    */
-  [[maybe_unused]] std::string getSynthesizedQcQASM() {
+  [[nodiscard]] [[maybe_unused]] std::string getSynthesizedQcQASM() const {
     std::stringstream ss;
     synthesizedQc.dumpOpenQASM(ss, false);
     return ss.str();
@@ -110,7 +110,7 @@ public:
    * @param filename Output filename.
    * @throw std::ios_base::failure If the file cannot be opened for writing.
    */
-  [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) {
+  [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) const {
     std::ofstream ofs(filename);
     synthesizedQc.dumpOpenQASM(ofs, false);
     ofs.close();

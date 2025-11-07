@@ -29,7 +29,7 @@ namespace na {
 
 std::vector<qc::fp>
 HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
-                                              bool alsoMap) {
+                                              const bool alsoMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
   size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
@@ -59,7 +59,7 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
 }
 
 qc::fp
-HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) {
+HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) const {
   NeutralAtomMapper tempMapper;
   tempMapper.copyStateFrom(*this);
   auto mappedQc = tempMapper.map(qc, mapping);
@@ -87,13 +87,13 @@ void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
 }
 
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
-  auto numCircQubits = synthesizedQc.getNqubits();
+  const auto numCircQubits = synthesizedQc.getNqubits();
   AdjacencyMatrix adjMatrix(numCircQubits);
 
   for (uint32_t i = 0; i < numCircQubits; ++i) {
     for (uint32_t j = 0; j < i; ++j) {
-      auto mappedI = this->mapping.getHwQubit(i);
-      auto mappedJ = this->mapping.getHwQubit(j);
+      const auto mappedI = this->mapping.getHwQubit(i);
+      const auto mappedJ = this->mapping.getHwQubit(j);
       if (this->arch->getSwapDistance(mappedI, mappedJ) == 0) {
         adjMatrix(i, j) = 1;
       } else {
