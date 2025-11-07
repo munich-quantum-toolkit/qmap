@@ -132,10 +132,9 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     }
     this->parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
-    this->parameters.decoherenceTimes =
-        NeutralAtomArchitecture::Parameters::DecoherenceTimes{
-            .t1 = jsonDataParameters["decoherenceTimes"]["t1"],
-            .t2 = jsonDataParameters["decoherenceTimes"]["t2"]};
+    this->parameters.decoherenceTimes = Parameters::DecoherenceTimes{
+        .t1 = jsonDataParameters["decoherenceTimes"]["t1"],
+        .t2 = jsonDataParameters["decoherenceTimes"]["t2"]};
 
   } catch (std::exception& e) {
     throw std::runtime_error("Could not parse JSON file " + filename + ": " +
@@ -174,7 +173,7 @@ void NeutralAtomArchitecture::computeSwapDistances(
 
   for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
     for (uint32_t j = i; j < this->getNrows(); j++) {
-      const auto dist = NeutralAtomArchitecture::getEuclideanDistance(
+      const auto dist = getEuclideanDistance(
           Location{.x = 0.0, .y = 0.0},
           Location{.x = static_cast<double>(i), .y = static_cast<double>(j)});
       if (dist <= interactionRadius) {
@@ -210,7 +209,7 @@ void NeutralAtomArchitecture::computeSwapDistances(
 
       // check if one can go diagonal to reduce the swap distance
       int32_t swapDistance = 0;
-      for (auto& diagonalDistance :
+      for (const auto& diagonalDistance :
            std::ranges::reverse_view(diagonalDistances)) {
         while (deltaX >= diagonalDistance.x && deltaY >= diagonalDistance.y) {
           swapDistance += 1;
@@ -259,7 +258,7 @@ NeutralAtomArchitecture::getNN(const CoordIndex idx) const {
 }
 std::string NeutralAtomArchitecture::getAnimationMachine(
     const qc::fp shuttlingSpeedFactor) const {
-  std::string animationMachine = "name: \"Hyrbid_" + this->name + "\"\n";
+  std::string animationMachine = "name: \"Hybrid_" + this->name + "\"\n";
 
   animationMachine +=
       "movement {\n\tmax_speed: " +

@@ -162,7 +162,7 @@ class NeutralAtomArchitecture {
         return t1 * t2 / (t1 + t2);
       }
     };
-    CoordIndex nQubits;
+    CoordIndex nQubits = 0;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
     std::map<qc::OpType, qc::fp> shuttlingTimes;
@@ -347,7 +347,7 @@ public:
    * std::map::at may be thrown.
    */
   [[nodiscard]] qc::fp getGateTime(const std::string& s) const {
-    if (parameters.gateTimes.find(s) == parameters.gateTimes.end()) {
+    if (!parameters.gateTimes.contains(s)) {
       std::cout << "Gate time for " << s << " not found\n"
                 << "Returning default value\n";
       return parameters.gateTimes.at("none");
@@ -363,8 +363,7 @@ public:
    * std::map::at may be thrown.
    */
   [[nodiscard]] qc::fp getGateAverageFidelity(const std::string& s) const {
-    if (parameters.gateAverageFidelities.find(s) ==
-        parameters.gateAverageFidelities.end()) {
+    if (!parameters.gateAverageFidelities.contains(s)) {
       std::cout << "Gate average fidelity for " << s << " not found\n"
                 << "Returning default value\n";
       return parameters.gateAverageFidelities.at("none");
