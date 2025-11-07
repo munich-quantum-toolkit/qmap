@@ -79,8 +79,8 @@ using SwapDistance = int32_t;
 struct AtomMove {
   CoordIndex c1;
   CoordIndex c2;
-  bool load1;
-  bool load2;
+  bool load1 = true;
+  bool load2 = true;
 
   /**
    * @brief Equality comparison.

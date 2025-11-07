@@ -22,6 +22,7 @@
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -55,8 +56,7 @@ struct MapperParameters {
   uint32_t maxBridgeDistance = 1;
   bool usePassBy = true;
   bool verbose = false;
-  InitialCoordinateMapping initialCoordMapping =
-      InitialCoordinateMapping::Trivial;
+  InitialCoordinateMapping initialCoordMapping = Trivial;
 };
 
 /**
@@ -194,17 +194,32 @@ protected:
    */
   void reassignGatesToLayers(const GateList& frontGates,
                              const GateList& lookaheadGates);
+
+  /**
+   * @brief Advance one step using gate-based routing (swaps/bridges).
+   * @param frontLayer Front layer container.
+   * @param lookaheadLayer Lookahead layer container.
+   * @param i Index of the considered operation in the front layer.
+   * @return Number of mapped operations performed.
+   */
+  size_t gateBasedMapping(NeutralAtomLayer& frontLayer,
+                          NeutralAtomLayer& lookaheadLayer, size_t i);
+  /**
+   * @brief Advance one step using shuttling primitives (moves/pass-by/flying
+   * ancilla).
+   * @param frontLayer Front layer container.
+   * @param lookaheadLayer Lookahead layer container.
+   * @param i Index of the considered operation in the front layer.
+   * @return Number of mapped operations performed.
+   */
+  size_t shuttlingBasedMapping(NeutralAtomLayer& frontLayer,
+                               NeutralAtomLayer& lookaheadLayer, size_t i);
+
   /**
    * @brief Estimate swaps and time required to execute a gate via swapping.
    * @param opPointer Gate under consideration.
    * @return Pair (#swaps, estimated time cost).
    */
-
-  size_t gateBasedMapping(NeutralAtomLayer& frontLayer,
-                          NeutralAtomLayer& lookaheadLayer, size_t i);
-  size_t shuttlingBasedMapping(NeutralAtomLayer& frontLayer,
-                               NeutralAtomLayer& lookaheadLayer, size_t i);
-
   std::pair<uint32_t, qc::fp>
   estimateNumSwapGates(const qc::Operation* opPointer);
   /**
@@ -238,20 +253,40 @@ protected:
 
   // Methods for bridge operations mapping
 
+  /**
+   * @brief Choose best bridge operation given current best swap.
+   * @param bestSwap Candidate swap used for context.
+   * @return Selected bridge descriptor.
+   */
   [[nodiscard]] Bridge findBestBridge(const Swap& bestSwap);
+  /**
+   * @brief Compute shortest bridge circuits compatible with a swap candidate.
+   * @param bestSwap Swap context.
+   * @return List of shortest bridges.
+   */
   [[nodiscard]] Bridges getShortestBridges(const Swap& bestSwap);
 
+  /**
+   * @brief Current coordinate usage (occupied indices) snapshot.
+   * @return Set of occupied coordinate indices.
+   */
   [[nodiscard]] CoordIndices computeCurrentCoordUsages() const;
 
+  /**
+   * @brief Convert a MOVE combination to a flying ancilla combination if
+   * suitable.
+   * @param moveComb MOVE combination candidate.
+   * @return Equivalent flying-ancilla combination.
+   */
   [[nodiscard]] FlyingAncillaComb
   convertMoveCombToFlyingAncillaComb(const MoveComb& moveComb) const;
+  /**
+   * @brief Convert a MOVE combination to a pass-by combination if suitable.
+   * @param moveComb MOVE combination candidate.
+   * @return Equivalent pass-by combination.
+   */
   [[nodiscard]] PassByComb
   convertMoveCombToPassByComb(const MoveComb& moveComb) const;
-
-  /**
-   * @brief Returns the next best shuttling move operation for the front layer.
-   * @return The next best shuttling move operation for the front layer
-   */
 
   // Methods for shuttling operations mapping
   /**
@@ -278,8 +313,22 @@ protected:
                           const CoordIndices& excludedCoords) const;
 
   // Methods for flying ancilla operations mapping
+  /**
+   * @brief Compare swap vs. bridge and select routing method.
+   * @param bestSwap Swap candidate.
+   * @param bestBridge Bridge candidate.
+   * @return Chosen mapping method.
+   */
   [[nodiscard]] MappingMethod compareSwapAndBridge(const Swap& bestSwap,
                                                    const Bridge& bestBridge);
+  /**
+   * @brief Compare shuttling vs. flying ancilla vs. pass-by for a move
+   * candidate.
+   * @param bestMoveComb Best move combination.
+   * @param bestFaComb Best flying ancilla combination.
+   * @param bestPbComb Best pass-by combination.
+   * @return Chosen mapping method.
+   */
   [[nodiscard]] MappingMethod
   compareShuttlingAndFlyingAncilla(const MoveComb& bestMoveComb,
                                    const FlyingAncillaComb& bestFaComb,
@@ -326,6 +375,14 @@ protected:
    * @return Hardware qubit set representing chosen position.
    */
   HwQubits getBestMultiQubitPosition(const qc::Operation* opPointer);
+  /**
+   * @brief Recursive helper to search for optimal multi-qubit convergence
+   * position.
+   * @param remainingGateQubits Remaining gate participants.
+   * @param selectedQubits Already selected qubits (path state).
+   * @param remainingNearbyQubits Candidate nearby qubits.
+   * @return Selected hardware qubit set.
+   */
   HwQubits getBestMultiQubitPositionRec(HwQubits remainingGateQubits,
                                         std::vector<HwQubit> selectedQubits,
                                         HwQubits remainingNearbyQubits);
@@ -344,7 +401,7 @@ protected:
    * @brief Compute distance reduction contribution for a swap.
    * @param swap Candidate swap.
    * @param swapCloseBy Close-by (2-qubit) swaps.
-   * @param moveExact Weighted exact swaps (multi-qubit alignment).
+   * @param swapExact Weighted exact swaps (multi-qubit alignment).
    * @return Reduction metric (higher means better improvement).
    */
   qc::fp swapCostPerLayer(const Swap& swap, const Swaps& swapCloseBy,
@@ -361,8 +418,20 @@ protected:
   qc::fp swapCost(const Swap& swap,
                   const std::pair<Swaps, WeightedSwaps>& swapsFront,
                   const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
-  qc::fp moveCombDistanceReduction(const MoveComb& moveComb,
-                                   const GateList& layer) const;
+  /**
+   * @brief Distance reduction from a move combination for a given layer.
+   * @param moveComb Move combo.
+   * @param layer Target layer.
+   * @return Distance reduction score.
+   */
+  [[nodiscard]] qc::fp moveCombDistanceReduction(const MoveComb& moveComb,
+                                                 const GateList& layer) const;
+  /**
+   * @brief Distance reduction from a swap for a given layer.
+   * @param swap Swap candidate.
+   * @param layer Target layer.
+   * @return Distance reduction score.
+   */
   qc::fp swapDistanceReduction(const Swap& swap, const GateList& layer);
 
   /**
@@ -392,9 +461,7 @@ public:
       : arch(architecture), scheduler(*architecture), parameters(p),
         hardwareQubits(*arch, arch->getNqubits() - p->numFlyingAncillas,
                        p->initialCoordMapping, p->seed),
-        flyingAncillas(*arch, p->numFlyingAncillas,
-                       InitialCoordinateMapping::Trivial, p->seed),
-        mapping() {
+        flyingAncillas(*arch, p->numFlyingAncillas, Trivial, p->seed) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p->shuttlingWeight > 0) {
       throw std::runtime_error(
@@ -409,7 +476,7 @@ public:
     for (uint32_t i = this->arch->getNcolumns(); i > 0; --i) {
       this->decayWeights.emplace_back(std::exp(-this->parameters->decay * i));
     }
-  };
+  }
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
       : NeutralAtomMapper(&architecture, &p) {}
@@ -455,9 +522,8 @@ public:
     hardwareQubits = HardwareQubits(
         *arch, arch->getNqubits() - parameters->numFlyingAncillas,
         parameters->initialCoordMapping, parameters->seed);
-    flyingAncillas =
-        HardwareQubits(*arch, parameters->numFlyingAncillas,
-                       InitialCoordinateMapping::Trivial, parameters->seed);
+    flyingAncillas = HardwareQubits(*arch, parameters->numFlyingAncillas,
+                                    Trivial, parameters->seed);
   }
 
   // Methods
@@ -482,7 +548,6 @@ public:
    * @param qc The quantum circuit to be mapped
    * @param initialMapping The initial mapping of the circuit qubits to the
    * hardware qubits
-   * @param verbose If true, prints additional information
    * @return The mapped quantum circuit with abstract SWAP gates and MOVE
    * operations
    */
@@ -603,7 +668,7 @@ public:
    * @brief Retrieve animation CSV content produced by scheduler.
    * @return CSV string.
    */
-  [[maybe_unused]] std::string getAnimationViz() const {
+  [[maybe_unused]] [[nodiscard]] std::string getAnimationViz() const {
     return scheduler.getAnimationViz();
   }
 

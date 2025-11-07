@@ -455,7 +455,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
 
     // update position of flying ancillas
     if (passBy.q1 != passBy.origin) {
-      this->flyingAncillas.move(passBy.index, passBy.q1);
+      this->flyingAncillas.move(static_cast<uint32_t>(passBy.index), passBy.q1);
     }
 
     if (this->parameters->verbose) {
@@ -616,8 +616,8 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
   if (this->lastBlockedQubits.empty()) {
     return coordUsages;
   }
-  const auto lastBlockedQubits = this->lastBlockedQubits.back();
-  for (const auto qubit : lastBlockedQubits) {
+  const auto lastBlockedQubitSet = this->lastBlockedQubits.back();
+  for (const auto qubit : lastBlockedQubitSet) {
     coordUsages[hardwareQubits.getCoordIndex(qubit)]++;
   }
   return coordUsages;
@@ -666,7 +666,7 @@ FlyingAncillaComb NeutralAtomMapper::convertMoveCombToFlyingAncillaComb(
       bestFAs.emplace_back(bestFA);
     }
   }
-  return {bestFAs, moveComb.op};
+  return {.moves = bestFAs, .op = moveComb.op};
 }
 
 PassByComb
@@ -1143,10 +1143,10 @@ qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) const {
                 static_cast<qc::fp>(this->parameters->lookaheadDepth);
   }
   if (!this->lastMoves.empty()) {
-    const auto parallelMovecost =
+    const auto parallelMovecCost =
         parameters->shuttlingTimeWeight * parallelMoveCost(moveComb) /
         static_cast<qc::fp>(this->frontLayerShuttling.size());
-    costComb += parallelMovecost;
+    costComb += parallelMovecCost;
   }
   return costComb;
 }
@@ -1297,7 +1297,6 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos currentPos,
 
 MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
   MoveCombs allMoves;
-  size_t i = 0;
   for (const auto& op : this->frontLayerShuttling) {
     auto usedQubits = op->getUsedQubits();
     auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
@@ -1318,7 +1317,6 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
       }
       allMoves.addMoveCombs(moves);
     }
-    ++i;
   }
   allMoves.removeLongerMoveCombs();
   return allMoves;
@@ -1326,7 +1324,6 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
 
 CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
   size_t const maxMoves = gateCoords.size() * 2;
-  size_t const minMoves = gateCoords.size();
   size_t nMovesGate = maxMoves;
   // do a breadth first search for the best position
   // start with the used coords
@@ -1414,8 +1411,9 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
           costs.emplace_back(remainingCoord, cost);
         }
       } else {
-        MoveComb moveComb({AtomMove{currentGateQubit, remainingCoord}});
-        auto cost = moveCostComb(moveComb);
+        MoveComb const moveCombNew(
+            {AtomMove{.c1 = currentGateQubit, .c2 = remainingCoord}});
+        auto cost = moveCostComb(moveCombNew);
         costs.emplace_back(remainingCoord, cost);
       }
     }
@@ -1424,17 +1422,20 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
         costs, [](const auto& cost1, const auto& cost2) {
           return cost1.second < cost2.second;
         });
-    auto bestCoord = bestCost->first;
-    if (this->hardwareQubits.isMapped(bestCoord)) {
-      auto moveAwayComb =
-          getMoveAwayCombinations(currentGateQubit, bestCoord, movedAwayCoords);
+    auto targetCoord = bestCost->first;
+    if (this->hardwareQubits.isMapped(targetCoord)) {
+      auto moveAwayComb = getMoveAwayCombinations(currentGateQubit, targetCoord,
+                                                  movedAwayCoords);
       moveComb.append(moveAwayComb.moveCombs[0]);
       movedAwayCoords.emplace_back(moveAwayComb.moveCombs[0].moves[0].c2);
     } else {
-      moveComb.append(AtomMove{currentGateQubit, bestCoord});
+      moveComb.append(AtomMove{.c1 = currentGateQubit,
+                               .c2 = targetCoord,
+                               .load1 = true,
+                               .load2 = true});
     }
     remainingGateCoords.erase(currentGateQubit);
-    remainingCoords.erase(std::ranges::find(remainingCoords, bestCoord));
+    remainingCoords.erase(std::ranges::find(remainingCoords, targetCoord));
   }
   return MoveCombs({moveComb});
 }
@@ -1464,7 +1465,6 @@ MoveCombs NeutralAtomMapper::getMoveAwayCombinations(
 size_t NeutralAtomMapper::shuttlingBasedMapping(
     NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer, size_t i) {
   while (!this->frontLayerShuttling.empty()) {
-    GateList gatesToExecute;
     ++i;
     if (this->parameters->verbose) {
       std::cout << "iteration " << i << '\n';
@@ -1475,17 +1475,17 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
 
     switch (
         compareShuttlingAndFlyingAncilla(bestComb, bestFaComb, bestPbComb)) {
-    case MappingMethod::MoveMethod:
+    case MoveMethod:
       // apply whole move combination at once
       for (const auto& move : bestComb.moves) {
         applyMove(move);
       }
       // applyMove(bestComb.moves[0]);
       break;
-    case MappingMethod::FlyingAncillaMethod:
+    case FlyingAncillaMethod:
       applyFlyingAncilla(frontLayer, bestFaComb);
       break;
-    case MappingMethod::PassByMethod:
+    case PassByMethod:
       applyPassBy(frontLayer, bestPbComb);
       break;
     default:
@@ -1630,18 +1630,17 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
       }
 
       auto bestSwap = findBestSwap(lastSwap);
-      MappingMethod bestMethod = MappingMethod::SwapMethod;
+      MappingMethod bestMethod = SwapMethod;
       if (parameters->maxBridgeDistance > 0 && !multiQubitGates) {
         auto bestBridge = findBestBridge(bestSwap);
         bestMethod = compareSwapAndBridge(bestSwap, bestBridge);
-        if (bestMethod == MappingMethod::BridgeMethod) {
+        if (bestMethod == BridgeMethod) {
           updateBlockedQubits(
               {bestBridge.second.begin(), bestBridge.second.end()});
           applyBridge(frontLayer, bestBridge);
-          break;
         }
       }
-      if (bestMethod == MappingMethod::SwapMethod) {
+      if (bestMethod == SwapMethod) {
         lastSwap = bestSwap;
         updateBlockedQubits(bestSwap);
         applySwap(bestSwap);
@@ -1662,10 +1661,10 @@ MappingMethod
 NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
                                         const Bridge& bestBridge) {
   if (bestBridge == Bridge()) {
-    return MappingMethod::SwapMethod;
+    return SwapMethod;
   }
   if (this->parameters->dynamicMappingWeight == 0) {
-    return MappingMethod::BridgeMethod;
+    return BridgeMethod;
   }
   // swap distance reduction
   qc::fp const swapDistReduction =
@@ -1691,30 +1690,31 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
                     parameters->dynamicMappingWeight;
   const auto bridge = std::log(bridgeFidelity) / bridgeDistReduction;
   if (swap >= bridge) {
-    return MappingMethod::SwapMethod;
+    return SwapMethod;
   }
-  return MappingMethod::BridgeMethod;
+  return BridgeMethod;
 }
 
 MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     const MoveComb& bestMoveComb, const FlyingAncillaComb& bestFaComb,
     const PassByComb& bestPbComb) const {
   if (flyingAncillas.getNumQubits() == 0 && !parameters->usePassBy) {
-    return MappingMethod::MoveMethod;
+    return MoveMethod;
   }
   if (multiQubitGates) {
-    return MappingMethod::MoveMethod;
+    return MoveMethod;
   }
 
   // move distance reduction
   const auto moveDistReductionFront =
       moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling);
 
-  constexpr auto moveDistReductionLookAhead = 0.0;
+  auto moveDistReductionLookAhead = 0.0;
   if (!this->lookaheadLayerShuttling.empty()) {
-    (this->parameters->lookaheadWeightMoves *
-     moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling) /
-     static_cast<double>(this->lookaheadLayerShuttling.size()));
+    moveDistReductionLookAhead =
+        this->parameters->lookaheadWeightMoves *
+        moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling) /
+        static_cast<double>(this->lookaheadLayerShuttling.size());
   }
   auto moveDistReduction = moveDistReductionFront + moveDistReductionLookAhead;
   // move
@@ -1808,11 +1808,11 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto passBy = std::log(passByFidelity) / pbDistReduction;
 
   if (move > fa && move > passBy) {
-    return MappingMethod::MoveMethod;
+    return MoveMethod;
   }
   if (fa > move && fa > passBy) {
-    return MappingMethod::FlyingAncillaMethod;
+    return FlyingAncillaMethod;
   }
-  return MappingMethod::PassByMethod;
+  return PassByMethod;
 }
 } // namespace na
