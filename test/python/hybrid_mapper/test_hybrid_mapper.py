@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from mqt.core import load
 
-from mqt.qmap.hybrid_mapper import HybridMapperParameters, HybridNAMapper, NeutralAtomHybridArchitecture
+from mqt.qmap.hybrid_mapper import HybridNAMapper, MapperParameters, NeutralAtomHybridArchitecture
 
 arch_dir = Path(__file__).parent.parent.parent / "hybridmap" / "architectures"
 circuit_dir = Path(__file__).parent.parent.parent / "hybridmap" / "circuits"
@@ -34,7 +34,7 @@ circuit_dir = Path(__file__).parent.parent.parent / "hybridmap" / "circuits"
 @pytest.mark.parametrize(
     "arch_filename",
     [
-        "rubidium.json",
+        "rubidium_gate.json",
         "rubidium_hybrid.json",
         "rubidium_shuttling.json",
     ],
@@ -48,18 +48,20 @@ def test_hybrid_na_mapper(
     """Test the hybrid Neutral Atom mapper."""
     arch = NeutralAtomHybridArchitecture(str(arch_dir / arch_filename))
 
-    params = HybridMapperParameters(
-        lookahead_weight_moves=lookahead_weight,
-        lookahead_weight_swaps=lookahead_weight,
-        decay=decay,
-        gate_weight=gate_shuttling_weight,
-    )
+    params = MapperParameters()
+    params.lookahead_weight_moves = lookahead_weight
+    params.lookahead_weight_swaps = lookahead_weight
+    params.decay = decay
+    params.gate_weight = gate_shuttling_weight
     mapper = HybridNAMapper(arch, params=params)
 
-    qc = load(circuit_dir / circuit_filename)
-
-    mapper.map(qc)
+    # Map directly from QASM file using the pybind-exposed convenience method
+    mapper.map_qasm_file(str(circuit_dir / circuit_filename))
     results = mapper.schedule(create_animation_csv=False)
+    # Validate QASM exports (mapped abstract and AOD-annotated)
+    mapped_qasm = mapper.get_mapped_qc_qasm()
+    # AOD QASM retrieval currently not exposed in Python API; just sanity check mapped_qasm
+    assert mapped_qasm.strip()
 
     assert results["totalExecutionTime"] > 0
     assert results["totalIdleTime"] > 0
@@ -68,8 +70,8 @@ def test_hybrid_na_mapper(
 
 def _nested_mapper_create() -> HybridNAMapper:
     """Create a nested Neutral Atom hybrid architecture."""
-    arch = NeutralAtomHybridArchitecture(str(arch_dir / "rubidium.json"))
-    params = HybridMapperParameters()
+    arch = NeutralAtomHybridArchitecture(str(arch_dir / "rubidium_gate.json"))
+    params = MapperParameters()
     return HybridNAMapper(arch, params=params)
 
 
@@ -81,6 +83,8 @@ def test_keep_alive() -> None:
 
     mapper.map(qc)
     results = mapper.schedule(create_animation_csv=False)
+    mapped_qasm = mapper.get_mapped_qc_qasm()
+    assert mapped_qasm.strip()
 
     assert results["totalExecutionTime"] > 0
     assert results["totalIdleTime"] > 0

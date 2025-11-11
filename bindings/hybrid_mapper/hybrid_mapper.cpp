@@ -176,9 +176,14 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "get_init_hw_pos", &na::NeutralAtomMapper::getInitHwPos,
           "Get the initial hardware positions, required to create an animation")
-      .def("map", &na::NeutralAtomMapper::mapWithoutReturn,
-           "Map a quantum circuit to the neutral atom quantum computer",
-           "circ"_a, "initial_mapping"_a = na::InitialMapping::Identity)
+      .def(
+          "map",
+          [](na::NeutralAtomMapper& mapper, qc::QuantumComputation& circ,
+             const na::InitialMapping initial_mapping) {
+            mapper.map(circ, initial_mapping);
+          },
+          "Map a quantum circuit object to the neutral atom quantum computer",
+          "qc"_a, "initial_mapping"_a = na::InitialMapping::Identity)
       .def(
           "map_qasm_file",
           [](na::NeutralAtomMapper& mapper, const std::string& filename,
@@ -191,11 +196,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def("get_stats", &na::NeutralAtomMapper::getStatsMap,
            "Returns the statistics of the mapping")
       .def("get_mapped_qc", &na::NeutralAtomMapper::getMappedQc,
-           "Returns the mapped circuit as an extended qasm2 string")
+           "Returns the mapped circuit")
       .def("get_mapped_qc_qasm", &na::NeutralAtomMapper::getMappedQcQasm,
            "Returns the mapped circuit as an extended qasm2 string")
-      .def("save_mapped_qc_aod_qasm",
-           &na::NeutralAtomMapper::getMappedQcAodQasm,
+      .def("get_mapped_qc_aod_qasm", &na::NeutralAtomMapper::getMappedQcAodQasm,
            "Returns the mapped circuit with AOD operations as an extended "
            "qasm2 string")
       .def("save_mapped_qc_aod_qasm",
