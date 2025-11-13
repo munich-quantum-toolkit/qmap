@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test the hybrid Neutral Atom synthesis mapping."""
 
 from __future__ import annotations
@@ -6,27 +14,30 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from mqt.core import load
 from qiskit import QuantumCircuit
 
-from mqt.qmap import HybridSynthesisMapper, NeutralAtomHybridArchitecture
+from mqt.qmap.hybrid_mapper import HybridSynthesisMapper, NeutralAtomHybridArchitecture
 
-arch_dir = Path(__file__).parent.parent / "hybridmap" / "architectures"
-circuit_dir = Path(__file__).parent.parent / "hybridmap" / "circuits"
+arch_dir = Path(__file__).parent.parent.parent / "hybridmap" / "architectures"
+circuit_dir = Path(__file__).parent.parent.parent / "hybridmap" / "circuits"
 
-qc1 = QuantumCircuit(3)
-qc1.h(0)
-qc1.cx(0, 1)
-qc1.cx(1, 2)
+qc1_qiskit = QuantumCircuit(3)
+qc1_qiskit.h(0)
+qc1_qiskit.cx(0, 1)
+qc1_qiskit.cx(1, 2)
+qc1 = load(qc1_qiskit)
 
-qc2 = QuantumCircuit(3)
-qc2.cx(0, 2)
-qc2.cx(1, 2)
+qc2_qiskit = QuantumCircuit(3)
+qc2_qiskit.cx(0, 2)
+qc2_qiskit.cx(1, 2)
+qc2 = load(qc2_qiskit)
 
 
 @pytest.mark.parametrize(
     "arch_filename",
     [
-        "rubidium.json",
+        "rubidium_gate.json",
         "rubidium_hybrid.json",
         "rubidium_shuttling.json",
     ],
@@ -45,7 +56,7 @@ def test_hybrid_synthesis(arch_filename: str) -> None:
 @pytest.mark.parametrize(
     "arch_filename",
     [
-        "rubidium.json",
+        "rubidium_gate.json",
         "rubidium_hybrid.json",
         "rubidium_shuttling.json",
     ],
@@ -81,7 +92,7 @@ def test_hybrid_synthesis_input_output(arch_filename: str) -> None:
 
 def test_adjacency_matrix() -> None:
     """Test the adjacency matrix of the hybrid Neutral Atom synthesis mapper."""
-    arch = NeutralAtomHybridArchitecture(str(arch_dir / "rubidium.json"))
+    arch = NeutralAtomHybridArchitecture(str(arch_dir / "rubidium_gate.json"))
     synthesis_mapper = HybridSynthesisMapper(arch)
     circ_size = 3
     synthesis_mapper.init_mapping(circ_size)
@@ -109,6 +120,6 @@ def help_create_mapper(arch_filename: str) -> HybridSynthesisMapper:
 
 def test_keep_alive() -> None:
     """Test the keep alive functionality of the hybrid Neutral Atom synthesis mapper."""
-    synthesis_mapper = help_create_mapper("rubidium.json")
+    synthesis_mapper = help_create_mapper("rubidium_gate.json")
     synthesis_mapper.append_with_mapping(qc1)
     _ = synthesis_mapper.get_circuit_adjacency_matrix()
