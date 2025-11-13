@@ -9,6 +9,7 @@
  */
 
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
+#include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
@@ -223,4 +224,98 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "filename"_a)
       .def("get_animation_viz", &na::NeutralAtomMapper::getAnimationViz,
            "Returns the animation csv string for the last scheduling");
+
+  py::class_<na::HybridSynthesisMapper>(
+      m, "HybridSynthesisMapper",
+      "Neutral Atom Mapper that can evaluate different synthesis steps "
+      "to choose the best one.")
+      .def(py::init<const na::NeutralAtomArchitecture&,
+                    const na::MapperParameters&>(),
+           "Create Hybrid Synthesis Mapper with mapper parameters",
+           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a,
+           "params"_a = na::MapperParameters())
+      .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
+           "Set the parameters for the Hybrid Synthesis Mapper", "params"_a)
+      .def("init_mapping", &na::HybridSynthesisMapper::initMapping,
+           "Initializes the synthesized and mapped circuits and mapping "
+           "structures for the given number of qubits.",
+           "n_qubits"_a)
+      .def("get_mapped_qc", &na::HybridSynthesisMapper::getMappedQcQasm,
+           "Returns the mapped QuantumComputation")
+      .def("save_mapped_qc", &na::HybridSynthesisMapper::saveMappedQcQasm,
+           "Saves the mapped QuantumComputation to a file", "filename"_a)
+      .def(
+          "convert_to_aod", &na::HybridSynthesisMapper::convertToAod,
+          "Converts the mapped QuantumComputation to a QuantumComputation with "
+          "native AOD movements")
+      .def("get_mapped_qc_aod", &na::HybridSynthesisMapper::getMappedQcAodQasm,
+           "Returns the mapped QuantumComputation with native AOD movements")
+      .def("save_mapped_qc_aod",
+           &na::HybridSynthesisMapper::saveMappedQcAodQasm,
+           "Saves the mapped QuantumComputation with native AOD movements to a "
+           "file",
+           "filename"_a)
+      .def("get_synthesized_qc",
+           &na::HybridSynthesisMapper::getSynthesizedQcQASM,
+           "Returns the synthesized QuantumComputation with all gates but not "
+           "mapped to the hardware.")
+      .def("save_synthesized_qc", &na::HybridSynthesisMapper::saveSynthesizedQc,
+           "Saves the synthesized QuantumComputation with all gates but not "
+           "mapped to the hardware to a file",
+           "filename"_a)
+      .def(
+          "append_without_mapping",
+          [](na::HybridSynthesisMapper& mapper, qc::QuantumComputation& qc) {
+            mapper.appendWithoutMapping(qc);
+          },
+          "Appends the given QuantumComputation to the synthesized "
+          "QuantumComputation without mapping it to the hardware.",
+          "qc"_a)
+      .def(
+          "append_with_mapping",
+          [](na::HybridSynthesisMapper& mapper, qc::QuantumComputation& qc) {
+            mapper.appendWithMapping(qc);
+          },
+          "Appends the given QuantumComputation to the synthesized "
+          "QuantumComputation and maps the gates to the hardware.",
+          "qc"_a)
+      .def(
+          "get_circuit_adjacency_matrix",
+          [](na::HybridSynthesisMapper& mapper) {
+            const auto symAdjMatrix = mapper.getCircuitAdjacencyMatrix();
+            std::vector<std::vector<int>> adjMatrix = {};
+            for (size_t i = 0; i < symAdjMatrix.size(); ++i) {
+              adjMatrix.emplace_back();
+              for (size_t j = 0; j < symAdjMatrix.size(); ++j) {
+                adjMatrix[i].emplace_back(symAdjMatrix(i, j));
+              }
+            }
+            return adjMatrix;
+          },
+          "Returns the current adjacency matrix of the neutral atom hardware.")
+      .def(
+          "evaluate_synthesis_steps",
+          [](na::HybridSynthesisMapper& mapper,
+             std::vector<qc::QuantumComputation>& qcs, bool alsoMap) {
+            for (const auto& qc : qcs) {
+              qcs.push_back(qc);
+            }
+            return mapper.evaluateSynthesisSteps(qcs, alsoMap);
+          },
+          "Evaluates the synthesis steps proposed by the ZX extraction. "
+          "Returns a list of fidelities of the mapped synthesis steps.",
+          "synthesis_steps"_a, "also_map"_a = false)
+      .def("complete_remap", &na::HybridSynthesisMapper::completeRemap,
+           "Remaps the synthesized QuantumComputation to the hardware.",
+           "initial_mapping"_a = na::InitialMapping::Identity)
+      .def(
+          "schedule",
+          [](na::HybridSynthesisMapper& mapper, bool verbose,
+             bool create_animation_csv, double shuttling_speed_factor) {
+            auto results = mapper.schedule(verbose, create_animation_csv,
+                                           shuttling_speed_factor);
+            return results.toMap();
+          },
+          "Schedule the mapped circuit", "verbose"_a = false,
+          "create_animation_csv"_a = false, "shuttling_speed_factor"_a = 1.0);
 }
