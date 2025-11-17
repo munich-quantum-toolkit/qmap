@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #pragma once
 inline const char* defaultStyle =
     "name: \"hybrid\"\n\natom {\n	trapped {\n		color: "
@@ -36,7 +46,8 @@ inline const char* defaultStyle =
     "20\n		y: 20\n		color: #999999\n		line "
     "{\n			thickness: 0.0\n			dash "
     "{\n				length: 0\n			"
-    "	duty: 100%\n			}\n		}\n	}\n	number "
+    "	duty: 100%\n			}\n		}\n	    display: "
+    "true\n     }\n	number "
     "{\n		x {\n			distance: 40\n		"
     "	position: bottom\n		}\n		y {\n		"
     "	distance: 40\n			position: left\n		"
