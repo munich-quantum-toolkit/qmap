@@ -553,6 +553,7 @@ public:
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              const Mapping& initialMapping) {
+    stats = MapperStats();
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     mappedQcAOD = qc::QuantumComputation(arch->getNpositions());
     mapAppend(qc, initialMapping);
