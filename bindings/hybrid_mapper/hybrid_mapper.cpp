@@ -297,9 +297,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           "evaluate_synthesis_steps",
           [](na::HybridSynthesisMapper& mapper,
              std::vector<qc::QuantumComputation>& qcs, bool alsoMap) {
-            for (const auto& qc : qcs) {
-              qcs.push_back(qc);
-            }
             return mapper.evaluateSynthesisSteps(qcs, alsoMap);
           },
           "Evaluates the synthesis steps proposed by the ZX extraction. "
