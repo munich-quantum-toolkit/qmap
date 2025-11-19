@@ -262,7 +262,7 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
 
   animationMachine +=
       "movement {\n\tmax_speed: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodMove) *
+      std::to_string(this->getShuttlingTime(qc::OpType::AodMove) /
                      shuttlingSpeedFactor) +
       "\n}\n";
 
