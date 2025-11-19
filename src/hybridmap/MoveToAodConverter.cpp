@@ -81,6 +81,9 @@ AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) const {
   return {.c1 = q1, .c2 = q2, .load1 = load1, .load2 = load2};
 }
 void MoveToAodConverter::initFlyingAncillas() {
+  if (ancillas.empty()) {
+    return;
+  }
   std::vector<CoordIndex> coords;
   std::vector<Dimension> dirs;
   std::vector<qc::fp> starts;
