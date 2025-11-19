@@ -104,7 +104,6 @@ protected:
   const NeutralAtomArchitecture* arch = nullptr;
   std::string animation;
   std::string animationMachine;
-  std::string animationStyle;
 
 public:
   /**
@@ -155,12 +154,6 @@ public:
    * @note Populated only if schedule() ran with createAnimationCsv=true.
    */
   [[nodiscard]] std::string getAnimationViz() const { return animation; }
-  /**
-   * @brief Retrieve visualization style sheet (.nastyle content).
-   * @return Style sheet string.
-   * @note Populated only if schedule() ran with createAnimationCsv=true.
-   */
-  [[nodiscard]] std::string getAnimationStyle() const { return animationStyle; }
 
   /**
    * @brief Write animation artifacts (.naviz/.namachine/.nastyle) to disk.
@@ -174,7 +167,6 @@ public:
         filename.substr(0, filename.find_last_of('.'));
     const auto filenameViz = filenameWithoutExtension + ".naviz";
     const auto filenameMachine = filenameWithoutExtension + ".namachine";
-    const auto filenameStyle = filenameWithoutExtension + ".nastyle";
 
     // save animation
     auto file = std::ofstream(filenameViz);
@@ -183,10 +175,6 @@ public:
     // save machine
     file.open(filenameMachine);
     file << getAnimationMachine();
-    file.close();
-    // save style
-    file.open(filenameStyle);
-    file << getAnimationStyle();
     file.close();
   }
 

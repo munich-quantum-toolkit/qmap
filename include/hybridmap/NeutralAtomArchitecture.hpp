@@ -14,7 +14,6 @@
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "hybridmap/default_style.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
@@ -581,40 +580,6 @@ public:
   getAnimationMachine(qc::fp shuttlingSpeedFactor) const;
 
   /**
-   * @brief Generate the animation style content.
-   * @param stylePath Optional path to a style file overriding defaults.
-   * @return Text content for the style (.nastyle).
-   * @note Falls back to compiled-in defaults if the file cannot be opened.
-   */
-  [[nodiscard]] std::string
-  getAnimationStyle(const std::string& stylePath) const {
-    std::string style(defaultStyle);
-    if (!stylePath.empty()) {
-      std::ifstream file(stylePath);
-      if (file.is_open()) {
-        std::string line;
-        while (std::getline(file, line)) {
-          style += line + "\n";
-        }
-        file.close();
-      } else {
-        std::cerr << "Could not open file " << stylePath
-                  << "! Using default style.\n";
-      }
-    }
-    const std::string toReplace = "XXX";
-    const std::string replaceWith =
-        std::to_string(getInteractionRadius() * getInterQubitDistance());
-
-    size_t pos = 0;
-    while ((pos = style.find(toReplace, pos)) != std::string::npos) {
-      style.replace(pos, toReplace.length(), replaceWith);
-      pos += replaceWith.length();
-    }
-    return style;
-  }
-
-  /**
    * @brief Save the device animation CSV to a file.
    * @param filename Output CSV filename.
    * @param shuttlingSpeedFactor Scaling factor applied to shuttling speeds.
@@ -624,19 +589,6 @@ public:
                        const qc::fp shuttlingSpeedFactor) const {
     std::ofstream file(filename);
     file << getAnimationMachine(shuttlingSpeedFactor);
-  }
-
-  /**
-   * @brief Save the animation style content to a file.
-   * @param filename Output style filename.
-   * @param stylePath Optional path to a base style to load before applying
-   * defaults.
-   */
-  [[maybe_unused]] void
-  saveAnimationStyle(const std::string& filename,
-                     const std::string& stylePath = "") const {
-    std::ofstream file(filename);
-    file << getAnimationStyle(stylePath);
   }
 };
 

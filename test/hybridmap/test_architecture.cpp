@@ -61,27 +61,16 @@ TEST(NeutralAtomArchitectureMethods, AnimationAPIsProduceContent) {
   EXPECT_NE(machine.find("zone hybrid"), std::string::npos);
   EXPECT_NE(machine.find("trap"), std::string::npos);
 
-  const auto invalidStyle = arch.getAnimationStyle("invalid_file_path.style");
-  EXPECT_FALSE(invalidStyle.empty());
-  const auto style = arch.getAnimationStyle("");
-  EXPECT_GT(style.size(), 0U);
-
   // Save to temp files
   const std::filesystem::path tmpMachine =
       std::filesystem::temp_directory_path() / "arch_anim_machine.csv";
-  const std::filesystem::path tmpStyle =
-      std::filesystem::temp_directory_path() / "arch_anim_style.css";
   arch.saveAnimationMachine(tmpMachine.string(), 1.0);
-  arch.saveAnimationStyle(tmpStyle.string());
   // Verify files exist and are non-empty
   ASSERT_TRUE(std::filesystem::exists(tmpMachine));
-  ASSERT_TRUE(std::filesystem::exists(tmpStyle));
   EXPECT_GT(std::filesystem::file_size(tmpMachine), 0U);
-  EXPECT_GT(std::filesystem::file_size(tmpStyle), 0U);
   // Cleanup best-effort
   std::error_code ec;
   std::filesystem::remove(tmpMachine, ec);
-  std::filesystem::remove(tmpStyle, ec);
 }
 
 TEST(NeutralAtomArchitectureMethods, BasicCountsAndOffsetDistance) {

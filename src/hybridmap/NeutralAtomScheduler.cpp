@@ -52,7 +52,6 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   if (createAnimationCsv) {
     animation += animationAtoms.placeInitAtoms();
     animationMachine = arch->getAnimationMachine(shuttlingSpeedFactor);
-    animationStyle = arch->getAnimationStyle("");
   }
 
   int index = 0;
