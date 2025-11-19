@@ -53,8 +53,11 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
       break;
     }
   }
-  mappedQc.addAncillaryRegister(this->arch->getNpositions());
-  mappedQc.addAncillaryRegister(this->arch->getNpositions(), "fa");
+  // only add flying ancillas if not already present
+  if (mappedQc.getNancillae() == 0) {
+    mappedQc.addAncillaryRegister(this->arch->getNpositions());
+    mappedQc.addAncillaryRegister(this->arch->getNpositions(), "fa");
+  }
 
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
