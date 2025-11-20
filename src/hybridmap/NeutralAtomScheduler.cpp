@@ -48,9 +48,10 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
 
-  AnimationAtoms animationAtoms(initHwPos, initFaPos, *arch);
+  std::optional<AnimationAtoms> animationAtoms;
   if (createAnimationCsv) {
-    animation += animationAtoms.placeInitAtoms();
+    animationAtoms.emplace(initHwPos, initFaPos, *arch);
+    animation += animationAtoms->placeInitAtoms();
     animationMachine = arch->getAnimationMachine(shuttlingSpeedFactor);
   }
 
@@ -163,7 +164,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     // update animation
     if (createAnimationCsv) {
-      animation += animationAtoms.opToNaViz(op, maxTime);
+      animation += animationAtoms->opToNaViz(op, maxTime);
     }
   }
   if (verbose) {
