@@ -258,20 +258,25 @@ NeutralAtomArchitecture::getNN(const CoordIndex idx) const {
 }
 std::string NeutralAtomArchitecture::getAnimationMachine(
     const qc::fp shuttlingSpeedFactor) const {
+  if (shuttlingSpeedFactor <= 0) {
+    throw std::runtime_error(
+        "Shuttling speed factor must be positive, but is " +
+        std::to_string(shuttlingSpeedFactor));
+  }
   std::string animationMachine = "name: \"Hybrid_" + this->name + "\"\n";
 
   animationMachine +=
       "movement {\n\tmax_speed: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodMove) /
+      std::to_string(this->getShuttlingTime(qc::OpType::AodMove) *
                      shuttlingSpeedFactor) +
       "\n}\n";
 
   animationMachine +=
       "time {\n\tload: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodActivate) *
+      std::to_string(this->getShuttlingTime(qc::OpType::AodActivate) /
                      shuttlingSpeedFactor) +
       "\n\tstore: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodDeactivate) *
+      std::to_string(this->getShuttlingTime(qc::OpType::AodDeactivate) /
                      shuttlingSpeedFactor) +
       "\n\trz: " + std::to_string(this->getGateTime("x")) +
       "\n\try: " + std::to_string(this->getGateTime("x")) +
