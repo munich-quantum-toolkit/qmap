@@ -264,7 +264,7 @@ TEST(NeutralAtomMapperExceptions, ImpossibleSwaps) {
       na::NeutralAtomArchitecture("architectures/arch_sparse.json");
   na::MapperParameters p;
   p.shuttlingWeight = 0.0;
-  p.initialCoordMapping = na::InitialCoordinateMapping::Random;
+  p.initialCoordMapping = na::InitialCoordinateMapping::Trivial;
   p.verbose = true;
   na::NeutralAtomMapper mapper(arch, p);
   qc::QuantumComputation qc =
