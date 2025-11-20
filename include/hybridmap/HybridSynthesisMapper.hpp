@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -74,6 +75,9 @@ public:
    * @param nQubits Number of logical qubits to synthesize.
    */
   void initMapping(const size_t nQubits) {
+    if (nQubits > arch->getNpositions()) {
+      throw std::runtime_error("Not enough qubits in architecture.");
+    }
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     synthesizedQc = qc::QuantumComputation(nQubits);
     mapping = Mapping(nQubits);
