@@ -83,7 +83,9 @@ public:
    *   emits move commands for affected atoms; also updates coordIdxToId for
    *   origin/target coordinate-index pairs.
    * - Multi-qubit gates: emits a grouped cz with all involved atoms.
-   * - Single-qubit gates: emits a simple rz 1 for the target atom.
+   * - Single-qubit gates: emits a simple rz 1 for the target atom (independent
+   * of the exact gate -> does not matter for visualization).
+   * - Other operations are currently not supported for animation output.
    * @param op The operation to translate (uses coordinate indices as qubits).
    * @param startTime The animation timestamp to annotate the command with.
    * @return NaViz command string for the operation at the given time.
