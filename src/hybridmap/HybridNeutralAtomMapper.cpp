@@ -1655,7 +1655,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
       }
       if (bestMethod == SwapMethod) {
         lastSwap = bestSwap;
-        updateBlockedQubits(bestSwap);
+        updateBlockedQubits(HwQubits{bestSwap.first, bestSwap.second});
         applySwap(bestSwap);
       }
 
