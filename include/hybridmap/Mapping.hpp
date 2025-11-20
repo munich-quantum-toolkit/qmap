@@ -87,6 +87,10 @@ public:
     if (qc.getNqubits() > hwQubits.getNumQubits()) {
       throw std::runtime_error("Not enough qubits in architecture for circuit");
     }
+    if (nQubits > qc.getNqubits()) {
+      throw std::runtime_error(
+          "nQubits exceeds number of qubits in provided circuit");
+    }
 
     switch (initialMapping) {
     case Identity:
