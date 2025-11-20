@@ -20,6 +20,7 @@
 #include <deque>
 #include <fstream>
 #include <map>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -163,6 +164,11 @@ public:
    * artifact extensions).
    */
   void saveAnimationFiles(const std::string& filename) const {
+    if (animation.empty() || animationMachine.empty()) {
+      SPDLOG_WARN("No animation data to save; did you run schedule() with "
+                  "createAnimationCsv=true?");
+      return;
+    }
     const auto filenameWithoutExtension =
         filename.substr(0, filename.find_last_of('.'));
     const auto filenameViz = filenameWithoutExtension + ".naviz";
