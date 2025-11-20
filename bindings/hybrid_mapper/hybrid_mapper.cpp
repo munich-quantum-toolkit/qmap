@@ -175,7 +175,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           "Create Hybrid NA Mapper with mapper parameters",
           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a, "params"_a)
       .def("set_parameters", &na::NeutralAtomMapper::setParameters,
-           "Set the parameters for the Hybrid NA Mapper", "params"_a)
+           "Set the parameters for the Hybrid NA Mapper", "params"_a,
+           py::keep_alive<1, 2>())
       .def(
           "get_init_hw_pos", &na::NeutralAtomMapper::getInitHwPos,
           "Get the initial hardware positions, required to create an animation")
@@ -236,7 +237,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a,
            "params"_a = na::MapperParameters())
       .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
-           "Set the parameters for the Hybrid Synthesis Mapper", "params"_a)
+           "Set the parameters for the Hybrid Synthesis Mapper", "params"_a,
+           py::keep_alive<1, 2>())
       .def("init_mapping", &na::HybridSynthesisMapper::initMapping,
            "Initializes the synthesized and mapped circuits and mapping "
            "structures for the given number of qubits.",
