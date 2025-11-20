@@ -297,6 +297,7 @@ HardwareQubits::findClosestFreeCoord(const CoordIndex coord,
 HwQubit HardwareQubits::getClosestQubit(const CoordIndex coord,
                                         const HwQubits& ignored) const {
   HwQubit closestQubit = 0;
+  bool noneFound = true;
   auto minDistance = std::numeric_limits<qc::fp>::max();
   for (auto const& [qubit, idx] : hwToCoordIdx) {
     if (ignored.contains(qubit)) {
@@ -306,7 +307,12 @@ HwQubit HardwareQubits::getClosestQubit(const CoordIndex coord,
         distance < minDistance) {
       minDistance = distance;
       closestQubit = qubit;
+      noneFound = false;
     }
+  }
+  if (noneFound) {
+    throw std::runtime_error(
+        "No available qubit found when searching for closest qubit.");
   }
   return closestQubit;
 }

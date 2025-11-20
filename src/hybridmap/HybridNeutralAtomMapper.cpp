@@ -1473,27 +1473,36 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
       std::cout << "iteration " << i << '\n';
     }
     auto bestComb = findBestAtomMove();
-    auto bestFaComb = convertMoveCombToFlyingAncillaComb(bestComb);
-    auto bestPbComb = convertMoveCombToPassByComb(bestComb);
+    MappingMethod bestMethod = MoveMethod;
+    if (!multiQubitGates) {
+      auto bestFaComb = convertMoveCombToFlyingAncillaComb(bestComb);
+      auto bestPbComb = convertMoveCombToPassByComb(bestComb);
+      bestMethod =
+          compareShuttlingAndFlyingAncilla(bestComb, bestFaComb, bestPbComb);
 
-    switch (
-        compareShuttlingAndFlyingAncilla(bestComb, bestFaComb, bestPbComb)) {
-    case MoveMethod:
-      // apply whole move combination at once
+      switch (bestMethod) {
+      case MoveMethod:
+        // apply whole move combination at once
+        for (const auto& move : bestComb.moves) {
+          applyMove(move);
+        }
+        // applyMove(bestComb.moves[0]);
+        break;
+      case FlyingAncillaMethod:
+        applyFlyingAncilla(frontLayer, bestFaComb);
+        break;
+      case PassByMethod:
+        applyPassBy(frontLayer, bestPbComb);
+        break;
+      default:
+        break;
+      }
+    } else {
       for (const auto& move : bestComb.moves) {
         applyMove(move);
       }
-      // applyMove(bestComb.moves[0]);
-      break;
-    case FlyingAncillaMethod:
-      applyFlyingAncilla(frontLayer, bestFaComb);
-      break;
-    case PassByMethod:
-      applyPassBy(frontLayer, bestPbComb);
-      break;
-    default:
-      break;
     }
+
     mapAllPossibleGates(frontLayer, lookaheadLayer);
     reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
     if (this->parameters->verbose) {
