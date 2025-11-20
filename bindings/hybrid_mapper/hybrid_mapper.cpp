@@ -214,8 +214,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "schedule",
           [](na::NeutralAtomMapper& mapper, const bool verbose,
-             const bool creatAnimationCsv, const double shuttlingSpeedFactor) {
-            auto results = mapper.schedule(verbose, creatAnimationCsv,
+             const bool createAnimationCsv, const double shuttlingSpeedFactor) {
+            auto results = mapper.schedule(verbose, createAnimationCsv,
                                            shuttlingSpeedFactor);
             return results.toMap();
           },
