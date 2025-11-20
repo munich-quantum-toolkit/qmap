@@ -26,7 +26,6 @@
 #include <map>
 #include <memory>
 #include <stdexcept>
-#include <sys/types.h>
 #include <utility>
 #include <vector>
 
@@ -52,9 +51,10 @@ using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
 class MoveToAodConverter {
   struct AncillaAtom {
     struct XAndY {
-      uint x;
-      uint y;
-      XAndY(const uint x, const uint y) : x(x), y(y) {}
+      std::uint32_t x;
+      std::uint32_t y;
+      XAndY(const std::uint32_t xCoord, const std::uint32_t yCoord)
+          : x(xCoord), y(yCoord) {}
     };
 
     XAndY coord;
@@ -355,7 +355,7 @@ public:
         hardwareQubits(hardwareQubitsArg) {
     qcScheduled.addAncillaryRegister(arch.getNpositions());
     qcScheduled.addAncillaryRegister(arch.getNpositions(), "fa");
-    for (uint i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
+    for (std::uint32_t i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
       const auto coord =
           flyingAncillas.getInitHwPos().at(i) + (2 * arch.getNpositions());
       const auto col = coord % arch.getNcolumns();
