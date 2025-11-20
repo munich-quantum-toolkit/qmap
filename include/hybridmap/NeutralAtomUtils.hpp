@@ -237,7 +237,7 @@ struct FlyingAncillaComb {
   /** Sequence of flying ancilla moves realizing an interaction. */
   std::vector<FlyingAncilla> moves;
   /** Operation this combination implements or is associated with. */
-  const qc::Operation* op;
+  const qc::Operation* op = nullptr;
 };
 
 /**
@@ -249,7 +249,7 @@ struct PassByComb {
   /** Sequence of atom moves realizing a pass-by maneuver. */
   std::vector<AtomMove> moves;
   /** Operation this combination implements or is associated with. */
-  const qc::Operation* op;
+  const qc::Operation* op = nullptr;
 };
 
 /**
