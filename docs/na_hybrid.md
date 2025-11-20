@@ -123,7 +123,7 @@ from mqt.qmap.hybrid_mapper import HybridNAMapper, MapperParameters
 # Optional: tweak parameters (defaults are sensible for most cases)
 params_shuttling = MapperParameters()
 params_shuttling.gate_weight = 1.0
-params_shuttling.shuttling_weight = 0.0  # prefer atom moves over gates
+params_shuttling.shuttling_weight = 0.0  # disables atom moves
 
 
 mapper = HybridNAMapper(arch, params=params_shuttling)
@@ -171,7 +171,7 @@ You can retrieve the mapped scheduled circuit (extended QASM2) and, if desired, 
 mapped_qasm = mapper.get_mapped_qc_qasm()
 # Print a snippet of the mapped QASM
 print("\n... Mapped QASM snippet ...\n" +
-    "\n".join(mapped_qasm.splitlines()[:]))
+    "\n".join(mapped_qasm.splitlines()[:30]))
 
 # AOD-annotated variant (hardware-native moves)
 mapped_aod_qasm = mapper.get_mapped_qc_aod_qasm()
@@ -183,7 +183,7 @@ The other registers are used for temporary storage and AOD control.
 
 The second variant shows explicit AOD movements that correspond to the atom moves done on hardware.
 Here, the AODs can be activated, moved, and deactivated to shuttle atoms around.
-The zero entry corresponds to x-direction, the one entry to y-direction movements, where the two number are start and end coordinates.
+The first entry corresponds to the x-direction and the second to the y-direction; in each pair, the two numbers denote start and end coordinates.
 
 ### Export animation files (optional)
 
@@ -260,7 +260,7 @@ This appends the circuit and maps it directly. This can be repeated for multiple
 
 Similar to the normal Hybrid Mapper, you can retrieve the mapped circuit and the AOD-annotated variant:
 
-```{code-cell} ipyth
+```{code-cell} ipython3
 
 # Retrieve mapped circuit (extended QASM2)
 qasm_mapped = synth.get_mapped_qc()
