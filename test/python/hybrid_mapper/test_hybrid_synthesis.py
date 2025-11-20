@@ -61,7 +61,7 @@ def test_hybrid_synthesis(arch_filename: str) -> None:
         "rubidium_shuttling.json",
     ],
 )
-def test_hybrid_synthesis_input_output(arch_filename: str) -> None:
+def test_hybrid_synthesis_input_output(arch_filename: str, tmp_path: Path) -> None:
     """Test printing and saving the produced circuits."""
     arch = NeutralAtomHybridArchitecture(str(arch_dir / arch_filename))
     synthesis_mapper = HybridSynthesisMapper(arch)
@@ -73,20 +73,20 @@ def test_hybrid_synthesis_input_output(arch_filename: str) -> None:
     qasm = synthesis_mapper.get_mapped_qc()
     assert qasm is not None
 
-    filename_mapped = Path(__file__).parent / f"{arch_filename}_mapped.qasm"
+    filename_mapped = tmp_path / f"{arch_filename}_mapped.qasm"
     synthesis_mapper.save_mapped_qc(str(filename_mapped))
 
     synthesis_mapper.convert_to_aod()
     qasm_aod = synthesis_mapper.get_mapped_qc_aod()
     assert qasm_aod is not None
 
-    filename_mapped_aod = Path(__file__).parent / f"{arch_filename}_mapped_aod.qasm"
+    filename_mapped_aod = tmp_path / f"{arch_filename}_mapped_aod.qasm"
     synthesis_mapper.save_mapped_qc_aod(str(filename_mapped_aod))
 
     qasm_synth = synthesis_mapper.get_synthesized_qc()
     assert qasm_synth is not None
 
-    filename_synth = Path(__file__).parent / f"{arch_filename}_synthesized.qasm"
+    filename_synth = tmp_path / f"{arch_filename}_synthesized.qasm"
     synthesis_mapper.save_synthesized_qc(str(filename_synth))
 
 
