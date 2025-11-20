@@ -19,6 +19,7 @@
 #include "ir/QuantumComputation.hpp"
 
 #include <gtest/gtest.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -60,7 +61,10 @@ TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
   auto params = MapperParameters();
   params.verbose = true;
   auto mapper = HybridSynthesisMapper(arch, params);
-  mapper.initMapping(3);
+  // Intentionally not initializing the mapper to test error handling
+  EXPECT_THROW(mapper.getCircuitAdjacencyMatrix(), std::runtime_error);
+  // Initializing with too many qubits to test error handling
+  EXPECT_THROW(mapper.initMapping(50), std::runtime_error);
   const auto best = mapper.evaluateSynthesisSteps(circuits, true);
   EXPECT_EQ(best.size(), 2);
   EXPECT_GE(best[0], 0);

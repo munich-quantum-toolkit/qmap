@@ -45,6 +45,7 @@ class HybridSynthesisMapper : public NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
   qc::QuantumComputation synthesizedQc;
+  bool initialized = false;
 
   /**
    * @brief Evaluate a single proposed synthesis step.
@@ -81,6 +82,7 @@ public:
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     synthesizedQc = qc::QuantumComputation(nQubits);
     mapping = Mapping(nQubits);
+    initialized = true;
   }
 
   /**
@@ -144,7 +146,7 @@ public:
    * @brief Get the current device adjacency (connectivity) matrix.
    * @return Symmetric adjacency matrix for the neutral atom hardware.
    */
-  [[nodiscard]] AdjacencyMatrix getCircuitAdjacencyMatrix() const;
+  AdjacencyMatrix getCircuitAdjacencyMatrix() const;
 };
 } // namespace na
 

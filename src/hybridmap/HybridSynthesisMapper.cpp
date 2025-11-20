@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -30,6 +31,10 @@ namespace na {
 std::vector<qc::fp>
 HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
                                               const bool alsoMap) {
+  if (!initialized) {
+    initMapping(synthesisSteps[0].getNqubits());
+    initialized = true;
+  }
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
   size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
@@ -70,6 +75,9 @@ HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) const {
 
 void HybridSynthesisMapper::appendWithoutMapping(
     const qc::QuantumComputation& qc) {
+  if (mappedQc.empty()) {
+    initMapping(qc.getNqubits());
+  }
   for (const auto& op : qc) {
     this->synthesizedQc.emplace_back(op->clone());
     this->mapGate(op.get());
@@ -87,6 +95,10 @@ void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
 }
 
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
+  if (!initialized) {
+    throw std::runtime_error(
+        "Not yet initialized. Cannot get circuit adjacency matrix.");
+  }
   const auto numCircQubits = synthesizedQc.getNqubits();
   AdjacencyMatrix adjMatrix(numCircQubits);
 
