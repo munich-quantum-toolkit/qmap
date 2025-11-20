@@ -157,7 +157,7 @@ public:
   [[nodiscard]] std::string getAnimationViz() const { return animation; }
 
   /**
-   * @brief Write animation artifacts (.naviz/.namachine/.nastyle) to disk.
+   * @brief Write animation artifacts (.naviz/.namachine) to disk.
    * @details Uses the stem of the provided filename to derive target paths for
    * each artifact.
    * @param filename Base filename (its extension is stripped before appending
