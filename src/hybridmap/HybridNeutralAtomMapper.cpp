@@ -46,6 +46,7 @@ namespace na {
 void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
                                   const Mapping& initialMapping) {
   // check if multi-qubit gates are present
+  multiQubitGates = false;
   for (const auto& op : qc) {
     if (op->getUsedQubits().size() > 2) {
       // deactivate static mapping
