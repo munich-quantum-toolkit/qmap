@@ -29,6 +29,7 @@
 #include <iterator>
 #include <map>
 #include <set>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -348,8 +349,7 @@ public:
    */
   [[nodiscard]] qc::fp getGateTime(const std::string& s) const {
     if (!parameters.gateTimes.contains(s)) {
-      std::cout << "Gate time for " << s << " not found\n"
-                << "Returning default value\n";
+      SPDLOG_WARN("Gate time for '{}' not found. Returning default value.", s);
       return parameters.gateTimes.at("none");
     }
     return parameters.gateTimes.at(s);
@@ -364,8 +364,9 @@ public:
    */
   [[nodiscard]] qc::fp getGateAverageFidelity(const std::string& s) const {
     if (!parameters.gateAverageFidelities.contains(s)) {
-      std::cout << "Gate average fidelity for " << s << " not found\n"
-                << "Returning default value\n";
+      SPDLOG_WARN(
+          "Gate average fidelity for '{}' not found. Returning default value.",
+          s);
       return parameters.gateAverageFidelities.at("none");
     }
     return parameters.gateAverageFidelities.at(s);
