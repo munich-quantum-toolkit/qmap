@@ -137,6 +137,7 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
     if ((*it)->isStandardOperation() && (*it)->getType() == qc::Bridge) {
       const auto targets = (*it)->getTargets();
       it = qc.erase(it);
+      size_t nInserted = 0;
       for (const auto& bridgeOp :
            this->arch->getBridgeCircuit(targets.size())) {
         const auto bridgeQubits = bridgeOp->getUsedQubits();
@@ -148,6 +149,11 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
                                  qc::Control{targets[*bridgeQubits.begin()]},
                                  targets[*bridgeQubits.rbegin()], qc::Z));
         }
+        ++nInserted;
+      }
+      // Advance past all inserted operations
+      for (size_t i = 0; i < nInserted && it != qc.end(); ++i) {
+        ++it;
       }
     } else {
       ++it;
