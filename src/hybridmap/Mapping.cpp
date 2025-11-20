@@ -69,6 +69,9 @@ std::vector<CoordIndex> Mapping::graphMatching() {
       hwCenter = qubit;
     }
   }
+  if (hwCenter == std::numeric_limits<unsigned int>::max()) {
+    hwCenter = 0;
+  }
 
   // make circuit graph
   std::vector<std::vector<std::pair<qc::Qubit, double>>> circGraph(dag.size());
