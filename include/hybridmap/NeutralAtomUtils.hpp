@@ -75,8 +75,10 @@ initialCoordinateMappingFromString(
   if (initialCoordinateMapping == "random" || initialCoordinateMapping == "1") {
     return Random;
   }
-  throw std::invalid_argument("Invalid initial coordinate mapping value: " +
-                              initialCoordinateMapping);
+  throw std::invalid_argument(
+      "Invalid initial coordinate mapping value (expected \"trivial\"/\"0\" "
+      "or \"random\"/\"1\"): " +
+      initialCoordinateMapping);
 }
 
 /**
@@ -94,8 +96,10 @@ initialMappingFromString(const std::string& initialMapping) {
   if (initialMapping == "graph" || initialMapping == "1") {
     return Graph;
   }
-  throw std::invalid_argument("Invalid initial mapping value: " +
-                              initialMapping);
+  throw std::invalid_argument(
+      "Invalid initial mapping value (expected \"identity\"/\"0\" or "
+      "\"graph\"/\"1\"): " +
+      initialMapping);
 }
 
 /**
