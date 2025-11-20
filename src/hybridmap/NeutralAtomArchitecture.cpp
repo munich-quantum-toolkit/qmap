@@ -327,7 +327,8 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
     return (distanceX + distanceY) / v;
   }
   std::string opName;
-  for (size_t i = 0; i < op->getNqubits() - 1; ++i) {
+  const auto nQubits = op->getNqubits();
+  for (size_t i = 1; i < nQubits; ++i) {
     opName += "c";
   }
   if (op->getType() == qc::OpType::P || op->getType() == qc::OpType::RZ) {
@@ -351,7 +352,8 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
     return getShuttlingAverageFidelity(op->getType());
   }
   std::string opName;
-  for (size_t i = 0; i < op->getNqubits() - 1; ++i) {
+  const auto nQubits = op->getNqubits();
+  for (size_t i = 1; i < nQubits; ++i) {
     opName += "c";
   }
   opName += op->getName();
