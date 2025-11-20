@@ -16,11 +16,14 @@
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 
+#include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 namespace na {
@@ -91,36 +94,55 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
     const auto endsY =
         dynamic_cast<AodOperation*>(op.get())->getEnds(Dimension::Y);
     const auto coordIndices = op->getTargets(); // renamed
+    // The list of targets for an AodMove operation must contain pairs of
+    // (origin, destination) coordinate indices.
+    if (coordIndices.size() % 2 != 0) {
+      throw std::logic_error(
+          "AodMove targets must be pairs of origin and target indices.");
+    }
+
+    // Tolerance for floating point comparisons when matching start coordinates.
+
     // use that coord indices are pairs of origin and target indices
     for (size_t i = 0; i < coordIndices.size(); i++) {
       if (i % 2 == 0) {
+        constexpr qc::fp FP_TOLERANCE = 0.0001;
         const auto coordIdx = coordIndices[i];
+        if (!coordIdxToId.contains(coordIdx)) {
+          throw std::logic_error("AodMove origin index " +
+                                 std::to_string(coordIdx) +
+                                 " not found in coordIdxToId map.");
+        }
         const auto id = coordIdxToId.at(coordIdx);
+        if (!idToCoord.contains(id)) {
+          throw std::logic_error("Atom ID " + std::to_string(id) +
+                                 " not found in idToCoord map.");
+        }
         bool foundX = false;
         auto newX = std::numeric_limits<qc::fp>::max();
         bool foundY = false;
         auto newY = std::numeric_limits<qc::fp>::max();
         for (size_t j = 0; j < startsX.size(); j++) {
-          if (std::abs(startsX[j] - idToCoord.at(id).first) < 0.0001) {
+          if (std::abs(startsX[j] - idToCoord.at(id).first) < FP_TOLERANCE) {
             newX = endsX[j];
             foundX = true;
             break;
           }
         }
         if (!foundX) {
-          // X coord is the same as before
+          // X coord is the same as before if no matching start is found.
           newX = idToCoord.at(id).first;
         }
 
         for (size_t j = 0; j < startsY.size(); j++) {
-          if (std::abs(startsY[j] - idToCoord.at(id).second) < 0.0001) {
+          if (std::abs(startsY[j] - idToCoord.at(id).second) < FP_TOLERANCE) {
             newY = endsY[j];
             foundY = true;
             break;
           }
         }
         if (!foundY) {
-          // Y coord is the same as before
+          // Y coord is the same as before if no matching start is found.
           newY = idToCoord.at(id).second;
         }
         opString += "@" + std::to_string(startTime) + " move (" +
@@ -132,8 +154,14 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
       } else {
         // this is the target index -> update coordIdxToId
         const auto coordIdx = coordIndices[i];
-        const auto id = coordIdxToId.at(coordIndices[i - 1]);
-        coordIdxToId.erase(coordIndices[i - 1]);
+        const auto prevCoordIdx = coordIndices[i - 1];
+        if (!coordIdxToId.contains(prevCoordIdx)) {
+          throw std::logic_error(
+              "AodMove origin index " + std::to_string(prevCoordIdx) +
+              " not found in coordIdxToId map during update.");
+        }
+        const auto id = coordIdxToId.at(prevCoordIdx);
+        coordIdxToId.erase(prevCoordIdx);
         coordIdxToId[coordIdx] = id;
       }
     }
