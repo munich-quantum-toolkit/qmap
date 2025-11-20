@@ -177,6 +177,7 @@ protected:
   qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
+  // Bridges only makes sense for short distances (<=5) so we limit its size
   BridgeCircuits bridgeCircuits = BridgeCircuits(10);
 
   /**
