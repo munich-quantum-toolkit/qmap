@@ -298,7 +298,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             }
             return adjMatrix;
           },
-          "Returns the current adjacency matrix of the neutral atom hardware.")
+          "Returns the current circuit-qubit adjacency matrix used for "
+          "mapping.")
       .def(
           "evaluate_synthesis_steps",
           [](na::HybridSynthesisMapper& mapper,
