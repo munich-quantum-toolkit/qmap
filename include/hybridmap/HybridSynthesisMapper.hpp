@@ -112,7 +112,6 @@ public:
   /**
    * @brief Save synthesized circuit as OpenQASM to a file.
    * @param filename Output filename.
-   * @throw std::ios_base::failure If the file cannot be opened for writing.
    */
   [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) const {
     std::ofstream ofs(filename);
