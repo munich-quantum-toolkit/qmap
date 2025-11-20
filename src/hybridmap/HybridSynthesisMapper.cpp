@@ -106,13 +106,19 @@ AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
   AdjacencyMatrix adjMatrix(numCircQubits);
 
   for (uint32_t i = 0; i < numCircQubits; ++i) {
-    for (uint32_t j = 0; j < i; ++j) {
+    for (uint32_t j = 0; j < numCircQubits; ++j) {
+      if (i == j) {
+        adjMatrix(i, j) = 0;
+        continue;
+      }
       const auto mappedI = this->mapping.getHwQubit(i);
       const auto mappedJ = this->mapping.getHwQubit(j);
       if (this->arch->getSwapDistance(mappedI, mappedJ) == 0) {
         adjMatrix(i, j) = 1;
+        adjMatrix(j, i) = 1;
       } else {
         adjMatrix(i, j) = 0;
+        adjMatrix(j, i) = 0;
       }
     }
   }
