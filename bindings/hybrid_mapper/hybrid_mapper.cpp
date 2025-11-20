@@ -242,27 +242,30 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "structures for the given number of qubits.",
            "n_qubits"_a)
       .def("get_mapped_qc", &na::HybridSynthesisMapper::getMappedQcQasm,
-           "Returns the mapped QuantumComputation")
+           "Returns the mapped circuit as an extended qasm2 string")
       .def("save_mapped_qc", &na::HybridSynthesisMapper::saveMappedQcQasm,
-           "Saves the mapped QuantumComputation to a file", "filename"_a)
+           "Saves the mapped circuit as an extended qasm2 to a file",
+           "filename"_a)
+      .def("convert_to_aod", &na::HybridSynthesisMapper::convertToAod,
+           "Converts the mapped circuit to "
+           "native AOD movements")
       .def(
-          "convert_to_aod", &na::HybridSynthesisMapper::convertToAod,
-          "Converts the mapped QuantumComputation to a QuantumComputation with "
-          "native AOD movements")
-      .def("get_mapped_qc_aod", &na::HybridSynthesisMapper::getMappedQcAodQasm,
-           "Returns the mapped QuantumComputation with native AOD movements")
+          "get_mapped_qc_aod", &na::HybridSynthesisMapper::getMappedQcAodQasm,
+          "Returns the mapped circuit with native AOD movements as an extended "
+          "qasm2 string")
       .def("save_mapped_qc_aod",
            &na::HybridSynthesisMapper::saveMappedQcAodQasm,
-           "Saves the mapped QuantumComputation with native AOD movements to a "
+           "Saves the mapped circuit with native AOD movements as an extended "
+           "qasm2 to a "
            "file",
            "filename"_a)
       .def("get_synthesized_qc",
            &na::HybridSynthesisMapper::getSynthesizedQcQASM,
-           "Returns the synthesized QuantumComputation with all gates but not "
-           "mapped to the hardware.")
+           "Returns the synthesized circuit with all gates but not "
+           "mapped to the hardware as a qasm2 string")
       .def("save_synthesized_qc", &na::HybridSynthesisMapper::saveSynthesizedQc,
-           "Saves the synthesized QuantumComputation with all gates but not "
-           "mapped to the hardware to a file",
+           "Saves the synthesized circuit with all gates but not "
+           "mapped to the hardware as qasm2 to a file",
            "filename"_a)
       .def(
           "append_without_mapping",
@@ -282,7 +285,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           "qc"_a)
       .def(
           "get_circuit_adjacency_matrix",
-          [](na::HybridSynthesisMapper& mapper) {
+          [](const na::HybridSynthesisMapper& mapper) {
             const auto symAdjMatrix = mapper.getCircuitAdjacencyMatrix();
             std::vector<std::vector<int>> adjMatrix = {};
             for (size_t i = 0; i < symAdjMatrix.size(); ++i) {
