@@ -80,7 +80,7 @@ public:
    * hardware qubits.
    */
   Mapping(const size_t nQubits, const InitialMapping initialMapping,
-          qc::QuantumComputation qc, HardwareQubits hwQubitsArg)
+          qc::QuantumComputation& qc, HardwareQubits hwQubitsArg)
       : hwQubits(std::move(hwQubitsArg)),
         dag(qc::CircuitOptimizer::constructDAG(qc)) {
 
