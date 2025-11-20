@@ -563,7 +563,6 @@ public:
 
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              const InitialMapping initialMapping) {
-    const auto dag = qc::CircuitOptimizer::constructDAG(qc);
     const auto actualMapping =
         Mapping(qc.getNqubits(), initialMapping, qc, hardwareQubits);
     return map(qc, actualMapping);
