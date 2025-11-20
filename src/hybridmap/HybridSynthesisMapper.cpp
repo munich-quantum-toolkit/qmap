@@ -39,13 +39,14 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
   size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
     if (this->parameters->verbose) {
-      std::cout << "Evaluating synthesis step number " << qcIndex++ << "\n";
+      std::cout << "Evaluating synthesis step number " << qcIndex << "\n";
     }
-    candidates.emplace_back(qc, this->evaluateSynthesisStep(qc));
+    const auto fidelity = this->evaluateSynthesisStep(qc);
+    candidates.emplace_back(qc, fidelity);
     if (this->parameters->verbose) {
-      std::cout << "Fidelity: " << candidates.back().second << "\n";
+      std::cout << "Fidelity: " << fidelity << "\n";
     }
-    qcIndex++;
+    ++qcIndex;
   }
   std::vector<qc::fp> fidelities;
   size_t bestIndex = 0;
@@ -57,7 +58,7 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
       bestIndex = i;
     }
   }
-  if (alsoMap) {
+  if (alsoMap && !candidates.empty()) {
     this->appendWithMapping(candidates[bestIndex].first);
   }
   return fidelities;
