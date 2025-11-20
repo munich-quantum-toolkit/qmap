@@ -183,10 +183,18 @@ public:
    * @param hwQubit Hardware qubit to remove.
    */
   void removeHwQubit(const HwQubit hwQubit) {
+    const auto currentCoord = hwToCoordIdx.at(hwQubit);
     hwToCoordIdx.erase(hwQubit);
-    freeCoordinates.emplace_back(initialHwPos.at(hwQubit));
-    occupiedCoordinates.emplace_back(initialHwPos.at(hwQubit));
     initialHwPos.erase(hwQubit);
+
+    if (auto it = std::ranges::find(occupiedCoordinates, currentCoord);
+        it != occupiedCoordinates.end()) {
+      occupiedCoordinates.erase(it);
+    }
+    if (std::ranges::find(freeCoordinates, currentCoord) ==
+        freeCoordinates.end()) {
+      freeCoordinates.emplace_back(currentCoord);
+    }
     // set swap distances to -1
     for (uint32_t i = 0; i < swapDistances.size(); ++i) {
       swapDistances(hwQubit, i) = -1;
