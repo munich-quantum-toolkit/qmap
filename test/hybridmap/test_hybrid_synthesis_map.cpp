@@ -18,7 +18,6 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
 
-#include <cstddef>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>

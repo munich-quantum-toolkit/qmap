@@ -27,7 +27,7 @@ TEST(HardwareQubitsExceptions, AccessEmptyCoordThrows) {
                               0);
 
   constexpr auto emptyCoord = static_cast<na::CoordIndex>(3);
-  EXPECT_THROW(auto result = hw.getHwQubit(emptyCoord), std::runtime_error);
+  EXPECT_THROW(hw.getHwQubit(emptyCoord), std::runtime_error);
 }
 
 TEST(HardwareQubitsExceptions, MoveInvalidCoordinateThrows) {

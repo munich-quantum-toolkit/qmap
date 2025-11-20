@@ -248,7 +248,7 @@ public:
    * @return Hardware qubit ID.
    * @throw std::runtime_error If no qubit occupies the coordinate.
    */
-  [[nodiscard]] HwQubit getHwQubit(const CoordIndex coordIndex) const {
+  HwQubit getHwQubit(const CoordIndex coordIndex) const {
     for (auto const& [hwQubit, index] : hwToCoordIdx) {
       if (index == coordIndex) {
         return hwQubit;

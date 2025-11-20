@@ -15,6 +15,7 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "qasm3/Importer.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
@@ -24,6 +25,7 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h> // NOLINT(misc-include-cleaner)
 #include <string>
+#include <vector>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -180,8 +182,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "map",
           [](na::NeutralAtomMapper& mapper, qc::QuantumComputation& circ,
-             const na::InitialMapping initial_mapping) {
-            mapper.map(circ, initial_mapping);
+             const na::InitialMapping initialMapping) {
+            mapper.map(circ, initialMapping);
           },
           "Map a quantum circuit object to the neutral atom quantum computer",
           "qc"_a, "initial_mapping"_a = na::InitialMapping::Identity)
@@ -211,10 +213,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "schedule",
           [](na::NeutralAtomMapper& mapper, const bool verbose,
-             const bool create_animation_csv,
-             const double shuttling_speed_factor) {
-            auto results = mapper.schedule(verbose, create_animation_csv,
-                                           shuttling_speed_factor);
+             const bool creatAnimationCsv, const double shuttlingSpeedFactor) {
+            auto results = mapper.schedule(verbose, creatAnimationCsv,
+                                           shuttlingSpeedFactor);
             return results.toMap();
           },
           "Schedule the mapped circuit", "verbose"_a = false,
