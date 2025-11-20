@@ -31,6 +31,9 @@ namespace na {
 std::vector<qc::fp>
 HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
                                               const bool alsoMap) {
+  if (synthesisSteps.empty()) {
+    return {};
+  }
   if (!initialized) {
     initMapping(synthesisSteps[0].getNqubits());
     initialized = true;
