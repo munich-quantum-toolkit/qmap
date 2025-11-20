@@ -194,11 +194,13 @@ Typically one has to accelerate the shuttling speed for better visualization by 
 # Re-run scheduling with animation output enabled
 _ = mapper.schedule(verbose=False, create_animation_csv=True, shuttling_speed_factor=100)
 
-# Save the files; the method writes both CSV and HTML next to the given base name
+# Save the files; the method writes `.naviz` and `.namachine` files
+# next to the given base name
 mapper.save_animation_files("ghz8_hyrona_animation")
 ```
 
-This creates a `namachine` and a `.naviz` file which can then be imported into MQT NAViz for visualization.
+This creates `.namachine` and `.naviz` files which can then be imported into
+MQT NAViz for visualization.
 
 ![Animation](images/hybrid_shuttling.gif)
 
