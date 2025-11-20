@@ -140,11 +140,10 @@ protected:
       na::NeutralAtomArchitecture(testArchitecturePath);
   na::InitialMapping const initialMapping = na::InitialMapping::Graph;
   na::MapperParameters mapperParameters;
-  na::NeutralAtomMapper mapper;
+  na::NeutralAtomMapper mapper{arch, mapperParameters};
   qc::QuantumComputation qc;
 
   void SetUp() override {
-    mapper = na::NeutralAtomMapper(arch);
     mapperParameters.initialCoordMapping =
         na::InitialCoordinateMapping::Trivial;
     mapperParameters.lookaheadDepth = 1;
@@ -159,7 +158,7 @@ protected:
     mapperParameters.numFlyingAncillas = 1;
     mapperParameters.limitShuttlingLayer = 1;
     mapperParameters.usePassBy = true;
-    mapper.setParameters(mapperParameters);
+    mapper = na::NeutralAtomMapper(arch, mapperParameters);
     qc = qasm3::Importer::importf(
         "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   }

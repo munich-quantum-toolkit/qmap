@@ -32,6 +32,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace na {
@@ -99,7 +100,7 @@ class NeutralAtomMapper {
 protected:
   MapperStats stats;
   // The considered architecture
-  const NeutralAtomArchitecture* arch = nullptr;
+  const NeutralAtomArchitecture* arch;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
   // The mapped quantum circuit converted to AOD movements
@@ -455,9 +456,9 @@ protected:
 
 public:
   // Constructors
-  NeutralAtomMapper() = default;
+  NeutralAtomMapper() = delete;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
-                             const MapperParameters* p = nullptr)
+                             const MapperParameters* p)
       : arch(architecture), scheduler(*architecture), parameters(p),
         hardwareQubits(*arch, arch->getNqubits() - p->numFlyingAncillas,
                        p->initialCoordMapping, p->seed),

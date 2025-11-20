@@ -65,7 +65,7 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
 
 qc::fp
 HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) const {
-  NeutralAtomMapper tempMapper;
+  NeutralAtomMapper tempMapper(this->arch, this->parameters);
   tempMapper.copyStateFrom(*this);
   auto mappedQc = tempMapper.map(qc, mapping);
   tempMapper.convertToAod();
