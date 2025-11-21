@@ -48,9 +48,15 @@ def test_hybrid_synthesis(arch_filename: str) -> None:
 
     synthesis_mapper = HybridSynthesisMapper(arch)
     synthesis_mapper.init_mapping(3)
-    best_circuit = synthesis_mapper.evaluate_synthesis_steps([qc1, qc2], True)
+    best_circuit = synthesis_mapper.evaluate_synthesis_steps(
+        [qc1, qc2],
+        also_map=True,
+    )
 
-    assert best_circuit is not None
+    assert isinstance(best_circuit, list)
+    assert len(best_circuit) == 2
+    assert best_circuit[0] <= 1
+    assert best_circuit[0] >= 0
 
 
 @pytest.mark.parametrize(
