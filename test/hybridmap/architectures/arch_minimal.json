@@ -2,7 +2,7 @@
   "name": "minimal",
   "properties": {
     "nRows": 1,
-    "nColumns": 1,
+    "nColumns": 2,
     "nAods": 1,
     "nAodCoordinates": 1,
     "interQubitDistance": 3,
@@ -11,7 +11,7 @@
     "blockingFactor": 1
   },
   "parameters": {
-    "nQubits": 1,
+    "nQubits": 2,
     "gateTimes": {
       "none": 0.5
     },
