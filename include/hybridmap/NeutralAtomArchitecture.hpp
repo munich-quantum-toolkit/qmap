@@ -21,6 +21,7 @@
 #include "na/entities/Location.hpp"
 
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -84,10 +85,11 @@ class NeutralAtomArchitecture {
                const qc::fp qubitDistance, const qc::fp radius,
                const qc::fp blockingFac, const qc::fp aodDist)
         : nRows(rows), nColumns(columns), nAods(aods),
-          nAodIntermediateLevels(
-              static_cast<uint16_t>(qubitDistance / aodDist)),
           nAodCoordinates(aodCoordinates), interQubitDistance(qubitDistance),
-          interactionRadius(radius), blockingFactor(blockingFac) {}
+          interactionRadius(radius), blockingFactor(blockingFac) {
+      assert(aodDist > 0);
+      nAodIntermediateLevels = static_cast<uint16_t>(qubitDistance / aodDist);
+    }
     /**
      * @brief Total grid sites (rows*columns).
      * @return Number of positions.
