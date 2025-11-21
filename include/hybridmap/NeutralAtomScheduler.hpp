@@ -78,7 +78,7 @@ struct SchedulerResults {
   /**
    * @brief Export selected metrics to a key-value map.
    * @details Includes totalExecutionTime, totalIdleTime, totalGateFidelities,
-   * totalFidelities, and nCZs.
+   * totalFidelities, nCZs, nAodActivate, nAodMove.
    * @return Unordered map from metric names to numeric values.
    */
   [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, qc::fp>
