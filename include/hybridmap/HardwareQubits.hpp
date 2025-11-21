@@ -368,7 +368,7 @@ public:
    * @return Map of hardware qubit to initial coordinate index.
    */
   [[nodiscard]] std::map<HwQubit, CoordIndex> getInitHwPos() const {
-    std::map<HwQubit, HwQubit> initialHwPosMap;
+    std::map<HwQubit, CoordIndex> initialHwPosMap;
     for (auto const& pair : initialHwPos) {
       initialHwPosMap[pair.first] = pair.second;
     }
