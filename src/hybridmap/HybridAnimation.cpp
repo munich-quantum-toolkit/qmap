@@ -56,7 +56,7 @@ void AnimationAtoms::initPositions(
   }
 }
 
-std::string AnimationAtoms::placeInitAtoms() {
+std::string AnimationAtoms::placeInitAtoms() const {
   std::string initString;
   for (const auto& [id, coords] : idToCoord) {
     initString += "atom (" + std::to_string(coords.first) + ", " +

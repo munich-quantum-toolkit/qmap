@@ -73,7 +73,7 @@ public:
    * (e.g., "atom (x, y) atom<ID>").
    * @return Concatenated lines suitable for a NaViz animation file.
    */
-  std::string placeInitAtoms();
+  [[nodiscard]] std::string placeInitAtoms() const;
   /**
    * @brief Convert a quantum operation into NaViz animation commands.
    * @details Supports AOD load/store/move operations and standard gates.
