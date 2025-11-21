@@ -20,6 +20,7 @@
 #include "ir/operations/Operation.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <map>
 #include <numeric>
@@ -103,6 +104,8 @@ public:
       uint32_t seed = 0)
       : arch(&architecture), nQubits(nQubits) {
 
+    assert(nQubits <= architecture.getNpositions() &&
+           "Number of hardware qubits exceeds available positions.");
     swapDistances = qc::SymmetricMatrix<SwapDistance>(this->nQubits);
 
     switch (initialCoordinateMapping) {
