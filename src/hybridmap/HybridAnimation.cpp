@@ -85,14 +85,13 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
     opString += "]\n";
   } else if (op->getType() == qc::OpType::AodMove) {
     // update atom coordinates
-    const auto startsX =
-        dynamic_cast<AodOperation*>(op.get())->getStarts(Dimension::X);
-    const auto endsX =
-        dynamic_cast<AodOperation*>(op.get())->getEnds(Dimension::X);
-    const auto startsY =
-        dynamic_cast<AodOperation*>(op.get())->getStarts(Dimension::Y);
-    const auto endsY =
-        dynamic_cast<AodOperation*>(op.get())->getEnds(Dimension::Y);
+    const auto* aodOp = dynamic_cast<AodOperation*>(op.get());
+    assert(aodOp != nullptr &&
+           "OpType::AodMove must be backed by AodOperation");
+    const auto startsX = aodOp->getStarts(Dimension::X);
+    const auto endsX = aodOp->getEnds(Dimension::X);
+    const auto startsY = aodOp->getStarts(Dimension::Y);
+    const auto endsY = aodOp->getEnds(Dimension::Y);
     const auto coordIndices = op->getTargets(); // renamed
     // The list of targets for an AodMove operation must contain pairs of
     // (origin, destination) coordinate indices.
