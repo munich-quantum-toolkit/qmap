@@ -102,15 +102,12 @@ struct SchedulerResults {
  */
 class NeutralAtomScheduler {
 protected:
-  const NeutralAtomArchitecture* arch = nullptr;
+  const NeutralAtomArchitecture* arch;
   std::string animation;
   std::string animationMachine;
 
 public:
-  /**
-   * @brief Default constructor (no associated architecture yet).
-   */
-  NeutralAtomScheduler() = default;
+  NeutralAtomScheduler() = delete;
   /**
    * @brief Construct with a given neutral atom architecture.
    * @param architecture Architecture reference whose timing data is used.
