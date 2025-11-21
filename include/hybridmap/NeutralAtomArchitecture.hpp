@@ -89,6 +89,7 @@ class NeutralAtomArchitecture {
           interactionRadius(radius), blockingFactor(blockingFac) {
       assert(aodDist > 0);
       nAodIntermediateLevels = static_cast<uint16_t>(qubitDistance / aodDist);
+      assert(nAodIntermediateLevels >= 1);
     }
     /**
      * @brief Total grid sites (rows*columns).
