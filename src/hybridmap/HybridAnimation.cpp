@@ -92,6 +92,8 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
     const auto endsX = aodOp->getEnds(Dimension::X);
     const auto startsY = aodOp->getStarts(Dimension::Y);
     const auto endsY = aodOp->getEnds(Dimension::Y);
+    assert(startsX.size() == endsX.size());
+    assert(startsY.size() == endsY.size());
     const auto& coordIndices = op->getTargets(); // renamed
     // The list of targets for an AodMove operation must contain pairs of
     // (origin, destination) coordinate indices.
