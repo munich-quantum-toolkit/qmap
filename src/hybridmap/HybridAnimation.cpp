@@ -165,6 +165,9 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
       }
     }
     // must be a gate
+    // For visualization:
+    // - All multi-qubit gates → cz
+    // - All single-qubit gates → rz
   } else if (op->getNqubits() > 1) {
     opString += "@" + std::to_string(startTime) + " cz {";
     for (const auto& coordIdx : op->getUsedQubits()) {
