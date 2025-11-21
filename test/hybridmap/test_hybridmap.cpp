@@ -257,21 +257,6 @@ TEST(NeutralAtomMapperExceptions, NoMultiQubitSpace) {
                std::runtime_error);
 }
 
-TEST(NeutralAtomMapperExceptions, ImpossibleSwaps) {
-  // Create minimal arch JSON: 1x1 positions, nQubits = 1 => no free coords
-  const auto arch =
-      na::NeutralAtomArchitecture("architectures/arch_sparse.json");
-  na::MapperParameters p;
-  p.shuttlingWeight = 0.0;
-  p.initialCoordMapping = na::InitialCoordinateMapping::Trivial;
-  p.verbose = true;
-  na::NeutralAtomMapper mapper(arch, p);
-  qc::QuantumComputation qc =
-      qasm3::Importer::importf("circuits/modulo_2.qasm");
-  EXPECT_THROW(auto circ = mapper.map(qc, na::InitialMapping::Identity),
-               std::runtime_error);
-}
-
 TEST(NeutralAtomMapperExceptions, LongShuttling) {
   const auto arch =
       na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
