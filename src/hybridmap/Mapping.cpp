@@ -114,7 +114,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
     circGraphQueue.push(key);
   }
   // graph matching -> return qubit Indices
-  HwQubit nMapped = 0;
+  size_t nMapped = 0;
   bool firstCenter = true;
   while (!circGraphQueue.empty() && nMapped != dag.size()) {
     auto qi = circGraphQueue.front();
