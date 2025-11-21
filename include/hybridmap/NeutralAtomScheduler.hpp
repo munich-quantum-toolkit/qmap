@@ -126,7 +126,7 @@ public:
    * qubit.
    * @param verbose If true, prints progress and summary to stdout.
    * @param createAnimationCsv If true, records animation artifacts
-   * (.naviz/.namachine/.nastyle).
+   * (.naviz/.namachine).
    * @param shuttlingSpeedFactor Factor scaling AOD move/activation durations
    * (1.0 = unchanged).
    * @return SchedulerResults containing makespan, idle time, fidelity metrics,
