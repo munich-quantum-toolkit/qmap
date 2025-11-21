@@ -56,7 +56,9 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   }
   // only add flying ancillas if not already present
   if (mappedQc.getNancillae() == 0) {
+    // ancilla register has indices [npositions, 2*npositions-1]
     mappedQc.addAncillaryRegister(this->arch->getNpositions());
+    // flying ancilla register has indices [2*npositions, 3*npositions-1]
     mappedQc.addAncillaryRegister(this->arch->getNpositions(), "fa");
   }
 
