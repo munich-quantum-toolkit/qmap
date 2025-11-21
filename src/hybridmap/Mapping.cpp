@@ -44,6 +44,11 @@ void Mapping::applySwap(const Swap& swap) {
 
 std::vector<CoordIndex> Mapping::graphMatching() {
   constexpr auto invalid = std::numeric_limits<CoordIndex>::max();
+  constexpr auto invalidHw = std::numeric_limits<HwQubit>::max();
+  if (dag.size() > hwQubits.getNumQubits()) {
+    throw std::runtime_error(
+        "graphMatching: more circuit qubits than hardware qubits");
+  }
   std::vector<CoordIndex> qubitIndices(dag.size(), invalid);
   std::vector<CoordIndex> hwIndices(hwQubits.getNumQubits(), invalid);
   // make hardware graph
@@ -58,7 +63,7 @@ std::vector<CoordIndex> Mapping::graphMatching() {
              hwQubits.getNearbyQubits(b).size();
     });
   }
-  uint32_t hwCenter = std::numeric_limits<unsigned int>::max();
+  HwQubit hwCenter = invalidHw;
   size_t maxHwConnections = 0;
   for (const auto& [qubit, neighbors] : hwGraph) {
     if (neighbors.size() > maxHwConnections) {
@@ -116,11 +121,14 @@ std::vector<CoordIndex> Mapping::graphMatching() {
   bool firstCenter = true;
   while (!circGraphQueue.empty() && nMapped != dag.size()) {
     auto qi = circGraphQueue.front();
-    HwQubit qI = std::numeric_limits<unsigned int>::max();
+    HwQubit qI = invalidHw;
     //  center mapping
     if (qubitIndices[qi] == invalid) {
       // first center
       if (firstCenter) {
+        if (hwCenter == invalidHw) {
+          throw std::runtime_error("graphMatching: no hardware center qubit");
+        }
         qI = hwCenter;
         firstCenter = false;
       }
@@ -147,6 +155,10 @@ std::vector<CoordIndex> Mapping::graphMatching() {
             qI = qCandi;
           }
         }
+        if (qI == invalidHw) {
+          throw std::runtime_error(
+              "graphMatching: no free hardware qubit for circuit qubit");
+        }
       }
       qubitIndices[qi] = qI;
       hwIndices[qI] = qi;
@@ -160,14 +172,14 @@ std::vector<CoordIndex> Mapping::graphMatching() {
       if (qubitIndices[qn] != invalid) {
         continue;
       }
-      HwQubit qN = std::numeric_limits<unsigned int>::max();
+      HwQubit qN = invalidHw;
       for (const auto& qCandi : hwGraph[qI]) {
         if (hwIndices[qCandi] == invalid) {
           qN = qCandi;
           break;
         }
       }
-      if (qN != std::numeric_limits<unsigned int>::max()) {
+      if (qN != invalidHw) {
         qubitIndices[qn] = qN;
         hwIndices[qN] = qn;
         nMapped++;
