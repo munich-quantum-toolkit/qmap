@@ -36,6 +36,8 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     const std::map<HwQubit, CoordIndex>& initHwPos,
     const std::map<HwQubit, CoordIndex>& initFaPos, const bool verbose,
     const bool createAnimationCsv, const qc::fp shuttlingSpeedFactor) {
+  animation.clear();
+  animationMachine.clear();
   if (verbose) {
     std::cout << "\n* schedule start!\n";
   }
