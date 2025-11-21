@@ -103,8 +103,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
     nodes.emplace_back(i, std::make_pair(degree, weightSum));
   }
   std::ranges::sort(nodes.begin(), nodes.end(),
-                    [](const std::pair<int, std::pair<int, double>>& a,
-                       const std::pair<int, std::pair<int, double>>& b) {
+                    [](const auto& a, const auto& b) {
                       if (a.second.first == b.second.first) {
                         return a.second.second > b.second.second;
                       }
