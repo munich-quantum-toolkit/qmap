@@ -93,7 +93,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
     circGraph[qubit] = std::move(neighbors);
   }
   // circuit queue for graph matching
-  std::vector<std::pair<HwQubit, std::pair<int, double>>> nodes;
+  std::vector<std::pair<HwQubit, std::pair<size_t, double>>> nodes;
   for (size_t i = 0; i < circGraph.size(); ++i) {
     const auto degree = circGraph[i].size();
     double weightSum = 0;
