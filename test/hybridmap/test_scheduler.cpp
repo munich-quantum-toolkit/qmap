@@ -25,7 +25,7 @@ TEST(NeutralAtomSchedulerTests, SchedulerResultsToMapForPython) {
   const auto m = res.toMap();
 
   // Only the documented keys are exported
-  ASSERT_EQ(m.size(), 5U);
+  ASSERT_EQ(m.size(), 7U);
   EXPECT_TRUE(m.count("totalExecutionTime"));
   EXPECT_TRUE(m.count("totalIdleTime"));
   EXPECT_TRUE(m.count("totalGateFidelities"));

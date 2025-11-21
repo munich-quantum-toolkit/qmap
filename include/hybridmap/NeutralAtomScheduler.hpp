@@ -89,6 +89,8 @@ struct SchedulerResults {
     result["totalGateFidelities"] = totalGateFidelities;
     result["totalFidelities"] = totalFidelities;
     result["nCZs"] = nCZs;
+    result["nAodActivate"] = static_cast<qc::fp>(nAodActivate);
+    result["nAodMove"] = static_cast<qc::fp>(nAodMove);
     return result;
   }
 };
