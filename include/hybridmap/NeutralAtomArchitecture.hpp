@@ -42,6 +42,7 @@ namespace na {
  * JSON, derives coordinate layout, connectivity (swap distances), and proximity
  * lists. Provides timing and fidelity queries, distance helpers, and optional
  * animation export.
+ * It requires at last one default "none" entry in gate times and fidelities.
  */
 class NeutralAtomArchitecture {
   /**
