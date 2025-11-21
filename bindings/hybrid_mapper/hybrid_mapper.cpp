@@ -287,11 +287,11 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           "get_circuit_adjacency_matrix",
           [](const na::HybridSynthesisMapper& mapper) {
             const auto symAdjMatrix = mapper.getCircuitAdjacencyMatrix();
-            std::vector<std::vector<int>> adjMatrix = {};
-            for (size_t i = 0; i < symAdjMatrix.size(); ++i) {
-              adjMatrix.emplace_back();
-              for (size_t j = 0; j < symAdjMatrix.size(); ++j) {
-                adjMatrix[i].emplace_back(symAdjMatrix(i, j));
+            const auto n = symAdjMatrix.size();
+            std::vector<std::vector<int>> adjMatrix(n, std::vector<int>(n));
+            for (size_t i = 0; i < n; ++i) {
+              for (size_t j = 0; j < n; ++j) {
+                adjMatrix[i][j] = symAdjMatrix(i, j);
               }
             }
             return adjMatrix;
