@@ -222,10 +222,11 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           "Schedule the mapped circuit", "verbose"_a = false,
           "create_animation_csv"_a = false, "shuttling_speed_factor"_a = 1.0)
       .def("save_animation_files", &na::NeutralAtomMapper::saveAnimationFiles,
-           "Saves the animation files (csv and html) for the last scheduling",
+           "Saves the animation files (.naviz and .namachine) for the last " +
+               "scheduling",
            "filename"_a)
       .def("get_animation_viz", &na::NeutralAtomMapper::getAnimationViz,
-           "Returns the animation csv string for the last scheduling");
+           "Returns the .naviz event-log content for the last scheduling");
 
   py::class_<na::HybridSynthesisMapper>(
       m, "HybridSynthesisMapper",
