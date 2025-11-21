@@ -124,9 +124,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def_property_readonly(
           "num_aods", &na::NeutralAtomArchitecture::getNAods,
           "Number of independent 2D acousto-optic deflectors")
-      .def_property_readonly("naod_coordinates",
-                             &na::NeutralAtomArchitecture::getNAodCoordinates,
-                             "Maximal number of AOD rows/columns (NOT USED) ")
       .def_property_readonly("num_qubits",
                              &na::NeutralAtomArchitecture::getNqubits,
                              "Number of atoms in the neutral atom quantum "
