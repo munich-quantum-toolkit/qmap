@@ -52,13 +52,13 @@ std::vector<CoordIndex> Mapping::graphMatching() {
   std::vector<CoordIndex> qubitIndices(dag.size(), invalid);
   std::vector<CoordIndex> hwIndices(hwQubits.getNumQubits(), invalid);
   // make hardware graph
-  std::unordered_map<uint32_t, std::vector<uint32_t>> hwGraph;
+  std::unordered_map<HwQubit, HwQubitsVector> hwGraph;
   for (qc::Qubit i = 0; i < hwQubits.getNumQubits(); ++i) {
     auto neighbors = hwQubits.getNearbyQubits(i);
     hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
   for (auto& neighbors : hwGraph | std::views::values) {
-    std::ranges::sort(neighbors, [this](const uint32_t a, const uint32_t b) {
+    std::ranges::sort(neighbors, [this](const HwQubit a, const HwQubit b) {
       return hwQubits.getNearbyQubits(a).size() >
              hwQubits.getNearbyQubits(b).size();
     });
