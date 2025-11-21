@@ -106,7 +106,7 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
     // use that coord indices are pairs of origin and target indices
     for (size_t i = 0; i < coordIndices.size(); i++) {
       if (i % 2 == 0) {
-        constexpr qc::fp FP_TOLERANCE = 0.0001;
+        constexpr qc::fp fpTolerance = 0.0001;
         const auto coordIdx = coordIndices[i];
         if (!coordIdxToId.contains(coordIdx)) {
           throw std::logic_error("AodMove origin index " +
@@ -123,7 +123,7 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
         bool foundY = false;
         auto newY = std::numeric_limits<qc::fp>::max();
         for (size_t j = 0; j < startsX.size(); j++) {
-          if (std::abs(startsX[j] - idToCoord.at(id).first) < FP_TOLERANCE) {
+          if (std::abs(startsX[j] - idToCoord.at(id).first) < fpTolerance) {
             newX = endsX[j];
             foundX = true;
             break;
@@ -135,7 +135,7 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
         }
 
         for (size_t j = 0; j < startsY.size(); j++) {
-          if (std::abs(startsY[j] - idToCoord.at(id).second) < FP_TOLERANCE) {
+          if (std::abs(startsY[j] - idToCoord.at(id).second) < fpTolerance) {
             newY = endsY[j];
             foundY = true;
             break;

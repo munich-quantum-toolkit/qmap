@@ -191,9 +191,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "map_qasm_file",
           [](na::NeutralAtomMapper& mapper, const std::string& filename,
-             const na::InitialMapping initial_mapping) {
+             const na::InitialMapping initialMapping) {
             auto circ = qasm3::Importer::importf(filename);
-            mapper.map(circ, initial_mapping);
+            mapper.map(circ, initialMapping);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
           "filename"_a, "initial_mapping"_a = na::InitialMapping::Identity)
@@ -314,10 +314,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "initial_mapping"_a = na::InitialMapping::Identity)
       .def(
           "schedule",
-          [](na::HybridSynthesisMapper& mapper, bool verbose,
-             bool create_animation_csv, double shuttling_speed_factor) {
-            auto results = mapper.schedule(verbose, create_animation_csv,
-                                           shuttling_speed_factor);
+          [](na::HybridSynthesisMapper& mapper, const bool verbose,
+             const bool createAnimationCsv, const double shuttlingSpeedFactor) {
+            const auto results = mapper.schedule(verbose, createAnimationCsv,
+                                                 shuttlingSpeedFactor);
             return results.toMap();
           },
           "Schedule the mapped circuit", "verbose"_a = false,

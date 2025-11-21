@@ -146,7 +146,7 @@ public:
    * @brief Get the current device adjacency (connectivity) matrix.
    * @return Symmetric adjacency matrix for the neutral atom hardware.
    */
-  AdjacencyMatrix getCircuitAdjacencyMatrix() const;
+  [[nodiscard]] AdjacencyMatrix getCircuitAdjacencyMatrix() const;
 };
 } // namespace na
 
