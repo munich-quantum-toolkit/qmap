@@ -53,7 +53,7 @@ protected:
    * qubit index i.
    */
   [[nodiscard]]
-  std::vector<CoordIndex> graphMatching();
+  std::vector<HwQubit> graphMatching();
 
 public:
   /**

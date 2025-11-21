@@ -42,15 +42,14 @@ void Mapping::applySwap(const Swap& swap) {
   }
 }
 
-std::vector<CoordIndex> Mapping::graphMatching() {
-  constexpr auto invalid = std::numeric_limits<CoordIndex>::max();
+std::vector<HwQubit> Mapping::graphMatching() {
   constexpr auto invalidHw = std::numeric_limits<HwQubit>::max();
   if (dag.size() > hwQubits.getNumQubits()) {
     throw std::runtime_error(
         "graphMatching: more circuit qubits than hardware qubits");
   }
-  std::vector<CoordIndex> qubitIndices(dag.size(), invalid);
-  std::vector<CoordIndex> hwIndices(hwQubits.getNumQubits(), invalid);
+  std::vector<HwQubit> qubitIndices(dag.size(), invalidHw);
+  std::vector<HwQubit> hwIndices(hwQubits.getNumQubits(), invalidHw);
   // make hardware graph
   std::unordered_map<HwQubit, HwQubitsVector> hwGraph;
   for (qc::Qubit i = 0; i < hwQubits.getNumQubits(); ++i) {
@@ -95,7 +94,7 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     circGraph[qubit] = std::move(neighbors);
   }
   // circuit queue for graph matching
-  std::vector<std::pair<uint32_t, std::pair<int, double>>> nodes;
+  std::vector<std::pair<HwQubit, std::pair<int, double>>> nodes;
   for (size_t i = 0; i < circGraph.size(); ++i) {
     const auto degree = circGraph[i].size();
     double weightSum = 0;
@@ -112,18 +111,18 @@ std::vector<CoordIndex> Mapping::graphMatching() {
                       }
                       return a.second.first > b.second.first;
                     });
-  std::queue<uint32_t> circGraphQueue;
+  std::queue<HwQubit> circGraphQueue;
   for (const auto& key : nodes | std::views::keys) {
     circGraphQueue.push(key);
   }
   // graph matching -> return qubit Indices
-  uint32_t nMapped = 0;
+  HwQubit nMapped = 0;
   bool firstCenter = true;
   while (!circGraphQueue.empty() && nMapped != dag.size()) {
     auto qi = circGraphQueue.front();
     HwQubit qI = invalidHw;
     //  center mapping
-    if (qubitIndices[qi] == invalid) {
+    if (qubitIndices[qi] == invalidHw) {
       // first center
       if (firstCenter) {
         if (hwCenter == invalidHw) {
@@ -136,7 +135,7 @@ std::vector<CoordIndex> Mapping::graphMatching() {
       else {
         auto minDistance = std::numeric_limits<qc::fp>::max();
         for (HwQubit qCandi = 0; qCandi < hwQubits.getNumQubits(); ++qCandi) {
-          if (hwIndices[qCandi] != invalid) {
+          if (hwIndices[qCandi] != invalidHw) {
             continue;
           }
           auto weightDistance = 0.0;
@@ -144,7 +143,7 @@ std::vector<CoordIndex> Mapping::graphMatching() {
             auto qn = qnPair.first;
             auto qnWeight = qnPair.second;
             HwQubit const qN = qubitIndices[qn];
-            if (qN == invalid) {
+            if (qN == invalidHw) {
               continue;
             }
             weightDistance +=
@@ -169,12 +168,12 @@ std::vector<CoordIndex> Mapping::graphMatching() {
     // neighbor mapping
     for (auto& key : circGraph[qi] | std::views::keys) {
       auto const qn = key;
-      if (qubitIndices[qn] != invalid) {
+      if (qubitIndices[qn] != invalidHw) {
         continue;
       }
       HwQubit qN = invalidHw;
       for (const auto& qCandi : hwGraph[qI]) {
-        if (hwIndices[qCandi] == invalid) {
+        if (hwIndices[qCandi] == invalidHw) {
           qN = qCandi;
           break;
         }
