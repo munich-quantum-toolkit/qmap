@@ -29,6 +29,8 @@ namespace na {
  * atom identifiers, as well as continuous coordinates derived from the
  * architecture's grid geometry. Provides utilities to emit initial placement
  * lines and per-operation animation snippets.
+ * @note The architecture reference passed to the constructor must remain valid
+ * for the lifetime of this object.
  */
 class AnimationAtoms {
 protected:
