@@ -253,7 +253,7 @@ TEST(NeutralAtomMapperExceptions, NoMultiQubitSpace) {
   na::NeutralAtomMapper mapper(arch, p);
   qc::QuantumComputation qc =
       qasm3::Importer::importf("circuits/multi_qubit.qasm");
-  EXPECT_THROW(auto circ = mapper.map(qc, na::InitialMapping::Identity),
+  EXPECT_THROW(static_cast<void>(mapper.map(qc, na::InitialMapping::Identity)),
                std::runtime_error);
 }
 
