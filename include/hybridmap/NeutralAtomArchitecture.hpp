@@ -426,6 +426,7 @@ public:
    */
   [[nodiscard]] [[maybe_unused]] qc::QuantumComputation
   getBridgeCircuit(const size_t length) const {
+    assert(length < bridgeCircuits.bridgeCircuits.size());
     return bridgeCircuits.bridgeCircuits[length];
   }
 
