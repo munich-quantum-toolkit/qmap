@@ -47,7 +47,7 @@ protected:
   // Test the HybridSynthesisMapper class
 };
 
-TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
+TEST_P(TestParametrizedHybridSynthesisMapper, AdjacencyMatrix) {
   const auto arch = NeutralAtomArchitecture(testArchitecturePath);
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
