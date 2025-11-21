@@ -339,9 +339,10 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
     // use time of theta = pi and linearly scale
     opName += "z";
     auto param = std::abs(op->getParameter().back());
-    constexpr auto pi = std::numbers::pi_v<qc::fp>;
-    while (param > pi) {
-      param = std::abs(param - (2 * pi));
+    constexpr auto twoPi = 2 * std::numbers::pi_v<qc::fp>;
+    param = std::fmod(param, twoPi);
+    if (param > std::numbers::pi_v<qc::fp>) {
+      param = twoPi - param; // map to [0, pi]
     }
     return getGateTime(opName) * param / std::numbers::pi_v<qc::fp>;
   }
