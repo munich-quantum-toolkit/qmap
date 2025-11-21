@@ -73,25 +73,29 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     for (const auto& [key, value] : jsonDataParameters["gateTimes"].items()) {
       gateTimes.emplace(key, value);
     }
-    // check if cz and h gates are present
-    if (!gateTimes.contains("cz")) {
-      gateTimes["cz"] = gateTimes["none"];
-    }
-    if (!gateTimes.contains("h")) {
-      gateTimes["h"] = gateTimes["none"];
-    }
+    // check if cz and h gates are present (require explicit fallback)
+    auto ensureGateWithFallback = [](auto& map, const std::string& gate,
+                                     const std::string& fallback) {
+      if (map.contains(gate)) {
+        return;
+      }
+      if (!map.contains(fallback)) {
+        throw std::runtime_error("Missing gate entry \"" + gate +
+                                 "\" and fallback \"" + fallback + "\"");
+      }
+      map[gate] = map.at(fallback);
+    };
+
+    ensureGateWithFallback(gateTimes, "cz", "none");
+    ensureGateWithFallback(gateTimes, "h", "none");
     this->parameters.gateTimes = gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["gateAverageFidelities"].items()) {
       gateAverageFidelities.emplace(key, value);
     }
-    if (!gateAverageFidelities.contains("cz")) {
-      gateAverageFidelities["cz"] = gateAverageFidelities["none"];
-    }
-    if (!gateAverageFidelities.contains("h")) {
-      gateAverageFidelities["h"] = gateAverageFidelities["none"];
-    }
+    ensureGateWithFallback(gateAverageFidelities, "cz", "none");
+    ensureGateWithFallback(gateAverageFidelities, "h", "none");
     this->parameters.gateAverageFidelities = gateAverageFidelities;
     std::map<qc::OpType, qc::fp> shuttlingTimes;
 
