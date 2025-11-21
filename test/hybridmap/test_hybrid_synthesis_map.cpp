@@ -18,6 +18,7 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
 
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <string>
@@ -125,7 +126,12 @@ TEST_F(TestHybridSynthesisMapper, Output) {
   mapper.appendWithMapping(qc);
   const auto qasm = mapper.getSynthesizedQcQASM();
   EXPECT_FALSE(qasm.empty());
-  mapper.saveSynthesizedQc("test_output.qasm");
+  const auto tempDir = std::filesystem::temp_directory_path();
+  const auto qasmPath = tempDir / "test_output.qasm";
+  mapper.saveSynthesizedQc(qasmPath.string());
+  EXPECT_TRUE(std::filesystem::exists(qasmPath));
+  EXPECT_GT(std::filesystem::file_size(qasmPath), 0);
+  std::filesystem::remove(qasmPath);
 }
 
 } // namespace na

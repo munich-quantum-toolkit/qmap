@@ -167,12 +167,22 @@ protected:
 TEST_F(NeutralAtomMapperTest, Output) {
   auto qcMapped = mapper.map(qc, initialMapping);
   // write to file
-  mapper.saveMappedQcQasm("test.qasm");
+  const auto tempDir = std::filesystem::temp_directory_path();
+  const auto qasmPath = tempDir / "test.qasm";
+  mapper.saveMappedQcQasm(qasmPath.string());
   const auto qcMappedFromFile = mapper.getMappedQcQasm();
   EXPECT_GT(qcMappedFromFile.size(), 0);
-  mapper.saveMappedQcAodQasm("test_aod.qasm");
+  EXPECT_TRUE(std::filesystem::exists(qasmPath));
+  EXPECT_GT(std::filesystem::file_size(qasmPath), 0);
+  std::filesystem::remove(qasmPath);
+
+  const auto aodQasmPath = tempDir / "test_aod.qasm";
+  mapper.saveMappedQcAodQasm(aodQasmPath.string());
   const auto qcMappedAod = mapper.getMappedQcAodQasm();
   EXPECT_GT(qcMappedAod.size(), 0);
+  EXPECT_TRUE(std::filesystem::exists(aodQasmPath));
+  EXPECT_GT(std::filesystem::file_size(aodQasmPath), 0);
+  std::filesystem::remove(aodQasmPath);
 
   const auto mapperStats = mapper.getStats();
   EXPECT_GE(mapperStats.nSwaps + mapperStats.nBridges + mapperStats.nFAncillas +
@@ -189,7 +199,16 @@ TEST_F(NeutralAtomMapperTest, Output) {
   const auto scheduleResults = mapper.schedule(true, true);
   const auto animationViz = mapper.getAnimationViz();
   EXPECT_GT(animationViz.size(), 0);
-  mapper.saveAnimationFiles("test");
+  const auto animationPath = tempDir / "test";
+  mapper.saveAnimationFiles(animationPath.string());
+  const auto machinePath = animationPath.string() + ".namachine";
+  const auto vizPath = animationPath.string() + ".naviz";
+  EXPECT_TRUE(std::filesystem::exists(machinePath));
+  EXPECT_GT(std::filesystem::file_size(machinePath), 0);
+  std::filesystem::remove(machinePath);
+  EXPECT_TRUE(std::filesystem::exists(vizPath));
+  EXPECT_GT(std::filesystem::file_size(vizPath), 0);
+  std::filesystem::remove(vizPath);
 
   std::cout << scheduleResults.toCsv();
 
