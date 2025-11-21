@@ -224,6 +224,9 @@ void NeutralAtomArchitecture::computeSwapDistances(
           deltaY -= diagonalDistance.y;
         }
       }
+      if (swapDistance == 0) {
+        swapDistance = 1;
+      }
       // save swap distance in matrix
       this->swapDistances(coordIndex1, coordIndex2) = swapDistance - 1;
       this->swapDistances(coordIndex2, coordIndex1) = swapDistance - 1;

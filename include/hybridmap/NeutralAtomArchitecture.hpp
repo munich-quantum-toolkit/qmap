@@ -308,8 +308,8 @@ public:
   [[nodiscard]] SwapDistance getSwapDistance(const Location& c1,
                                              const Location& c2) const {
     return swapDistances(
-        static_cast<size_t>(c1.x + c1.y) * properties.getNcolumns(),
-        static_cast<size_t>(c2.x + c2.y) * properties.getNcolumns());
+        static_cast<size_t>(c1.x + (c1.y * properties.getNcolumns())),
+        static_cast<size_t>(c2.x + (c2.y * properties.getNcolumns())));
   }
 
   /**
