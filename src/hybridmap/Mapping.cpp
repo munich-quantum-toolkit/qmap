@@ -51,7 +51,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
   std::vector<HwQubit> hwIndices(hwQubits.getNumQubits(), invalidHw);
   // make hardware graph
   std::unordered_map<HwQubit, HwQubitsVector> hwGraph;
-  for (qc::Qubit i = 0; i < hwQubits.getNumQubits(); ++i) {
+  for (HwQubit i = 0; i < hwQubits.getNumQubits(); ++i) {
     auto neighbors = hwQubits.getNearbyQubits(i);
     hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
@@ -70,9 +70,9 @@ std::vector<HwQubit> Mapping::graphMatching() {
     }
   }
   // make circuit graph
-  std::vector<std::vector<std::pair<qc::Qubit, double>>> circGraph(dag.size());
-  for (qc::Qubit qubit = 0; qubit < dag.size(); ++qubit) {
-    std::unordered_map<qc::Qubit, double> weightMap;
+  std::vector<std::vector<std::pair<HwQubit, double>>> circGraph(dag.size());
+  for (HwQubit qubit = 0; qubit < dag.size(); ++qubit) {
+    std::unordered_map<HwQubit, double> weightMap;
     for (const auto& opPtr : dag[qubit]) {
       const auto* op = opPtr->get();
       auto usedQubits = op->getUsedQubits();
@@ -84,10 +84,10 @@ std::vector<HwQubit> Mapping::graphMatching() {
         }
       }
     }
-    std::vector<std::pair<qc::Qubit, double>> neighbors(weightMap.begin(),
-                                                        weightMap.end());
-    std::ranges::sort(neighbors, [](const std::pair<qc::Qubit, double>& a,
-                                    const std::pair<qc::Qubit, double>& b) {
+    std::vector<std::pair<HwQubit, double>> neighbors(weightMap.begin(),
+                                                      weightMap.end());
+    std::ranges::sort(neighbors, [](const std::pair<HwQubit, double>& a,
+                                    const std::pair<HwQubit, double>& b) {
       return a.second > b.second;
     });
     circGraph[qubit] = std::move(neighbors);
