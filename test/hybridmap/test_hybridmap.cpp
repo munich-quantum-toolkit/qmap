@@ -246,7 +246,7 @@ TEST(NeutralAtomMapperExceptions, NoFreeCoordsForShuttlingConstructor) {
   EXPECT_THROW(mapper.setParameters(p1), std::runtime_error);
 }
 TEST(NeutralAtomMapperExceptions, NoMultiQubitSpace) {
-  // Create minimal arch JSON: 1x1 positions, nQubits = 1 => no free coords
+  // Test that mapping throws when multi-qubit gates cannot be executed
   const auto arch =
       na::NeutralAtomArchitecture("architectures/rubidium_gate.json");
   constexpr na::MapperParameters p;
