@@ -43,12 +43,13 @@ void Mapping::applySwap(const Swap& swap) {
 
 std::vector<HwQubit> Mapping::graphMatching() {
   constexpr auto invalidHw = std::numeric_limits<HwQubit>::max();
+  constexpr auto invalidCirc = std::numeric_limits<qc::Qubit>::max();
   if (dag.size() > hwQubits.getNumQubits()) {
     throw std::runtime_error(
         "graphMatching: more circuit qubits than hardware qubits");
   }
   std::vector<HwQubit> qubitIndices(dag.size(), invalidHw);
-  std::vector<HwQubit> hwIndices(hwQubits.getNumQubits(), invalidHw);
+  std::vector<HwQubit> hwIndices(hwQubits.getNumQubits(), invalidCirc);
   // make hardware graph
   std::unordered_map<HwQubit, HwQubitsVector> hwGraph;
   for (HwQubit i = 0; i < hwQubits.getNumQubits(); ++i) {
@@ -133,7 +134,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
       else {
         auto minDistance = std::numeric_limits<qc::fp>::max();
         for (HwQubit qCandi = 0; qCandi < hwQubits.getNumQubits(); ++qCandi) {
-          if (hwIndices[qCandi] != invalidHw) {
+          if (hwIndices[qCandi] != invalidCirc) {
             continue;
           }
           auto weightDistance = 0.0;
@@ -171,7 +172,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
       }
       HwQubit qN = invalidHw;
       for (const auto& qCandi : hwGraph[qI]) {
-        if (hwIndices[qCandi] == invalidHw) {
+        if (hwIndices[qCandi] == invalidCirc) {
           qN = qCandi;
           break;
         }
