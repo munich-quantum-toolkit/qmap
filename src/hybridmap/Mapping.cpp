@@ -70,9 +70,9 @@ std::vector<HwQubit> Mapping::graphMatching() {
     }
   }
   // make circuit graph
-  std::vector<std::vector<std::pair<HwQubit, double>>> circGraph(dag.size());
-  for (HwQubit qubit = 0; qubit < dag.size(); ++qubit) {
-    std::unordered_map<HwQubit, double> weightMap;
+  std::vector<std::vector<std::pair<qc::Qubit, double>>> circGraph(dag.size());
+  for (qc::Qubit qubit = 0; qubit < dag.size(); ++qubit) {
+    std::unordered_map<qc::Qubit, double> weightMap;
     for (const auto& opPtr : dag[qubit]) {
       const auto* op = opPtr->get();
       auto usedQubits = op->getUsedQubits();
@@ -84,16 +84,16 @@ std::vector<HwQubit> Mapping::graphMatching() {
         }
       }
     }
-    std::vector<std::pair<HwQubit, double>> neighbors(weightMap.begin(),
-                                                      weightMap.end());
-    std::ranges::sort(neighbors, [](const std::pair<HwQubit, double>& a,
-                                    const std::pair<HwQubit, double>& b) {
+    std::vector<std::pair<qc::Qubit, double>> neighbors(weightMap.begin(),
+                                                        weightMap.end());
+    std::ranges::sort(neighbors, [](const std::pair<qc::Qubit, double>& a,
+                                    const std::pair<qc::Qubit, double>& b) {
       return a.second > b.second;
     });
     circGraph[qubit] = std::move(neighbors);
   }
   // circuit queue for graph matching
-  std::vector<std::pair<HwQubit, std::pair<size_t, double>>> nodes;
+  std::vector<std::pair<qc::Qubit, std::pair<size_t, double>>> nodes;
   for (size_t i = 0; i < circGraph.size(); ++i) {
     const auto degree = circGraph[i].size();
     double weightSum = 0;
@@ -109,7 +109,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
                       }
                       return a.second.first > b.second.first;
                     });
-  std::queue<HwQubit> circGraphQueue;
+  std::queue<qc::Qubit> circGraphQueue;
   for (const auto& key : nodes | std::views::keys) {
     circGraphQueue.push(key);
   }
@@ -137,7 +137,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
             continue;
           }
           auto weightDistance = 0.0;
-          for (auto qnPair : circGraph[qi]) {
+          for (const auto& qnPair : circGraph[qi]) {
             auto qn = qnPair.first;
             auto qnWeight = qnPair.second;
             HwQubit const qN = qubitIndices[qn];
