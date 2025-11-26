@@ -412,4 +412,7 @@ dev = [
   {include-group = "build"},
   {include-group = "docs"},
   {include-group = "test"},
+  "nox>=2025.11.12",
+  "ruff>=0.14.6",
+  "ty>=0.0.1a27",
 ]
