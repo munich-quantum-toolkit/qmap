@@ -498,6 +498,9 @@ public:
           "No free coordinates for shuttling but shuttling "
           "weight is greater than 0.");
     }
+    if (parameters.numFlyingAncillas > 1) {
+      throw std::runtime_error("Only one flying ancilla is supported for now.");
+    }
     this->reset();
   }
 
