@@ -558,7 +558,7 @@ Bridge NeutralAtomMapper::findBestBridge(const Swap& bestSwap) {
   for (size_t i = 0; i < allBridges.size(); ++i) {
     size_t usage = 0;
     for (const auto qubit : allBridges[i].second) {
-      usage += qubitUsages[qubit];
+      usage += qubitUsages[hardwareQubits.getCoordIndex(qubit)];
     }
     if (usage < minUsage) {
       minUsage = usage;
