@@ -118,7 +118,7 @@ protected:
   // The minimal weight for any multi-qubit gate
   qc::fp twoQubitSwapWeight = 1;
   // The runtime parameters of the mapper
-  const MapperParameters* parameters = nullptr;
+  MapperParameters parameters;
   // The qubits that are blocked by the last swap
   std::deque<std::set<HwQubit>> lastBlockedQubits;
   // The last swap that has been executed
@@ -458,29 +458,29 @@ public:
   // Constructors
   NeutralAtomMapper() = delete;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
-                             const MapperParameters* p)
+                             const MapperParameters& p)
       : arch(architecture), scheduler(*architecture), parameters(p),
-        hardwareQubits(*arch, arch->getNqubits() - p->numFlyingAncillas,
-                       p->initialCoordMapping, p->seed),
-        flyingAncillas(*arch, p->numFlyingAncillas, Trivial, p->seed) {
+        hardwareQubits(*arch, arch->getNqubits() - p.numFlyingAncillas,
+                       p.initialCoordMapping, p.seed),
+        flyingAncillas(*arch, p.numFlyingAncillas, Trivial, p.seed) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
-        p->shuttlingWeight > 0) {
+        p.shuttlingWeight > 0) {
       throw std::runtime_error(
           "No free coordinates for shuttling but shuttling "
           "weight is greater than 0.");
     }
-    if (parameters->numFlyingAncillas > 1) {
+    if (parameters.numFlyingAncillas > 1) {
       throw std::runtime_error("Only one flying ancilla is supported for now.");
     }
     //   precompute exponential decay weights
     this->decayWeights.reserve(this->arch->getNcolumns());
     for (uint32_t i = this->arch->getNcolumns(); i > 0; --i) {
-      this->decayWeights.emplace_back(std::exp(-this->parameters->decay * i));
+      this->decayWeights.emplace_back(std::exp(-this->parameters.decay * i));
     }
   }
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
-      : NeutralAtomMapper(&architecture, &p) {}
+      : NeutralAtomMapper(&architecture, p) {}
 
   /**
    * @brief Set/replace runtime parameters and reset internal state.
@@ -489,7 +489,7 @@ public:
    * unsupported number of flying ancillas.
    */
   void setParameters(const MapperParameters& p) {
-    this->parameters = &p;
+    this->parameters = p;
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p.shuttlingWeight > 0) {
       throw std::runtime_error(
@@ -520,11 +520,11 @@ public:
    * ancillas).
    */
   void reset() {
-    hardwareQubits = HardwareQubits(
-        *arch, arch->getNqubits() - parameters->numFlyingAncillas,
-        parameters->initialCoordMapping, parameters->seed);
-    flyingAncillas = HardwareQubits(*arch, parameters->numFlyingAncillas,
-                                    Trivial, parameters->seed);
+    hardwareQubits =
+        HardwareQubits(*arch, arch->getNqubits() - parameters.numFlyingAncillas,
+                       parameters.initialCoordMapping, parameters.seed);
+    flyingAncillas = HardwareQubits(*arch, parameters.numFlyingAncillas,
+                                    Trivial, parameters.seed);
   }
 
   // Methods
