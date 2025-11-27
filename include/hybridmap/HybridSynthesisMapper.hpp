@@ -90,7 +90,8 @@ public:
    * @param initMapping Initial mapping heuristic (defaults to Identity).
    */
   void completeRemap(const InitialMapping initMapping = Identity) {
-    this->map(synthesizedQc, initMapping);
+    auto qcCopy = synthesizedQc;
+    this->map(qcCopy, initMapping);
   }
 
   /**
