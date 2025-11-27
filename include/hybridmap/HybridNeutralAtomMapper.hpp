@@ -463,8 +463,9 @@ public:
         hardwareQubits(*arch, arch->getNqubits() - p.numFlyingAncillas,
                        p.initialCoordMapping, p.seed),
         flyingAncillas(*arch, p.numFlyingAncillas, Trivial, p.seed) {
-    if (arch->getNpositions() - arch->getNqubits() < 1 &&
-        p.shuttlingWeight > 0) {
+    const auto nPositions = static_cast<int>(arch->getNpositions());
+    const auto nQubits = static_cast<int>(arch->getNqubits());
+    if (nPositions - nQubits < 1 && p.shuttlingWeight > 0) {
       throw std::runtime_error(
           "No free coordinates for shuttling but shuttling "
           "weight is greater than 0.");
@@ -490,8 +491,9 @@ public:
    */
   void setParameters(const MapperParameters& p) {
     this->parameters = p;
-    if (arch->getNpositions() - arch->getNqubits() < 1 &&
-        p.shuttlingWeight > 0) {
+    const auto nPositions = static_cast<int>(arch->getNpositions());
+    const auto nQubits = static_cast<int>(arch->getNqubits());
+    if (nPositions - nQubits < 1 && p.shuttlingWeight > 0) {
       throw std::runtime_error(
           "No free coordinates for shuttling but shuttling "
           "weight is greater than 0.");
