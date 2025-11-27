@@ -494,8 +494,7 @@ Swap NeutralAtomMapper::findBestSwap(const Swap& lastSwapUsed) {
 
   // no swap possible
   if (swaps.empty()) {
-    return {std::numeric_limits<qc::Qubit>::max(),
-            std::numeric_limits<qc::Qubit>::max()};
+    return {};
   }
   std::vector<std::pair<Swap, qc::fp>> swapCosts;
   swapCosts.reserve(swaps.size());
@@ -1662,6 +1661,10 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
         }
       }
       if (bestMethod == SwapMethod) {
+        if (bestSwap == Swap() || bestSwap.first == bestSwap.second) {
+          throw std::runtime_error(
+              "No possible SWAP found to execute gates in front layer.");
+        }
         lastSwap = bestSwap;
         updateBlockedQubits(HwQubits{bestSwap.first, bestSwap.second});
         applySwap(bestSwap);
