@@ -657,8 +657,8 @@ FlyingAncillaComb NeutralAtomMapper::convertMoveCombToFlyingAncillaComb(
       const auto nearSecond = this->flyingAncillas.getCoordIndex(nearSecondIdx);
       if (usedQubits.size() == 2) {
         // both directions possible, check if reversed is better
-        if (this->arch->getEuclideanDistance(nearFirstIdx, move.c1) <
-            this->arch->getEuclideanDistance(nearSecondIdx, move.c2)) {
+        if (this->arch->getEuclideanDistance(nearFirst, move.c1) <
+            this->arch->getEuclideanDistance(nearSecond, move.c2)) {
           bestFA.q1 = move.c2;
           bestFA.q2 = move.c1;
           bestFA.origin = nearSecond;
