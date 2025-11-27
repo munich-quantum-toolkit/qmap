@@ -81,7 +81,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                      "Number of ancilla qubits to be used (0 or 1 for now).")
       .def_readwrite("limit_shuttling_layer",
                      &na::MapperParameters::limitShuttlingLayer,
-                     "Maximum allowed shuttling layer (default: unlimited).")
+                     "Maximum allowed shuttling layer (default: 10).")
       .def_readwrite("max_bridge_distance",
                      &na::MapperParameters::maxBridgeDistance,
                      "Maximum distance for bridge operations.")
