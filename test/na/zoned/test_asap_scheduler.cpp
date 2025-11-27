@@ -45,7 +45,7 @@ constexpr std::string_view architectureJson = R"({
 class ASAPSchedulerScheduleTest : public ::testing::Test {
 protected:
   Architecture architecture;
-  nlohmann::json config;
+  ASAPScheduler::Config config{.maxFillingFactor = .8};
   ASAPScheduler scheduler;
   ASAPSchedulerScheduleTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
@@ -212,5 +212,15 @@ TEST_F(ASAPSchedulerScheduleTest, UnsupportedCXGate) {
   qc::QuantumComputation qc(2);
   qc.cx(0, 1);
   EXPECT_THROW(std::ignore = scheduler.schedule(qc), std::invalid_argument);
+}
+TEST_F(ASAPSchedulerScheduleTest, FullEntanglementZone) {
+  qc::QuantumComputation qc(26);
+  for (qc::Qubit i = 0; i < 13; ++i) {
+    qc.cz(2 * i, 2 * i + 1);
+  }
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers, ::testing::SizeIs(3));
+  EXPECT_THAT(twoQubitGateLayers, ::testing::SizeIs(2));
 }
 } // namespace na::zoned
