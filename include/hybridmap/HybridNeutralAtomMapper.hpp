@@ -599,7 +599,9 @@ public:
    * @brief Get current mapped circuit (abstract operations form).
    * @return Mapped circuit object.
    */
-  [[nodiscard]] qc::QuantumComputation getMappedQc() const { return mappedQc; }
+  [[nodiscard]] const qc::QuantumComputation& getMappedQc() const {
+    return mappedQc;
+  }
 
   /**
    * @brief Serialize mapped circuit (abstract operations) to extended OpenQASM.
