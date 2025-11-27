@@ -72,17 +72,6 @@ struct MapperStats {
 };
 
 /**
- * @brief Enumeration of supported routing primitives.
- */
-enum RoutingType : uint8_t {
-  SwapType,         ///< Conventional SWAP gate routing.
-  BridgeType,       ///< Bridge circuit using intermediate ancillas.
-  MoveType,         ///< Physical MOVE (shuttling) of atoms.
-  PassByType,       ///< Pass-by movement combination.
-  FlyingAncillaType ///< Flying ancilla mediated interaction.
-};
-
-/**
  * @brief Maps a quantum circuit onto a neutral atom architecture using hybrid
  * routing.
  * @details Combines gate-based (swap/bridge) and shuttling-based
