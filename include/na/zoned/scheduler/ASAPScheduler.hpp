@@ -48,8 +48,8 @@ private:
 public:
   /**
    * Create a new ASAPScheduler.
-   * @note The second parameter of the constructor is unused.
    * @param architecture is the architecture of the neutral atom system
+   * @param config is the configuration for the scheduler
    */
   ASAPScheduler(const Architecture& architecture, const Config& config);
   /**

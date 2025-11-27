@@ -72,7 +72,7 @@ class RoutingAgnosticCompiler:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
-            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it set the limit for the maximum number of entangling gates that are scheduled in parallel
+            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
             use_window: whether to use a window for the placer
             window_size: the size of the window for the placer
             dynamic_placement: whether to use dynamic placement for the placer
@@ -135,7 +135,7 @@ class RoutingAwareCompiler:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
-            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it set the limit for the maximum number of entangling gates that are scheduled in parallel
+            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
             use_window: is a flag whether to use a window for the placer
             window_min_width: is the minimum width of the window for the placer
             window_ratio: is the ratio between the height and the width of the window
