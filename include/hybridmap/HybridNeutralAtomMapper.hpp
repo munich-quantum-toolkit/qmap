@@ -619,7 +619,6 @@ public:
   /**
    * @brief Save mapped abstract circuit (SWAP/MOVE) to file in OpenQASM.
    * @param filename Output file path.
-   * @throw std::runtime_error On file I/O failure.
    */
   [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) const {
     std::ofstream ofs(filename);
@@ -642,7 +641,6 @@ public:
   /**
    * @brief Save AOD-native mapped circuit to file.
    * @param filename Output file path.
-   * @throw std::runtime_error On file I/O failure.
    */
   [[maybe_unused]] void saveMappedQcAodQasm(const std::string& filename) {
     if (this->mappedQcAOD.empty()) {
@@ -683,7 +681,6 @@ public:
   /**
    * @brief Persist animation CSV assets to disk.
    * @param filename Base filename for output.
-   * @throw std::runtime_error On file I/O failure.
    */
   [[maybe_unused]] void saveAnimationFiles(const std::string& filename) const {
     scheduler.saveAnimationFiles(filename);
