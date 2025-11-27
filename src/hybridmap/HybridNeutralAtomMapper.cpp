@@ -607,7 +607,8 @@ Bridges NeutralAtomMapper::getShortestBridges(const Swap& bestSwap) {
 }
 CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
   // Size to cover all register spaces: logical + ancilla + flying ancilla
-  CoordIndices coordUsages(arch->getNpositions() * 3U, 0);
+  CoordIndices coordUsages(static_cast<CoordIndex>(arch->getNpositions() * 3U),
+                           0);
   // in front layer
   for (const auto* const op : this->frontLayerGate) {
     for (const auto qubit : op->getUsedQubits()) {
