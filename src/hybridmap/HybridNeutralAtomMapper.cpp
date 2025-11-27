@@ -1656,7 +1656,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
         bestMethod = compareSwapAndBridge(bestSwap, bestBridge);
         if (bestMethod == BridgeMethod) {
           updateBlockedQubits(
-              {bestBridge.second.begin(), bestBridge.second.end()});
+              HwQubits(bestBridge.second.begin(), bestBridge.second.end()));
           applyBridge(frontLayer, bestBridge);
         }
       }
