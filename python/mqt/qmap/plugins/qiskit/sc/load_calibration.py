@@ -14,8 +14,6 @@ from typing import TYPE_CHECKING
 
 from qiskit.transpiler.target import Target
 
-from .import_backend import import_target
-
 if TYPE_CHECKING:
     from ....sc import Architecture
 
@@ -33,6 +31,8 @@ def load_calibration(architecture: Architecture, calibration: str | Target | Non
     if isinstance(calibration, str):
         architecture.load_properties(calibration)
     elif isinstance(calibration, Target):
+        from .import_backend import import_target  # noqa: PLC0415 to decouple from Qiskit
+
         architecture.load_properties(import_target(calibration))
     else:  # pragma: no cover
         msg = f"Calibration type {type(calibration)} not supported."
