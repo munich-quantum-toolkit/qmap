@@ -634,4 +634,51 @@ atom (3.000, 57.000) atom3
 ]
 )");
 }
+TEST_F(CodeGeneratorGenerateTest, ColumnByColumn) {
+  // STORAGE     ...         │ ...         │ ...
+  //         17  0 1 o o ... │ o o o o ... │ 0 1 o o ...
+  //         18  2 3 o o ... │ o o o o ... │ 2 3 o o ...
+  //         19  4 5 o o ... │ o o o o ... │ 4 5 o o ...
+  //                         │  ╲╲         │ ↑ ↑
+  // ENTANGLEMENT            │   ↓↓        │  ╲╲
+  //          0    oo    ... │   01    ... │   oo    ...
+  //          1    oo    ... │   23    ... │   oo    ...
+  //          2    oo    ... │   45    ... │   oo    ...
+  //               ...       │   ...       │   ...
+  const auto& storage = *architecture.storageZones.front();
+  const auto& entanglementLeft =
+      architecture.entanglementZones.front()->front();
+  const auto& entanglementRight =
+      architecture.entanglementZones.front()->back();
+  EXPECT_TRUE(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{{},
+                                                                            {}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{storage, 17, 0},
+                   {storage, 17, 1},
+                   {storage, 18, 0},
+                   {storage, 18, 1},
+                   {storage, 19, 0},
+                   {storage, 19, 1}},
+                  {{entanglementLeft, 0, 0},
+                   {entanglementRight, 0, 0},
+                   {entanglementLeft, 1, 0},
+                   {entanglementRight, 1, 0},
+                   {entanglementLeft, 2, 0},
+                   {entanglementRight, 2, 0}},
+                  {{storage, 17, 0},
+                   {storage, 17, 1},
+                   {storage, 18, 0},
+                   {storage, 18, 1},
+                   {storage, 19, 0},
+                   {storage, 19, 1}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{
+                  {{0U, 1U, 2U, 3U, 4U, 5U}}, {{0U, 1U, 2U, 3U, 4U, 5U}}})
+          .validate()
+          .first);
+}
 } // namespace na::zoned
