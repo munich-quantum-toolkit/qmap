@@ -223,4 +223,13 @@ TEST_F(ASAPSchedulerScheduleTest, FullEntanglementZone) {
   EXPECT_THAT(singleQubitGateLayers, ::testing::SizeIs(3));
   EXPECT_THAT(twoQubitGateLayers, ::testing::SizeIs(2));
 }
+TEST(ASAPSchedulerConfigTest, InvalidMaxFillingFactor) {
+  const auto architecture = Architecture::fromJSONString(architectureJson);
+  constexpr ASAPScheduler::Config config1{.maxFillingFactor = 0.};
+  EXPECT_THROW(ASAPScheduler scheduler(architecture, config1),
+               std::invalid_argument);
+  constexpr ASAPScheduler::Config config2{.maxFillingFactor = 1.1};
+  EXPECT_THROW(ASAPScheduler scheduler(architecture, config2),
+               std::invalid_argument);
+}
 } // namespace na::zoned
