@@ -43,7 +43,7 @@ namespace na::zoned {
 // Unique-y comparison (ignores multiplicity)
 template <typename Set1, typename Set2, typename Map>
   requires std::is_same_v<std::decay_t<Set1>, std::decay_t<Set2>>
-bool isSameMappedSet(Set1&& a, Set2&& b, Map m) {
+auto isSameMappedSet(Set1&& a, Set2&& b, Map m) -> bool {
   using T = std::decay_t<typename std::decay_t<Set1>::value_type>;
   std::unordered_set<T> mappedA, mappedB;
   std::ranges::for_each(
@@ -79,8 +79,7 @@ auto CodeGenerator::appendSingleQubitGates(
           assert(false);
         }
       } else {
-        const auto opType = op.get().getType();
-        if (opType == qc::RY) {
+        if (const auto opType = op.get().getType(); opType == qc::RY) {
           code.emplaceBack<GlobalRYOp>(globalZone,
                                        op.get().getParameter().front());
         } else if (opType == qc::Y) {
@@ -104,7 +103,7 @@ auto CodeGenerator::appendSingleQubitGates(
       assert(op.get().getNqubits() == 1);
       const qc::Qubit qubit = op.get().getTargets().front();
       // By default, all variants of rotational z-gates are supported
-      if (op.get().getType() == qc::RZ) {
+      if (op.get().getType() == qc::RZ || op.get().getType() == qc::P) {
         code.emplaceBack<LocalRZOp>(atoms[qubit],
                                     op.get().getParameter().front());
       } else if (op.get().getType() == qc::Z) {
@@ -117,9 +116,6 @@ auto CodeGenerator::appendSingleQubitGates(
         code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_4);
       } else if (op.get().getType() == qc::Tdg) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_4);
-      } else if (op.get().getType() == qc::P) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit],
-                                    op.get().getParameter().front());
       } else {
         // in this case, the gate is not any variant of a rotational z-gate.
         // depending on the settings, a warning is printed.
@@ -149,16 +145,14 @@ auto CodeGenerator::appendSingleQubitGates(
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, 0, qc::PI);
         } else if (op.get().getType() == qc::Y) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, qc::PI_2, qc::PI_2);
-        } else if (op.get().getType() == qc::V) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
-                                     qc::PI_2);
         } else if (op.get().getType() == qc::Vdg) {
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, qc::PI_2,
                                      -qc::PI_2);
         } else if (op.get().getType() == qc::SX) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
-        } else if (op.get().getType() == qc::SXdg) {
+        } else if (op.get().getType() == qc::SXdg ||
+                   op.get().getType() == qc::V) {
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
         } else {
@@ -1135,6 +1129,7 @@ auto CodeGenerator::generate(
     const std::vector<Routing>& routing) const -> NAComputation {
   NAComputation code;
   std::vector<std::reference_wrapper<const Zone>> rydbergZones;
+  rydbergZones.reserve(architecture_.get().rydbergRangeMinX.size());
   for (size_t i = 0; i < architecture_.get().rydbergRangeMinX.size(); ++i) {
     rydbergZones.emplace_back(code.emplaceBackZone(
         "zone_cz" + std::to_string(i),
