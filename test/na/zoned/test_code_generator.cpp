@@ -485,33 +485,50 @@ TEST_F(CodeGeneratorGenerateTest, TwoQubitGate) {
               std::vector<std::vector<std::vector<qc::Qubit>>>{{{0U, 1U}},
                                                                {{0U, 1U}}})
           .toString(),
-      "atom (0.000, 57.000) atom0\n"
-      "atom (3.000, 57.000) atom1\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (5.000, 70.000) atom0\n"
-      "    (7.000, 70.000) atom1\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ cz zone_cz0\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (0.000, 57.000) atom0\n"
-      "    (3.000, 57.000) atom1\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n");
+      R"(atom (0.000, 57.000) atom0
+atom (3.000, 57.000) atom1
+@+ load [
+    atom0
+    atom1
+]
+@+ move [
+    (1.000, 58.000) atom0
+    (4.000, 58.000) atom1
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+]
+@+ move [
+    (5.000, 70.000) atom0
+    (7.000, 70.000) atom1
+]
+@+ store [
+    atom0
+    atom1
+]
+@+ cz zone_cz0
+@+ load [
+    atom0
+    atom1
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+]
+@+ move [
+    (1.000, 58.000) atom0
+    (4.000, 58.000) atom1
+]
+@+ move [
+    (0.000, 57.000) atom0
+    (3.000, 57.000) atom1
+]
+@+ store [
+    atom0
+    atom1
+]
+)");
 }
 TEST_F(CodeGeneratorGenerateTest, Offset) {
   // STORAGE     ...         │ ...         │ ...
@@ -550,58 +567,71 @@ TEST_F(CodeGeneratorGenerateTest, Offset) {
               std::vector<std::vector<std::vector<qc::Qubit>>>{
                   {{0U, 1U, 2U, 3U}}, {{0U, 1U, 2U, 3U}}})
           .toString(),
-      "atom (0.000, 54.000) atom0\n"
-      "atom (0.000, 57.000) atom2\n"
-      "atom (3.000, 54.000) atom1\n"
-      "atom (3.000, 57.000) atom3\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (0.000, 55.000) atom0\n"
-      "    (3.000, 55.000) atom1\n"
-      "]\n"
-      "@+ load [\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n"
-      "@+ move [\n"
-      "    (5.000, 70.000) atom0\n"
-      "    (7.000, 70.000) atom1\n"
-      "    (5.000, 80.000) atom2\n"
-      "    (7.000, 80.000) atom3\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n"
-      "@+ cz zone_cz0\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (5.000, 71.000) atom0\n"
-      "    (7.000, 71.000) atom1\n"
-      "]\n"
-      "@+ load [\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n"
-      "@+ move [\n"
-      "    (0.000, 54.000) atom0\n"
-      "    (3.000, 54.000) atom1\n"
-      "    (0.000, 57.000) atom2\n"
-      "    (3.000, 57.000) atom3\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n");
+      R"(atom (0.000, 54.000) atom0
+atom (0.000, 57.000) atom2
+atom (3.000, 54.000) atom1
+atom (3.000, 57.000) atom3
+@+ load [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+@+ move [
+    (1.000, 55.000) atom0
+    (4.000, 55.000) atom1
+    (1.000, 58.000) atom2
+    (4.000, 58.000) atom3
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+    (2.000, 75.000) atom2
+    (10.000, 75.000) atom3
+]
+@+ move [
+    (5.000, 70.000) atom0
+    (7.000, 70.000) atom1
+    (5.000, 80.000) atom2
+    (7.000, 80.000) atom3
+]
+@+ store [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+@+ cz zone_cz0
+@+ load [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+    (2.000, 75.000) atom2
+    (10.000, 75.000) atom3
+]
+@+ move [
+    (1.000, 55.000) atom0
+    (4.000, 55.000) atom1
+    (1.000, 58.000) atom2
+    (4.000, 58.000) atom3
+]
+@+ move [
+    (0.000, 54.000) atom0
+    (3.000, 54.000) atom1
+    (0.000, 57.000) atom2
+    (3.000, 57.000) atom3
+]
+@+ store [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+)");
 }
 } // namespace na::zoned
