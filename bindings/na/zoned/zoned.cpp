@@ -62,7 +62,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         py::init([](const na::zoned::Architecture& arch,
                     const std::string& logLevel, const double maxFillingFactor,
                     const bool useWindow, const size_t windowSize,
-                    const bool dynamicPlacement, const size_t parkingOffset,
+                    const bool dynamicPlacement,
                     const bool warnUnsupportedGates)
                      -> na::zoned::RoutingAgnosticCompiler {
           na::zoned::RoutingAgnosticCompiler::Config config;
@@ -72,8 +72,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
               .useWindow = useWindow,
               .windowSize = windowSize,
               .dynamicPlacement = dynamicPlacement};
-          config.codeGeneratorConfig = {.parkingOffset = parkingOffset,
-                                        .warnUnsupportedGates =
+          config.codeGeneratorConfig = {.warnUnsupportedGates =
                                             warnUnsupportedGates};
           return {arch, config};
         }),
@@ -86,7 +85,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             defaultConfig.layoutSynthesizerConfig.placerConfig.windowSize,
         "dynamic_placement"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.dynamicPlacement,
-        "parking_offset"_a = defaultConfig.codeGeneratorConfig.parkingOffset,
         "warn_unsupported_gates"_a =
             defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
   }
@@ -127,8 +125,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                     const double windowRatio, const double windowShare,
                     const float deepeningFactor, const float deepeningValue,
                     const float lookaheadFactor, const float reuseLevel,
-                    const size_t maxNodes, const size_t parkingOffset,
-                    const bool warnUnsupportedGates)
+                    const size_t maxNodes, const bool warnUnsupportedGates)
                      -> na::zoned::RoutingAwareCompiler {
           na::zoned::RoutingAwareCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
@@ -143,8 +140,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
               .lookaheadFactor = lookaheadFactor,
               .reuseLevel = reuseLevel,
               .maxNodes = maxNodes};
-          config.codeGeneratorConfig = {.parkingOffset = parkingOffset,
-                                        .warnUnsupportedGates =
+          config.codeGeneratorConfig = {.warnUnsupportedGates =
                                             warnUnsupportedGates};
           return {arch, config};
         }),
@@ -169,7 +165,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             defaultConfig.layoutSynthesizerConfig.placerConfig.reuseLevel,
         "max_nodes"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.maxNodes,
-        "parking_offset"_a = defaultConfig.codeGeneratorConfig.parkingOffset,
         "warn_unsupported_gates"_a =
             defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
   }
