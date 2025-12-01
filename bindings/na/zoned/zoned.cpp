@@ -62,7 +62,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         py::init([](const na::zoned::Architecture& arch,
                     const std::string& logLevel, const double maxFillingFactor,
                     const bool useWindow, const size_t windowSize,
-                    const bool dynamicPlacement, const size_t parkingOffset,
+                    const bool dynamicPlacement,
                     const bool warnUnsupportedGates)
                      -> na::zoned::RoutingAgnosticCompiler {
           na::zoned::RoutingAgnosticCompiler::Config config;

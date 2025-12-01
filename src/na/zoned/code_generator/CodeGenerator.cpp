@@ -44,8 +44,9 @@ namespace na::zoned {
 template <typename Set1, typename Set2, typename Map>
   requires std::is_same_v<std::decay_t<Set1>, std::decay_t<Set2>>
 auto isSameMappedSet(Set1&& a, Set2&& b, Map m) -> bool {
-  using T = std::decay_t<typename std::decay_t<Set1>::value_type>;
-  std::unordered_set<T> mappedA, mappedB;
+  using Value = typename std::decay_t<Set1>::value_type;
+  using MappedT = std::decay_t<std::invoke_result_t<Map&, Value>>;
+  std::unordered_set<MappedT> mappedA, mappedB;
   std::ranges::for_each(
       a, [&m, &mappedA](const auto& i) { mappedA.emplace(m(i)); });
   std::ranges::for_each(
@@ -1037,6 +1038,9 @@ CodeGenerator::RearrangementGenerator::RearrangementGenerator(
     const Architecture& arch, const Placement& sourcePlacement,
     const Placement& targetPlacement, const std::vector<qc::Qubit>& qubits)
     : architecture_(arch) {
+  if (qubits.empty()) {
+    return;
+  }
   // extract the movement of every single qubit
   std::ranges::for_each(qubits, [&](const auto& qubit) {
     const auto [sourceX, sourceY] = getLocationFromSite(sourcePlacement[qubit]);
@@ -1104,6 +1108,7 @@ CodeGenerator::RearrangementGenerator::RearrangementGenerator(
       std::ranges::is_sorted(horizontalMoves_ | std::views::values);
 
   const auto anyVerticalMove = verticalMoves_.begin();
+  assert(anyVerticalMove != verticalMoves_.end());
   rearrangementDirection_ = anyVerticalMove->first < anyVerticalMove->second
                                 ? RearrangementDirection::UP
                                 : RearrangementDirection::DOWN;
