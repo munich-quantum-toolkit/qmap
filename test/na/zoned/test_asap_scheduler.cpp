@@ -225,7 +225,7 @@ TEST_F(ASAPSchedulerScheduleTest, FullEntanglementZone) {
 }
 TEST(ASAPSchedulerConfigTest, InvalidMaxFillingFactor) {
   const auto architecture = Architecture::fromJSONString(architectureJson);
-  constexpr ASAPScheduler::Config config1{.maxFillingFactor = 0.};
+  constexpr ASAPScheduler::Config config1{.maxFillingFactor = -0.1};
   EXPECT_THROW(ASAPScheduler scheduler(architecture, config1),
                std::invalid_argument);
   constexpr ASAPScheduler::Config config2{.maxFillingFactor = 1.1};
