@@ -265,8 +265,8 @@ auto CodeGenerator::RearrangementGenerator::addTargetMove(
     if (location != newLocation) {
       atomsToOffset.emplace_back(&atoms[qubit].get());
       offsetTargetLocations.emplace_back(
-          static_cast<double>(newLocation.first),
-          static_cast<double>(newLocation.second));
+          Location{.x = static_cast<double>(newLocation.first),
+                   .y = static_cast<double>(newLocation.second)});
       location = newLocation;
     }
   }
