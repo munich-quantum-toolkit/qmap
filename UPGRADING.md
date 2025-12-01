@@ -4,6 +4,10 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+As part of this release, the scheduler of the zoned neutral atom compiler now features a new parameter `max_filling_factor`.
+It allows limiting the maximum number of parallel entangling gates relative to the maximum capacity of the entangling zone.
+NOte, the default is set to `0.9`.
+
 ## [3.4.0]
 
 ### End of support for Python 3.9
