@@ -1054,7 +1054,7 @@ CodeGenerator::RearrangementGenerator::RearrangementGenerator(
   sourceDy_ = static_cast<int64_t>(sourceSlm.siteSeparation.second);
   sourceMinX_ = static_cast<int64_t>(sourceSlm.location.first);
   sourceMaxX_ = sourceMinX_ + sourceDx_ * static_cast<int64_t>(sourceSlm.nCols);
-  sourceMinY_ = static_cast<int64_t>(sourceSlm.location.first);
+  sourceMinY_ = static_cast<int64_t>(sourceSlm.location.second);
   sourceMaxY_ = sourceMinY_ + sourceDy_ * static_cast<int64_t>(sourceSlm.nRows);
   // We do the same for the target zone
   const auto& targetSlm = std::get<0>(targetPlacement.at(qubits.front())).get();
