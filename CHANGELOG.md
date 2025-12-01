@@ -13,7 +13,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
-- ✨ Add `max_filling_factor` to Scheduler in Zoned Neutral Atom Compiler ([#847]) ([**@ystade**])
+- ✨ Add `max_filling_factor` to scheduler in Zoned Neutral Atom Compiler ([#847]) ([**@ystade**])
 
 ## [3.4.0] - 2025-10-15
 
