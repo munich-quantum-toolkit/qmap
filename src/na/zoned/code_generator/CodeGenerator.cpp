@@ -692,7 +692,7 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
       const auto aodRowTargetY = aodRowToTargetY[upperIt->first];
       const auto& aodColQubits = yToQubitsToBeStored[aodRowTargetY];
       if (aodRowTargetY >=
-              aodRowTargetY - (sign * targetDy_ / 2) + (freeCols * targetDy_) &&
+              nextY - (sign * targetDy_ / 2) + (freeCols * targetDy_) &&
           isSameMappedSet(qubitsToStore, aodColQubits, [this](const auto q) {
             return movements_.at(q).targetX;
           })) {
