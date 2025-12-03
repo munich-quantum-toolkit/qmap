@@ -186,8 +186,9 @@ auto CodeGenerator::appendTwoQubitGates(
                       code);
 }
 namespace {
-[[nodiscard]] auto enumerate(const auto& data) {
-  return data | std::views::transform([i = 0UL](const auto& value) mutable {
+[[nodiscard]] auto enumerate(auto&& data) {
+  return std::views::all(std::forward<decltype(data)>(data)) |
+         std::views::transform([i = 0UL](const auto& value) mutable {
            return std::pair{i++, value};
          });
 }
