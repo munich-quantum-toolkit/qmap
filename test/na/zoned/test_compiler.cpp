@@ -49,6 +49,7 @@ constexpr std::string_view routingAgnosticConfiguration = R"({
     }
   },
   "codeGeneratorConfig" : {
+    "parkingOffset" : 1,
     "warnUnsupportedGates" : false
   }
 })";
