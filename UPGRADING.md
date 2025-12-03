@@ -6,7 +6,11 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 As part of this release, the scheduler of the zoned neutral atom compiler now features a new parameter `max_filling_factor`.
 It allows limiting the maximum number of parallel entangling gates relative to the maximum capacity of the entangling zone.
-NOte, the default is set to `0.9`.
+Note, the default is set to `0.9`.
+
+The code generator of the zoned neutral atom compiler is updated to also handle routings that only satisfy relaxed routing constraints.
+In contrast to the strict routing, a relaxed routing can change the relative order of atoms.
+The constraint that remains is that atoms previously in one row (column) must remain in the same row (column) after the routing.
 
 ## [3.4.0]
 
