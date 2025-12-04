@@ -36,6 +36,7 @@
 #include <queue>
 #include <ranges>
 #include <set>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -45,11 +46,17 @@
 namespace na {
 void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
                                   const Mapping& initialMapping) {
+  // remove barriers and measurements
+  qc::CircuitOptimizer::removeFinalMeasurements(qc);
   // check if multi-qubit gates are present
   multiQubitGates = false;
   for (const auto& op : qc) {
     if (op->getUsedQubits().size() > 2) {
       // deactivate static mapping
+      spdlog::warn(
+          "The circuit contains multi-qubit gates (more than 2 qubits). "
+          "Bridge gates will NOT be used for mapping.");
+
       multiQubitGates = true;
       break;
     }
