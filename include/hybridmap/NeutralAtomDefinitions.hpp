@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -96,6 +97,16 @@ struct AtomMove {
    * @return True if any field differs.
    */
   bool operator!=(const AtomMove& other) const { return !(*this == other); }
+
+  /**
+   * @brief Less-than comparison for ordering.
+   * @param other Move to compare.
+   * @return True if this move is less than the other in lexicographical order.
+   */
+  bool operator<(const AtomMove& other) const {
+    return std::tie(c1, c2, load1, load2) <
+           std::tie(other.c1, other.c2, other.load1, other.load2);
+  }
 };
 
 /**
