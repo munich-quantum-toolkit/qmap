@@ -196,8 +196,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           "filename"_a, "initial_mapping"_a = na::InitialMapping::Identity)
       .def("get_stats", &na::NeutralAtomMapper::getStatsMap,
            "Returns the statistics of the mapping.")
-      .def("get_mapped_qc", &na::NeutralAtomMapper::getMappedQc,
-           "Returns the mapped circuit.")
       .def("get_mapped_qc_qasm", &na::NeutralAtomMapper::getMappedQcQasm,
            "Returns the mapped circuit as an extended qasm2 string.")
       .def("get_mapped_qc_aod_qasm", &na::NeutralAtomMapper::getMappedQcAodQasm,
@@ -241,19 +239,20 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "Initializes the synthesized and mapped circuits and mapping "
            "structures for the given number of qubits.",
            "n_qubits"_a)
-      .def("get_mapped_qc", &na::HybridSynthesisMapper::getMappedQcQasm,
+      .def("get_mapped_qc_qasm", &na::HybridSynthesisMapper::getMappedQcQasm,
            "Returns the mapped circuit as an extended qasm2 string.")
-      .def("save_mapped_qc", &na::HybridSynthesisMapper::saveMappedQcQasm,
+      .def("save_mapped_qc_qasm", &na::HybridSynthesisMapper::saveMappedQcQasm,
            "Saves the mapped circuit as an extended qasm2 to a file.",
            "filename"_a)
       .def("convert_to_aod", &na::HybridSynthesisMapper::convertToAod,
            "Converts the mapped circuit to "
            "native AOD movements.")
       .def(
-          "get_mapped_qc_aod", &na::HybridSynthesisMapper::getMappedQcAodQasm,
+          "get_mapped_qc_aod_qasm",
+          &na::HybridSynthesisMapper::getMappedQcAodQasm,
           "Returns the mapped circuit with native AOD movements as an extended "
           "qasm2 string.")
-      .def("save_mapped_qc_aod",
+      .def("save_mapped_qc_aod_qasm",
            &na::HybridSynthesisMapper::saveMappedQcAodQasm,
            "Saves the mapped circuit with native AOD movements as an extended "
            "qasm2 to a "
