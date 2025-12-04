@@ -8,8 +8,7 @@
  * Licensed under the MIT License
  */
 
-#ifndef HYBRIDMAP_NEUTRAL_ATOM_UTILS_HPP
-#define HYBRIDMAP_NEUTRAL_ATOM_UTILS_HPP
+#pragma once
 
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
@@ -468,5 +467,3 @@ protected:
   bridgeExpand(const qc::QuantumComputation& qcBridge, size_t qubit);
 };
 } // namespace na
-
-#endif // HYBRIDMAP_NEUTRAL_ATOM_UTILS_HPP

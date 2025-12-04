@@ -8,8 +8,7 @@
  * Licensed under the MIT License
  */
 
-#ifndef HYBRIDMAP_NEUTRAL_ATOM_ARCHITECTURE_HPP
-#define HYBRIDMAP_NEUTRAL_ATOM_ARCHITECTURE_HPP
+#pragma once
 
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
@@ -600,5 +599,3 @@ public:
 };
 
 } // namespace na
-
-#endif // HYBRIDMAP_NEUTRAL_ATOM_ARCHITECTURE_HPP

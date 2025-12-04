@@ -8,8 +8,7 @@
  * Licensed under the MIT License
  */
 
-#ifndef HYBRIDMAP_NEUTRAL_ATOM_LAYER_HPP
-#define HYBRIDMAP_NEUTRAL_ATOM_LAYER_HPP
+#pragma once
 
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "ir/Definitions.hpp"
@@ -151,5 +150,3 @@ bool commutesWithAtQubit(const GateList& layer, const qc::Operation* opPointer,
 bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
                     const qc::Qubit& qubit);
 } // namespace na
-
-#endif // HYBRIDMAP_NEUTRAL_ATOM_LAYER_HPP

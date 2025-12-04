@@ -8,8 +8,7 @@
  * Licensed under the MIT License
  */
 
-#ifndef HYBRIDMAP_NEUTRAL_ATOM_SCHEDULER_HPP
-#define HYBRIDMAP_NEUTRAL_ATOM_SCHEDULER_HPP
+#pragma once
 
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
@@ -202,5 +201,3 @@ public:
 };
 
 } // namespace na
-
-#endif // HYBRIDMAP_NEUTRAL_ATOM_SCHEDULER_HPP

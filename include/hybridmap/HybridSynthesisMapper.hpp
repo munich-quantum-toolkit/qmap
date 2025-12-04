@@ -13,8 +13,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#ifndef HYBRIDMAP_HYBRID_SYNTHESIS_MAPPER_HPP
-#define HYBRIDMAP_HYBRID_SYNTHESIS_MAPPER_HPP
+#pragma once
 
 #include "HybridNeutralAtomMapper.hpp"
 #include "NeutralAtomArchitecture.hpp"
@@ -150,5 +149,3 @@ public:
   [[nodiscard]] AdjacencyMatrix getCircuitAdjacencyMatrix() const;
 };
 } // namespace na
-
-#endif // HYBRIDMAP_HYBRID_SYNTHESIS_MAPPER_HPP

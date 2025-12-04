@@ -8,8 +8,7 @@
  * Licensed under the MIT License
  */
 
-#ifndef HYBRIDMAP_MAPPING_HPP
-#define HYBRIDMAP_MAPPING_HPP
+#pragma once
 
 #include "HardwareQubits.hpp"
 #include "NeutralAtomArchitecture.hpp"
@@ -215,5 +214,3 @@ public:
 };
 
 } // namespace na
-
-#endif // HYBRIDMAP_MAPPING_HPP

@@ -8,8 +8,7 @@
  * Licensed under the MIT License
  */
 
-#ifndef HYBRIDMAP_NEUTRAL_ATOM_DEFINITIONS_HPP
-#define HYBRIDMAP_NEUTRAL_ATOM_DEFINITIONS_HPP
+#pragma once
 
 #include "datastructures/SymmetricMatrix.hpp"
 #include "ir/Definitions.hpp"
@@ -109,5 +108,3 @@ using GateList = std::vector<const qc::Operation*>;
 using GateLists = std::vector<GateList>;
 
 } // namespace na
-
-#endif // HYBRIDMAP_NEUTRAL_ATOM_DEFINITIONS_HPP
