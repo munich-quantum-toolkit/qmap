@@ -351,6 +351,8 @@ auto RelaxedIndependentSetRouter::route(
         // erase the current group from the linked list of groups; note that
         // a reverse pointer always points to the element in front of the
         // current iterator position.
+        // After erasing, we create a new reverse iterator pointing to the
+        // same logical position in the remaining list.
         const auto& a = (++groupIt).base();
         const auto& b = groups.erase(a);
         groupIt = std::make_reverse_iterator(b);
