@@ -285,6 +285,7 @@ protected:
      */
 
     [[nodiscard]] uint32_t getFirstIdx() const {
+      assert(!moves.empty() || !movesFa.empty());
       if (moves.empty()) {
         return movesFa.front().second;
       }
