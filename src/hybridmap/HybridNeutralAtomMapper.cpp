@@ -589,7 +589,7 @@ Bridges NeutralAtomMapper::getShortestBridges(const Swap& bestSwap) {
       auto usedQuBits = op->getUsedQubits();
       auto usedHwQubits = this->mapping.getHwQubits(usedQuBits);
       if (!usedHwQubits.contains(bestSwap.first) &&
-          !usedHwQubits.contains(bestSwap.second)) {
+          !usedHwQubits.contains(bestSwap.second) && bestSwap != Swap()) {
         continue;
       }
       // shortcut if distance already larger than minBridgeLength
