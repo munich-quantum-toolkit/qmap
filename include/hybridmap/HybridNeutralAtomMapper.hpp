@@ -48,7 +48,7 @@ struct MapperParameters {
   qc::fp lookaheadWeightMoves = 0.1;
   qc::fp decay = 0.1;
   qc::fp shuttlingTimeWeight = 0.1;
-  qc::fp dynamicMappingWeight = 2;
+  qc::fp dynamicMappingWeight = 1;
   qc::fp gateWeight = 1;
   qc::fp shuttlingWeight = 1;
   uint32_t seed = 42;

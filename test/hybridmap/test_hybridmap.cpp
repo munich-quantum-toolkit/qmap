@@ -68,7 +68,7 @@ protected:
   qc::fp gateWeight = 1;
   qc::fp shuttlingWeight = 1;
   qc::fp lookAheadWeight = 1;
-  qc::fp dynamicMappingWeight = 2;
+  qc::fp dynamicMappingWeight = 1;
   na::InitialCoordinateMapping initialCoordinateMapping =
       na::InitialCoordinateMapping::Random;
   // fixed
