@@ -87,12 +87,9 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
   if (placement.empty()) {
     return routing;
   }
-  for (auto it = placement.cbegin(); true;) {
-    const auto& startPlacement = *it;
-    if (++it == placement.cend()) {
-      break;
-    }
-    const auto& targetPlacement = *it;
+  for (size_t i = 0; i + 1 < placement.size(); ++i) {
+    const auto& startPlacement = placement[i];
+    const auto& targetPlacement = placement[i + 1];
     std::set<std::pair<double, qc::Qubit>, std::greater<>>
         atomsToMoveOrderedAscByDist;
     assert(startPlacement.size() == targetPlacement.size());
