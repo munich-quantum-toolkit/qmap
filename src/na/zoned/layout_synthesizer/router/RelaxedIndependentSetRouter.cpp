@@ -125,7 +125,7 @@ auto subCubeRootsCubed(const double a, const double b) -> double {
 } // namespace
 auto RelaxedIndependentSetRouter::isRelaxedIncompatibleMovement(
     const std::tuple<size_t, size_t, size_t, size_t>& v,
-    const std::tuple<size_t, size_t, size_t, size_t>& w) const
+    const std::tuple<size_t, size_t, size_t, size_t>& w)
     -> std::optional<std::optional<double>> {
   const auto& [v0, v1, v2, v3] = v;
   const auto& [w0, w1, w2, w3] = w;

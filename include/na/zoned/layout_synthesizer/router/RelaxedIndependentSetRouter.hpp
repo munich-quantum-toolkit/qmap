@@ -134,9 +134,9 @@ private:
    * @return true, if the given movement vectors are incompatible, otherwise
    * false
    */
-  [[nodiscard]] auto isRelaxedIncompatibleMovement(
+  [[nodiscard]] static auto isRelaxedIncompatibleMovement(
       const std::tuple<size_t, size_t, size_t, size_t>& v,
-      const std::tuple<size_t, size_t, size_t, size_t>& w) const
+      const std::tuple<size_t, size_t, size_t, size_t>& w)
       -> std::optional<std::optional<double>>;
 };
 } // namespace na::zoned
