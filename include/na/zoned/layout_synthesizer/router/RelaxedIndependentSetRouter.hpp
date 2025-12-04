@@ -38,8 +38,15 @@ public:
    * parameters.
    */
   struct Config {
-    // todo(yannick): add docstring
-    double preferSplit = 4.0;
+    /**
+     * @brief Threshold factor for group merging decisions during routing.
+     * @details First, a strict routing is computed resulting in a set of
+     * rearrangement groups. Afterward, some of those are merged with existing
+     * groups based on the relaxed constraints. Higher values of this
+     * parameter favor keeping groups separate; lower values favor merging.
+     * In particular, a value of 0.0 merges all possible groups. (Default: 1.0)
+     */
+    double preferSplit = 1.0;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, preferSplit);
   };
 
