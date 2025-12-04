@@ -49,7 +49,6 @@ constexpr std::string_view routingAgnosticConfiguration = R"({
     }
   },
   "codeGeneratorConfig" : {
-    "parkingOffset" : 1,
     "warnUnsupportedGates" : false
   }
 })";
@@ -86,6 +85,9 @@ constexpr std::string_view relaxedRoutingAwareConfiguration = R"({
       "deepeningValue" : 0.2,
       "lookaheadFactor": 0.2,
       "reuseLevel": 5.0
+    },
+    "routerConfig" : {
+      "preferSplit" : 0.0
     }
   }
 })";
