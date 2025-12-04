@@ -1657,7 +1657,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
   // first do all gate based mapping gates
   while (!this->frontLayerGate.empty()) {
     GateList gatesToExecute;
-    while (gatesToExecute.empty()) {
+    while (gatesToExecute.empty() && !this->frontLayerGate.empty()) {
       ++i;
       if (this->parameters.verbose) {
         std::cout << "iteration " << i << '\n';
