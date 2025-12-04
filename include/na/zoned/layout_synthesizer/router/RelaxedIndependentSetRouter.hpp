@@ -124,7 +124,16 @@ private:
   isCompatibleMovement(const std::tuple<size_t, size_t, size_t, size_t>& v,
                        const std::tuple<size_t, size_t, size_t, size_t>& w)
       -> bool;
-  // todo(yannick): add docstring
+  /**
+   * Check whether two movements are incompatible with respect to the relaxed
+   * routing constraints, i.e., moved atoms remain not on the same row (column).
+   * This is, however, independent of their topological order (i.e., relaxed).
+   * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
+   * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
+   * y-end)
+   * @return true, if the given movement vectors are incompatible, otherwise
+   * false
+   */
   [[nodiscard]] auto isRelaxedIncompatibleMovement(
       const std::tuple<size_t, size_t, size_t, size_t>& v,
       const std::tuple<size_t, size_t, size_t, size_t>& w) const
