@@ -40,7 +40,6 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
     return qc;
   }
   processMoveGroups();
-  // postProcessMoveGroups();
 
   // create new quantum circuit and insert AOD operations at the correct
   // indices
