@@ -232,6 +232,8 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
   }
 
   frontLayer.removeGatesAndUpdate({pbComb.op});
+  this->frontLayerShuttling.erase(
+      std::ranges::find(this->frontLayerShuttling, pbComb.op));
   stats.nPassBy += pbComb.moves.size();
 }
 
@@ -408,6 +410,7 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
   // // remove gate from frontLayer
   const auto* op = bridge.first;
   frontLayer.removeGatesAndUpdate({op});
+  this->frontLayerGate.erase(std::ranges::find(this->frontLayerGate, op));
 
   stats.nBridges++;
 }
@@ -484,6 +487,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   }
 
   frontLayer.removeGatesAndUpdate({faComb.op});
+  this->frontLayerShuttling.erase(
+      std::ranges::find(this->frontLayerShuttling, faComb.op));
   stats.nFAncillas += faComb.moves.size();
 }
 
