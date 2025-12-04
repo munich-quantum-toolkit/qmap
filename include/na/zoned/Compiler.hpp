@@ -163,9 +163,9 @@ public:
     // CodeQL was not very happy about the structural binding here, hence I
     // removed it.
     SPDLOG_DEBUG("Scheduling...");
-    const auto& schedulingStart = std::chrono::system_clock::now();
+    const auto schedulingStart = std::chrono::system_clock::now();
     const auto& schedule = SELF.schedule(qComp);
-    const auto& schedulingEnd = std::chrono::system_clock::now();
+    const auto schedulingEnd = std::chrono::system_clock::now();
     const auto& singleQubitGateLayers = schedule.first;
     const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
@@ -197,9 +197,9 @@ public:
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
     SPDLOG_DEBUG("Analyzing reuse...");
-    const auto& reuseAnalysisStart = std::chrono::system_clock::now();
+    const auto reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
-    const auto& reuseAnalysisEnd = std::chrono::system_clock::now();
+    const auto reuseAnalysisEnd = std::chrono::system_clock::now();
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             reuseAnalysisEnd - reuseAnalysisStart)
@@ -207,10 +207,10 @@ public:
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
 
     SPDLOG_DEBUG("Synthesizing layout...");
-    const auto& layoutSynthesisStart = std::chrono::system_clock::now();
+    const auto layoutSynthesisStart = std::chrono::system_clock::now();
     const auto& [placement, routing] = LayoutSynthesizer::synthesize(
         qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
-    const auto& layoutSynthesisEnd = std::chrono::system_clock::now();
+    const auto layoutSynthesisEnd = std::chrono::system_clock::now();
     statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             layoutSynthesisEnd - layoutSynthesisStart)
@@ -221,10 +221,10 @@ public:
                 statistics_.layoutSynthesisTime);
 
     SPDLOG_DEBUG("Generating code...");
-    const auto& codeGenerationStart = std::chrono::system_clock::now();
+    const auto codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
         SELF.generate(singleQubitGateLayers, placement, routing);
-    const auto& codeGenerationEnd = std::chrono::system_clock::now();
+    const auto codeGenerationEnd = std::chrono::system_clock::now();
     assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
