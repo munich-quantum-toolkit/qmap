@@ -1704,11 +1704,13 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   if (this->parameters.dynamicMappingWeight == 0) {
     return BridgeMethod;
   }
-  // swap distance reduction
-  qc::fp const swapDistReduction =
-      swapDistanceReduction(bestSwap, this->frontLayerGate) +
-      (this->parameters.lookaheadWeightSwaps *
-       swapDistanceReduction(bestSwap, this->lookaheadLayerGate) /
+  const auto swapFrontDistReduction =
+      swapDistanceReduction(bestSwap, this->frontLayerGate);
+  const auto swapLookaheadDistReduction =
+      swapDistanceReduction(bestSwap, this->lookaheadLayerGate);
+  const auto swapDistReduction =
+      swapFrontDistReduction +
+      (this->parameters.lookaheadWeightSwaps * swapLookaheadDistReduction /
        this->parameters.lookaheadDepth);
 
   // bridge distance reduction
@@ -1716,9 +1718,12 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
       static_cast<qc::fp>(bestBridge.second.size()) - 2;
 
   // fidelity comparison
-  qc::fp const swapFidelity = this->arch->getGateAverageFidelity("swap") *
-                              std::exp(-this->arch->getGateTime("swap") /
-                                       this->arch->getDecoherenceTime());
+  qc::fp const swapTime =
+      this->arch->getGateTime("swap") + this->arch->getGateTime("cz");
+  qc::fp const swapFidelity =
+      this->arch->getGateAverageFidelity("swap") *
+      this->arch->getGateAverageFidelity("cz") *
+      std::exp(-swapTime / this->arch->getDecoherenceTime());
   const std::string bridgeName =
       "bridge" + std::to_string(bestBridge.second.size());
   qc::fp const bridgeFidelity = this->arch->getGateAverageFidelity(bridgeName) *
