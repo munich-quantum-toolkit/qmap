@@ -141,9 +141,8 @@ constexpr std::string_view relaxedRoutingAwareConfiguration = R"({
       compiler_type##Test,              /* Test suite name */                  \
       ::testing::Values(TEST_CIRCUITS), /* Parameters to test with */          \
       [](const ::testing::TestParamInfo<std::string>& pinfo) {                 \
-        const auto& path = pinfo.param;                                        \
-        const auto& filename = path.substr(path.find_last_of('/') + 1);        \
-        return filename.substr(0, filename.find_last_of('.'));                 \
+        const std::filesystem::path path(pinfo.param);                         \
+        return path.stem().string();                                           \
       })
 /*============================== INSTANTIATIONS ==============================*/
 COMPILER_TEST(RoutingAgnosticCompiler, routingAgnosticConfiguration);
