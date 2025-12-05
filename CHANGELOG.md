@@ -22,6 +22,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
 
 ### Added
 
+- ✨ Add new relaxed routing method to the zoned neutral atom compiler ([#859]) ([**@ystade**])
 - 👷 Enable testing on Python 3.14 ([#796]) ([**@denialhaag**])
 
 ### Changed
@@ -158,6 +159,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#859]: https://github.com/munich-quantum-toolkit/qmap/pull/859
 [#848]: https://github.com/munich-quantum-toolkit/qmap/pull/848
 [#847]: https://github.com/munich-quantum-toolkit/qmap/pull/847
 [#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804
