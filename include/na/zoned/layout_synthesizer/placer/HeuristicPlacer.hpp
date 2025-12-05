@@ -576,7 +576,8 @@ private:
    * node.
    * @param trials is the number of restarts IDS performs.
    * @param queueCapacity is the capacity of the queue used for the iterative
-   * diving search. Must be larger or equal to @p trials.
+   * diving search. For the actual capacity, the current value of trial is
+   * added.
    * @return a shared pointer to the final node of the search.
    */
   template <class Node>
@@ -626,18 +627,20 @@ private:
    * particular node from the start node
    * @param getHeuristic is a function that returns the heuristic cost from the
    * node to any goal.
+   * @param maxNodes is the maximum number of held in the priority queue before
+   * the search is aborted.
    * @return a vector of node references representing the path from the start to
    * a goal
    */
   template <class Node>
-  [[nodiscard]] static auto aStarTreeSearch(
-      const Node& start,
-      const std::function<std::vector<std::reference_wrapper<const Node>>(
-          const Node&)>& getNeighbors,
-      const std::function<bool(const Node&)>& isGoal,
-      const std::function<double(const Node&)>& getCost,
-      const std::function<double(const Node&)>& getHeuristic, size_t maxNodes)
-      -> std::vector<std::reference_wrapper<const Node>>;
+  [[nodiscard]] static auto
+  aStarTreeSearch(std::shared_ptr<const Node> start,
+                  const std::function<std::vector<std::shared_ptr<const Node>>(
+                      std::shared_ptr<const Node>)>& getNeighbors,
+                  const std::function<bool(const Node&)>& isGoal,
+                  const std::function<double(const Node&)>& getCost,
+                  const std::function<double(const Node&)>& getHeuristic,
+                  size_t maxNodes) -> std::shared_ptr<const Node>;
 
   /**
    * @brief This function takes a list of atoms together with their current
