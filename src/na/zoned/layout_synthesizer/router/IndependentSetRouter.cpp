@@ -132,24 +132,22 @@ auto IndependentSetRouter::isRelaxedCompatibleMovement(
   if (((v0 == w0) != (v2 == w2)) || ((v1 == w1) != (v3 == w3))) {
     return MovementCompatibility::incompatible();
   }
+  // Helper to safely compute absolute difference
+  auto distDouble = [](const auto a, const auto b) -> double {
+    return static_cast<double>(a > b ? a - b : b - a);
+  };
   if ((v0 < w0) != (v2 < w2) && (v1 < w1) != (v3 < w3)) {
-    return MovementCompatibility::relaxedCompatible(sumCubeRootsCubed(
-        static_cast<double>(
-            std::abs(static_cast<int64_t>(v0) - static_cast<int64_t>(w0)) +
-            std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2))),
-        static_cast<double>(
-            std::abs(static_cast<int64_t>(v1) - static_cast<int64_t>(w1)) +
-            std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3)))));
+    return MovementCompatibility::relaxedCompatible(
+        sumCubeRootsCubed(distDouble(v0, w0) + distDouble(v2, w2),
+                          distDouble(v1, w1) + distDouble(v3, w3)));
   }
   if ((v0 < w0) != (v2 < w2)) {
-    return MovementCompatibility::relaxedCompatible(static_cast<double>(
-        std::abs(static_cast<int64_t>(v0) - static_cast<int64_t>(w0)) +
-        std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2))));
+    return MovementCompatibility::relaxedCompatible(distDouble(v0, w0) +
+                                                    distDouble(v2, w2));
   }
   if ((v1 < w1) != (v3 < w3)) {
-    return MovementCompatibility::relaxedCompatible(static_cast<double>(
-        std::abs(static_cast<int64_t>(v1) - static_cast<int64_t>(w1)) +
-        std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3))));
+    return MovementCompatibility::relaxedCompatible(distDouble(v1, w1) +
+                                                    distDouble(v3, w3));
   }
   return MovementCompatibility::strictlyCompatible();
 }
