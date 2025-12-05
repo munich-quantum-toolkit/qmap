@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -585,7 +586,76 @@ private:
       const std::function<bool(const Node&)>& isGoal,
       const std::function<double(const Node&)>& getCost,
       const std::function<double(const Node&)>& getHeuristic, size_t trials,
-      size_t queueCapacity) -> std::shared_ptr<const Node>;
+      const size_t queueCapacity) -> std::shared_ptr<const Node> {
+    struct Item {
+      double priority;                  //< sum of cost and heuristic
+      std::shared_ptr<const Node> node; //< pointer to the node
+
+      Item(const double priority, std::shared_ptr<const Node> node)
+          : priority(priority), node(node) {
+        assert(!std::isnan(priority));
+      }
+    };
+    struct ItemCompare {
+      auto operator()(const Item& a, const Item& b) const -> bool {
+        return a.priority < b.priority;
+      }
+    };
+    BoundedPriorityQueue<Item, ItemCompare> queue(queueCapacity + trials);
+    std::optional<Item> goal;
+    Item currentItem{getHeuristic(*start), start};
+    while (true) {
+      if (isGoal(*currentItem.node)) {
+        SPDLOG_TRACE("Goal node found with priority {}", currentItem.priority);
+        trials--;
+        if (!goal.has_value() || currentItem.priority < goal->priority) {
+          goal = std::move(currentItem);
+        }
+        if (trials > 0 && !queue.empty()) {
+          SPDLOG_TRACE("Restart search with priority {}", goal->priority);
+          currentItem = std::move(queue.top());
+          queue.popAndShrink();
+          continue;
+        }
+        break;
+      }
+      // Expand the current node by adding all neighbors to the open set
+      std::optional<Item> minItem = std::nullopt;
+      for (auto& neighbor : getNeighbors(currentItem.node)) {
+        const auto cost = getCost(*neighbor);
+        const auto heuristic = getHeuristic(*neighbor);
+        Item item{cost + heuristic, std::move(neighbor)};
+        if (!minItem) {
+          minItem = std::move(item);
+        } else if (item.priority < minItem->priority) {
+          queue.push(std::move(*minItem));
+          minItem = std::move(item);
+        } else {
+          queue.push(std::move(item));
+        }
+      }
+      if (minItem) {
+        currentItem = std::move(*minItem);
+      } else {
+        assert(trials > 0);
+        if (!queue.empty()) {
+          SPDLOG_TRACE("No neighbors found, restart search with priority {}",
+                       goal->priority);
+          currentItem = std::move(queue.top());
+          queue.pop();
+        } else {
+          break;
+        }
+      }
+    }
+    if (!goal) {
+      throw std::runtime_error(
+          "No path from start to any goal found. This may be caused by a too "
+          "narrow window size. Try adjusting the window_share compiler "
+          "configuration option to a higher value, such as 1.0.");
+    }
+    return goal->node;
+  }
 
   /**
    * @brief A* search algorithm for trees
@@ -637,7 +707,65 @@ private:
                   const std::function<bool(const Node&)>& isGoal,
                   const std::function<double(const Node&)>& getCost,
                   const std::function<double(const Node&)>& getHeuristic,
-                  size_t maxNodes) -> std::shared_ptr<const Node>;
+                  size_t maxNodes) -> std::shared_ptr<const Node> {
+    //===--------------------------------------------------------------------===//
+    // Setup open set structure
+    //===--------------------------------------------------------------------===//
+    // struct for items in the open set
+    struct Item {
+      double priority;                  //< sum of cost and heuristic
+      std::shared_ptr<const Node> node; //< pointer to the node
+
+      Item(const double priority, std::shared_ptr<const Node> node)
+          : priority(priority), node(node) {
+        assert(!std::isnan(priority));
+      }
+    };
+    // compare function for the open set
+    struct ItemCompare {
+      auto operator()(const Item& a, const Item& b) const -> bool {
+        // this way, the item with the lowest priority is on top of the heap
+        return a.priority > b.priority;
+      }
+    };
+    // open list of nodes to be evaluated as a minimum heap based on the
+    // priority.
+    std::priority_queue<Item, std::vector<Item>, ItemCompare> openSet;
+    openSet.emplace(getHeuristic(*start), start);
+    //===--------------------------------------------------------------------===//
+    // Perform A* search
+    //===--------------------------------------------------------------------===//
+    while (openSet.size() < maxNodes && !openSet.empty()) {
+      auto itm = openSet.top();
+      openSet.pop();
+      // if a goal is reached, that is the shortest path to a goal under the
+      // assumption that the heuristic is admissible
+      if (isGoal(*itm.node)) {
+        return itm.node;
+      }
+      // expand the current node by adding all neighbors to the open set
+      const auto& neighbors = getNeighbors(itm.node);
+      if (!neighbors.empty()) {
+        for (const auto& neighbor : neighbors) {
+          // getCost returns the total cost to reach the current node
+          const auto cost = getCost(*neighbor);
+          const auto heuristic = getHeuristic(*neighbor);
+          openSet.emplace(cost + heuristic, neighbor);
+        }
+      }
+    }
+    if (openSet.size() >= maxNodes) {
+      throw std::runtime_error(
+          "Maximum number of nodes reached. Increase max_nodes or increase "
+          "deepening_value and deepening_factor to reduce the number of "
+          "explored "
+          "nodes.");
+    }
+    throw std::runtime_error(
+        "No path from start to any goal found. This may be caused by a too "
+        "narrow window size. Try adjusting the window_share compiler "
+        "configuration option to a higher value, such as 1.0.");
+  }
 
   /**
    * @brief This function takes a list of atoms together with their current

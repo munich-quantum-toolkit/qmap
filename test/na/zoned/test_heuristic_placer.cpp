@@ -375,7 +375,7 @@ TEST(HeuristicPlacerTest, AStarSearch) {
   nodes[12]->neighbors = {nodes[13]};
   nodes[13]->neighbors = {nodes[14]};
   nodes[14]->neighbors = {nodes[15]};
-  const auto goal = (HeuristicPlacer::aStarTreeSearch<Node>(
+  const auto goal = HeuristicPlacer::aStarTreeSearch<Node>(
       /* start: */
       nodes[0],
       /* getNeighbors: */
@@ -389,7 +389,7 @@ TEST(HeuristicPlacerTest, AStarSearch) {
       [](const Node& /* unused */) -> double { return 1.0; },
       /* getHeuristic: */
       [&nodes](const Node& node) -> double { return node.distanceToGoal; },
-      1'000'000));
+      1'000'000);
   EXPECT_EQ(goal, nodes[14]);
 }
 } // namespace na::zoned
