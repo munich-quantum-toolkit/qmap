@@ -24,6 +24,7 @@
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/pybind11.h>
 // NOLINTNEXTLINE(misc-include-cleaner)
 #include <pybind11_json/pybind11_json.hpp>
@@ -52,6 +53,18 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                    });
 
   //===--------------------------------------------------------------------===//
+  // Routing Method Enum
+  //===--------------------------------------------------------------------===//
+  py::native_enum<na::zoned::IndependentSetRouter::Config::Method>(
+      m, "Routing Method", "enum.Enum",
+      "Enumeration of routing methods for the independent set router.")
+      .value("strict", na::zoned::IndependentSetRouter::Config::Method::STRICT)
+      .value("relaxed",
+             na::zoned::IndependentSetRouter::Config::Method::RELAXED)
+      .export_values()
+      .finalize();
+
+  //===--------------------------------------------------------------------===//
   // Routing-agnostic Compiler
   //===--------------------------------------------------------------------===//
   py::class_<na::zoned::RoutingAgnosticCompiler> routingAgnosticCompiler(
@@ -61,6 +74,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
     routingAgnosticCompiler.def(
         py::init([](const na::zoned::Architecture& arch,
                     const std::string& logLevel, const double maxFillingFactor,
+                    const na::zoned::IndependentSetRouter::Config::Method
+                        routingMethod,
                     const bool useWindow, const size_t windowSize,
                     const bool dynamicPlacement,
                     const bool warnUnsupportedGates)
@@ -68,6 +83,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           na::zoned::RoutingAgnosticCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
           config.schedulerConfig.maxFillingFactor = maxFillingFactor;
+          config.layoutSynthesizerConfig.routerConfig.method = routingMethod;
           config.layoutSynthesizerConfig.placerConfig = {
               .useWindow = useWindow,
               .windowSize = windowSize,
@@ -79,6 +95,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         py::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
+        "routing_method"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
         "use_window"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
         "window_size"_a =
@@ -121,6 +139,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
     routingAwareCompiler.def(
         py::init([](const na::zoned::Architecture& arch,
                     const std::string& logLevel, const double maxFillingFactor,
+                    const na::zoned::IndependentSetRouter::Config::Method
+                        routingMethod,
                     const bool useWindow, const size_t windowMinWidth,
                     const double windowRatio, const double windowShare,
                     const float deepeningFactor, const float deepeningValue,
@@ -130,6 +150,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
           na::zoned::RoutingAwareCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
           config.schedulerConfig.maxFillingFactor = maxFillingFactor;
+          config.layoutSynthesizerConfig.routerConfig.method = routingMethod;
           config.layoutSynthesizerConfig.placerConfig = {
               .useWindow = useWindow,
               .windowMinWidth = windowMinWidth,
@@ -147,6 +168,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         py::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
+        "routing_method"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
         "use_window"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
         "window_min_width"_a =
