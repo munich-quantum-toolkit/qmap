@@ -46,7 +46,7 @@ using RowColumnSet =
  * the placement of the atoms in each layer using a heuristic search algorithm.
  */
 class HeuristicPlacer : public PlacerBase {
-  friend class HeuristicPlacerPlacerTest_AStarSearch_Test;
+  friend class HeuristicPlacerTest_AStarSearch_Test;
   using DiscreteSite = std::array<uint8_t, 2>;
   using CompatibilityGroup = std::array<std::map<uint8_t, uint8_t>, 2>;
 
