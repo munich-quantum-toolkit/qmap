@@ -265,7 +265,7 @@ Similar to the normal Hybrid Mapper, you can retrieve the mapped circuit and the
 ```{code-cell} ipython3
 
 # Retrieve mapped circuit (extended QASM2)
-qasm_mapped = synth.get_mapped_qc()
+qasm_mapped = synth.get_mapped_qc_qasm()
 print("\n... Mapped QASM snippet ...\n" +
     "\n".join(qasm_mapped.splitlines()[:30]) +
     "\n...")
@@ -274,7 +274,7 @@ print("\n... Mapped QASM snippet ...\n" +
 One can also access the circuits which is constructed step-by-step in a unmapped state (e.g. to use a different mapper).
 
 ```{code-cell} ipython3
-qasm_synth = synth.get_synthesized_qc()
+qasm_synth = synth.get_synthesized_qc_qasm()
 print("\n... Synthesized QASM snippet ...\n" +
     "\n".join(qasm_synth.splitlines()[:30]) +
     "\n...")
