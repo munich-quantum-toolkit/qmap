@@ -224,6 +224,17 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
             relaxedConflictingAtoms;
       };
       std::list<GroupInfo> groups;
+      // Helper to merge conflict costs
+      auto mergeConflictCost = [](std::optional<double>& existing,
+                                  const std::optional<double>& incoming) {
+        if (existing.has_value()) {
+          if (incoming.has_value()) {
+            existing = std::max(*existing, *incoming);
+          } else {
+            existing = std::nullopt;
+          }
+        }
+      };
       while (!atomsToMove.empty()) {
         auto& group = groups.emplace_back();
         std::vector<qc::Qubit> remainingAtoms;
@@ -247,13 +258,8 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
                 auto [conflictIt, success] =
                     group.relaxedConflictingAtoms.try_emplace(neighbor.first,
                                                               neighbor.second);
-                if (!success && conflictIt->second.has_value()) {
-                  if (neighbor.second.has_value()) {
-                    conflictIt->second =
-                        std::max(*conflictIt->second, *neighbor.second);
-                  } else {
-                    conflictIt->second = std::nullopt;
-                  }
+                if (!success) {
+                  mergeConflictCost(conflictIt->second, neighbor.second);
                 }
               }
             }
@@ -344,34 +350,30 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
         // costs, i.e., the distance and the cubed costs directly.
         if (foundNewGroupForAllAtoms &&
             groupIt->maxDistance > config_.preferSplit * totalCostCubed) {
-          std::ranges::for_each(atomToNewGroup, [&relaxedConflictGraph,
-                                                 &atomToDist](
-                                                    const auto& pair) {
-            const auto& [atom, group] = pair;
-            // add atom to a new group
-            group->independentSet.emplace_back(atom);
-            const auto dist = atomToDist.at(atom);
-            if (group->maxDistance < dist) {
-              group->maxDistance = dist;
-            }
-            if (const auto relaxedConflictingNeighbors =
-                    relaxedConflictGraph.find(atom);
-                relaxedConflictingNeighbors != relaxedConflictGraph.end()) {
-              for (const auto neighbor : relaxedConflictingNeighbors->second) {
-                auto [conflictIt, success] =
-                    group->relaxedConflictingAtoms.try_emplace(neighbor.first,
-                                                               neighbor.second);
-                if (!success && conflictIt->second.has_value()) {
-                  if (neighbor.second.has_value()) {
-                    conflictIt->second =
-                        std::max(*conflictIt->second, *neighbor.second);
-                  } else {
-                    conflictIt->second = std::nullopt;
+          std::ranges::for_each(
+              atomToNewGroup, [&relaxedConflictGraph, &atomToDist,
+                               &mergeConflictCost](const auto& pair) {
+                const auto& [atom, group] = pair;
+                // add atom to a new group
+                group->independentSet.emplace_back(atom);
+                const auto dist = atomToDist.at(atom);
+                if (group->maxDistance < dist) {
+                  group->maxDistance = dist;
+                }
+                if (const auto relaxedConflictingNeighbors =
+                        relaxedConflictGraph.find(atom);
+                    relaxedConflictingNeighbors != relaxedConflictGraph.end()) {
+                  for (const auto neighbor :
+                       relaxedConflictingNeighbors->second) {
+                    auto [conflictIt, success] =
+                        group->relaxedConflictingAtoms.try_emplace(
+                            neighbor.first, neighbor.second);
+                    if (!success) {
+                      mergeConflictCost(conflictIt->second, neighbor.second);
+                    }
                   }
                 }
-              }
-            }
-          });
+              });
           // erase the current group from the linked list of groups; note that
           // a reverse pointer always points to the element in front of the
           // current iterator position.
