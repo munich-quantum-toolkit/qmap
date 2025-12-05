@@ -247,7 +247,8 @@ auto RelaxedIndependentSetRouter::route(
       const auto& independentSet = groupIt->independentSet;
       std::unordered_map<qc::Qubit, decltype(groups)::value_type*>
           atomToNewGroup;
-      // find best new group for each qubit in independent set and record costs
+      // find the best new group for each qubit in independent set and record
+      // costs
       auto totalCost = 0.0;
       auto totalCostCubed = 0.0;
       bool foundNewGroupForAllAtoms = true;
@@ -313,15 +314,17 @@ auto RelaxedIndependentSetRouter::route(
                          3 * cost * totalCost * (cost + totalCost);
         totalCost += cost;
       }
-      // if all atoms in independent set could be assigned to a new group and
-      // the offset cost is less than the cost for the current group which is
-      // proportional to the cubed maximum distance
+      // if all atoms in the independent set could be assigned to a new group
+      // and the offset cost, i.e., the time for the extra offsets, is less than
+      // the cost for the current group. The cost for the current group is the
+      // cubic root of the distance; hence, we compare the cubes of the costs,
+      // i.e., the distance and the cubed costs directly.
       if (foundNewGroupForAllAtoms &&
           groupIt->maxDistance > config_.preferSplit * totalCostCubed) {
         std::ranges::for_each(atomToNewGroup, [&relaxedConflictGraph,
                                                &atomToDist](const auto& pair) {
           const auto& [atom, group] = pair;
-          // add atom to new group
+          // add atom to a new group
           group->independentSet.emplace_back(atom);
           const auto dist = atomToDist.at(atom);
           if (group->maxDistance < dist) {
