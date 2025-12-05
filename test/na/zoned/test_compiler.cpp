@@ -48,7 +48,7 @@ constexpr std::string_view strictRoutingAgnosticConfiguration = R"({
       "dynamicPlacement" : true
     },
     "routerConfig" : {
-      "method" : "STRICT"
+      "method" : "strict"
     }
   },
   "codeGeneratorConfig" : {
@@ -72,7 +72,7 @@ constexpr std::string_view strictRoutingAwareConfiguration = R"({
       "reuseLevel": 5.0
     },
     "routerConfig" : {
-      "method" : "STRICT"
+      "method" : "strict"
     }
   }
 })";
@@ -93,7 +93,7 @@ constexpr std::string_view relaxedRoutingAwareConfiguration = R"({
       "reuseLevel": 5.0
     },
     "routerConfig" : {
-      "method" : "RELAXED",
+      "method" : "relaxed",
       "preferSplit" : 0.0
     }
   }

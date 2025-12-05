@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <nlohmann/json.hpp>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -49,10 +50,6 @@ public:
        */
       RELAXED
     };
-    NLOHMANN_JSON_SERIALIZE_ENUM(Method, {
-                                             {Method::STRICT, "strict"},
-                                             {Method::RELAXED, "relaxed"},
-                                         })
     Method method = Method::RELAXED;
     /**
      * @brief Threshold factor for group merging decisions during routing.
@@ -64,7 +61,7 @@ public:
      * @note This value is only relevant if the routing method RELAXED is used.
      */
     double preferSplit = 1.0;
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, method, preferSplit);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, method, preferSplit)
   };
 
 private:
@@ -216,4 +213,10 @@ private:
       const std::tuple<size_t, size_t, size_t, size_t>& w)
       -> MovementCompatibility;
 };
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    IndependentSetRouter::Config::Method,
+    {
+        {IndependentSetRouter::Config::Method::STRICT, "strict"},
+        {IndependentSetRouter::Config::Method::RELAXED, "relaxed"},
+    })
 } // namespace na::zoned
