@@ -18,7 +18,6 @@
 #include "layout_synthesizer/placer/AStarPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
-#include "layout_synthesizer/router/RelaxedIndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 #include "scheduler/ASAPScheduler.hpp"
@@ -292,8 +291,7 @@ public:
 
 class RelaxedRoutingAwareSynthesizer
     : public PlaceAndRouteSynthesizer<RelaxedRoutingAwareSynthesizer,
-                                      AStarPlacer,
-                                      RelaxedIndependentSetRouter> {
+                                      AStarPlacer, IndependentSetRouter> {
 public:
   RelaxedRoutingAwareSynthesizer(const Architecture& architecture,
                                  const Config& config)
