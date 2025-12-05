@@ -760,8 +760,8 @@ auto HeuristicPlacer::placeGatesInEntanglementZone(
   const auto deepeningFactor = config_.deepeningFactor;
   const auto deepeningValue = config_.deepeningValue;
   std::shared_ptr<const GateNode> node;
-  switch (config_.heuristicMethod) {
-  case Config::HeuristicMethod::IDS:
+  switch (config_.method) {
+  case Config::Method::IDS:
     node = iterativeDivingSearch<GateNode>(
         std::make_shared<const GateNode>(),
         [&gateJobs](const auto& node) { return getNeighbors(gateJobs, node); },
@@ -774,7 +774,7 @@ auto HeuristicPlacer::placeGatesInEntanglementZone(
         },
         config_.trials, config_.queueCapacity);
     break;
-  case Config::HeuristicMethod::AStar:
+  case Config::Method::ASTAR:
     node = aStarTreeSearch<GateNode>(
         std::make_shared<const GateNode>(),
         [&gateJobs](const auto& node) { return getNeighbors(gateJobs, node); },
@@ -1173,8 +1173,8 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
   const auto deepeningValue = config_.deepeningValue;
 
   std::shared_ptr<const AtomNode> node;
-  switch (config_.heuristicMethod) {
-  case Config::HeuristicMethod::IDS:
+  switch (config_.method) {
+  case Config::Method::IDS:
     node = iterativeDivingSearch<AtomNode>(
         std::make_shared<const AtomNode>(),
         [&atomJobs](const auto& node) { return getNeighbors(atomJobs, node); },
@@ -1187,7 +1187,7 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
         },
         config_.trials, config_.queueCapacity);
     break;
-  case Config::HeuristicMethod::AStar:
+  case Config::Method::ASTAR:
     node = aStarTreeSearch<AtomNode>(
         std::make_shared<const AtomNode>(),
         [&atomJobs](const auto& node) { return getNeighbors(atomJobs, node); },
