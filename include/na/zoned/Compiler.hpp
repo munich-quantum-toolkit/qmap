@@ -18,6 +18,7 @@
 #include "layout_synthesizer/placer/AStarPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
+#include "layout_synthesizer/router/RelaxedIndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 #include "scheduler/ASAPScheduler.hpp"
@@ -159,23 +160,14 @@ public:
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
-    const auto& schedulingStart = std::chrono::system_clock::now();
     // CodeQL was not very happy about the structural binding here, hence I
     // removed it.
+    SPDLOG_DEBUG("Scheduling...");
+    const auto schedulingStart = std::chrono::system_clock::now();
     const auto& schedule = SELF.schedule(qComp);
+    const auto schedulingEnd = std::chrono::system_clock::now();
     const auto& singleQubitGateLayers = schedule.first;
     const auto& twoQubitGateLayers = schedule.second;
-    const auto& schedulingEnd = std::chrono::system_clock::now();
-    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
-    const auto& reuseAnalysisEnd = std::chrono::system_clock::now();
-    const auto& [placement, routing] = LayoutSynthesizer::synthesize(
-        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
-    const auto& layoutSynthesisEnd = std::chrono::system_clock::now();
-    NAComputation code =
-        SELF.generate(singleQubitGateLayers, placement, routing);
-    const auto& codeGenerationEnd = std::chrono::system_clock::now();
-    assert(code.validate().first);
-
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
                                                               schedulingStart)
@@ -203,25 +195,44 @@ public:
           avg, max);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
+
+    SPDLOG_DEBUG("Analyzing reuse...");
+    const auto reuseAnalysisStart = std::chrono::system_clock::now();
+    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
+    const auto reuseAnalysisEnd = std::chrono::system_clock::now();
     statistics_.reuseAnalysisTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(reuseAnalysisEnd -
-                                                              schedulingEnd)
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            reuseAnalysisEnd - reuseAnalysisStart)
             .count();
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
+
+    SPDLOG_DEBUG("Synthesizing layout...");
+    const auto layoutSynthesisStart = std::chrono::system_clock::now();
+    const auto& [placement, routing] = LayoutSynthesizer::synthesize(
+        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+    const auto layoutSynthesisEnd = std::chrono::system_clock::now();
     statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            layoutSynthesisEnd - reuseAnalysisEnd)
+            layoutSynthesisEnd - layoutSynthesisStart)
             .count();
     statistics_.layoutSynthesizerStatistics =
         SELF.getLayoutSynthesisStatistics();
     SPDLOG_INFO("Time for layout synthesis: {}us",
                 statistics_.layoutSynthesisTime);
+
+    SPDLOG_DEBUG("Generating code...");
+    const auto codeGenerationStart = std::chrono::system_clock::now();
+    NAComputation code =
+        SELF.generate(singleQubitGateLayers, placement, routing);
+    const auto codeGenerationEnd = std::chrono::system_clock::now();
+    assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
-            codeGenerationEnd - layoutSynthesisEnd)
+            codeGenerationEnd - codeGenerationStart)
             .count();
     SPDLOG_INFO("Time for code generation: {}us",
                 statistics_.codeGenerationTime);
+
     statistics_.totalTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             codeGenerationEnd - schedulingStart)
@@ -254,7 +265,7 @@ public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const Config& config)
       : Compiler(architecture, config) {}
-  RoutingAgnosticCompiler(const Architecture& architecture)
+  explicit RoutingAgnosticCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 
@@ -275,7 +286,30 @@ class RoutingAwareCompiler final
 public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
-  RoutingAwareCompiler(const Architecture& architecture)
+  explicit RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+
+class RelaxedRoutingAwareSynthesizer
+    : public PlaceAndRouteSynthesizer<RelaxedRoutingAwareSynthesizer,
+                                      AStarPlacer,
+                                      RelaxedIndependentSetRouter> {
+public:
+  RelaxedRoutingAwareSynthesizer(const Architecture& architecture,
+                                 const Config& config)
+      : PlaceAndRouteSynthesizer(architecture, config) {}
+  explicit RelaxedRoutingAwareSynthesizer(const Architecture& architecture)
+      : PlaceAndRouteSynthesizer(architecture) {}
+};
+class RelaxedRoutingAwareCompiler final
+    : public Compiler<RelaxedRoutingAwareCompiler, ASAPScheduler,
+                      VertexMatchingReuseAnalyzer,
+                      RelaxedRoutingAwareSynthesizer, CodeGenerator> {
+public:
+  RelaxedRoutingAwareCompiler(const Architecture& architecture,
+                              const Config& config)
+      : Compiler(architecture, config) {}
+  explicit RelaxedRoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned

@@ -28,26 +28,37 @@ namespace na::zoned {
  * that forms groups of parallel movements by calculating a maximal independent
  * set.
  */
-class IndependentSetRouter : public RouterBase {
+class RelaxedIndependentSetRouter : public RouterBase {
   std::reference_wrapper<const Architecture> architecture_;
 
 public:
   /**
-   * The configuration of the IndependentSetRouter
-   * @note IndependentSetRouter does not have any configuration parameters.
+   * The configuration of the RelaxedIndependentSetRouter
+   * @note RelaxedIndependentSetRouter does not have any configuration
+   * parameters.
    */
   struct Config {
-    template <typename BasicJsonType>
-    friend void to_json(BasicJsonType& /* unused */,
-                        const Config& /* unused */) {}
-    template <typename BasicJsonType>
-    friend void from_json(const BasicJsonType& /* unused */,
-                          Config& /* unused */) {}
+    /**
+     * @brief Threshold factor for group merging decisions during routing.
+     * @details First, a strict routing is computed resulting in a set of
+     * rearrangement groups. Afterward, some of those are merged with existing
+     * groups based on the relaxed constraints. Higher values of this
+     * parameter favor keeping groups separate; lower values favor merging.
+     * In particular, a value of 0.0 merges all possible groups. (Default: 1.0)
+     */
+    double preferSplit = 1.0;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, preferSplit);
   };
-  /// Create a IndependentSetRouter
-  IndependentSetRouter(const Architecture& architecture,
-                       const Config& /* unused */)
-      : architecture_(architecture) {}
+
+private:
+  /// The configuration of the relaxed independent set router
+  Config config_;
+
+public:
+  /// Create a RelaxedIndependentSetRouter
+  RelaxedIndependentSetRouter(const Architecture& architecture,
+                              const Config& config)
+      : architecture_(architecture), config_(config) {}
   /**
    * Given the computed placement, compute a possible routing.
    * @details For this task, all movements are put in a conflict graph where an
@@ -81,6 +92,12 @@ private:
                       const Placement& startPlacement,
                       const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
+  [[nodiscard]] auto
+  createRelaxedConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                             const Placement& startPlacement,
+                             const Placement& targetPlacement) const
+      -> std::unordered_map<
+          qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>;
 
   /**
    * Takes two sites, the start and target site and returns a 4D-vector of the
@@ -104,7 +121,57 @@ private:
    * @return true, if the given movement vectors are compatible, otherwise false
    */
   [[nodiscard]] static auto
-  isCompatibleMovement(std::tuple<size_t, size_t, size_t, size_t> v,
-                       std::tuple<size_t, size_t, size_t, size_t> w) -> bool;
+  isCompatibleMovement(const std::tuple<size_t, size_t, size_t, size_t>& v,
+                       const std::tuple<size_t, size_t, size_t, size_t>& w)
+      -> bool;
+  /**
+   * This struct indicates whether two movements are strictly compatible,
+   * relaxed compatible together with the corresponding merging cost, or
+   * (completely) incompatible.
+   */
+  struct MovementCompatibility {
+    enum class Status : uint8_t {
+      StrictlyCompatible, // Movements can proceed in parallel
+      RelaxedCompatible,  // Can be merged with a cost
+      Incompatible        // Cannot be merged at all
+    };
+
+    /// Indicates the type of compatibility
+    Status status;
+    /**
+     * In the case of `RelaxedIncompatible`, the cost to merge the two
+     * movements
+     */
+    std::optional<double> mergeCost;
+
+    /// Factory methods for strict compatibility
+    [[nodiscard]] static auto strictlyCompatible() -> MovementCompatibility {
+      return {.status = Status::StrictlyCompatible, .mergeCost = std::nullopt};
+    }
+
+    /// Factory method for incompatibility
+    [[nodiscard]] static auto incompatible() -> MovementCompatibility {
+      return {.status = Status::Incompatible, .mergeCost = std::nullopt};
+    }
+
+    [[nodiscard]] static auto relaxedCompatible(const double cost)
+        -> MovementCompatibility {
+      return {.status = Status::RelaxedCompatible, .mergeCost = cost};
+    }
+  };
+  /**
+   * Check whether two movements are incompatible with respect to the relaxed
+   * routing constraints, i.e., moved atoms remain not on the same row (column).
+   * This is, however, independent of their topological order (i.e., relaxed).
+   * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
+   * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
+   * y-end)
+   * @return true, if the given movement vectors are incompatible, otherwise
+   * false
+   */
+  [[nodiscard]] static auto isRelaxedCompatibleMovement(
+      const std::tuple<size_t, size_t, size_t, size_t>& v,
+      const std::tuple<size_t, size_t, size_t, size_t>& w)
+      -> MovementCompatibility;
 };
 } // namespace na::zoned
