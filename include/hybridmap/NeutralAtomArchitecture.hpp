@@ -439,8 +439,7 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2));
+    return coordinates.at(idx1).getEuclideanDistance(coordinates.at(idx2));
   }
   /**
    * @brief Sum of pairwise Euclidean distances among a set of indices.
@@ -522,8 +521,7 @@ public:
   [[nodiscard]] CoordIndex getManhattanDistanceX(const CoordIndex idx1,
                                                  const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
-        this->coordinates.at(idx1).getManhattanDistanceX(
-            this->coordinates.at(idx2)));
+        coordinates.at(idx1).getManhattanDistanceX(coordinates.at(idx2)));
   }
   /**
    * @brief Manhattan distance in Y between two indices.
@@ -564,8 +562,8 @@ public:
    */
   [[nodiscard]] MoveVector getVector(const CoordIndex idx1,
                                      const CoordIndex idx2) const {
-    return {this->coordinates[idx1].x, this->coordinates[idx1].y,
-            this->coordinates[idx2].x, this->coordinates[idx2].y};
+    return {coordinates[idx1].x, coordinates[idx1].y, coordinates[idx2].x,
+            coordinates[idx2].y};
   }
   /**
    * @brief Estimate time to move along a MoveVector.
@@ -573,8 +571,8 @@ public:
    * @return Shuttling time proportional to Euclidean length and device speed.
    */
   [[nodiscard]] qc::fp getVectorShuttlingTime(const MoveVector& v) const {
-    return v.getLength() * this->getInterQubitDistance() /
-           this->getShuttlingTime(qc::OpType::Move);
+    return v.getLength() * getInterQubitDistance() /
+           getShuttlingTime(qc::OpType::Move);
   }
 
   /**

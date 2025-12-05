@@ -41,12 +41,12 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
   size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
-    if (this->parameters.verbose) {
+    if (parameters.verbose) {
       spdlog::info("Evaluating synthesis step number {}", qcIndex);
     }
-    const auto fidelity = this->evaluateSynthesisStep(qc);
+    const auto fidelity = evaluateSynthesisStep(qc);
     candidates.emplace_back(qc, fidelity);
-    if (this->parameters.verbose) {
+    if (parameters.verbose) {
       spdlog::info("Fidelity: {}", fidelity);
     }
     ++qcIndex;
@@ -62,14 +62,14 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
     }
   }
   if (alsoMap && !candidates.empty()) {
-    this->appendWithMapping(candidates[bestIndex].first);
+    appendWithMapping(candidates[bestIndex].first);
   }
   return fidelities;
 }
 
 qc::fp
 HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) const {
-  NeutralAtomMapper tempMapper(this->arch, this->parameters);
+  NeutralAtomMapper tempMapper(arch, parameters);
   tempMapper.copyStateFrom(*this);
   // Make a copy of qc to avoid modifying the original
   auto qcCopy = qc;
@@ -85,8 +85,8 @@ void HybridSynthesisMapper::appendWithoutMapping(
     initMapping(qc.getNqubits());
   }
   for (const auto& op : qc) {
-    this->synthesizedQc.emplace_back(op->clone());
-    this->mapGate(op.get());
+    synthesizedQc.emplace_back(op->clone());
+    mapGate(op.get());
   }
 }
 
@@ -94,9 +94,9 @@ void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
   if (mappedQc.empty()) {
     initMapping(qc.getNqubits());
   }
-  mapAppend(qc, this->mapping);
+  mapAppend(qc, mapping);
   for (const auto& op : qc) {
-    this->synthesizedQc.emplace_back(op->clone());
+    synthesizedQc.emplace_back(op->clone());
   }
 }
 
@@ -114,9 +114,9 @@ AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
         adjMatrix(i, j) = 0;
         continue;
       }
-      const auto mappedI = this->mapping.getHwQubit(i);
-      const auto mappedJ = this->mapping.getHwQubit(j);
-      if (this->arch->getSwapDistance(mappedI, mappedJ) == 0) {
+      const auto mappedI = mapping.getHwQubit(i);
+      const auto mappedJ = mapping.getHwQubit(j);
+      if (arch->getSwapDistance(mappedI, mappedJ) == 0) {
         adjMatrix(i, j) = 1;
         adjMatrix(j, i) = 1;
       } else {

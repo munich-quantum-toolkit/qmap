@@ -27,15 +27,15 @@ namespace na {
 void Mapping::applySwap(const Swap& swap) {
   const auto q1 = swap.first;
   const auto q2 = swap.second;
-  if (this->isMapped(q1) && this->isMapped(q2)) {
-    const auto circQ1 = this->getCircQubit(q1);
-    const auto circQ2 = this->getCircQubit(q2);
-    this->setCircuitQubit(circQ2, q1);
-    this->setCircuitQubit(circQ1, q2);
-  } else if (this->isMapped(q1) && !this->isMapped(q2)) {
-    this->setCircuitQubit(this->getCircQubit(q1), q2);
-  } else if (this->isMapped(q2) && !this->isMapped(q1)) {
-    this->setCircuitQubit(this->getCircQubit(q2), q1);
+  if (isMapped(q1) && isMapped(q2)) {
+    const auto circQ1 = getCircQubit(q1);
+    const auto circQ2 = getCircQubit(q2);
+    setCircuitQubit(circQ2, q1);
+    setCircuitQubit(circQ1, q2);
+  } else if (isMapped(q1) && !isMapped(q2)) {
+    setCircuitQubit(getCircQubit(q1), q2);
+  } else if (isMapped(q2) && !isMapped(q1)) {
+    setCircuitQubit(getCircQubit(q2), q1);
   } else {
     throw std::runtime_error("Cannot swap unmapped qubits");
   }

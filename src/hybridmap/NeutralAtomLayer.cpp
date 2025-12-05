@@ -30,7 +30,7 @@ void NeutralAtomLayer::updateByQubits(
 
 void NeutralAtomLayer::initAllQubits() {
   std::set<qc::Qubit> allQubits;
-  for (std::size_t i = 0; i < this->dag.size(); ++i) {
+  for (std::size_t i = 0; i < dag.size(); ++i) {
     allQubits.emplace(static_cast<qc::Qubit>(i));
   }
   updateByQubits(allQubits);

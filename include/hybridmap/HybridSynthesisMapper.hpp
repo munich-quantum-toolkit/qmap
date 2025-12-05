@@ -90,7 +90,7 @@ public:
    */
   void completeRemap(const InitialMapping initMapping = Identity) {
     auto qcCopy = synthesizedQc;
-    this->map(qcCopy, initMapping);
+    map(qcCopy, initMapping);
   }
 
   /**
@@ -98,7 +98,7 @@ public:
    * @return Synthesized QuantumComputation.
    */
   [[nodiscard]] qc::QuantumComputation getSynthesizedQc() const {
-    return this->synthesizedQc;
+    return synthesizedQc;
   }
 
   /**

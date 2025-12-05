@@ -51,7 +51,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     // Load properties
     nlohmann::basic_json<> jsonDataProperties = jsonData["properties"];
-    this->properties = Properties(
+    properties = Properties(
         jsonDataProperties["nRows"], jsonDataProperties["nColumns"],
         jsonDataProperties["nAods"], jsonDataProperties["nAodCoordinates"],
         jsonDataProperties["interQubitDistance"],
@@ -61,11 +61,11 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     // Load parameters
     const nlohmann::basic_json<> jsonDataParameters = jsonData["parameters"];
-    this->parameters = Parameters();
-    this->parameters.nQubits = jsonDataParameters["nQubits"];
+    parameters = Parameters();
+    parameters.nQubits = jsonDataParameters["nQubits"];
 
     // check if qubits can fit in the architecture
-    if (this->parameters.nQubits > this->properties.getNpositions()) {
+    if (parameters.nQubits > properties.getNpositions()) {
       throw std::runtime_error("Number of qubits exceeds number of positions");
     }
 
@@ -88,7 +88,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     ensureGateWithFallback(gateTimes, "cz", "none");
     ensureGateWithFallback(gateTimes, "h", "none");
-    this->parameters.gateTimes = gateTimes;
+    parameters.gateTimes = gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["gateAverageFidelities"].items()) {
@@ -96,7 +96,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     }
     ensureGateWithFallback(gateAverageFidelities, "cz", "none");
     ensureGateWithFallback(gateAverageFidelities, "h", "none");
-    this->parameters.gateAverageFidelities = gateAverageFidelities;
+    parameters.gateAverageFidelities = gateAverageFidelities;
     std::map<qc::OpType, qc::fp> shuttlingTimes;
 
     for (const auto& [key, value] :
@@ -109,8 +109,8 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     qc::fp const swapGateFidelity =
         std::pow(gateAverageFidelities.at("cz"), 3) *
         std::pow(gateAverageFidelities.at("h"), 6);
-    this->parameters.gateTimes.emplace("swap", swapGateTime);
-    this->parameters.gateAverageFidelities.emplace("swap", swapGateFidelity);
+    parameters.gateTimes.emplace("swap", swapGateTime);
+    parameters.gateAverageFidelities.emplace("swap", swapGateFidelity);
 
     // compute values for Bridge gate
     // precompute bridge circuits
@@ -125,21 +125,21 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       qc::fp const bridgeFidelity =
           std::pow(gateAverageFidelities.at("cz"), bridgeCircuits.czs[i]) *
           std::pow(gateAverageFidelities.at("h"), bridgeCircuits.hs[i]);
-      this->parameters.gateTimes.emplace("bridge" + std::to_string(i),
-                                         bridgeGateTime);
-      this->parameters.gateAverageFidelities.emplace(
-          "bridge" + std::to_string(i), bridgeFidelity);
+      parameters.gateTimes.emplace("bridge" + std::to_string(i),
+                                   bridgeGateTime);
+      parameters.gateAverageFidelities.emplace("bridge" + std::to_string(i),
+                                               bridgeFidelity);
     }
 
-    this->parameters.shuttlingTimes = shuttlingTimes;
+    parameters.shuttlingTimes = shuttlingTimes;
     std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
       shuttlingAverageFidelities.emplace(qc::opTypeFromString(key), value);
     }
-    this->parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
+    parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
-    this->parameters.decoherenceTimes = Parameters::DecoherenceTimes{
+    parameters.decoherenceTimes = Parameters::DecoherenceTimes{
         .t1 = jsonDataParameters["decoherenceTimes"]["t1"],
         .t2 = jsonDataParameters["decoherenceTimes"]["t2"]};
 
@@ -149,23 +149,23 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
   }
 
   // apply changes to the object
-  this->name = jsonData["name"];
+  name = jsonData["name"];
 
-  this->createCoordinates();
-  this->computeSwapDistances(this->properties.getInteractionRadius());
-  this->computeNearbyCoordinates();
+  createCoordinates();
+  computeSwapDistances(properties.getInteractionRadius());
+  computeNearbyCoordinates();
 }
 void NeutralAtomArchitecture::createCoordinates() {
   coordinates.reserve(properties.getNpositions());
-  for (std::uint16_t i = 0; i < this->properties.getNpositions(); i++) {
-    this->coordinates.emplace_back(
-        Location{.x = static_cast<double>(i % this->properties.getNcolumns()),
+  for (std::uint16_t i = 0; i < properties.getNpositions(); i++) {
+    coordinates.emplace_back(
+        Location{.x = static_cast<double>(i % properties.getNcolumns()),
                  // NOLINTNEXTLINE(bugprone-integer-division)
-                 .y = static_cast<double>(i / this->properties.getNcolumns())});
+                 .y = static_cast<double>(i / properties.getNcolumns())});
   }
 }
 NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
-  this->loadJson(filename);
+  loadJson(filename);
 }
 
 void NeutralAtomArchitecture::computeSwapDistances(
@@ -178,8 +178,8 @@ void NeutralAtomArchitecture::computeSwapDistances(
   };
   std::vector<DiagonalDistance> diagonalDistances;
 
-  for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
-    for (uint32_t j = i; j < this->getNrows(); j++) {
+  for (uint32_t i = 0; i < getNcolumns() && i < interactionRadius; i++) {
+    for (uint32_t j = i; j < getNrows(); j++) {
       const auto dist = getEuclideanDistance(
           Location{.x = 0.0, .y = 0.0},
           Location{.x = static_cast<double>(i), .y = static_cast<double>(j)});
@@ -205,14 +205,12 @@ void NeutralAtomArchitecture::computeSwapDistances(
                     });
 
   // compute swap distances
-  this->swapDistances =
-      qc::SymmetricMatrix<SwapDistance>(this->getNpositions());
+  swapDistances = qc::SymmetricMatrix<SwapDistance>(getNpositions());
 
-  for (uint32_t coordIndex1 = 0; coordIndex1 < this->getNpositions();
-       coordIndex1++) {
+  for (uint32_t coordIndex1 = 0; coordIndex1 < getNpositions(); coordIndex1++) {
     for (uint32_t coordIndex2 = 0; coordIndex2 < coordIndex1; coordIndex2++) {
-      auto deltaX = this->getManhattanDistanceX(coordIndex1, coordIndex2);
-      auto deltaY = this->getManhattanDistanceY(coordIndex1, coordIndex2);
+      auto deltaX = getManhattanDistanceX(coordIndex1, coordIndex2);
+      auto deltaY = getManhattanDistanceY(coordIndex1, coordIndex2);
 
       // check if one can go diagonal to reduce the swap distance
       int32_t swapDistance = 0;
@@ -228,22 +226,20 @@ void NeutralAtomArchitecture::computeSwapDistances(
         swapDistance = 1;
       }
       // save swap distance in matrix
-      this->swapDistances(coordIndex1, coordIndex2) = swapDistance - 1;
-      this->swapDistances(coordIndex2, coordIndex1) = swapDistance - 1;
+      swapDistances(coordIndex1, coordIndex2) = swapDistance - 1;
+      swapDistances(coordIndex2, coordIndex1) = swapDistance - 1;
     }
   }
 }
 
 void NeutralAtomArchitecture::computeNearbyCoordinates() {
-  this->nearbyCoordinates =
-      std::vector(this->getNpositions(), std::set<CoordIndex>());
-  for (CoordIndex coordIndex = 0; coordIndex < this->getNpositions();
-       coordIndex++) {
+  nearbyCoordinates = std::vector(getNpositions(), std::set<CoordIndex>());
+  for (CoordIndex coordIndex = 0; coordIndex < getNpositions(); coordIndex++) {
     for (CoordIndex otherCoordIndex = 0; otherCoordIndex < coordIndex;
          otherCoordIndex++) {
-      if (this->getSwapDistance(coordIndex, otherCoordIndex) == 0) {
-        this->nearbyCoordinates.at(coordIndex).emplace(otherCoordIndex);
-        this->nearbyCoordinates.at(otherCoordIndex).emplace(coordIndex);
+      if (getSwapDistance(coordIndex, otherCoordIndex) == 0) {
+        nearbyCoordinates.at(coordIndex).emplace(otherCoordIndex);
+        nearbyCoordinates.at(otherCoordIndex).emplace(coordIndex);
       }
     }
   }
@@ -252,17 +248,17 @@ void NeutralAtomArchitecture::computeNearbyCoordinates() {
 std::vector<CoordIndex>
 NeutralAtomArchitecture::getNN(const CoordIndex idx) const {
   std::vector<CoordIndex> nn;
-  if (idx % this->getNcolumns() != 0) {
+  if (idx % getNcolumns() != 0) {
     nn.emplace_back(idx - 1);
   }
-  if (idx % this->getNcolumns() != this->getNcolumns() - 1U) {
+  if (idx % getNcolumns() != getNcolumns() - 1U) {
     nn.emplace_back(idx + 1);
   }
-  if (idx >= this->getNcolumns()) {
-    nn.emplace_back(idx - this->getNcolumns());
+  if (idx >= getNcolumns()) {
+    nn.emplace_back(idx - getNcolumns());
   }
-  if (std::cmp_less(idx, this->getNpositions() - this->getNcolumns())) {
-    nn.emplace_back(idx + this->getNcolumns());
+  if (std::cmp_less(idx, getNpositions() - getNcolumns())) {
+    nn.emplace_back(idx + getNcolumns());
   }
   return nn;
 }
@@ -273,50 +269,48 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
         "Shuttling speed factor must be positive, but is " +
         std::to_string(shuttlingSpeedFactor));
   }
-  std::string animationMachine = "name: \"Hybrid_" + this->name + "\"\n";
+  std::string animationMachine = "name: \"Hybrid_" + name + "\"\n";
 
-  animationMachine +=
-      "movement {\n\tmax_speed: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodMove) *
-                     shuttlingSpeedFactor) +
-      "\n}\n";
+  animationMachine += "movement {\n\tmax_speed: " +
+                      std::to_string(getShuttlingTime(qc::OpType::AodMove) *
+                                     shuttlingSpeedFactor) +
+                      "\n}\n";
 
   animationMachine +=
       "time {\n\tload: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodActivate) /
+      std::to_string(getShuttlingTime(qc::OpType::AodActivate) /
                      shuttlingSpeedFactor) +
       "\n\tstore: " +
-      std::to_string(this->getShuttlingTime(qc::OpType::AodDeactivate) /
+      std::to_string(getShuttlingTime(qc::OpType::AodDeactivate) /
                      shuttlingSpeedFactor) +
-      "\n\trz: " + std::to_string(this->getGateTime("x")) +
-      "\n\try: " + std::to_string(this->getGateTime("x")) +
-      "\n\tcz: " + std::to_string(this->getGateTime("cz")) +
-      "\n\tunit: \"us\"\n}\n";
+      "\n\trz: " + std::to_string(getGateTime("x")) +
+      "\n\try: " + std::to_string(getGateTime("x")) +
+      "\n\tcz: " + std::to_string(getGateTime("cz")) + "\n\tunit: \"us\"\n}\n";
 
-  animationMachine += "distance {\n\tinteraction: " +
-                      std::to_string(this->getInteractionRadius() *
-                                     this->getInterQubitDistance()) +
-                      "\n\tunit: \"um\"\n}\n";
-  const auto zoneStart = -this->getInterQubitDistance();
-  const auto zoneEndX = this->getNcolumns() * this->getInterQubitDistance() +
-                        this->getInterQubitDistance();
-  const auto zoneEndY = this->getNrows() * this->getInterQubitDistance() +
-                        this->getInterQubitDistance();
+  animationMachine +=
+      "distance {\n\tinteraction: " +
+      std::to_string(getInteractionRadius() * getInterQubitDistance()) +
+      "\n\tunit: \"um\"\n}\n";
+  const auto zoneStart = -getInterQubitDistance();
+  const auto zoneEndX =
+      getNcolumns() * getInterQubitDistance() + getInterQubitDistance();
+  const auto zoneEndY =
+      getNrows() * getInterQubitDistance() + getInterQubitDistance();
   animationMachine += "zone hybrid {\n\tfrom: (" + std::to_string(zoneStart) +
                       ", " + std::to_string(zoneStart) + ")\n\tto: (" +
                       std::to_string(zoneEndX) + ", " +
                       std::to_string(zoneEndY) + ") \n}\n";
 
-  for (size_t colIdx = 0; colIdx < this->getNcolumns(); colIdx++) {
-    for (size_t rowIdx = 0; rowIdx < this->getNrows(); rowIdx++) {
-      const auto coordIdx = colIdx + (rowIdx * this->getNcolumns());
+  for (size_t colIdx = 0; colIdx < getNcolumns(); colIdx++) {
+    for (size_t rowIdx = 0; rowIdx < getNrows(); rowIdx++) {
+      const auto coordIdx = colIdx + (rowIdx * getNcolumns());
       animationMachine += "trap trap" + std::to_string(coordIdx) +
                           " {\n\tposition: (" +
                           std::to_string(static_cast<qc::fp>(colIdx) *
-                                         this->getInterQubitDistance()) +
+                                         getInterQubitDistance()) +
                           ", " +
                           std::to_string(static_cast<qc::fp>(rowIdx) *
-                                         this->getInterQubitDistance()) +
+                                         getInterQubitDistance()) +
                           ")\n}\n";
     }
   }
@@ -330,7 +324,7 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
     return getShuttlingTime(op->getType());
   }
   if (op->getType() == qc::OpType::AodMove) {
-    const auto v = this->parameters.shuttlingTimes.at(op->getType());
+    const auto v = parameters.shuttlingTimes.at(op->getType());
     const auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
     const auto distanceX = opAodMove->getMaxDistance(Dimension::X);
     const auto distanceY = opAodMove->getMaxDistance(Dimension::Y);

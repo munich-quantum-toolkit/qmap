@@ -105,11 +105,11 @@ public:
 
     assert(nQubits <= architecture.getNpositions() &&
            "Number of hardware qubits exceeds available positions.");
-    swapDistances = qc::SymmetricMatrix<SwapDistance>(this->nQubits);
+    swapDistances = qc::SymmetricMatrix<SwapDistance>(nQubits);
 
     switch (initialCoordinateMapping) {
     case Trivial:
-      for (uint32_t i = 0; i < this->nQubits; ++i) {
+      for (uint32_t i = 0; i < nQubits; ++i) {
         hwToCoordIdx.emplace(i, i);
         occupiedCoordinates.emplace_back(i);
       }
@@ -123,12 +123,12 @@ public:
       }
       std::mt19937 g(seed);
       std::ranges::shuffle(indices, g);
-      for (uint32_t i = 0; i < this->nQubits; ++i) {
+      for (uint32_t i = 0; i < nQubits; ++i) {
         hwToCoordIdx.emplace(i, indices[i]);
         occupiedCoordinates.emplace_back(indices[i]);
       }
 
-      swapDistances = qc::SymmetricMatrix(this->nQubits, -1);
+      swapDistances = qc::SymmetricMatrix(nQubits, -1);
     }
     initNearbyQubits();
 
@@ -237,7 +237,7 @@ public:
   getCoordIndices(const std::set<HwQubit>& hwQubits) const {
     std::set<CoordIndex> coordIndices;
     for (auto const& hwQubit : hwQubits) {
-      coordIndices.emplace(this->getCoordIndex(hwQubit));
+      coordIndices.emplace(getCoordIndex(hwQubit));
     }
     return coordIndices;
   }
@@ -247,7 +247,7 @@ public:
     std::vector<CoordIndex> coordIndices;
     coordIndices.reserve(hwQubits.size());
     for (auto const& hwQubit : hwQubits) {
-      coordIndices.emplace_back(this->getCoordIndex(hwQubit));
+      coordIndices.emplace_back(getCoordIndex(hwQubit));
     }
     return coordIndices;
   }

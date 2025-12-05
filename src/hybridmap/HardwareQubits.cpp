@@ -117,7 +117,7 @@ HardwareQubits::computeAllShortestPaths(const HwQubit q1,
       continue;
     }
 
-    for (const auto& neighbor : this->getNearbyQubits(currentQubit)) {
+    for (const auto& neighbor : getNearbyQubits(currentQubit)) {
       if (std::ranges::find(currentPath, neighbor) == currentPath.end()) {
         auto newPath = currentPath;
         newPath.push_back(neighbor);
@@ -244,8 +244,8 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) const {
 std::set<CoordIndex>
 HardwareQubits::getNearbyFreeCoordinatesByCoord(const CoordIndex idx) const {
   std::set<CoordIndex> nearbyFreeCoordinates;
-  for (auto const& coordIndex : this->arch->getNearbyCoordinates(idx)) {
-    if (!this->isMapped(coordIndex)) {
+  for (auto const& coordIndex : arch->getNearbyCoordinates(idx)) {
+    if (!isMapped(coordIndex)) {
       nearbyFreeCoordinates.emplace(coordIndex);
     }
   }
@@ -254,8 +254,8 @@ HardwareQubits::getNearbyFreeCoordinatesByCoord(const CoordIndex idx) const {
 
 std::set<CoordIndex> HardwareQubits::getNearbyOccupiedCoordinatesByCoord(
     const CoordIndex idx) const {
-  const auto nearbyHwQubits = this->getNearbyQubits(this->getHwQubit(idx));
-  return this->getCoordIndices(nearbyHwQubits);
+  const auto nearbyHwQubits = getNearbyQubits(getHwQubit(idx));
+  return getCoordIndices(nearbyHwQubits);
 }
 
 std::vector<CoordIndex>

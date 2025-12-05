@@ -462,9 +462,9 @@ public:
       throw std::runtime_error("Only one flying ancilla is supported for now.");
     }
     //   precompute exponential decay weights
-    this->decayWeights.reserve(this->arch->getNcolumns());
-    for (uint32_t i = this->arch->getNcolumns(); i > 0; --i) {
-      this->decayWeights.emplace_back(std::exp(-this->parameters.decay * i));
+    decayWeights.reserve(arch->getNcolumns());
+    for (uint32_t i = arch->getNcolumns(); i > 0; --i) {
+      decayWeights.emplace_back(std::exp(-parameters.decay * i));
     }
   }
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
@@ -478,7 +478,7 @@ public:
    * unsupported number of flying ancillas.
    */
   void setParameters(const MapperParameters& p) {
-    this->parameters = p;
+    parameters = p;
     const auto nPositions = static_cast<int>(arch->getNpositions());
     const auto nQubits = static_cast<int>(arch->getNqubits());
     if (nPositions - nQubits < 1 && p.shuttlingWeight > 0) {
@@ -489,7 +489,7 @@ public:
     if (parameters.numFlyingAncillas > 1) {
       throw std::runtime_error("Only one flying ancilla is supported for now.");
     }
-    this->reset();
+    reset();
   }
 
   /**
@@ -498,15 +498,15 @@ public:
    * @param mapper Source mapper.
    */
   void copyStateFrom(const NeutralAtomMapper& mapper) {
-    this->arch = mapper.arch;
-    this->parameters = mapper.parameters;
-    this->mapping = mapper.mapping;
-    this->hardwareQubits = mapper.hardwareQubits;
-    this->lastMoves = mapper.lastMoves;
-    this->lastBlockedQubits = mapper.lastBlockedQubits;
-    this->scheduler = mapper.scheduler;
-    this->decayWeights = mapper.decayWeights;
-    this->flyingAncillas = mapper.flyingAncillas;
+    arch = mapper.arch;
+    parameters = mapper.parameters;
+    mapping = mapper.mapping;
+    hardwareQubits = mapper.hardwareQubits;
+    lastMoves = mapper.lastMoves;
+    lastBlockedQubits = mapper.lastBlockedQubits;
+    scheduler = mapper.scheduler;
+    decayWeights = mapper.decayWeights;
+    flyingAncillas = mapper.flyingAncillas;
   }
 
   /**
@@ -601,7 +601,7 @@ public:
    */
   [[nodiscard]] [[maybe_unused]] std::string getMappedQcQasm() const {
     std::stringstream ss;
-    this->mappedQc.dumpOpenQASM(ss, false);
+    mappedQc.dumpOpenQASM(ss, false);
     return ss.str();
   }
 
@@ -611,7 +611,7 @@ public:
    */
   [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) const {
     std::ofstream ofs(filename);
-    this->mappedQc.dumpOpenQASM(ofs, false);
+    mappedQc.dumpOpenQASM(ofs, false);
   }
 
   /**
@@ -619,11 +619,11 @@ public:
    * @return OpenQASM string (AOD-native).
    */
   [[maybe_unused]] std::string getMappedQcAodQasm() {
-    if (this->mappedQcAOD.empty()) {
-      this->convertToAod();
+    if (mappedQcAOD.empty()) {
+      convertToAod();
     }
     std::stringstream ss;
-    this->mappedQcAOD.dumpOpenQASM(ss, false);
+    mappedQcAOD.dumpOpenQASM(ss, false);
     return ss.str();
   }
 
@@ -632,11 +632,11 @@ public:
    * @param filename Output file path.
    */
   [[maybe_unused]] void saveMappedQcAodQasm(const std::string& filename) {
-    if (this->mappedQcAOD.empty()) {
-      this->convertToAod();
+    if (mappedQcAOD.empty()) {
+      convertToAod();
     }
     std::ofstream ofs(filename);
-    this->mappedQcAOD.dumpOpenQASM(ofs, false);
+    mappedQcAOD.dumpOpenQASM(ofs, false);
   }
 
   /**

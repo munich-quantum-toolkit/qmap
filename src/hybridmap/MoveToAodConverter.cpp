@@ -617,9 +617,9 @@ void MoveToAodConverter::AodActivationHelper::computeInitAndOffsetOperations(
     std::vector<SingleOperation>& initOperations,
     std::vector<SingleOperation>& offsetOperations) const {
 
-  const auto d = this->arch->getInterQubitDistance();
-  const auto interD = this->arch->getInterQubitDistance() /
-                      this->arch->getNAodIntermediateLevels();
+  const auto d = arch->getInterQubitDistance();
+  const auto interD =
+      arch->getInterQubitDistance() / arch->getNAodIntermediateLevels();
 
   initOperations.emplace_back(dimension, static_cast<qc::fp>(aodMove->init) * d,
                               static_cast<qc::fp>(aodMove->init) * d);

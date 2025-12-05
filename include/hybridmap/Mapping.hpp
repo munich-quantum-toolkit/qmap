@@ -136,7 +136,7 @@ public:
   getHwQubits(const std::set<qc::Qubit>& qubits) const {
     std::set<HwQubit> hw;
     for (const auto& qubit : qubits) {
-      hw.emplace(this->getHwQubit(qubit));
+      hw.emplace(getHwQubit(qubit));
     }
     return hw;
   }
@@ -153,7 +153,7 @@ public:
     std::vector<HwQubit> hw;
     hw.reserve(qubits.size());
     for (const auto& qubit : qubits) {
-      hw.emplace_back(this->getHwQubit(qubit));
+      hw.emplace_back(getHwQubit(qubit));
     }
     return hw;
   }
