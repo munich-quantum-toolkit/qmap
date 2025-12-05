@@ -50,7 +50,7 @@ public:
        */
       RELAXED
     };
-    Method method = Method::STRICT;
+    Method method = Method::RELAXED;
     /**
      * @brief Threshold factor for group merging decisions during routing.
      * @details First, a strict routing is computed resulting in a set of
@@ -58,6 +58,7 @@ public:
      * groups based on the relaxed constraints. Higher values of this
      * parameter favor keeping groups separate; lower values favor merging.
      * In particular, a value of 0.0 merges all possible groups. (Default: 1.0)
+     * @note This value is only relevant if the routing method RELAXED is used.
      */
     double preferSplit = 1.0;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, method, preferSplit);

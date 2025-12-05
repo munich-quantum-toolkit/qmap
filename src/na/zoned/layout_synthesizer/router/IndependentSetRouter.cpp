@@ -304,8 +304,8 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
                   cost = std::cbrt(diff);
                 }
               } else if (conflictIt->second.has_value()) {
-                // can be added with additional cost because there is a strict
-                // conflict
+                // can be added with additional cost because there is only a
+                // relaxed conflict
                 const auto dist = atomToDist.at(atom);
                 if (group.maxDistance > dist) {
                   if (costCubed > *conflictIt->second) {

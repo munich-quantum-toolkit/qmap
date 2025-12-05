@@ -288,26 +288,4 @@ public:
   explicit RoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
-
-class RelaxedRoutingAwareSynthesizer
-    : public PlaceAndRouteSynthesizer<RelaxedRoutingAwareSynthesizer,
-                                      AStarPlacer, IndependentSetRouter> {
-public:
-  RelaxedRoutingAwareSynthesizer(const Architecture& architecture,
-                                 const Config& config)
-      : PlaceAndRouteSynthesizer(architecture, config) {}
-  explicit RelaxedRoutingAwareSynthesizer(const Architecture& architecture)
-      : PlaceAndRouteSynthesizer(architecture) {}
-};
-class RelaxedRoutingAwareCompiler final
-    : public Compiler<RelaxedRoutingAwareCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer,
-                      RelaxedRoutingAwareSynthesizer, CodeGenerator> {
-public:
-  RelaxedRoutingAwareCompiler(const Architecture& architecture,
-                              const Config& config)
-      : Compiler(architecture, config) {}
-  explicit RelaxedRoutingAwareCompiler(const Architecture& architecture)
-      : Compiler(architecture) {}
-};
 } // namespace na::zoned
