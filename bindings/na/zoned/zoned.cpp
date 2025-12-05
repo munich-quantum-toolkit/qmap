@@ -54,6 +54,16 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                    });
 
   //===--------------------------------------------------------------------===//
+  // Placement Method Enum
+  //===--------------------------------------------------------------------===//
+  py::native_enum<na::zoned::HeuristicPlacer::Config::Method>(
+      m, "PlacementMethod", "enum.Enum")
+      .value("astar", na::zoned::HeuristicPlacer::Config::Method::ASTAR)
+      .value("ids", na::zoned::HeuristicPlacer::Config::Method::IDS)
+      .export_values()
+      .finalize();
+
+  //===--------------------------------------------------------------------===//
   // Routing Method Enum
   //===--------------------------------------------------------------------===//
   py::native_enum<na::zoned::IndependentSetRouter::Config::Method>(
@@ -137,34 +147,38 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   {
     const na::zoned::RoutingAwareCompiler::Config defaultConfig;
     routingAwareCompiler.def(
-        py::init([](const na::zoned::Architecture& arch,
-                    const std::string& logLevel, const double maxFillingFactor,
-                    const na::zoned::IndependentSetRouter::Config::Method
-                        routingMethod,
-                    const bool useWindow, const size_t windowMinWidth,
-                    const double windowRatio, const double windowShare,
-                    const float deepeningFactor, const float deepeningValue,
-                    const float lookaheadFactor, const float reuseLevel,
-                    const size_t maxNodes, const bool warnUnsupportedGates)
-                     -> na::zoned::RoutingAwareCompiler {
-          na::zoned::RoutingAwareCompiler::Config config;
-          config.logLevel = spdlog::level::from_str(logLevel);
-          config.schedulerConfig.maxFillingFactor = maxFillingFactor;
-          config.layoutSynthesizerConfig.routerConfig.method = routingMethod;
-          config.layoutSynthesizerConfig.placerConfig = {
-              .useWindow = useWindow,
-              .windowMinWidth = windowMinWidth,
-              .windowRatio = windowRatio,
-              .windowShare = windowShare,
-              .deepeningFactor = deepeningFactor,
-              .deepeningValue = deepeningValue,
-              .lookaheadFactor = lookaheadFactor,
-              .reuseLevel = reuseLevel,
-              .maxNodes = maxNodes};
-          config.codeGeneratorConfig = {.warnUnsupportedGates =
-                                            warnUnsupportedGates};
-          return {arch, config};
-        }),
+        py::init(
+            [](const na::zoned::Architecture& arch, const std::string& logLevel,
+               const double maxFillingFactor,
+               const na::zoned::IndependentSetRouter::Config::Method
+                   routingMethod,
+               const bool useWindow, const size_t windowMinWidth,
+               const double windowRatio, const double windowShare,
+               const na::zoned::HeuristicPlacer::Config::Method placementMethod,
+               const float deepeningFactor, const float deepeningValue,
+               const float lookaheadFactor, const float reuseLevel,
+               const size_t maxNodes, const bool warnUnsupportedGates)
+                -> na::zoned::RoutingAwareCompiler {
+              na::zoned::RoutingAwareCompiler::Config config;
+              config.logLevel = spdlog::level::from_str(logLevel);
+              config.schedulerConfig.maxFillingFactor = maxFillingFactor;
+              config.layoutSynthesizerConfig.routerConfig.method =
+                  routingMethod;
+              config.layoutSynthesizerConfig.placerConfig = {
+                  .useWindow = useWindow,
+                  .windowMinWidth = windowMinWidth,
+                  .windowRatio = windowRatio,
+                  .windowShare = windowShare,
+                  .method = placementMethod,
+                  .deepeningFactor = deepeningFactor,
+                  .deepeningValue = deepeningValue,
+                  .lookaheadFactor = lookaheadFactor,
+                  .reuseLevel = reuseLevel,
+                  .maxNodes = maxNodes};
+              config.codeGeneratorConfig = {.warnUnsupportedGates =
+                                                warnUnsupportedGates};
+              return {arch, config};
+            }),
         py::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
@@ -178,6 +192,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             defaultConfig.layoutSynthesizerConfig.placerConfig.windowRatio,
         "window_share"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.windowShare,
+        "placement_method"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.method,
         "deepening_factor"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.deepeningFactor,
         "deepening_value"_a =
