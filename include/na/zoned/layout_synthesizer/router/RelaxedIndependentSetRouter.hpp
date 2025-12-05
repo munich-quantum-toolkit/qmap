@@ -154,7 +154,7 @@ private:
       return {.status = Status::Incompatible, .mergeCost = std::nullopt};
     }
 
-    [[nodiscard]] static auto relaxedCompatible(double cost)
+    [[nodiscard]] static auto relaxedCompatible(const double cost)
         -> MovementCompatibility {
       return {.status = Status::RelaxedCompatible, .mergeCost = cost};
     }

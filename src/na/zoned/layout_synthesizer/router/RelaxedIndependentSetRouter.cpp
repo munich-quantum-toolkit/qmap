@@ -68,7 +68,7 @@ auto RelaxedIndependentSetRouter::createRelaxedConflictGraph(
           startPlacement[neighbor], targetPlacement[neighbor]);
       if (const auto& comp = isRelaxedCompatibleMovement(
               atomMovementVector, neighborMovementVector);
-          comp.status != MovementCompatibility::Status::Incompatible) {
+          comp.status != MovementCompatibility::Status::StrictlyCompatible) {
         conflictGraph.try_emplace(atom).first->second.emplace_back(
             neighbor, comp.mergeCost);
         conflictGraph.try_emplace(neighbor).first->second.emplace_back(
@@ -129,10 +129,7 @@ auto RelaxedIndependentSetRouter::isRelaxedCompatibleMovement(
     -> MovementCompatibility {
   const auto& [v0, v1, v2, v3] = v;
   const auto& [w0, w1, w2, w3] = w;
-  if ((v0 == w0) != (v2 == w2)) {
-    return MovementCompatibility::incompatible();
-  }
-  if ((v1 == w1) != (v3 == w3)) {
+  if (((v0 == w0) != (v2 == w2)) || ((v1 == w1) != (v3 == w3))) {
     return MovementCompatibility::incompatible();
   }
   if ((v0 < w0) != (v2 < w2) && (v1 < w1) != (v3 < w3)) {
@@ -190,8 +187,8 @@ auto RelaxedIndependentSetRouter::route(
     atomsToMove.reserve(atomsToMoveOrderedAscByDist.size());
     // put the atoms into the vector such they are ordered decreasingly by their
     // movement distance
-    for (const auto& atomIt : atomsToMoveOrderedAscByDist) {
-      atomsToMove.emplace_back(atomIt.second);
+    for (const auto& val : atomsToMoveOrderedAscByDist | std::views::values) {
+      atomsToMove.emplace_back(val);
     }
     const auto conflictGraph =
         createConflictGraph(atomsToMove, startPlacement, targetPlacement);
