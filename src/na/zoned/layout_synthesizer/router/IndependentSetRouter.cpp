@@ -190,19 +190,16 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
     const auto conflictGraph =
         createConflictGraph(atomsToMove, startPlacement, targetPlacement);
     if (config_.method == Config::Method::STRICT) {
-      struct GroupInfo {
-        std::vector<qc::Qubit> independentSet;
-      };
-      std::list<GroupInfo> groups;
+      auto& currentRouting = routing.emplace_back();
       while (!atomsToMove.empty()) {
-        auto& group = groups.emplace_back();
+        auto& group = currentRouting.emplace_back();
         std::vector<qc::Qubit> remainingAtoms;
         std::unordered_set<qc::Qubit> conflictingAtoms;
         for (const auto& atom : atomsToMove) {
           if (!conflictingAtoms.contains(atom)) {
             // if the atom does not conflict with any atom that is already in
             // the independent set, add it and mark its neighbors as conflicting
-            group.independentSet.emplace_back(atom);
+            group.emplace_back(atom);
             if (const auto conflictingNeighbors = conflictGraph.find(atom);
                 conflictingNeighbors != conflictGraph.end()) {
               for (const auto neighbor : conflictingNeighbors->second) {

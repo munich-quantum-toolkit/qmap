@@ -49,6 +49,10 @@ public:
        */
       RELAXED
     };
+    NLOHMANN_JSON_SERIALIZE_ENUM(Method, {
+                                             {Method::STRICT, "strict"},
+                                             {Method::RELAXED, "relaxed"},
+                                         })
     Method method = Method::RELAXED;
     /**
      * @brief Threshold factor for group merging decisions during routing.
