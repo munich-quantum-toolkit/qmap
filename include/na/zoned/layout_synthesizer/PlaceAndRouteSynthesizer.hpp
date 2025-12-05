@@ -97,9 +97,11 @@ private:
       : PlaceAndRouteSynthesizer(architecture, Config{}) {}
 
 public:
-  [[nodiscard]] auto synthesize(
-      size_t nQubits, const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
-      const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits) -> Layout {
+  [[nodiscard]] auto
+  synthesize(size_t nQubits,
+             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
+             const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
+      -> Layout override {
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement =
         SELF.place(nQubits, twoQubitGateLayers, reuseQubits);

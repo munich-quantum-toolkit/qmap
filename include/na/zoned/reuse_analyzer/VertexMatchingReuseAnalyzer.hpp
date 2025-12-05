@@ -58,7 +58,7 @@ public:
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
   [[nodiscard]] auto
   analyzeReuse(const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
-      -> std::vector<std::unordered_set<qc::Qubit>>;
+      -> std::vector<std::unordered_set<qc::Qubit>> override;
 
 private:
   /**

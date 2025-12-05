@@ -60,7 +60,7 @@ public:
    * vector of groups containing atoms that can be moved simultaneously
    */
   [[nodiscard]] auto route(const std::vector<Placement>& placement) const
-      -> std::vector<Routing>;
+      -> std::vector<Routing> override;
 
 private:
   /**

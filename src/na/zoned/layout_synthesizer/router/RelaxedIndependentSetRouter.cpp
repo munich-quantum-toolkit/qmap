@@ -66,13 +66,13 @@ auto RelaxedIndependentSetRouter::createRelaxedConflictGraph(
       const auto& neighbor = *neighborIt;
       const auto& neighborMovementVector = getMovementVector(
           startPlacement[neighbor], targetPlacement[neighbor]);
-      if (const auto& edge = isRelaxedIncompatibleMovement(
+      if (const auto& comp = isRelaxedCompatibleMovement(
               atomMovementVector, neighborMovementVector);
-          edge.has_value()) {
-        conflictGraph.try_emplace(atom).first->second.emplace_back(neighbor,
-                                                                   *edge);
-        conflictGraph.try_emplace(neighbor).first->second.emplace_back(atom,
-                                                                       *edge);
+          comp.status != MovementCompatibility::Status::Incompatible) {
+        conflictGraph.try_emplace(atom).first->second.emplace_back(
+            neighbor, comp.mergeCost);
+        conflictGraph.try_emplace(neighbor).first->second.emplace_back(
+            atom, comp.mergeCost);
       }
     }
   }
@@ -123,38 +123,38 @@ auto subCubeRootsCubed(const double a, const double b) -> double {
   return a - b + 3.0 * x * y * (y - x);
 }
 } // namespace
-auto RelaxedIndependentSetRouter::isRelaxedIncompatibleMovement(
+auto RelaxedIndependentSetRouter::isRelaxedCompatibleMovement(
     const std::tuple<size_t, size_t, size_t, size_t>& v,
     const std::tuple<size_t, size_t, size_t, size_t>& w)
-    -> std::optional<std::optional<double>> {
+    -> MovementCompatibility {
   const auto& [v0, v1, v2, v3] = v;
   const auto& [w0, w1, w2, w3] = w;
   if ((v0 == w0) != (v2 == w2)) {
-    return std::optional{std::optional<double>{}};
+    return MovementCompatibility::incompatible();
   }
   if ((v1 == w1) != (v3 == w3)) {
-    return std::optional{std::optional<double>{}};
+    return MovementCompatibility::incompatible();
   }
   if ((v0 < w0) != (v2 < w2) && (v1 < w1) != (v3 < w3)) {
-    return sumCubeRootsCubed(
+    return MovementCompatibility::relaxedCompatible(sumCubeRootsCubed(
         static_cast<double>(
             std::abs(static_cast<int64_t>(v0) - static_cast<int64_t>(w0)) +
             std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2))),
         static_cast<double>(
             std::abs(static_cast<int64_t>(v1) - static_cast<int64_t>(w1)) +
-            std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3))));
+            std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3)))));
   }
   if ((v0 < w0) != (v2 < w2)) {
-    return static_cast<double>(
+    return MovementCompatibility::relaxedCompatible(static_cast<double>(
         std::abs(static_cast<int64_t>(v0) - static_cast<int64_t>(w0)) +
-        std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2)));
+        std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2))));
   }
   if ((v1 < w1) != (v3 < w3)) {
-    return static_cast<double>(
+    return MovementCompatibility::relaxedCompatible(static_cast<double>(
         std::abs(static_cast<int64_t>(v1) - static_cast<int64_t>(w1)) +
-        std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3)));
+        std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3))));
   }
-  return std::nullopt;
+  return MovementCompatibility::strictlyCompatible();
 }
 auto RelaxedIndependentSetRouter::route(
     const std::vector<Placement>& placement) const -> std::vector<Routing> {

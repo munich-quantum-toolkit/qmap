@@ -71,7 +71,7 @@ public:
    * vector of groups containing atoms that can be moved simultaneously
    */
   [[nodiscard]] auto route(const std::vector<Placement>& placement) const
-      -> std::vector<Routing>;
+      -> std::vector<Routing> override;
 
 private:
   /**
@@ -125,6 +125,41 @@ private:
                        const std::tuple<size_t, size_t, size_t, size_t>& w)
       -> bool;
   /**
+   * This struct indicates whether two movements are strictly compatible,
+   * relaxed compatible together with the corresponding merging cost, or
+   * (completely) incompatible.
+   */
+  struct MovementCompatibility {
+    enum class Status : uint8_t {
+      StrictlyCompatible, // Movements can proceed in parallel
+      RelaxedCompatible,  // Can be merged with a cost
+      Incompatible        // Cannot be merged at all
+    };
+
+    /// Indicates the type of compatibility
+    Status status;
+    /**
+     * In the case of `RelaxedIncompatible`, the cost to merge the two
+     * movements
+     */
+    std::optional<double> mergeCost;
+
+    /// Factory methods for strict compatibility
+    [[nodiscard]] static auto strictlyCompatible() -> MovementCompatibility {
+      return {.status = Status::StrictlyCompatible, .mergeCost = std::nullopt};
+    }
+
+    /// Factory method for incompatibility
+    [[nodiscard]] static auto incompatible() -> MovementCompatibility {
+      return {.status = Status::Incompatible, .mergeCost = std::nullopt};
+    }
+
+    [[nodiscard]] static auto relaxedCompatible(double cost)
+        -> MovementCompatibility {
+      return {.status = Status::RelaxedCompatible, .mergeCost = cost};
+    }
+  };
+  /**
    * Check whether two movements are incompatible with respect to the relaxed
    * routing constraints, i.e., moved atoms remain not on the same row (column).
    * This is, however, independent of their topological order (i.e., relaxed).
@@ -134,9 +169,9 @@ private:
    * @return true, if the given movement vectors are incompatible, otherwise
    * false
    */
-  [[nodiscard]] static auto isRelaxedIncompatibleMovement(
+  [[nodiscard]] static auto isRelaxedCompatibleMovement(
       const std::tuple<size_t, size_t, size_t, size_t>& v,
       const std::tuple<size_t, size_t, size_t, size_t>& w)
-      -> std::optional<std::optional<double>>;
+      -> MovementCompatibility;
 };
 } // namespace na::zoned

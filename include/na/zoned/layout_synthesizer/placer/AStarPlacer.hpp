@@ -303,7 +303,7 @@ public:
   place(size_t nQubits,
         const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
         const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-      -> std::vector<Placement>;
+      -> std::vector<Placement> override;
 
 private:
   /**
