@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- ✨ Add relaxed routing method to the zoned neutral atom compiler ([#859]) ([**@ystade**])
+
 ### Changed
 
 - ✨ Enable code generation for relaxed routing constraints ([#848]) ([**@ystade**])
@@ -22,7 +26,6 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
 
 ### Added
 
-- ✨ Add new relaxed routing method to the zoned neutral atom compiler ([#859]) ([**@ystade**])
 - 👷 Enable testing on Python 3.14 ([#796]) ([**@denialhaag**])
 
 ### Changed
