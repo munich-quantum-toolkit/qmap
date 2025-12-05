@@ -8,6 +8,8 @@
 
 """Python bindings module for MQT QMAP's Zoned Neutral Atom Compiler."""
 
+from enum import Enum
+
 from mqt.core.ir import QuantumComputation
 
 class ZonedNeutralAtomArchitecture:
@@ -52,6 +54,20 @@ class ZonedNeutralAtomArchitecture:
             the architecture as a .namachine string
         """
 
+class RoutingMethod(Enum):
+    """Enumeration of the available routing methods for the independent set router."""
+
+    strict = ...
+    """
+    Strict routing, i.e., the relative order of atoms must be
+    maintained throughout a movement.
+    """
+    relaxed = ...
+    """
+    Relaxed routing, i.e., the relative order of atoms may change
+    throughout a movement by applying offsets during pick-up and drop-off.
+    """
+
 class RoutingAgnosticCompiler:
     """MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler."""
 
@@ -60,6 +76,7 @@ class RoutingAgnosticCompiler:
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = ...,
         max_filling_factor: float = ...,
+        routing_method: RoutingMethod = ...,
         use_window: bool = ...,
         window_size: int = ...,
         dynamic_placement: bool = ...,
@@ -73,6 +90,7 @@ class RoutingAgnosticCompiler:
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
             max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
+            routing_method: is the routing method that should be used for the independent set router
             use_window: whether to use a window for the placer
             window_size: the size of the window for the placer
             dynamic_placement: whether to use dynamic placement for the placer
@@ -117,6 +135,7 @@ class RoutingAwareCompiler:
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = ...,
         max_filling_factor: float = ...,
+        routing_method: RoutingMethod = ...,
         use_window: bool = ...,
         window_min_width: int = ...,
         window_ratio: float = ...,
@@ -135,7 +154,11 @@ class RoutingAwareCompiler:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
-            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
+            max_filling_factor: is the maximum filling factor for the entanglement zone,
+                i.e., it sets the limit for the maximum number of entangling gates that
+                are scheduled in parallel
+            routing_method: is the routing method that should be used for the
+                independent set router
             use_window: is a flag whether to use a window for the placer
             window_min_width: is the minimum width of the window for the placer
             window_ratio: is the ratio between the height and the width of the window

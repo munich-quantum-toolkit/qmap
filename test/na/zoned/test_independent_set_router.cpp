@@ -44,7 +44,8 @@ constexpr std::string_view architectureJson = R"({
 class IndependentSetRouterRouteTest : public ::testing::Test {
 protected:
   Architecture architecture;
-  nlohmann::json config;
+  IndependentSetRouter::Config config{
+      .method = IndependentSetRouter::Config::Method::STRICT};
   IndependentSetRouter router;
   IndependentSetRouterRouteTest()
       : architecture(Architecture::fromJSONString(architectureJson)),

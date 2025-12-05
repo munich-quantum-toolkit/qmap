@@ -39,20 +39,23 @@ constexpr std::string_view architectureSpecification = R"({
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
-constexpr std::string_view routingAgnosticConfiguration = R"({
+constexpr std::string_view strictRoutingAgnosticConfiguration = R"({
   "logLevel" : 1,
   "layoutSynthesizerConfig" : {
     "placerConfig" : {
       "useWindow" : true,
       "windowSize" : 10,
       "dynamicPlacement" : true
+    },
+    "routerConfig" : {
+      "method" : "strict"
     }
   },
   "codeGeneratorConfig" : {
     "warnUnsupportedGates" : false
   }
 })";
-constexpr std::string_view routingAwareConfiguration = R"({
+constexpr std::string_view strictRoutingAwareConfiguration = R"({
   "logLevel" : 1,
   "codeGeneratorConfig" : {
     "warnUnsupportedGates" : false
@@ -67,6 +70,9 @@ constexpr std::string_view routingAwareConfiguration = R"({
       "deepeningValue" : 0.2,
       "lookaheadFactor": 0.2,
       "reuseLevel": 5.0
+    },
+    "routerConfig" : {
+      "method" : "strict"
     }
   }
 })";
@@ -87,25 +93,26 @@ constexpr std::string_view relaxedRoutingAwareConfiguration = R"({
       "reuseLevel": 5.0
     },
     "routerConfig" : {
+      "method" : "relaxed",
       "preferSplit" : 0.0
     }
   }
 })";
-#define COMPILER_TEST(compiler_type, config)                                   \
-  TEST(compiler_type##Test, ConstructorWithoutConfig) {                        \
+#define COMPILER_TEST(test_name, compiler_type, config)                        \
+  TEST(test_name##Test, ConstructorWithoutConfig) {                            \
     Architecture architecture(                                                 \
         Architecture::fromJSONString(architectureSpecification));              \
     /* expected not to lead to a segfault */                                   \
     [[maybe_unused]] compiler_type compiler(architecture);                     \
   }                                                                            \
-  class compiler_type##Test : public ::testing::TestWithParam<std::string> {   \
+  class test_name##Test : public ::testing::TestWithParam<std::string> {       \
     compiler_type::Config config_;                                             \
     Architecture architecture_;                                                \
                                                                                \
   protected:                                                                   \
     qc::QuantumComputation circ_;                                              \
     compiler_type compiler_;                                                   \
-    compiler_type##Test()                                                      \
+    test_name##Test()                                                          \
         : config_(nlohmann::json::parse(config)),                              \
           architecture_(                                                       \
               Architecture::fromJSONString(architectureSpecification)),        \
@@ -113,14 +120,14 @@ constexpr std::string_view relaxedRoutingAwareConfiguration = R"({
     void SetUp() override { circ_ = qasm3::Importer::importf(GetParam()); }    \
   };                                                                           \
   /*=========================== END TO END TESTS ===========================*/ \
-  TEST_P(compiler_type##Test, EndToEnd) {                                      \
+  TEST_P(test_name##Test, EndToEnd) {                                          \
     const auto& code = this->compiler_.compile(this->circ_);                   \
     EXPECT_TRUE(code.validate().first);                                        \
     /*===----------------------------------------------------------------===*/ \
     /* write code to a file with extension .naviz in a directory converted */  \
     std::filesystem::path inputFile(GetParam());                               \
     std::filesystem::path outputFile = inputFile.parent_path() / "converted" / \
-                                       #compiler_type /                        \
+                                       #test_name /                            \
                                        (inputFile.stem().string() + ".naviz"); \
     std::filesystem::create_directories(outputFile.parent_path());             \
     std::ofstream output(outputFile);                                          \
@@ -137,17 +144,20 @@ constexpr std::string_view relaxedRoutingAwareConfiguration = R"({
   }                                                                            \
   /*========================================================================*/ \
   INSTANTIATE_TEST_SUITE_P(                                                    \
-      compiler_type##TestWithCircuits,  /* Custom instantiation name */        \
-      compiler_type##Test,              /* Test suite name */                  \
+      test_name##TestWithCircuits,      /* Custom instantiation name */        \
+      test_name##Test,                  /* Test suite name */                  \
       ::testing::Values(TEST_CIRCUITS), /* Parameters to test with */          \
       [](const ::testing::TestParamInfo<std::string>& pinfo) {                 \
         const std::filesystem::path path(pinfo.param);                         \
         return path.stem().string();                                           \
       })
 /*============================== INSTANTIATIONS ==============================*/
-COMPILER_TEST(RoutingAgnosticCompiler, routingAgnosticConfiguration);
-COMPILER_TEST(RoutingAwareCompiler, routingAwareConfiguration);
-COMPILER_TEST(RelaxedRoutingAwareCompiler, relaxedRoutingAwareConfiguration);
+COMPILER_TEST(StrictRoutingAgnosticCompiler, RoutingAgnosticCompiler,
+              strictRoutingAgnosticConfiguration);
+COMPILER_TEST(StrictRoutingAwareCompiler, RoutingAwareCompiler,
+              strictRoutingAwareConfiguration);
+COMPILER_TEST(RelaxedRoutingAwareCompiler, RoutingAwareCompiler,
+              relaxedRoutingAwareConfiguration);
 
 // Tests that the bug described in issue
 // https://github.com/munich-quantum-toolkit/qmap/issues/727 is fixed.

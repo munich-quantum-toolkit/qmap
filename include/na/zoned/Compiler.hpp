@@ -18,7 +18,6 @@
 #include "layout_synthesizer/placer/HeuristicPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
-#include "layout_synthesizer/router/RelaxedIndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 #include "scheduler/ASAPScheduler.hpp"
@@ -287,29 +286,6 @@ public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
   explicit RoutingAwareCompiler(const Architecture& architecture)
-      : Compiler(architecture) {}
-};
-
-class RelaxedRoutingAwareSynthesizer
-    : public PlaceAndRouteSynthesizer<RelaxedRoutingAwareSynthesizer,
-                                      HeuristicPlacer,
-                                      RelaxedIndependentSetRouter> {
-public:
-  RelaxedRoutingAwareSynthesizer(const Architecture& architecture,
-                                 const Config& config)
-      : PlaceAndRouteSynthesizer(architecture, config) {}
-  explicit RelaxedRoutingAwareSynthesizer(const Architecture& architecture)
-      : PlaceAndRouteSynthesizer(architecture) {}
-};
-class RelaxedRoutingAwareCompiler final
-    : public Compiler<RelaxedRoutingAwareCompiler, ASAPScheduler,
-                      VertexMatchingReuseAnalyzer,
-                      RelaxedRoutingAwareSynthesizer, CodeGenerator> {
-public:
-  RelaxedRoutingAwareCompiler(const Architecture& architecture,
-                              const Config& config)
-      : Compiler(architecture, config) {}
-  explicit RelaxedRoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned
