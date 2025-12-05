@@ -56,8 +56,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   // Routing Method Enum
   //===--------------------------------------------------------------------===//
   py::native_enum<na::zoned::IndependentSetRouter::Config::Method>(
-      m, "Routing Method", "enum.Enum",
-      "Enumeration of routing methods for the independent set router.")
+      m, "RoutingMethod", "enum.Enum")
       .value("strict", na::zoned::IndependentSetRouter::Config::Method::STRICT)
       .value("relaxed",
              na::zoned::IndependentSetRouter::Config::Method::RELAXED)

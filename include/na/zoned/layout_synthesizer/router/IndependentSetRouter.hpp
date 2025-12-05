@@ -34,10 +34,9 @@ class IndependentSetRouter : public RouterBase {
 public:
   /**
    * The configuration of the RelaxedIndependentSetRouter
-   * @note RelaxedIndependentSetRouter does not have any configuration
-   * parameters.
    */
   struct Config {
+    /// The routing method.
     enum class Method : uint8_t {
       /**
        * Use strict routing, i.e., the relative order of atoms must be
