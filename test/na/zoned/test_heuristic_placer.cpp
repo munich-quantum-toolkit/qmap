@@ -256,11 +256,11 @@ TEST(HeuristicPlacerTest, LimitSpace) {
   "reuseLevel": 5.0,
   "maxNodes": 2
 })"_json);
-  constexpr size_t nQubits = 4;
+  constexpr size_t nQubits = 8;
   EXPECT_THROW(std::ignore = placer.place(
                    nQubits,
                    std::vector<std::vector<std::array<qc::Qubit, 2>>>{
-                       {{0U, 1U}, {2U, 3U}}},
+                       {{0U, 1U}, {2U, 3U}, {4U, 5U}, {6U, 7U}}},
                    std::vector<std::unordered_set<qc::Qubit>>{}),
                std::runtime_error);
 }

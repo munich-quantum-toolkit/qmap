@@ -170,12 +170,10 @@ public:
      * @note This option is only relevant if the IDS heuristic method is used.
      */
     size_t queueCapacity = 100;
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, useWindow,
-                                                windowMinWidth, windowRatio,
-                                                windowShare, deepeningFactor,
-                                                deepeningValue, lookaheadFactor,
-                                                reuseLevel, maxNodes, trials,
-                                                queueCapacity);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(
+        Config, useWindow, windowMinWidth, windowRatio, windowShare, method,
+        deepeningFactor, deepeningValue, lookaheadFactor, reuseLevel, maxNodes,
+        trials, queueCapacity);
   };
 
 private:
