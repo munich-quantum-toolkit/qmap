@@ -24,9 +24,8 @@
 namespace na::zoned {
 
 /**
- * This class implements the default Router for the zoned neutral atom compiler
- * that forms groups of parallel movements by calculating a maximal independent
- * set.
+ * This class implements a Router for the zoned neutral atom compiler that forms
+ * groups of parallel movements by calculating a maximal independent set.
  */
 class IndependentSetRouter : public RouterBase {
   std::reference_wrapper<const Architecture> architecture_;
