@@ -161,7 +161,8 @@ private:
      * @details The cost is calculated such that it represents the extra time
      * the offset takes to shift the loaded atoms to deal with the relaxed
      * routing constraints. More precisely, the cost is proportional to the
-     * cubed time for the sake of easier computation. If only one offset is
+     * cubed time for the sake of easier computation because then it is just
+     * proportional to the distance of the offset. If only one offset is
      * required, i.e., either horizontal or vertical, the cost is the raw
      * distance of the offset. If both offsets are required, then the cost is
      * calculated as the sum of the third roots of the individual distances and
