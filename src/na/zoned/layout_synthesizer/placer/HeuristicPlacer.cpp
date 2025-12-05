@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/layout_synthesizer/placer/AStarPlacer.hpp"
+#include "na/zoned/layout_synthesizer/placer/HeuristicPlacer.hpp"
 
 #include "ir/Definitions.hpp"
 #include "na/zoned/Architecture.hpp"
@@ -40,7 +40,7 @@
 
 namespace na::zoned {
 template <class Node>
-auto AStarPlacer::aStarTreeSearch(
+auto HeuristicPlacer::aStarTreeSearch(
     const Node& start,
     const std::function<std::vector<std::reference_wrapper<const Node>>(
         const Node&)>& getNeighbors,
@@ -124,13 +124,15 @@ auto AStarPlacer::aStarTreeSearch(
       "narrow window size. Try adjusting the window_share compiler "
       "configuration option to a higher value, such as 1.0.");
 }
-auto AStarPlacer::isGoal(const size_t nGates, const GateNode& node) -> bool {
+auto HeuristicPlacer::isGoal(const size_t nGates, const GateNode& node)
+    -> bool {
   return node.level == nGates;
 }
-auto AStarPlacer::isGoal(const size_t nAtoms, const AtomNode& node) -> bool {
+auto HeuristicPlacer::isGoal(const size_t nAtoms, const AtomNode& node)
+    -> bool {
   return node.level == nAtoms;
 }
-auto AStarPlacer::discretizePlacementOfAtoms(
+auto HeuristicPlacer::discretizePlacementOfAtoms(
     const Placement& placement, const std::vector<qc::Qubit>& atoms) const
     -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, RowColumnSet> rows;
@@ -160,7 +162,7 @@ auto AStarPlacer::discretizePlacementOfAtoms(
   return std::pair{rowIndices, columnIndices};
 }
 
-auto AStarPlacer::discretizeNonOccupiedStorageSites(
+auto HeuristicPlacer::discretizeNonOccupiedStorageSites(
     const SiteSet& occupiedSites) const
     -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>> rows;
@@ -203,7 +205,7 @@ auto AStarPlacer::discretizeNonOccupiedStorageSites(
   return std::pair{rowIndices, columnIndices};
 }
 
-auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
+auto HeuristicPlacer::discretizeNonOccupiedEntanglementSites(
     const SiteSet& occupiedSites) const
     -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, RowColumnSet> rows;
@@ -256,7 +258,7 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
   return std::pair{rowIndices, columnIndices};
 }
 
-auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
+auto HeuristicPlacer::makeInitialPlacement(const size_t nQubits) const
     -> Placement {
   auto slmIt = architecture_.get().storageZones.cbegin();
   std::size_t c = 0;
@@ -283,7 +285,7 @@ auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
   return initialPlacement;
 }
 
-auto AStarPlacer::makeIntermediatePlacement(
+auto HeuristicPlacer::makeIntermediatePlacement(
     const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& previousReuseQubits,
     const std::unordered_set<qc::Qubit>& reuseQubits,
@@ -298,7 +300,7 @@ auto AStarPlacer::makeIntermediatePlacement(
                                   nextTwoQubitGates)};
 }
 
-auto AStarPlacer::addGateOption(
+auto HeuristicPlacer::addGateOption(
     const RowColumnMap<uint8_t>& discreteTargetRows,
     const RowColumnMap<uint8_t>& discreteTargetColumns, const SLM& leftSLM,
     const size_t leftRow, const size_t leftCol, const SLM& rightSLM,
@@ -351,7 +353,7 @@ auto AStarPlacer::addGateOption(
   }
 }
 
-auto AStarPlacer::placeGatesInEntanglementZone(
+auto HeuristicPlacer::placeGatesInEntanglementZone(
     const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
     const TwoQubitGateLayer& twoQubitGates,
@@ -740,7 +742,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   return currentPlacement;
 }
 
-auto AStarPlacer::placeAtomsInStorageZone(
+auto HeuristicPlacer::placeAtomsInStorageZone(
     const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
     const TwoQubitGateLayer& twoQubitGates,
@@ -1145,7 +1147,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   return currentPlacement;
 }
 
-auto AStarPlacer::getCost(const GateNode& node) -> float {
+auto HeuristicPlacer::getCost(const GateNode& node) -> float {
   float cost = node.lookaheadCost;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += std::sqrt(d);
@@ -1153,7 +1155,7 @@ auto AStarPlacer::getCost(const GateNode& node) -> float {
   return cost;
 }
 
-auto AStarPlacer::getCost(const AtomNode& node) -> float {
+auto HeuristicPlacer::getCost(const AtomNode& node) -> float {
   float cost = node.lookaheadCost;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += std::sqrt(d);
@@ -1161,7 +1163,7 @@ auto AStarPlacer::getCost(const AtomNode& node) -> float {
   return cost;
 }
 
-auto AStarPlacer::sumStdDeviationForGroups(
+auto HeuristicPlacer::sumStdDeviationForGroups(
     const std::array<float, 2>& scaleFactors,
     const std::vector<CompatibilityGroup>& groups) -> float {
   float sumStdDev = 0.F;
@@ -1188,11 +1190,11 @@ auto AStarPlacer::sumStdDeviationForGroups(
   return sumStdDev;
 }
 
-auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
-                               const float deepeningFactor,
-                               const float deepeningValue,
-                               const std::array<float, 2>& scaleFactors,
-                               const AtomNode& node) -> float {
+auto HeuristicPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
+                                   const float deepeningFactor,
+                                   const float deepeningValue,
+                                   const std::array<float, 2>& scaleFactors,
+                                   const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
   const auto nUnplacedAtoms = static_cast<float>(nAtomJobs - node.level);
   float maxDistanceOfUnplacedAtom = 0.0F;
@@ -1234,11 +1236,11 @@ auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
   return heuristic;
 }
 
-auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
-                               const float deepeningFactor,
-                               const float deepeningValue,
-                               const std::array<float, 2>& scaleFactors,
-                               const GateNode& node) -> float {
+auto HeuristicPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
+                                   const float deepeningFactor,
+                                   const float deepeningValue,
+                                   const std::array<float, 2>& scaleFactors,
+                                   const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
   const auto nUnplacedGates = static_cast<float>(nGateJobs - node.level);
   float maxDistanceOfUnplacedAtom = 0.0F;
@@ -1279,9 +1281,9 @@ auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
   return heuristic;
 }
 
-auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
-                               const std::vector<AtomJob>& atomJobs,
-                               const AtomNode& node)
+auto HeuristicPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
+                                   const std::vector<AtomJob>& atomJobs,
+                                   const AtomNode& node)
     -> std::vector<std::reference_wrapper<const AtomNode>> {
   const size_t atomToBePlacedNext = node.level;
   const auto& atomJob = atomJobs[atomToBePlacedNext];
@@ -1315,9 +1317,9 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
   return neighbors;
 }
 
-auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
-                               const std::vector<GateJob>& gateJobs,
-                               const GateNode& node)
+auto HeuristicPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
+                                   const std::vector<GateJob>& gateJobs,
+                                   const GateNode& node)
     -> std::vector<std::reference_wrapper<const GateNode>> {
   const size_t gateToBePlacedNext = node.level;
   const auto& gateJob = gateJobs[gateToBePlacedNext];
@@ -1360,7 +1362,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
   return neighbors;
 }
 
-auto AStarPlacer::checkCompatibilityWithGroup(
+auto HeuristicPlacer::checkCompatibilityWithGroup(
     const uint8_t key, const uint8_t value,
     const std::map<uint8_t, uint8_t>& group)
     -> std::optional<
@@ -1401,7 +1403,7 @@ auto AStarPlacer::checkCompatibilityWithGroup(
   return std::nullopt;
 }
 
-auto AStarPlacer::checkCompatibilityAndAddPlacement(
+auto HeuristicPlacer::checkCompatibilityAndAddPlacement(
     const uint8_t hKey, const uint8_t hValue, const uint8_t vKey,
     const uint8_t vValue, const float distance,
     std::vector<CompatibilityGroup>& groups, std::vector<float>& maxDistances)
@@ -1437,7 +1439,8 @@ auto AStarPlacer::checkCompatibilityAndAddPlacement(
   return false;
 }
 
-AStarPlacer::AStarPlacer(const Architecture& architecture, const Config& config)
+HeuristicPlacer::HeuristicPlacer(const Architecture& architecture,
+                                 const Config& config)
     : architecture_(architecture), config_(config) {
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSLM = *architecture_.get().storageZones.front();
@@ -1455,7 +1458,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture, const Config& config)
       config_.windowRatio * static_cast<double>(config_.windowMinWidth)));
 }
 
-auto AStarPlacer::place(
+auto HeuristicPlacer::place(
     const size_t nQubits,
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
     const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)

@@ -41,11 +41,11 @@ using RowColumnMap =
 using RowColumnSet =
     std::unordered_set<std::pair<std::reference_wrapper<const SLM>, size_t>>;
 /**
- * @brief The A* placer is a class that provides a method to determine the
- * placement of the atoms in each layer using the A* search algorithm.
+ * @brief The heuristic placer is a class that provides a method to determine
+ * the placement of the atoms in each layer using a heuristic search algorithm.
  */
-class AStarPlacer : public PlacerBase {
-  friend class AStarPlacerTest_AStarSearch_Test;
+class HeuristicPlacer : public PlacerBase {
+  friend class HeuristicPlacerPlacerTest_AStarSearch_Test;
   using DiscreteSite = std::array<uint8_t, 2>;
   using CompatibilityGroup = std::array<std::map<uint8_t, uint8_t>, 2>;
 
@@ -290,7 +290,7 @@ private:
 
 public:
   /// Constructs an A* placer for the given architecture and configuration.
-  AStarPlacer(const Architecture& architecture, const Config& config);
+  HeuristicPlacer(const Architecture& architecture, const Config& config);
 
   /**
    * This function defines the interface of the placer and delegates the

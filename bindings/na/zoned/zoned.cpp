@@ -13,7 +13,7 @@
 #include "na/zoned/Compiler.hpp"
 #include "na/zoned/code_generator/CodeGenerator.hpp"
 #include "na/zoned/layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
-#include "na/zoned/layout_synthesizer/placer/AStarPlacer.hpp"
+#include "na/zoned/layout_synthesizer/placer/HeuristicPlacer.hpp"
 #include "na/zoned/layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 
 #include <cstddef>
