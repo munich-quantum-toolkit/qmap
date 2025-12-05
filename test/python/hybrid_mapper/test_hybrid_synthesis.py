@@ -89,11 +89,11 @@ def test_hybrid_synthesis_input_output(arch_filename: str, tmp_path: Path) -> No
     filename_mapped_aod = tmp_path / f"{arch_filename}_mapped_aod.qasm"
     synthesis_mapper.save_mapped_qc_aod_qasm(str(filename_mapped_aod))
 
-    qasm_synth = synthesis_mapper.get_synthesized_qc()
+    qasm_synth = synthesis_mapper.get_synthesized_qc_qasm()
     assert qasm_synth is not None
 
     filename_synth = tmp_path / f"{arch_filename}_synthesized.qasm"
-    synthesis_mapper.save_synthesized_qc(str(filename_synth))
+    synthesis_mapper.save_synthesized_qc_qasm(str(filename_synth))
 
 
 def test_adjacency_matrix() -> None:

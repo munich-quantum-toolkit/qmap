@@ -258,11 +258,12 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "qasm2 to a "
            "file.",
            "filename"_a)
-      .def("get_synthesized_qc",
+      .def("get_synthesized_qc_qasm",
            &na::HybridSynthesisMapper::getSynthesizedQcQASM,
            "Returns the synthesized circuit with all gates but not "
            "mapped to the hardware as a qasm2 string.")
-      .def("save_synthesized_qc", &na::HybridSynthesisMapper::saveSynthesizedQc,
+      .def("save_synthesized_qc_qasm",
+           &na::HybridSynthesisMapper::saveSynthesizedQc,
            "Saves the synthesized circuit with all gates but not "
            "mapped to the hardware as qasm2 to a file.",
            "filename"_a)
