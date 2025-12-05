@@ -132,24 +132,22 @@ auto IndependentSetRouter::isRelaxedCompatibleMovement(
   if (((v0 == w0) != (v2 == w2)) || ((v1 == w1) != (v3 == w3))) {
     return MovementCompatibility::incompatible();
   }
+  // Helper to safely compute absolute difference
+  auto distDouble = [](const auto a, const auto b) -> double {
+    return static_cast<double>(a > b ? a - b : b - a);
+  };
   if ((v0 < w0) != (v2 < w2) && (v1 < w1) != (v3 < w3)) {
-    return MovementCompatibility::relaxedCompatible(sumCubeRootsCubed(
-        static_cast<double>(
-            std::abs(static_cast<int64_t>(v0) - static_cast<int64_t>(w0)) +
-            std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2))),
-        static_cast<double>(
-            std::abs(static_cast<int64_t>(v1) - static_cast<int64_t>(w1)) +
-            std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3)))));
+    return MovementCompatibility::relaxedCompatible(
+        sumCubeRootsCubed(distDouble(v0, w0) + distDouble(v2, w2),
+                          distDouble(v1, w1) + distDouble(v3, w3)));
   }
   if ((v0 < w0) != (v2 < w2)) {
-    return MovementCompatibility::relaxedCompatible(static_cast<double>(
-        std::abs(static_cast<int64_t>(v0) - static_cast<int64_t>(w0)) +
-        std::abs(static_cast<int64_t>(v2) - static_cast<int64_t>(w2))));
+    return MovementCompatibility::relaxedCompatible(distDouble(v0, w0) +
+                                                    distDouble(v2, w2));
   }
   if ((v1 < w1) != (v3 < w3)) {
-    return MovementCompatibility::relaxedCompatible(static_cast<double>(
-        std::abs(static_cast<int64_t>(v1) - static_cast<int64_t>(w1)) +
-        std::abs(static_cast<int64_t>(v3) - static_cast<int64_t>(w3))));
+    return MovementCompatibility::relaxedCompatible(distDouble(v1, w1) +
+                                                    distDouble(v3, w3));
   }
   return MovementCompatibility::strictlyCompatible();
 }
@@ -224,6 +222,17 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
             relaxedConflictingAtoms;
       };
       std::list<GroupInfo> groups;
+      // Helper to merge conflict costs
+      auto mergeConflictCost = [](std::optional<double>& existing,
+                                  const std::optional<double>& incoming) {
+        if (existing.has_value()) {
+          if (incoming.has_value()) {
+            existing = std::max(*existing, *incoming);
+          } else {
+            existing = std::nullopt;
+          }
+        }
+      };
       while (!atomsToMove.empty()) {
         auto& group = groups.emplace_back();
         std::vector<qc::Qubit> remainingAtoms;
@@ -247,13 +256,8 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
                 auto [conflictIt, success] =
                     group.relaxedConflictingAtoms.try_emplace(neighbor.first,
                                                               neighbor.second);
-                if (!success && conflictIt->second.has_value()) {
-                  if (neighbor.second.has_value()) {
-                    conflictIt->second =
-                        std::max(*conflictIt->second, *neighbor.second);
-                  } else {
-                    conflictIt->second = std::nullopt;
-                  }
+                if (!success) {
+                  mergeConflictCost(conflictIt->second, neighbor.second);
                 }
               }
             }
@@ -344,39 +348,37 @@ auto IndependentSetRouter::route(const std::vector<Placement>& placement) const
         // costs, i.e., the distance and the cubed costs directly.
         if (foundNewGroupForAllAtoms &&
             groupIt->maxDistance > config_.preferSplit * totalCostCubed) {
-          std::ranges::for_each(atomToNewGroup, [&relaxedConflictGraph,
-                                                 &atomToDist](
-                                                    const auto& pair) {
-            const auto& [atom, group] = pair;
-            // add atom to a new group
-            group->independentSet.emplace_back(atom);
-            const auto dist = atomToDist.at(atom);
-            if (group->maxDistance < dist) {
-              group->maxDistance = dist;
-            }
-            if (const auto relaxedConflictingNeighbors =
-                    relaxedConflictGraph.find(atom);
-                relaxedConflictingNeighbors != relaxedConflictGraph.end()) {
-              for (const auto neighbor : relaxedConflictingNeighbors->second) {
-                auto [conflictIt, success] =
-                    group->relaxedConflictingAtoms.try_emplace(neighbor.first,
-                                                               neighbor.second);
-                if (!success && conflictIt->second.has_value()) {
-                  if (neighbor.second.has_value()) {
-                    conflictIt->second =
-                        std::max(*conflictIt->second, *neighbor.second);
-                  } else {
-                    conflictIt->second = std::nullopt;
+          std::ranges::for_each(
+              atomToNewGroup, [&relaxedConflictGraph, &atomToDist,
+                               &mergeConflictCost](const auto& pair) {
+                const auto& [atom, group] = pair;
+                // add atom to a new group
+                group->independentSet.emplace_back(atom);
+                const auto dist = atomToDist.at(atom);
+                if (group->maxDistance < dist) {
+                  group->maxDistance = dist;
+                }
+                if (const auto relaxedConflictingNeighbors =
+                        relaxedConflictGraph.find(atom);
+                    relaxedConflictingNeighbors != relaxedConflictGraph.end()) {
+                  for (const auto neighbor :
+                       relaxedConflictingNeighbors->second) {
+                    auto [conflictIt, success] =
+                        group->relaxedConflictingAtoms.try_emplace(
+                            neighbor.first, neighbor.second);
+                    if (!success) {
+                      mergeConflictCost(conflictIt->second, neighbor.second);
+                    }
                   }
                 }
-              }
-            }
-          });
+              });
           // erase the current group from the linked list of groups; note that
           // a reverse pointer always points to the element in front of the
-          // current iterator position.
-          // After erasing, we create a new reverse iterator pointing to the
-          // same logical position in the remaining list.
+          // current iterator position. Hence, to erase the current group, we
+          // increment reverse_iterator to move past the current element, then
+          // .base() gives forward_iterator to the element to erase. After
+          // erasing, we create a new reverse iterator pointing to the position
+          // right before the erased element in the remaining list.
           const auto& a = (++groupIt).base();
           const auto& b = groups.erase(a);
           groupIt = std::make_reverse_iterator(b);

@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- ✨ Add relaxed routing method to the zoned neutral atom compiler ([#859]) ([**@ystade**])
+
 ### Changed
 
 - ✨ Enable code generation for relaxed routing constraints ([#848]) ([**@ystade**])
@@ -158,6 +162,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#859]: https://github.com/munich-quantum-toolkit/qmap/pull/859
 [#848]: https://github.com/munich-quantum-toolkit/qmap/pull/848
 [#847]: https://github.com/munich-quantum-toolkit/qmap/pull/847
 [#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804

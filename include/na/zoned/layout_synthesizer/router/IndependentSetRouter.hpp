@@ -32,9 +32,7 @@ class IndependentSetRouter : public RouterBase {
   std::reference_wrapper<const Architecture> architecture_;
 
 public:
-  /**
-   * The configuration of the RelaxedIndependentSetRouter
-   */
+  /// The configuration of the IndependentSetRouter
   struct Config {
     /// The routing method.
     enum class Method : uint8_t {
@@ -64,11 +62,11 @@ public:
   };
 
 private:
-  /// The configuration of the relaxed independent set router
+  /// The configuration of the independent set router
   Config config_;
 
 public:
-  /// Create a RelaxedIndependentSetRouter
+  /// Create an IndependentSetRouter with the given configuration
   IndependentSetRouter(const Architecture& architecture, const Config& config)
       : architecture_(architecture), config_(config) {}
   /**
