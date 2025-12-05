@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <list>
 #include <nlohmann/json.hpp>
 #include <tuple>
 #include <unordered_map>
@@ -85,10 +86,92 @@ public:
 
 private:
   /**
+   * Computes a strict routing for the given placement.
+   * @param placement is the placement for all layers
+   * @returns a strict routing
+   */
+  [[nodiscard]] auto routeStrict(const std::vector<Placement>& placement) const
+      -> std::vector<Routing>;
+  /**
+   * Updates the existing cost if the incoming cost is greater or infinite
+   * (i.e., std::nullopt).
+   * @param existing is the existing cost
+   * @param incoming is the new cost
+   */
+  static auto mergeConflictCost(std::optional<double>& existing,
+                                const std::optional<double>& incoming) -> void;
+  /// Information about a group during routing
+  struct GroupInfo {
+    /// The set of independent atoms in the group
+    std::vector<qc::Qubit> independentSet;
+    /// Maximum movement distance of any atom in the group
+    double maxDistance = 0.0;
+    /// All atoms that are in conflict with atoms in the independent set
+    std::unordered_map<qc::Qubit, std::optional<double>>
+        relaxedConflictingAtoms;
+  };
+  /**
+   * Computes the strict routing before movement groups are merged according to
+   * the relaxed routing constraints.
+   * @param atomsToMove is the vector or atoms to move
+   * @param atomsToDist is a map from atoms to their movement distance
+   * @param conflictGraph is the conflict graph based on the strict routing
+   * constraints.
+   * @param relaxedConflictGraph is the conflict graph based on the relaxed
+   * routing constraints with weights edges for strict conflicts.
+   * @returns a list of strict routing groups.
+   */
+  [[nodiscard]] auto makeStrictRoutingForRelaxedRouting(
+      std::vector<qc::Qubit> atomsToMove,
+      const std::unordered_map<qc::Qubit, double>& atomsToDist,
+      const std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>&
+          conflictGraph,
+      const std::unordered_map<
+          qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>&
+          relaxedConflictGraph) const -> std::list<GroupInfo>;
+  /**
+   * Merges movement groups if all movement of one group can be combined with
+   * other movement groups based on the relaxed routing constaraints.
+   * @param atomsToDist is a map from atoms to their movement distance.
+   * @param relaxedConflictGraph is the conflict graph based on the relaxed
+   * routing constraints with weights edges for strict conflicts.
+   * @param groups is a list of movement groups that is modified by this
+   * function.
+   */
+  auto mergeGroups(
+      const std::unordered_map<qc::Qubit, double>& atomsToDist,
+      const std::unordered_map<
+          qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>&
+          relaxedConflictGraph,
+      std::list<GroupInfo>& groups) const -> void;
+  /**
+   * Computes a relaxed routing for the given placement.
+   * @param placement is the placement for all layers
+   * @returns a relaxed routing
+   */
+  [[nodiscard]] auto routeRelaxed(const std::vector<Placement>& placement) const
+      -> std::vector<Routing>;
+  /**
+   * @param atomsToDist is a map from atoms to their movement distance.
+   * @returns the atoms to move, i.e., the keys of the map.
+   */
+  [[nodiscard]] auto
+  getAtomsToMove(const std::unordered_map<qc::Qubit, double>& atomsToDist) const
+      -> std::vector<qc::Qubit>;
+  /**
+   * @param startPlacement is the start placement.
+   * @param targetPlacement is the target placement.
+   * @returns a map from atoms to their movement distance.
+   */
+  [[nodiscard]] auto
+  getAtomsToMoveWithDistance(const Placement& startPlacement,
+                             const Placement& targetPlacement) const
+      -> std::unordered_map<qc::Qubit, double>;
+  /**
    * Creates the conflict graph.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
-   * targetPlacement stand in conflict with each other. The graph is
+   * targetPlacement stands in conflict with each other. The graph is
    * represented as adjacency lists.
    * @param atomsToMove are all atoms corresponding to nodes in the graph
    * @param startPlacement is the start placement of all atoms as a mapping from
@@ -103,6 +186,19 @@ private:
                       const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
   [[nodiscard]] auto
+  /**
+   * Creates the relaxed conflict graph.
+   * @details Atom/qubit indices are the nodes. Two nodes are connected if their
+   * corresponding move with respect to the given @p start- and @p
+   * targetPlacement stands in conflict with each other based on the relaxed
+   * routing constraints. The graph is represented as adjacency lists.
+   * @param atomsToMove are all atoms corresponding to nodes in the graph.
+   * @param startPlacement is the start placement of all atoms as a mapping from
+   * atoms to their sites.
+   * @param targetPlacement is the target placement of the atoms.
+   * @return the conflict graph as an unordered_map, where the keys are the
+   * nodes and the values are vectors of their neighbors.
+   */
   createRelaxedConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
                              const Placement& startPlacement,
                              const Placement& targetPlacement) const
