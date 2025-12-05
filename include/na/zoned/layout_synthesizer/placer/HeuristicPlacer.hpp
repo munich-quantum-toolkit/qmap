@@ -25,7 +25,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
-#include <stack>
+#include <spdlog/spdlog.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
