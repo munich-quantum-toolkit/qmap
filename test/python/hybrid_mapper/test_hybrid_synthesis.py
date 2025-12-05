@@ -76,18 +76,18 @@ def test_hybrid_synthesis_input_output(arch_filename: str, tmp_path: Path) -> No
     synthesis_mapper.append_with_mapping(qc1)
     synthesis_mapper.append_without_mapping(qc2)
 
-    qasm = synthesis_mapper.get_mapped_qc()
+    qasm = synthesis_mapper.get_mapped_qc_qasm()
     assert qasm is not None
 
     filename_mapped = tmp_path / f"{arch_filename}_mapped.qasm"
-    synthesis_mapper.save_mapped_qc(str(filename_mapped))
+    synthesis_mapper.save_mapped_qc_qasm(str(filename_mapped))
 
     synthesis_mapper.convert_to_aod()
-    qasm_aod = synthesis_mapper.get_mapped_qc_aod()
+    qasm_aod = synthesis_mapper.get_mapped_qc_aod_qasm()
     assert qasm_aod is not None
 
     filename_mapped_aod = tmp_path / f"{arch_filename}_mapped_aod.qasm"
-    synthesis_mapper.save_mapped_qc_aod(str(filename_mapped_aod))
+    synthesis_mapper.save_mapped_qc_aod_qasm(str(filename_mapped_aod))
 
     qasm_synth = synthesis_mapper.get_synthesized_qc()
     assert qasm_synth is not None
