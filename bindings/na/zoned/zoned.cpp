@@ -15,6 +15,7 @@
 #include "na/zoned/layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
 #include "na/zoned/layout_synthesizer/placer/AStarPlacer.hpp"
 #include "na/zoned/layout_synthesizer/placer/VertexMatchingPlacer.hpp"
+#include "na/zoned/layout_synthesizer/router/IndependentSetRouter.hpp"
 
 #include <cstddef>
 // The header <nlohmann/json.hpp> is used, but clang-tidy confuses it with the
