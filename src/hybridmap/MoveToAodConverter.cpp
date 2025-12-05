@@ -541,8 +541,9 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             targetQubits.emplace_back(starts[i]);
             targetQubits.emplace_back(ends[i]);
           } else {
-            // insert one before the found position
-            const auto newPos = targetQubits.insert(pos - 1, ends[i]);
+            // insert the (end, start) pair immediately before the existing
+            // start
+            const auto newPos = targetQubits.insert(pos, ends[i]);
             targetQubits.insert(newPos, starts[i]);
           }
         }
