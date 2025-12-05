@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -81,7 +82,7 @@ public:
      * rows. The window is centered at the nearest site.
      * @note Specified by the user in the configuration file.
      */
-    size_t windowMinWidth = 8;
+    size_t windowMinWidth = 16;
     /**
      * @brief If the window is used, this denotes the ratio between the height
      * and the width of the window.
@@ -104,7 +105,16 @@ public:
      * moved will end in the same window.
      * @note Specified by the user in the configuration file.
      */
-    double windowShare = 0.6;
+    double windowShare = 0.8;
+    /// Enum of available heuristic methods used for the search.
+    enum class HeuristicMethod : uint8_t {
+      /// A-star algorithm
+      AStar,
+      /// Iterative diving search
+      IDS
+    };
+    /// The heuristic method used for the search (default: IDS).
+    HeuristicMethod heuristicMethod = HeuristicMethod::IDS;
     /**
      * @brief The heuristic used in the A* search contains a term that resembles
      * the standard deviation of the differences between the current and target
@@ -115,14 +125,16 @@ public:
      * heuristic. However, this leads to a vast exploration of the search tree
      * and usually results in a huge number of nodes visited.
      */
-    float deepeningFactor = 0.8F;
+    float deepeningFactor =
+        heuristicMethod == HeuristicMethod::IDS ? 0.01F : 0.8F;
     /**
      * @brief Before the sum of standard deviations is multiplied with the
      * number of unplaced nodes and @ref deepeningFactor_, this value is added
      * to the sum to amplify the influence of the unplaced nodes count.
      * @see deepeningFactor_
      */
-    float deepeningValue = 0.2F;
+    float deepeningValue =
+        heuristicMethod == HeuristicMethod::IDS ? 0.0F : 0.2F;
     /**
      * @brief The cost function can consider the distance of atoms to their
      * interaction partner in the next layer.
@@ -131,7 +143,8 @@ public:
      * entirely. A factor of 1.0 implies that the lookahead is as important as
      * the distance to the target site, which is usually not desired.
      */
-    float lookaheadFactor = 0.2F;
+    float lookaheadFactor =
+        heuristicMethod == HeuristicMethod::IDS ? 0.4F : 0.2F;
     /**
      * @brief The reuse level corresponds to the estimated extra fidelity loss
      * due to the extra trap transfers when the atom is not reused and instead
@@ -144,16 +157,27 @@ public:
      * @brief The maximum number of nodes that are allowed to be visited in the
      * A* search tree.
      * @detsils If this number is exceeded, the search is aborted and an error
-     * is raised. In the current implementation, one node roughly consumes 120
-     * Byte. Hence, allowing 50,000,000 nodes results in memory consumption of
-     * about 6 GB plus the size of the rest of the data structures.
+     * is raised. In the current implementation, one node roughly consumes 140
+     * Byte. Hence, allowing 10,000,000 nodes results in memory consumption of
+     * about 2 GB plus the size of the rest of the data structures.
      */
-    size_t maxNodes = 50'000'000;
+    size_t maxNodes = 10'000'000;
+    /**
+     * @brief The number of trials determines the number of restarts during IDS.
+     * @note This option is only relevant if the IDS heuristic method is used.
+     */
+    size_t trials = 4;
+    /**
+     * @brief The maximum capacity of the priority queue used during IDS.
+     * @note This option is only relevant if the IDS heuristic method is used.
+     */
+    size_t queueCapacity = 100;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, useWindow,
                                                 windowMinWidth, windowRatio,
                                                 windowShare, deepeningFactor,
                                                 deepeningValue, lookaheadFactor,
-                                                reuseLevel, maxNodes);
+                                                reuseLevel, maxNodes, trials,
+                                                queueCapacity);
   };
 
 private:
@@ -223,11 +247,13 @@ private:
    * stage
    */
   struct AtomNode {
+    /// The parent node.
+    std::shared_ptr<const AtomNode> parent = nullptr;
     /**
      * The current level in the search tree. A level equal to the number of
      * atoms to be placed indicates that all atoms have been placed.
      */
-    uint8_t level = 0;
+    uint16_t level = 0;
     /**
      * The index of the chosen option for the current atom instead of a pointer
      * to that option to save memory
@@ -259,11 +285,13 @@ private:
    * stage.
    */
   struct GateNode {
+    /// The parent node.
+    std::shared_ptr<const GateNode> parent = nullptr;
     /**
      * The current level in the search tree. A level equal to the number of
      * gates to be placed indicates that all gates have been placed.
      */
-    uint8_t level = 0;
+    uint16_t level = 0;
     /**
      * The index of the chosen option for the current gate instead of a pointer
      * to that option to save memory
@@ -307,6 +335,261 @@ public:
 
 private:
   /**
+   * @brief This class implements a bounded priority queue.
+   * @details It uses two heaps to allow for efficient retrieval and removal of
+   * both the minimum and maximum elements. If the maximum capacity is reached,
+   * either the new element or the maximum element is discarded on insertion
+   * depending on which has a higher priority.
+   * @tparam T is the type of elements stored in the queue.
+   * @tparam Compare is the comparison functor to determine the priority of the
+   * elements.
+   */
+  template <class T, class Compare = std::less<T>> class BoundedPriorityQueue {
+  public:
+    using ValueType = T;
+    using SizeType = size_t;
+    using PriorityCompare = Compare;
+    using Reference = ValueType&;
+
+  private:
+    struct Node {
+      SizeType minHeapIndex;
+      SizeType maxHeapIndex;
+      ValueType value;
+    };
+    /// Vector of heap elements satisfying the min-heap property.
+    std::vector<std::unique_ptr<Node>> minHeap_;
+    /// Vector of heap elements satisfying the max-heap property.
+    std::vector<Node*> maxHeap_;
+    /// The maximum number of elements in the heap.
+    SizeType heapCapacity_;
+
+    /**
+     * Starts to establish the min-heap property from the given index upwards.
+     * @param i is the index in the min-heap.
+     */
+    auto heapifyMinHeapUp(SizeType i) -> void {
+      assert(i < minHeap_.size());
+      while (i > 0) {
+        size_t parent = (i - 1) / 2;
+        if (PriorityCompare{}(minHeap_[i]->value, minHeap_[parent]->value)) {
+          std::swap(minHeap_[i], minHeap_[parent]);
+          minHeap_[i]->minHeapIndex = i;
+          minHeap_[parent]->minHeapIndex = parent;
+          i = parent;
+        } else {
+          break;
+        }
+      }
+    }
+
+    /**
+     * Starts to establish the max-heap property from the given index upwards.
+     * @param i is the index in the max-heap.
+     */
+    auto heapifyMaxHeapUp(SizeType i) -> void {
+      assert(i < maxHeap_.size());
+      while (i > 0) {
+        size_t parent = (i - 1) / 2;
+        if (PriorityCompare{}(maxHeap_[parent]->value, maxHeap_[i]->value)) {
+          std::swap(maxHeap_[i], maxHeap_[parent]);
+          maxHeap_[i]->maxHeapIndex = i;
+          maxHeap_[parent]->maxHeapIndex = parent;
+          i = parent;
+        } else {
+          break;
+        }
+      }
+    }
+
+    /**
+     * Starts to establish the min-heap property from the given index downwards.
+     * @param i is the index in the min-heap.
+     */
+    auto heapifyMinHeapDown(SizeType i) -> void {
+      while (true) {
+        size_t leftChild = (2 * i) + 1;
+        size_t rightChild = (2 * i) + 2;
+        size_t smallest = i;
+
+        if (leftChild < minHeap_.size() &&
+            PriorityCompare{}(minHeap_[leftChild]->value,
+                              minHeap_[smallest]->value)) {
+          smallest = leftChild;
+        }
+        if (rightChild < minHeap_.size() &&
+            PriorityCompare{}(minHeap_[rightChild]->value,
+                              minHeap_[smallest]->value)) {
+          smallest = rightChild;
+        }
+        if (smallest != i) {
+          std::swap(minHeap_[i], minHeap_[smallest]);
+          minHeap_[i]->minHeapIndex = i;
+          minHeap_[smallest]->minHeapIndex = smallest;
+          i = smallest;
+        } else {
+          break;
+        }
+      }
+    }
+
+    /**
+     * Starts to establish the max-heap property from the given index downwards.
+     * @param i is the index in the max-heap.
+     */
+    auto heapifyMaxHeapDown(SizeType i) -> void {
+      while (true) {
+        size_t leftChild = (2 * i) + 1;
+        size_t rightChild = (2 * i) + 2;
+        size_t largest = i;
+
+        if (leftChild < maxHeap_.size() &&
+            PriorityCompare{}(maxHeap_[largest]->value,
+                              maxHeap_[leftChild]->value)) {
+          largest = leftChild;
+        }
+        if (rightChild < maxHeap_.size() &&
+            PriorityCompare{}(maxHeap_[largest]->value,
+                              maxHeap_[rightChild]->value)) {
+          largest = rightChild;
+        }
+        if (largest != i) {
+          std::swap(maxHeap_[i], maxHeap_[largest]);
+          maxHeap_[i]->maxHeapIndex = i;
+          maxHeap_[largest]->maxHeapIndex = largest;
+          i = largest;
+        } else {
+          break;
+        }
+      }
+    }
+
+  public:
+    explicit BoundedPriorityQueue(const SizeType maxQueueSize)
+        : heapCapacity_(maxQueueSize) {
+      minHeap_.reserve(heapCapacity_);
+      maxHeap_.reserve(heapCapacity_);
+    }
+    /**
+     * @returns the top element of the stack.
+     * @note If @ref empty returns `true`, calling this function is
+     * undefined behavior.
+     */
+    [[nodiscard]] auto top() const -> const ValueType& {
+      assert(!minHeap_.empty());
+      return minHeap_.front()->value;
+    }
+    /**
+     * @returns the top element of the stack.
+     * @note If @ref empty returns `true`, calling this function is
+     * undefined behavior.
+     */
+    [[nodiscard]] auto top() -> ValueType& {
+      assert(!minHeap_.empty());
+      return minHeap_.front()->value;
+    }
+    /**
+     * @brief Removes the top element.
+     * @note If @ref empty returns `true`, calling this function is
+     * undefined behavior.
+     */
+    auto pop() -> void {
+      assert(!minHeap_.empty());
+      assert(minHeap_.size() == maxHeap_.size());
+      assert(minHeap_.size() <= heapCapacity_);
+      if (minHeap_.size() == 1) {
+        minHeap_.pop_back();
+        maxHeap_.pop_back();
+      } else {
+        assert(minHeap_.size() > 1);
+        const auto i = minHeap_.front()->maxHeapIndex;
+        std::swap(minHeap_.front(), minHeap_.back());
+        minHeap_.pop_back();
+        minHeap_.front()->minHeapIndex = 0;
+        heapifyMinHeapDown(0);
+        if (i == maxHeap_.size() - 1) {
+          maxHeap_.pop_back();
+        } else {
+          std::swap(maxHeap_[i], maxHeap_.back());
+          maxHeap_.pop_back();
+          maxHeap_[i]->maxHeapIndex = i;
+          heapifyMaxHeapDown(i);
+        }
+      }
+      assert(minHeap_.size() == maxHeap_.size());
+      assert(minHeap_.size() <= heapCapacity_);
+    }
+    /// @returns `true` if the stack is empty.
+    [[nodiscard]] auto empty() const -> bool { return minHeap_.empty(); }
+    /// @brief Inserts an element at the top.
+    auto push(ValueType&& value) -> void {
+      assert(minHeap_.size() == maxHeap_.size());
+      if (heapCapacity_ > 0) {
+        if (minHeap_.size() < heapCapacity_) {
+          minHeap_.emplace_back(std::make_unique<Node>(
+              minHeap_.size(), maxHeap_.size(), std::move(value)));
+          maxHeap_.emplace_back(minHeap_.back().get());
+          heapifyMinHeapUp(minHeap_.size() - 1);
+          heapifyMaxHeapUp(maxHeap_.size() - 1);
+        } else {
+          assert(minHeap_.size() == heapCapacity_);
+          // if capacity is reached, only insert the value if smaller than max
+          if (PriorityCompare{}(value, maxHeap_.front()->value)) {
+            const auto i = maxHeap_.front()->minHeapIndex;
+            assert(i < minHeap_.size());
+            minHeap_[i] = std::make_unique<Node>(i, 0, std::move(value));
+            maxHeap_.front() = minHeap_[i].get();
+            heapifyMinHeapUp(i);
+            heapifyMaxHeapDown(0);
+          }
+        }
+      }
+      assert(minHeap_.size() == maxHeap_.size());
+      assert(minHeap_.size() <= heapCapacity_);
+    }
+    /**
+     * @brief Removes the top element and decrements the maximum capacity by
+     * one.
+     * @note If @ref empty returns `true`, calling this function is
+     * undefined behavior.
+     */
+    auto popAndShrink() -> void {
+      pop();
+      if (heapCapacity_ > 0) {
+        --heapCapacity_;
+      }
+      assert(minHeap_.size() == maxHeap_.size());
+      assert(minHeap_.size() <= heapCapacity_);
+    }
+  };
+
+  /**
+   * @brief Performs an iterative diving search (IDS) on the defined graph.
+   * @tparam Node is the type of nodes in the graph.
+   * @param start is the start node to start the search from.
+   * @param getNeighbors is a function to retrieve the neighbor reachable from a
+   * given node.
+   * @param isGoal is a function to determine whether a given node is a goal
+   * node.
+   * @param getCost is a function returning the cost of a node in the graph.
+   * @param getHeuristic is a function returning the heuristic value of a given
+   * node.
+   * @param trials is the number of restarts IDS performs.
+   * @param queueCapacity is the capacity of the queue used for the iterative
+   * diving search. Must be larger or equal to @p trials.
+   * @return a shared pointer to the final node of the search.
+   */
+  template <class Node>
+  [[nodiscard]] static auto iterativeDivingSearch(
+      std::shared_ptr<const Node> start,
+      const std::function<std::vector<std::shared_ptr<const Node>>(
+          std::shared_ptr<const Node>)>& getNeighbors,
+      const std::function<bool(const Node&)>& isGoal,
+      const std::function<double(const Node&)>& getCost,
+      const std::function<double(const Node&)>& getHeuristic, size_t trials,
+      size_t queueCapacity) -> std::shared_ptr<const Node>;
+
+  /**
    * @brief A* search algorithm for trees
    * @details A* is a graph traversal and path search algorithm that finds the
    * shortest path between a start node and a goal node. It evaluates nodes by
@@ -322,11 +605,11 @@ private:
    * is superfluous for trees.
    * - As a consequence of the first point, this implementation also does not
    * check whether a node is already in the open set. This would also require an
-   * O(log(n)) check operation which is not necessary for trees as one path can
+   * O(log(n)) check operation, which is not necessary for trees as one path can
    * only reach a node.
    * @note This implementation of A* search can only handle trees and not
    * general graphs. This is because it does not keep track of visited nodes and
-   * therefore cannot detect cycles. Also for DAGs it may expand nodes multiple
+   * therefore cannot detect cycles. Also, for DAGs it may expand nodes multiple
    * times when they can be reached by different paths from the start node.
    * @note @p getHeuristic must be admissible, meaning that it never
    * overestimates the cost to reach the goal from the current node calculated
@@ -363,7 +646,7 @@ private:
    * @param placement is a list of atoms together with their current placement
    * @param atoms is a list of all atoms that must be placed
    * @return a pair of two maps, the first one maps rows to their discrete
-   * indices and the second one maps columns to their discrete indices
+   * indices, and the second one maps columns to their discrete indices
    */
   [[nodiscard]] auto
   discretizePlacementOfAtoms(const Placement& placement,
@@ -583,16 +866,14 @@ private:
    * whether the new corresponding placement is compatible with any of the
    * existing groups. If yes, the new placement is added to the respective group
    * and otherwise, a new group is formed with the new placement.
-   * @param nodes is the list of all nodes created so far with permanent memory
-   * allocation
-   * @param atomJobs are the atoms to be placed
-   * @param node is the node to be expanded
+   * @param atomJobs are the atoms to be placed.
+   * @param node is the node to be expanded.
    * @return a list of references to the neighbors of the given node
    */
   [[nodiscard]] static auto
-  getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
-               const std::vector<AtomJob>& atomJobs, const AtomNode& node)
-      -> std::vector<std::reference_wrapper<const AtomNode>>;
+  getNeighbors(const std::vector<AtomJob>& atomJobs,
+               const std::shared_ptr<const AtomNode>& node)
+      -> std::vector<std::shared_ptr<const AtomNode>>;
 
   /**
    * @brief Return references to all neighbors of the given node.
@@ -607,23 +888,21 @@ private:
    * whether the new corresponding placement is compatible with any of the
    * existing groups. If yes, the new placement is added to the respective group
    * and otherwise, a new group is formed with the new placement.
-   * @param nodes is the list of all nodes created so far with permanent memory
-   * allocation
-   * @param gateJobs are the gates to be placed
-   * @param node is the node to be expanded
+   * @param gateJobs are the gates to be placed.
+   * @param node is the node to be expanded.
    * @return a list of references to the neighbors of the given node
    */
   [[nodiscard]] static auto
-  getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
-               const std::vector<GateJob>& gateJobs, const GateNode& node)
-      -> std::vector<std::reference_wrapper<const GateNode>>;
+  getNeighbors(const std::vector<GateJob>& gateJobs,
+               const std::shared_ptr<const GateNode>& node)
+      -> std::vector<std::shared_ptr<const GateNode>>;
 
   /**
    * Checks the compatibility with a new assignment, i.e., a key-value pair,
    * whether it is compatible with an existing group. The group can either be
    * a horizontal or vertical group. In case the new assignment is compatible
    * with the group, an iterator is returned pointing to the assignment in the
-   * group, if it already exists or to the element directly following the
+   * group if it already exists or to the element directly following the
    * new key. Additionally, a boolean is returned indicating whether the new
    * exists in the group.
    * @param key the key of the new assignment
