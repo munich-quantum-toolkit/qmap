@@ -79,16 +79,13 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   mapping = initialMapping;
 
   if (this->parameters.verbose) {
-    std::cout << "* Init Coord Mapping w/ [row:" << arch->getNrows()
-              << " X col:" << arch->getNcolumns() << "] hardware" << "\n";
+    spdlog::info("* Init Coord Mapping w/ [row:{} X col:{}] hardware",
+                 arch->getNrows(), arch->getNcolumns());
     for (uint32_t q = 0; q < qc.getNqubits(); q++) {
-      std::cout << "q " << std::setw(3) << q;
       const auto hwQubit = this->mapping.getHwQubit(q);
-      std::cout << " -> h " << std::setw(3) << hwQubit;
-      std::cout << " -> c " << std::setw(3)
-                << hardwareQubits.getCoordIndex(hwQubit) << "\n";
+      spdlog::info("q {:3} -> h {:3} -> c {:3}", q, hwQubit,
+                   hardwareQubits.getCoordIndex(hwQubit));
     }
-    std::cout << "\n";
   }
 
   // init layers
@@ -110,7 +107,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     // assign gates to layers
     reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
     if (this->parameters.verbose) {
-      std::cout << "Iteration " << i << '\n';
+      spdlog::info("Iteration {}", i);
       printLayers();
     }
 
@@ -119,11 +116,11 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   }
 
   if (this->parameters.verbose) {
-    std::cout << "nSwaps: " << stats.nSwaps << '\n';
-    std::cout << "nBridges: " << stats.nBridges << '\n';
-    std::cout << "nFAncillas: " << stats.nFAncillas << '\n';
-    std::cout << "nMoves: " << stats.nMoves << '\n';
-    std::cout << "nPassBy: " << stats.nPassBy << '\n';
+    spdlog::info("nSwaps: {}", stats.nSwaps);
+    spdlog::info("nBridges: {}", stats.nBridges);
+    spdlog::info("nFAncillas: {}", stats.nFAncillas);
+    spdlog::info("nMoves: {}", stats.nMoves);
+    spdlog::info("nPassBy: {}", stats.nPassBy);
   }
 }
 
@@ -182,7 +179,7 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   MoveToAodConverter aodScheduler(*arch, hardwareQubits, flyingAncillas);
   mappedQcAOD = aodScheduler.schedule(mappedQc);
   if (this->parameters.verbose) {
-    std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';
+    spdlog::info("nMoveGroups: {}", aodScheduler.getNMoveGroups());
   }
   return mappedQcAOD;
 }
@@ -203,7 +200,7 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : pbComb.moves) {
     mappedQc.move(passBy.c1, passBy.c2 + arch->getNpositions());
     if (this->parameters.verbose) {
-      std::cout << "passby " << passBy.c1 << " " << passBy.c2 << '\n';
+      spdlog::info("passby {} {}", passBy.c1, passBy.c2);
     }
     auto itT = std::ranges::find(targetCoords, passBy.c1);
     if (itT != targetCoords.end()) {
@@ -227,7 +224,7 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : pbComb.moves) {
     mappedQc.move(passBy.c2 + arch->getNpositions(), passBy.c1);
     if (this->parameters.verbose) {
-      std::cout << "passby " << passBy.c2 << " " << passBy.c1 << '\n';
+      spdlog::info("passby {} {}", passBy.c2, passBy.c1);
     }
   }
 
@@ -269,11 +266,10 @@ void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
 
 void NeutralAtomMapper::mapGate(const qc::Operation* op) {
   if (this->parameters.verbose) {
-    std::cout << "mapped " << op->getName() << " ";
+    spdlog::info("mapped {}", op->getName());
     for (const auto qubit : op->getUsedQubits()) {
-      std::cout << qubit << " ";
+      spdlog::info("{}", qubit);
     }
-    std::cout << "\n";
   }
   // convert circuit qubits to CoordIndex and append to mappedQc
   const auto opCopyUnique = op->clone();
@@ -293,42 +289,38 @@ bool NeutralAtomMapper::isExecutable(const qc::Operation* opPointer) {
 }
 
 void NeutralAtomMapper::printLayers() const {
-  std::cout << "f,g: ";
+  spdlog::info("f,g:");
   for (const auto* op : this->frontLayerGate) {
-    std::cout << op->getName() << " ";
+    spdlog::info("{}", op->getName());
     for (const auto qubit : op->getUsedQubits()) {
-      std::cout << qubit << " ";
+      spdlog::info("{}", qubit);
     }
-    std::cout << '\n';
   }
-  std::cout << '\n';
-  std::cout << "f,s: ";
+  spdlog::info("");
+  spdlog::info("f,s:");
   for (const auto* op : this->frontLayerShuttling) {
-    std::cout << op->getName() << " ";
+    spdlog::info("{}", op->getName());
     for (const auto qubit : op->getUsedQubits()) {
-      std::cout << qubit << " ";
+      spdlog::info("{}", qubit);
     }
-    std::cout << '\n';
   }
-  std::cout << '\n';
-  std::cout << "l,g: ";
+  spdlog::info("");
+  spdlog::info("l,g:");
   for (const auto* op : this->lookaheadLayerGate) {
-    std::cout << op->getName() << " ";
+    spdlog::info("{}", op->getName());
     for (const auto qubit : op->getUsedQubits()) {
-      std::cout << qubit << " ";
+      spdlog::info("{}", qubit);
     }
-    std::cout << '\n';
   }
-  std::cout << '\n';
-  std::cout << "l,s: ";
+  spdlog::info("");
+  spdlog::info("l,s:");
   for (const auto* op : this->lookaheadLayerShuttling) {
-    std::cout << op->getName() << " ";
+    spdlog::info("{}", op->getName());
     for (const auto qubit : op->getUsedQubits()) {
-      std::cout << qubit << " ";
+      spdlog::info("{}", qubit);
     }
-    std::cout << '\n';
   }
-  std::cout << '\n';
+  spdlog::info("");
 }
 
 GateList NeutralAtomMapper::getExecutableGates(const GateList& gates) {
@@ -359,19 +351,18 @@ void NeutralAtomMapper::applySwap(const Swap& swap) {
   const auto idxSecond = this->hardwareQubits.getCoordIndex(swap.second);
   this->mappedQc.swap(idxFirst, idxSecond);
   if (this->parameters.verbose) {
-    std::cout << "swapped " << swap.first << " " << swap.second;
-    std::cout << "  logical qubits: ";
+    spdlog::info("swapped {} {}", swap.first, swap.second);
+    spdlog::info("  logical qubits:");
     if (this->mapping.isMapped(swap.first)) {
-      std::cout << this->mapping.getCircQubit(swap.first);
+      spdlog::info("{}", this->mapping.getCircQubit(swap.first));
     } else {
-      std::cout << "not mapped";
+      spdlog::info("not mapped");
     }
     if (this->mapping.isMapped(swap.second)) {
-      std::cout << " " << this->mapping.getCircQubit(swap.second);
+      spdlog::info(" {}", this->mapping.getCircQubit(swap.second));
     } else {
-      std::cout << " not mapped";
+      spdlog::info(" not mapped");
     }
-    std::cout << '\n';
   }
 }
 
@@ -384,12 +375,12 @@ void NeutralAtomMapper::applyMove(AtomMove move) {
   const auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.c1);
   this->hardwareQubits.move(toMoveHwQubit, move.c2);
   if (this->parameters.verbose) {
-    std::cout << "moved " << move.c1 << " to " << move.c2;
+    spdlog::info("moved {} to {}", move.c1, move.c2);
     if (this->mapping.isMapped(toMoveHwQubit)) {
-      std::cout << "  logical qubit: "
-                << this->mapping.getCircQubit(toMoveHwQubit) << '\n';
+      spdlog::info("  logical qubit: {}",
+                   this->mapping.getCircQubit(toMoveHwQubit));
     } else {
-      std::cout << "  not mapped" << '\n';
+      spdlog::info("  not mapped");
     }
   }
   stats.nMoves++;
@@ -400,11 +391,10 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
   mappedQc.bridge(coordIndices);
 
   if (this->parameters.verbose) {
-    std::cout << "bridged " << bridge.first->getName() << " ";
+    spdlog::info("bridged {}", bridge.first->getName());
     for (const auto qubit : bridge.second) {
-      std::cout << qubit << " ";
+      spdlog::info("{}", qubit);
     }
-    std::cout << '\n';
   }
 
   // // remove gate from frontLayer
@@ -452,8 +442,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     i += 2;
 
     if (this->parameters.verbose) {
-      std::cout << "passby (flying ancilla) " << passBy.origin << " "
-                << passBy.q1 << " " << passBy.q2 << '\n';
+      spdlog::info("passby (flying ancilla) {} {} {}", passBy.origin, passBy.q1,
+                   passBy.q2);
     }
   }
   const auto opCopy = faComb.op->clone();
@@ -481,8 +471,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     }
 
     if (this->parameters.verbose) {
-      std::cout << "passby (flying ancilla) " << passBy.q2 << " " << passBy.q1
-                << '\n';
+      spdlog::info("passby (flying ancilla) {} {}", passBy.q2, passBy.q1);
     }
   }
 
@@ -811,11 +800,10 @@ NeutralAtomMapper::initSwaps(const GateList& layer) {
       // for multi-qubit gates, find the best position around the gate qubits
       auto bestPos = getBestMultiQubitPosition(gate);
       if (this->parameters.verbose) {
-        std::cout << "bestPos: ";
+        spdlog::info("bestPos:");
         for (const auto qubit : bestPos) {
-          std::cout << qubit << " ";
+          spdlog::info("{}", qubit);
         }
-        std::cout << '\n';
       }
       // then compute the exact moves to get to the best position
       auto exactSwapsToPos = getExactSwapsToPosition(gate, bestPos);
@@ -1492,7 +1480,7 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
   while (!this->frontLayerShuttling.empty()) {
     ++i;
     if (this->parameters.verbose) {
-      std::cout << "iteration " << i << '\n';
+      spdlog::info("iteration {}", i);
     }
     auto bestComb = findBestAtomMove();
     MappingMethod bestMethod = MoveMethod;
@@ -1660,7 +1648,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
     while (gatesToExecute.empty() && !this->frontLayerGate.empty()) {
       ++i;
       if (this->parameters.verbose) {
-        std::cout << "iteration " << i << '\n';
+        spdlog::info("iteration {}", i);
       }
 
       auto bestSwap = findBestSwap(lastSwap);

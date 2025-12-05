@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -42,12 +42,12 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
   size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
     if (this->parameters.verbose) {
-      std::cout << "Evaluating synthesis step number " << qcIndex << "\n";
+      spdlog::info("Evaluating synthesis step number {}", qcIndex);
     }
     const auto fidelity = this->evaluateSynthesisStep(qc);
     candidates.emplace_back(qc, fidelity);
     if (this->parameters.verbose) {
-      std::cout << "Fidelity: " << fidelity << "\n";
+      spdlog::info("Fidelity: {}", fidelity);
     }
     ++qcIndex;
   }

@@ -23,10 +23,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <deque>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -39,7 +39,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   animation.clear();
   animationMachine.clear();
   if (verbose) {
-    std::cout << "\n* schedule start!\n";
+    spdlog::info("* schedule start!");
   }
 
   const auto nPositions = static_cast<std::size_t>(arch->getNpositions());
@@ -65,7 +65,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   for (const auto& op : qc) {
     index++;
     if (verbose) {
-      std::cout << "\n" << index << "\n";
+      spdlog::info("{}", index);
     }
     if (op->getType() == qc::AodActivate) {
       nAodActivate++;
@@ -85,17 +85,16 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     // DEBUG info
     if (verbose) {
-      std::cout << op->getName() << "  ";
+      spdlog::info("{}", op->getName());
       // print control qubits
       for (const auto& c : op->getControls()) {
-        std::cout << "c" << c.qubit << " ";
+        spdlog::info("c{} ", c.qubit);
       }
       // print target qubits
       for (const auto& t : op->getTargets()) {
-        std::cout << "q" << t << " ";
+        spdlog::info("q{} ", t);
       }
-      std::cout << "-> time: " << opTime << ", fidelity: " << opFidelity
-                << "\n";
+      spdlog::info("-> time: {}, fidelity: {}", opTime, opFidelity);
     }
 
     qc::fp maxTime = 0;
@@ -171,7 +170,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     }
   }
   if (verbose) {
-    std::cout << "\n* schedule end!\n";
+    spdlog::info("* schedule end!");
   }
 
   const auto maxExecutionTime = *std::ranges::max_element(totalExecutionTimes);
@@ -197,11 +196,11 @@ void na::NeutralAtomScheduler::printSchedulerResults(
     const uint32_t nCZs, const uint32_t nAodActivate, const uint32_t nAodMove) {
   const auto totalExecutionTime = *std::ranges::max_element(
       totalExecutionTimes.begin(), totalExecutionTimes.end());
-  std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
-  std::cout << "totalIdleTime: " << totalIdleTime << "\n";
-  std::cout << "totalGateFidelities: " << totalGateFidelities << "\n";
-  std::cout << "totalFidelities: " << totalFidelities << "\n";
-  std::cout << "totalNumCZs: " << nCZs << "\n";
-  std::cout << "nAodActivate: " << nAodActivate << "\n";
-  std::cout << "nAodMove: " << nAodMove << "\n";
+  spdlog::info("totalExecutionTimes: {}", totalExecutionTime);
+  spdlog::info("totalIdleTime: {}", totalIdleTime);
+  spdlog::info("totalGateFidelities: {}", totalGateFidelities);
+  spdlog::info("totalFidelities: {}", totalFidelities);
+  spdlog::info("totalNumCZs: {}", nCZs);
+  spdlog::info("nAodActivate: {}", nAodActivate);
+  spdlog::info("nAodMove: {}", nAodMove);
 }
