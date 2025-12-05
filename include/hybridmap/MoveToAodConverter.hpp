@@ -88,8 +88,6 @@ protected:
       // delta of the actual move
       qc::fp delta;
 
-      AodMove() = default;
-
       AodMove(const uint32_t initMove, const qc::fp deltaMove,
               const int32_t offsetMove, const bool loadMove)
           : init(initMove), load(loadMove), offset(offsetMove),
