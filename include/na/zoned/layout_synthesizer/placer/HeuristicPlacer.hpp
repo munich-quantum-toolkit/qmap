@@ -107,14 +107,14 @@ public:
      */
     double windowShare = 0.8;
     /// Enum of available heuristic methods used for the search.
-    enum class HeuristicMethod : uint8_t {
+    enum class Method : uint8_t {
       /// A-star algorithm
-      AStar,
+      ASTAR,
       /// Iterative diving search
       IDS
     };
     /// The heuristic method used for the search (default: IDS).
-    HeuristicMethod heuristicMethod = HeuristicMethod::IDS;
+    Method method = Method::IDS;
     /**
      * @brief The heuristic used in the A* search contains a term that resembles
      * the standard deviation of the differences between the current and target
@@ -125,16 +125,14 @@ public:
      * heuristic. However, this leads to a vast exploration of the search tree
      * and usually results in a huge number of nodes visited.
      */
-    float deepeningFactor =
-        heuristicMethod == HeuristicMethod::IDS ? 0.01F : 0.8F;
+    float deepeningFactor = method == Method::IDS ? 0.01F : 0.8F;
     /**
      * @brief Before the sum of standard deviations is multiplied with the
      * number of unplaced nodes and @ref deepeningFactor_, this value is added
      * to the sum to amplify the influence of the unplaced nodes count.
      * @see deepeningFactor_
      */
-    float deepeningValue =
-        heuristicMethod == HeuristicMethod::IDS ? 0.0F : 0.2F;
+    float deepeningValue = method == Method::IDS ? 0.0F : 0.2F;
     /**
      * @brief The cost function can consider the distance of atoms to their
      * interaction partner in the next layer.
@@ -143,8 +141,7 @@ public:
      * entirely. A factor of 1.0 implies that the lookahead is as important as
      * the distance to the target site, which is usually not desired.
      */
-    float lookaheadFactor =
-        heuristicMethod == HeuristicMethod::IDS ? 0.4F : 0.2F;
+    float lookaheadFactor = method == Method::IDS ? 0.4F : 0.2F;
     /**
      * @brief The reuse level corresponds to the estimated extra fidelity loss
      * due to the extra trap transfers when the atom is not reused and instead
@@ -966,4 +963,10 @@ private:
                      const SLM& nearestSLM, size_t r, size_t c,
                      GateJob& job) const -> void;
 };
+NLOHMANN_JSON_SERIALIZE_ENUM(HeuristicPlacer::Config::Method,
+                             {
+                                 {HeuristicPlacer::Config::Method::ASTAR,
+                                  "astar"},
+                                 {HeuristicPlacer::Config::Method::IDS, "ids"},
+                             })
 } // namespace na::zoned
