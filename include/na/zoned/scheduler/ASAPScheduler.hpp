@@ -34,24 +34,24 @@ class ASAPScheduler : public SchedulerBase {
   size_t maxTwoQubitGateNumPerLayer_ = 0;
 
 public:
-  /**
-   * The configuration of the ASAPScheduler
-   * @note ASAPScheduler does not have any configuration parameters.
-   */
+  /// The configuration of the ASAPScheduler
   struct Config {
-    template <typename BasicJsonType>
-    friend void to_json(BasicJsonType& /* unused */,
-                        const Config& /* unused */) {}
-    template <typename BasicJsonType>
-    friend void from_json(const BasicJsonType& /* unused */,
-                          Config& /* unused */) {}
+    /// The maximal share of traps that are used in the entanglement zone.
+    double maxFillingFactor = 0.9;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, maxFillingFactor);
   };
+
+private:
+  /// The configuration of the ASAPScheduler
+  Config config_;
+
+public:
   /**
    * Create a new ASAPScheduler.
-   * @note The second parameter of the constructor is unused.
    * @param architecture is the architecture of the neutral atom system
+   * @param config is the configuration for the scheduler
    */
-  ASAPScheduler(const Architecture& architecture, const Config& /* unused */);
+  ASAPScheduler(const Architecture& architecture, const Config& config);
   /**
    * This function schedules the operations of a quantum computation.
    * @details Every operation is scheduled as soon as possible. The function

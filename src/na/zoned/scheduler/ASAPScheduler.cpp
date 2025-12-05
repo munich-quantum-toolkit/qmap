@@ -30,11 +30,22 @@
 
 namespace na::zoned {
 ASAPScheduler::ASAPScheduler(const Architecture& architecture,
-                             const Config& /* unused */)
-    : architecture_(architecture) {
+                             const Config& config)
+    : architecture_(architecture), config_(config) {
+  // Validate maxFillingFactor
+  if (config_.maxFillingFactor < 0.0 || config_.maxFillingFactor > 1.0) {
+    std::ostringstream oss;
+    oss << "Invalid maxFillingFactor: " << config_.maxFillingFactor
+        << ". Value must be in the range [0.0, 1.0].";
+    throw std::invalid_argument(oss.str());
+  }
   // calculate the maximum possible number of two-qubit gates per layer
   for (const auto& zone : architecture_.get().entanglementZones) {
-    maxTwoQubitGateNumPerLayer_ += zone->front().nRows * zone->front().nCols;
+    maxTwoQubitGateNumPerLayer_ +=
+        std::max(static_cast<size_t>(1U),
+                 static_cast<size_t>(config_.maxFillingFactor *
+                                     static_cast<double>(zone->front().nRows *
+                                                         zone->front().nCols)));
   }
   if (maxTwoQubitGateNumPerLayer_ == 0) {
     throw std::invalid_argument("Architecture must contain at least one site "

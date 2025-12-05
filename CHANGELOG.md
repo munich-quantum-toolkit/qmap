@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
+
+### Changed
+
+- ✨ Enable code generation for relaxed routing constraints ([#848]) ([**@ystade**])
+- ✨ Add `max_filling_factor` to scheduler in Zoned Neutral Atom Compiler ([#847]) ([**@ystade**])
+
 ## [3.4.0] - 2025-10-15
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
@@ -151,6 +158,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#848]: https://github.com/munich-quantum-toolkit/qmap/pull/848
+[#847]: https://github.com/munich-quantum-toolkit/qmap/pull/847
 [#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804
 [#803]: https://github.com/munich-quantum-toolkit/qmap/pull/803
 [#796]: https://github.com/munich-quantum-toolkit/qmap/pull/796

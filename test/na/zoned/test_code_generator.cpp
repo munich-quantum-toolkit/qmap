@@ -485,33 +485,50 @@ TEST_F(CodeGeneratorGenerateTest, TwoQubitGate) {
               std::vector<std::vector<std::vector<qc::Qubit>>>{{{0U, 1U}},
                                                                {{0U, 1U}}})
           .toString(),
-      "atom (0.000, 57.000) atom0\n"
-      "atom (3.000, 57.000) atom1\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (5.000, 70.000) atom0\n"
-      "    (7.000, 70.000) atom1\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ cz zone_cz0\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (0.000, 57.000) atom0\n"
-      "    (3.000, 57.000) atom1\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n");
+      R"(atom (0.000, 57.000) atom0
+atom (3.000, 57.000) atom1
+@+ load [
+    atom0
+    atom1
+]
+@+ move [
+    (1.000, 58.000) atom0
+    (4.000, 58.000) atom1
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+]
+@+ move [
+    (5.000, 70.000) atom0
+    (7.000, 70.000) atom1
+]
+@+ store [
+    atom0
+    atom1
+]
+@+ cz zone_cz0
+@+ load [
+    atom0
+    atom1
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+]
+@+ move [
+    (1.000, 58.000) atom0
+    (4.000, 58.000) atom1
+]
+@+ move [
+    (0.000, 57.000) atom0
+    (3.000, 57.000) atom1
+]
+@+ store [
+    atom0
+    atom1
+]
+)");
 }
 TEST_F(CodeGeneratorGenerateTest, Offset) {
   // STORAGE     ...         │ ...         │ ...
@@ -550,58 +567,157 @@ TEST_F(CodeGeneratorGenerateTest, Offset) {
               std::vector<std::vector<std::vector<qc::Qubit>>>{
                   {{0U, 1U, 2U, 3U}}, {{0U, 1U, 2U, 3U}}})
           .toString(),
-      "atom (0.000, 54.000) atom0\n"
-      "atom (0.000, 57.000) atom2\n"
-      "atom (3.000, 54.000) atom1\n"
-      "atom (3.000, 57.000) atom3\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (0.000, 55.000) atom0\n"
-      "    (3.000, 55.000) atom1\n"
-      "]\n"
-      "@+ load [\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n"
-      "@+ move [\n"
-      "    (5.000, 70.000) atom0\n"
-      "    (7.000, 70.000) atom1\n"
-      "    (5.000, 80.000) atom2\n"
-      "    (7.000, 80.000) atom3\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n"
-      "@+ cz zone_cz0\n"
-      "@+ load [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "]\n"
-      "@+ move [\n"
-      "    (5.000, 71.000) atom0\n"
-      "    (7.000, 71.000) atom1\n"
-      "]\n"
-      "@+ load [\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n"
-      "@+ move [\n"
-      "    (0.000, 54.000) atom0\n"
-      "    (3.000, 54.000) atom1\n"
-      "    (0.000, 57.000) atom2\n"
-      "    (3.000, 57.000) atom3\n"
-      "]\n"
-      "@+ store [\n"
-      "    atom0\n"
-      "    atom1\n"
-      "    atom2\n"
-      "    atom3\n"
-      "]\n");
+      R"(atom (0.000, 54.000) atom0
+atom (0.000, 57.000) atom2
+atom (3.000, 54.000) atom1
+atom (3.000, 57.000) atom3
+@+ load [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+@+ move [
+    (1.000, 55.000) atom0
+    (4.000, 55.000) atom1
+    (1.000, 58.000) atom2
+    (4.000, 58.000) atom3
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+    (2.000, 75.000) atom2
+    (10.000, 75.000) atom3
+]
+@+ move [
+    (5.000, 70.000) atom0
+    (7.000, 70.000) atom1
+    (5.000, 80.000) atom2
+    (7.000, 80.000) atom3
+]
+@+ store [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+@+ cz zone_cz0
+@+ load [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+@+ move [
+    (2.000, 65.000) atom0
+    (10.000, 65.000) atom1
+    (2.000, 75.000) atom2
+    (10.000, 75.000) atom3
+]
+@+ move [
+    (1.000, 55.000) atom0
+    (4.000, 55.000) atom1
+    (1.000, 58.000) atom2
+    (4.000, 58.000) atom3
+]
+@+ move [
+    (0.000, 54.000) atom0
+    (3.000, 54.000) atom1
+    (0.000, 57.000) atom2
+    (3.000, 57.000) atom3
+]
+@+ store [
+    atom0
+    atom1
+    atom2
+    atom3
+]
+)");
+}
+TEST_F(CodeGeneratorGenerateTest, ColumnByColumn) {
+  // STORAGE     ...         │ ...         │ ...
+  //         17  0 1 o o ... │ o o o o ... │ 0 1 o o ...
+  //         18  2 3 o o ... │ o o o o ... │ 2 3 o o ...
+  //         19  4 5 o o ... │ o o o o ... │ 4 5 o o ...
+  //                         │  ╲╲         │ ↑ ↑
+  // ENTANGLEMENT            │   ↓↓        │  ╲╲
+  //          0    oo    ... │   01    ... │   oo    ...
+  //          1    oo    ... │   23    ... │   oo    ...
+  //          2    oo    ... │   45    ... │   oo    ...
+  //               ...       │   ...       │   ...
+  const auto& storage = *architecture.storageZones.front();
+  const auto& entanglementLeft =
+      architecture.entanglementZones.front()->front();
+  const auto& entanglementRight =
+      architecture.entanglementZones.front()->back();
+  EXPECT_TRUE(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{{},
+                                                                            {}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{storage, 17, 0},
+                   {storage, 17, 1},
+                   {storage, 18, 0},
+                   {storage, 18, 1},
+                   {storage, 19, 0},
+                   {storage, 19, 1}},
+                  {{entanglementLeft, 0, 0},
+                   {entanglementRight, 0, 0},
+                   {entanglementLeft, 1, 0},
+                   {entanglementRight, 1, 0},
+                   {entanglementLeft, 2, 0},
+                   {entanglementRight, 2, 0}},
+                  {{storage, 17, 0},
+                   {storage, 17, 1},
+                   {storage, 18, 0},
+                   {storage, 18, 1},
+                   {storage, 19, 0},
+                   {storage, 19, 1}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{
+                  {{0U, 1U, 2U, 3U, 4U, 5U}}, {{0U, 1U, 2U, 3U, 4U, 5U}}})
+          .validate()
+          .first);
+}
+TEST_F(CodeGeneratorGenerateTest, RelaxedRouting) {
+  // STORAGE     ...         │ ...         │ ...
+  //         18  0 1 o o ... │ o o o o ... │ 0 1 o o ...
+  //         19  2 3 o o ... │ o o o o ... │ 2 3 o o ...
+  //                         │  ╲╲         │ ↑ ↑
+  // ENTANGLEMENT            │   ↓↓        │  ╲╲
+  //          0    oo    ... │   32    ... │   oo    ...
+  //          1    oo    ... │   10    ... │   oo    ...
+  //               ...       │   ...       │   ...
+  const auto& storage = *architecture.storageZones.front();
+  const auto& entanglementLeft =
+      architecture.entanglementZones.front()->front();
+  const auto& entanglementRight =
+      architecture.entanglementZones.front()->back();
+  EXPECT_TRUE(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{{},
+                                                                            {}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{storage, 18, 0},
+                   {storage, 18, 1},
+                   {storage, 19, 0},
+                   {storage, 19, 1}},
+                  {{entanglementRight, 1, 0},
+                   {entanglementLeft, 1, 0},
+                   {entanglementRight, 0, 0},
+                   {entanglementLeft, 0, 0}},
+                  {{storage, 18, 0},
+                   {storage, 18, 1},
+                   {storage, 19, 0},
+                   {storage, 19, 1}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{
+                  {{0U, 1U, 2U, 3U}}, {{0U, 1U, 2U, 3U}}})
+          .validate()
+          .first);
 }
 } // namespace na::zoned

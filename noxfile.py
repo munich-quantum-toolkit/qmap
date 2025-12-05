@@ -32,7 +32,9 @@ if TYPE_CHECKING:
 nox.needs_version = ">=2025.10.16"
 nox.options.default_venv_backend = "uv"
 
-PYTHON_ALL_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+# TODO(burgholzer): Re-enable 3.14 when the Python 3.14.1 issues have been resolved
+#   https://github.com/munich-quantum-toolkit/qmap/issues/860
+PYTHON_ALL_VERSIONS = ["3.10", "3.11", "3.12", "3.13"]  # , "3.14"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
@@ -52,10 +54,10 @@ def preserve_lockfile() -> Generator[None]:
 @nox.session(reuse_venv=True, default=True)
 def lint(session: nox.Session) -> None:
     """Run the linter."""
-    if shutil.which("pre-commit") is None:
-        session.install("pre-commit")
+    if shutil.which("prek") is None:
+        session.install("prek")
 
-    session.run("pre-commit", "run", "--all-files", *session.posargs, external=True)
+    session.run("prek", "run", "--all-files", *session.posargs, external=True)
 
 
 def _run_tests(

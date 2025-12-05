@@ -59,6 +59,7 @@ class RoutingAgnosticCompiler:
         self,
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = ...,
+        max_filling_factor: float = ...,
         use_window: bool = ...,
         window_size: int = ...,
         dynamic_placement: bool = ...,
@@ -71,6 +72,7 @@ class RoutingAgnosticCompiler:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
+            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
             use_window: whether to use a window for the placer
             window_size: the size of the window for the placer
             dynamic_placement: whether to use dynamic placement for the placer
@@ -79,7 +81,7 @@ class RoutingAgnosticCompiler:
         """
     @classmethod
     def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAgnosticCompiler:
-        """Create a routing-agnostic compiler for the given architecture and with configurations from a JSON string.
+        """Create a compiler for the given architecture and with configurations from a JSON string.
 
         Args:
             arch: is the zoned neutral atom architecture
@@ -114,6 +116,7 @@ class RoutingAwareCompiler:
         self,
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = ...,
+        max_filling_factor: float = ...,
         use_window: bool = ...,
         window_min_width: int = ...,
         window_ratio: float = ...,
@@ -132,6 +135,7 @@ class RoutingAwareCompiler:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
+            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
             use_window: is a flag whether to use a window for the placer
             window_min_width: is the minimum width of the window for the placer
             window_ratio: is the ratio between the height and the width of the window
@@ -160,7 +164,7 @@ class RoutingAwareCompiler:
         """
     @classmethod
     def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAwareCompiler:
-        """Create a routing-aware compiler for the given architecture and configurations from a JSON string.
+        """Create a compiler for the given architecture and configurations from a JSON string.
 
         Args:
             arch: is the zoned neutral atom architecture
