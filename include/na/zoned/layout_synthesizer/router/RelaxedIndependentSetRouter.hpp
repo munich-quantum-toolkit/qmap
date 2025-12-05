@@ -125,22 +125,48 @@ private:
                        const std::tuple<size_t, size_t, size_t, size_t>& w)
       -> bool;
   /**
-   * This struct indicates whether two movements are strictly compatible,
+   * @brief This struct indicates whether two movements are strictly compatible,
    * relaxed compatible together with the corresponding merging cost, or
    * (completely) incompatible.
    */
   struct MovementCompatibility {
     enum class Status : uint8_t {
-      StrictlyCompatible, // Movements can proceed in parallel
-      RelaxedCompatible,  // Can be merged with a cost
-      Incompatible        // Cannot be merged at all
+      /**
+       * @brief The movements are strictly compatible.
+       * @details The atoms remain on the same row (column) and maintain their
+       * relative/topological order during the movement.
+       */
+      StrictlyCompatible,
+      /**
+       * @brief The movements are compatible with respect to the relaxed routing
+       * constraints.
+       * @details The moved atoms must still remain on the same row (column) but
+       * may change their relative/topological order during the movement
+       * achieved by offsets during pick-up and drop-off.
+       */
+      RelaxedCompatible,
+      /**
+       * @brief The movements are incompatible.
+       * @details The atoms starting in one row (column) do not end up in the
+       * same row (column).
+       */
+      Incompatible
     };
 
     /// Indicates the type of compatibility
     Status status;
     /**
-     * In the case of `RelaxedIncompatible`, the cost to merge the two
-     * movements
+     * @brief In the case of `RelaxedCompatible`, the cost to merge the two
+     * movements.
+     * @details The cost is calculated such that it represents the extra time
+     * the offset takes to shift the loaded atoms to deal with the relaxed
+     * routing constraints. More precisely, the cost is proportional to the
+     * cubed time for the sake of easier computation. If only one offset is
+     * required, i.e., either horizontal or vertical, the cost is the raw
+     * distance of the offset. If both offsets are required, then the cost is
+     * calculated as the sum of the third roots of the individual distances and
+     * then cubed again.
+     * Hence, the cost must always be a non-negative number.
      */
     std::optional<double> mergeCost;
 
@@ -166,8 +192,7 @@ private:
    * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
    * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
    * y-end)
-   * @return true, if the given movement vectors are incompatible, otherwise
-   * false
+   * @returns a @ref MovementCompatibility object indicating the compatibility.
    */
   [[nodiscard]] static auto isRelaxedCompatibleMovement(
       const std::tuple<size_t, size_t, size_t, size_t>& v,
