@@ -59,7 +59,8 @@ public:
      * groups based on the relaxed constraints. Higher values of this
      * parameter favor keeping groups separate; lower values favor merging.
      * In particular, a value of 0.0 merges all possible groups. (Default: 1.0)
-     * @note This value is only relevant if the routing method RELAXED is used.
+     * @note This value is only relevant if the routing method RELAXED is used
+     * and ignored otherwise.
      */
     double preferSplit = 1.0;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, method, preferSplit)
@@ -121,7 +122,7 @@ private:
    * @param conflictGraph is the conflict graph based on the strict routing
    * constraints.
    * @param relaxedConflictGraph is the conflict graph based on the relaxed
-   * routing constraints with weights edges for strict conflicts.
+   * routing constraints with weighted edges for strict conflicts.
    * @returns a list of strict routing groups.
    */
   [[nodiscard]] auto makeStrictRoutingForRelaxedRouting(
@@ -137,7 +138,7 @@ private:
    * other movement groups based on the relaxed routing constaraints.
    * @param atomsToDist is a map from atoms to their movement distance.
    * @param relaxedConflictGraph is the conflict graph based on the relaxed
-   * routing constraints with weights edges for strict conflicts.
+   * routing constraints with weighted edges for strict conflicts.
    * @param groups is a list of movement groups that is modified by this
    * function.
    */
@@ -200,7 +201,10 @@ private:
    * atoms to their sites.
    * @param targetPlacement is the target placement of the atoms.
    * @return the conflict graph as an unordered_map, where the keys are the
-   * nodes and the values are vectors of their neighbors.
+   * nodes and the values are vectors of their neighbors together with an
+   * optional associated cost for merging the movements in case of a strict
+   * conflict that is not a conflict with respect to the relaxed routing
+   * constraints.
    */
   createRelaxedConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
                              const Placement& startPlacement,
