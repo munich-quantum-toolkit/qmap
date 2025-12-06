@@ -47,7 +47,8 @@ qc.draw(output="mpl")
 
 ### Load a hybrid NA architecture
 
-The hybrid mapper expects an architecture specification in JSON. This repository ships several ready-to-use examples
+The hybrid mapper expects an architecture specification in JSON.
+This repository ships several ready-to-use examples.
 
 ```{code-cell} ipython3
 
@@ -231,7 +232,8 @@ For more details, please check the source code documentation of `MapperParameter
 
 ## Hybrid Synthesis Mapper
 
-The Hybrid Synthesis Mapper helps you compare and stitch together alternative circuit fragments while keeping track of the current mapping on the NA device. Below is a compact example that mirrors the unit test flow and shows how to
+The Hybrid Synthesis Mapper helps you compare and stitch together alternative circuit fragments while keeping track of the current mapping on the NA device.
+Below is a compact example that mirrors the unit test flow and shows how to:
 
 - evaluate multiple candidate fragments and pick the best,
 - append fragments,
