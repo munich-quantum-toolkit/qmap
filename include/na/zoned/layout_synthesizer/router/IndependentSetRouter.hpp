@@ -16,11 +16,14 @@
 #include "na/zoned/layout_synthesizer/router/RouterBase.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace na::zoned {
