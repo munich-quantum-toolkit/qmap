@@ -135,7 +135,8 @@ private:
           relaxedConflictGraph) const -> std::list<GroupInfo>;
   /**
    * Merges movement groups if all movement of one group can be combined with
-   * other movement groups based on the relaxed routing constaraints.
+   * other movement groups based on the relaxed routing constraints.
+   * The merging decisions are driven by the configured `preferSplit` threshold.
    * @param atomsToDist is a map from atoms to their movement distance.
    * @param relaxedConflictGraph is the conflict graph based on the relaxed
    * routing constraints with weighted edges for strict conflicts.
