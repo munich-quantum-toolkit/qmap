@@ -157,21 +157,24 @@ private:
   [[nodiscard]] auto routeRelaxed(const std::vector<Placement>& placement) const
       -> std::vector<Routing>;
   /**
-   * @param atomsToDist is a map from atoms to their movement distance.
-   * @returns the atoms to move, i.e., the keys of the map.
+   * @param startPlacement is the start placement.
+   * @param targetPlacement is the target placement.
+   * @returns the atoms to move
    */
-  [[nodiscard]] auto
-  getAtomsToMove(const std::unordered_map<qc::Qubit, double>& atomsToDist) const
+  [[nodiscard]] auto getAtomsToMove(const Placement& startPlacement,
+                                    const Placement& targetPlacement) const
       -> std::vector<qc::Qubit>;
   /**
    * @param startPlacement is the start placement.
    * @param targetPlacement is the target placement.
-   * @returns a map from atoms to their movement distance.
+   * @returns a pair consisting of a vector containing the atoms to move and a
+   * map from atoms to their movement distance.
    */
   [[nodiscard]] auto
   getAtomsToMoveWithDistance(const Placement& startPlacement,
                              const Placement& targetPlacement) const
-      -> std::unordered_map<qc::Qubit, double>;
+      -> std::pair<std::vector<qc::Qubit>,
+                   std::unordered_map<qc::Qubit, double>>;
   /**
    * Creates the conflict graph with respect to the strict routing constraints.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
@@ -233,14 +236,13 @@ private:
       -> std::tuple<size_t, size_t, size_t, size_t>;
 
   /**
-   * Check the compatibility of two movements under the relaxed routing
-   * constraints. The movements may change topological order (via offsets) but
-   * must still satisfy the relaxed row/column conditions.
+   * Check whether two movements are strictly compatible, i.e., atoms remain on
+   * the same row (column) and maintain their relative/topological order.
    * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
    * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
    * y-end)
-   * @returns a @ref MovementCompatibility object indicating whether they are
-   * strictly compatible, relaxed compatible (with merge cost), or incompatible.
+   * @returns `true` if the movements are (strictly) compatible, `false`
+   * otherwise.
    */
   [[nodiscard]] static auto
   isCompatibleMovement(const std::tuple<size_t, size_t, size_t, size_t>& v,
@@ -315,7 +317,8 @@ private:
    * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
    * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
    * y-end)
-   * @returns a @ref MovementCompatibility object indicating the compatibility.
+   * @returns a @ref MovementCompatibility object indicating whether they are
+   * strictly compatible, relaxed compatible (with merge cost), or incompatible.
    */
   [[nodiscard]] static auto isRelaxedCompatibleMovement(
       const std::tuple<size_t, size_t, size_t, size_t>& v,
