@@ -298,7 +298,7 @@ auto IndependentSetRouter::mergeGroups(
             // can be added with additional cost because there is only a
             // relaxed conflict
             const auto dist = atomsToDist.at(atom);
-            if (group.maxDistance > dist) {
+            if (group.maxDistance >= dist) {
               if (costCubed > *conflictIt->second) {
                 foundNewGroup = true;
                 atomToNewGroup.insert_or_assign(atom, &group);
