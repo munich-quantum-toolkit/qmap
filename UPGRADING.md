@@ -12,7 +12,7 @@ The code generator of the zoned neutral atom compiler is updated to also handle 
 In contrast to the strict routing, a relaxed routing can change the relative order of atoms.
 The constraint that remains is that atoms previously in one row (column) must remain in the same row (column) after the routing.
 
-Additionally, we also introduce and extension to the Hybrid Neutral Atom Mapper (HyRoNA), which unifies gate-based routing (SWAP/BRIDGE) with atom shuttling, pass-by, and an optional flying ancilla to find the most suitable routing.
+Additionally, we also introduce an extension to the Hybrid Neutral Atom Mapper (HyRoNA), which unifies gate-based routing (SWAP/BRIDGE) with atom shuttling, pass-by, and an optional flying ancilla to find the most suitable routing.
 
 Existing workflows should continue to function.
 The optionally new parameters are `usePassBy=False`, `numFlyingAncillas=0`, and `maxBridgeDistance=0` which can all be disabled with the above values to recover the previous behavior.
