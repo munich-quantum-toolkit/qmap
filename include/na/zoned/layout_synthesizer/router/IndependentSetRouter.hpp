@@ -125,14 +125,14 @@ private:
    * routing constraints with weighted edges for strict conflicts.
    * @returns a list of strict routing groups.
    */
-  [[nodiscard]] auto makeStrictRoutingForRelaxedRouting(
+  [[nodiscard]] static auto makeStrictRoutingForRelaxedRouting(
       std::vector<qc::Qubit> atomsToMove,
       const std::unordered_map<qc::Qubit, double>& atomsToDist,
       const std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>&
           conflictGraph,
       const std::unordered_map<
           qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>&
-          relaxedConflictGraph) const -> std::list<GroupInfo>;
+          relaxedConflictGraph) -> std::list<GroupInfo>;
   /**
    * Merges movement groups if all movement of one group can be combined with
    * other movement groups based on the relaxed routing constraints.
@@ -173,7 +173,7 @@ private:
                              const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, double>;
   /**
-   * Creates the conflict graph.
+   * Creates the conflict graph with respect to the strict routing constraints.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
    * targetPlacement stands in conflict with each other. The graph is
@@ -186,13 +186,12 @@ private:
    * nodes and the values are vectors of their neighbors
    */
   [[nodiscard]] auto
-  createConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
-                      const Placement& startPlacement,
-                      const Placement& targetPlacement) const
+  createStrictConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                            const Placement& startPlacement,
+                            const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
-  [[nodiscard]] auto
   /**
-   * Creates the relaxed conflict graph.
+   * Creates the relaxed and strict conflict graph.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
    * targetPlacement stands in conflict with each other based on the relaxed
@@ -207,11 +206,15 @@ private:
    * conflict that is not a conflict with respect to the relaxed routing
    * constraints.
    */
-  createRelaxedConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
-                             const Placement& startPlacement,
-                             const Placement& targetPlacement) const
-      -> std::unordered_map<
-          qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>;
+  [[nodiscard]] auto
+  createRelaxedAndStrictConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                                      const Placement& startPlacement,
+                                      const Placement& targetPlacement) const
+      -> std::pair<
+          std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>,
+          std::unordered_map<
+              qc::Qubit,
+              std::vector<std::pair<qc::Qubit, std::optional<double>>>>>;
 
   /**
    * Takes two sites, the start and target site and returns a 4D-vector of the

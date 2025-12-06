@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace na::zoned {
-auto IndependentSetRouter::createConflictGraph(
+auto IndependentSetRouter::createStrictConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove, const Placement& startPlacement,
     const Placement& targetPlacement) const
     -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> {
@@ -48,14 +48,17 @@ auto IndependentSetRouter::createConflictGraph(
   }
   return conflictGraph;
 }
-auto IndependentSetRouter::createRelaxedConflictGraph(
+auto IndependentSetRouter::createRelaxedAndStrictConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove, const Placement& startPlacement,
     const Placement& targetPlacement) const
-    -> std::unordered_map<
-        qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>> {
+    -> std::pair<
+        std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>,
+        std::unordered_map<qc::Qubit, std::vector<std::pair<
+                                          qc::Qubit, std::optional<double>>>>> {
+  std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> strictConflictGraph;
   std::unordered_map<qc::Qubit,
                      std::vector<std::pair<qc::Qubit, std::optional<double>>>>
-      conflictGraph;
+      relaxedConflictGraph;
   for (auto atomIt = atomsToMove.cbegin(); atomIt != atomsToMove.cend();
        ++atomIt) {
     const auto& atom = *atomIt;
@@ -66,17 +69,21 @@ auto IndependentSetRouter::createRelaxedConflictGraph(
       const auto& neighbor = *neighborIt;
       const auto& neighborMovementVector = getMovementVector(
           startPlacement[neighbor], targetPlacement[neighbor]);
-      if (const auto& comp = isRelaxedCompatibleMovement(
-              atomMovementVector, neighborMovementVector);
-          comp.status != MovementCompatibility::Status::StrictlyCompatible) {
-        conflictGraph.try_emplace(atom).first->second.emplace_back(
+      const auto& comp = isRelaxedCompatibleMovement(atomMovementVector,
+                                                     neighborMovementVector);
+      if (comp.status != MovementCompatibility::Status::StrictlyCompatible) {
+        strictConflictGraph.try_emplace(atom).first->second.emplace_back(
+            neighbor);
+        strictConflictGraph.try_emplace(neighbor).first->second.emplace_back(
+            atom);
+        relaxedConflictGraph.try_emplace(atom).first->second.emplace_back(
             neighbor, comp.mergeCost);
-        conflictGraph.try_emplace(neighbor).first->second.emplace_back(
+        relaxedConflictGraph.try_emplace(neighbor).first->second.emplace_back(
             atom, comp.mergeCost);
       }
     }
   }
-  return conflictGraph;
+  return {strictConflictGraph, relaxedConflictGraph};
 }
 auto IndependentSetRouter::getMovementVector(
     const std::tuple<const SLM&, size_t, size_t>& start,
@@ -171,7 +178,7 @@ auto IndependentSetRouter::routeStrict(
     auto atomsToMove = getAtomsToMove(
         getAtomsToMoveWithDistance(startPlacement, targetPlacement));
     const auto conflictGraph =
-        createConflictGraph(atomsToMove, startPlacement, targetPlacement);
+        createStrictConflictGraph(atomsToMove, startPlacement, targetPlacement);
     auto& currentRouting = routing.emplace_back();
     while (!atomsToMove.empty()) {
       auto& group = currentRouting.emplace_back();
@@ -216,7 +223,7 @@ auto IndependentSetRouter::makeStrictRoutingForRelaxedRouting(
     const std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>& conflictGraph,
     const std::unordered_map<
         qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>&
-        relaxedConflictGraph) const -> std::list<GroupInfo> {
+        relaxedConflictGraph) -> std::list<GroupInfo> {
   std::list<GroupInfo> groups;
   while (!atomsToMove.empty()) {
     auto& group = groups.emplace_back();
@@ -384,12 +391,11 @@ auto IndependentSetRouter::routeRelaxed(
     const auto& atomsToDist =
         getAtomsToMoveWithDistance(startPlacement, targetPlacement);
     auto atomsToMove = getAtomsToMove(atomsToDist);
-    const auto conflictGraph =
-        createConflictGraph(atomsToMove, startPlacement, targetPlacement);
-    const auto relaxedConflictGraph = createRelaxedConflictGraph(
-        atomsToMove, startPlacement, targetPlacement);
+    const auto& [strictConflictGraph, relaxedConflictGraph] =
+        createRelaxedAndStrictConflictGraph(atomsToMove, startPlacement,
+                                            targetPlacement);
     auto groups = makeStrictRoutingForRelaxedRouting(
-        atomsToMove, atomsToDist, conflictGraph, relaxedConflictGraph);
+        atomsToMove, atomsToDist, strictConflictGraph, relaxedConflictGraph);
     mergeGroups(atomsToDist, relaxedConflictGraph, groups);
     auto& currentRouting = routing.emplace_back();
     currentRouting.reserve(groups.size());
