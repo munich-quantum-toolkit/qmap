@@ -194,17 +194,20 @@ private:
    * Creates the relaxed and strict conflict graph.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
-   * targetPlacement stands in conflict with each other based on the relaxed
+   * targetPlacement stands in conflict with each other based on the strict
    * routing constraints. The graph is represented as adjacency lists.
+   * @par
+   * * In contrast to the strict conflict graph, all edges that do not represent
+   * a conflict with respect to the relaxed routing constraints carry a weight.
+   * The weight of other edges is `std::nullopt`. This weight corresponds to the
+   * cost for merging the two adjacent movements.
    * @param atomsToMove are all atoms corresponding to nodes in the graph.
    * @param startPlacement is the start placement of all atoms as a mapping from
    * atoms to their sites.
    * @param targetPlacement is the target placement of the atoms.
-   * @return the conflict graph as an unordered_map, where the keys are the
-   * nodes and the values are vectors of their neighbors together with an
-   * optional associated cost for merging the movements in case of a strict
-   * conflict that is not a conflict with respect to the relaxed routing
-   * constraints.
+   * @return the relaxed conflict graph as an unordered_map where the keys are
+   * the nodes and the values are vectors of (neighbor, optional merge cost)
+   * pairs.
    */
   [[nodiscard]] auto
   createRelaxedAndStrictConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
