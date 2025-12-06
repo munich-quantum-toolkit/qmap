@@ -636,6 +636,9 @@ public:
       convertToAod();
     }
     std::ofstream ofs(filename);
+    if (!ofs) {
+      throw std::runtime_error("Failed to open file: " + filename);
+    }
     mappedQcAOD.dumpOpenQASM(ofs, false);
   }
 
