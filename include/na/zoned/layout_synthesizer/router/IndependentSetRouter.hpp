@@ -230,12 +230,14 @@ private:
       -> std::tuple<size_t, size_t, size_t, size_t>;
 
   /**
-   * Check whether two movements are compatible, i.e., the topological order
-   * of the moved atoms remain the same.
+   * Check the compatibility of two movements under the relaxed routing
+   * constraints. The movements may change topological order (via offsets) but
+   * must still satisfy the relaxed row/column conditions.
    * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
    * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
    * y-end)
-   * @return true, if the given movement vectors are compatible, otherwise false
+   * @returns a @ref MovementCompatibility object indicating whether they are
+   * strictly compatible, relaxed compatible (with merge cost), or incompatible.
    */
   [[nodiscard]] static auto
   isCompatibleMovement(const std::tuple<size_t, size_t, size_t, size_t>& v,
@@ -271,7 +273,7 @@ private:
     };
 
     /// Indicates the type of compatibility
-    Status status;
+    Status status = Status::Incompatible;
     /**
      * @brief In the case of `RelaxedCompatible`, the cost to merge the two
      * movements.
@@ -286,7 +288,7 @@ private:
      * then cubed again.
      * Hence, the cost must always be a non-negative number.
      */
-    std::optional<double> mergeCost;
+    std::optional<double> mergeCost = std::nullopt;
 
     /// Factory methods for strict compatibility
     [[nodiscard]] static auto strictlyCompatible() -> MovementCompatibility {
