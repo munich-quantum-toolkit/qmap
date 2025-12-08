@@ -352,6 +352,10 @@ private:
       SizeType minHeapIndex;
       SizeType maxHeapIndex;
       ValueType value;
+      Node(const SizeType minHeapIndex, const SizeType maxHeapIndex,
+           ValueType&& value)
+          : minHeapIndex(minHeapIndex), maxHeapIndex(maxHeapIndex),
+            value(std::move(value)) {}
     };
     /// Vector of heap elements satisfying the min-heap property.
     std::vector<std::unique_ptr<Node>> minHeap_;
