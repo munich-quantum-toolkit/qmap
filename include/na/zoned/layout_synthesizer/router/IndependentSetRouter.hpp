@@ -68,7 +68,7 @@ public:
 
 private:
   /// The configuration of the independent set router
-  Config config_;
+  const Config config_;
 
 public:
   /// Create an IndependentSetRouter with the given configuration
@@ -97,8 +97,8 @@ private:
   [[nodiscard]] auto routeStrict(const std::vector<Placement>& placement) const
       -> std::vector<Routing>;
   /**
-   * Updates the existing cost if the incoming cost is greater or infinite
-   * (i.e., std::nullopt).
+   * Updates the existing cost if the incoming cost is greater or indicating
+   * incompatibility (`std::nullopt`), which dominates any finite cost.
    * @param existing is the existing cost
    * @param incoming is the new cost
    */
@@ -201,9 +201,11 @@ private:
    * routing constraints. The graph is represented as adjacency lists.
    * @par
    * * In contrast to the strict conflict graph, all edges that do not represent
-   * a conflict with respect to the relaxed routing constraints carry a weight.
-   * The weight of other edges is `std::nullopt`. This weight corresponds to the
-   * cost for merging the two adjacent movements.
+   * a conflict with respect to the relaxed routing constraints carry a weight
+   * representing the cost for merging the two adjacent movements. These edges
+   * correspond to the value `RelaxedCompatible` returned by @ref
+   * isRelaxedCompatibleMovement. The weight of other edges, i.e.,
+   * `Incompatible`, is `std::nullopt`.
    * @param atomsToMove are all atoms corresponding to nodes in the graph.
    * @param startPlacement is the start placement of all atoms as a mapping from
    * atoms to their sites.
