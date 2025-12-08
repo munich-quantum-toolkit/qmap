@@ -16,6 +16,7 @@
 #include "ir/Definitions.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <limits>
@@ -27,8 +28,8 @@
 
 namespace na {
 void HardwareQubits::initTrivialSwapDistances() {
-  swapDistances = qc::SymmetricMatrix<SwapDistance>(arch->getNqubits());
-  for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
+  swapDistances = qc::SymmetricMatrix<SwapDistance>(nQubits);
+  for (uint32_t i = 0; i < nQubits; ++i) {
     for (uint32_t j = 0; j < i; ++j) {
       swapDistances(i, j) =
           arch->getSwapDistance(hwToCoordIdx.at(i), hwToCoordIdx.at(j));
@@ -37,15 +38,15 @@ void HardwareQubits::initTrivialSwapDistances() {
 }
 
 void HardwareQubits::initNearbyQubits() {
-  for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
+  for (uint32_t i = 0; i < nQubits; ++i) {
     computeNearbyQubits(i);
   }
 }
 
-void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
+void HardwareQubits::computeSwapDistance(HwQubit q1, const HwQubit q2) {
   std::queue<HwQubit> q;
-  std::vector<bool> visited(swapDistances.size(), false);
-  std::vector<HwQubit> parent(swapDistances.size(), q2);
+  std::vector visited(swapDistances.size(), false);
+  std::vector parent(swapDistances.size(), q2);
 
   q.push(q1);
   visited[q1] = true;
@@ -87,35 +88,89 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
   }
 }
 
+std::vector<HwQubitsVector>
+HardwareQubits::computeAllShortestPaths(const HwQubit q1,
+                                        const HwQubit q2) const {
+  std::vector<HwQubitsVector> allPaths;
+  std::queue<HwQubitsVector> pathsQueue;
+  auto shortestPathLength = std::numeric_limits<std::size_t>::max();
+
+  pathsQueue.push(HwQubitsVector{q1});
+
+  while (!pathsQueue.empty()) {
+    auto currentPath = pathsQueue.front();
+    pathsQueue.pop();
+
+    if (currentPath.size() > shortestPathLength) {
+      continue;
+    }
+
+    HwQubit const currentQubit = currentPath.back();
+
+    if (currentQubit == q2) {
+      if (shortestPathLength == std::numeric_limits<std::size_t>::max()) {
+        shortestPathLength = currentPath.size();
+      }
+      if (currentPath.size() == shortestPathLength) {
+        allPaths.push_back(currentPath);
+      }
+      continue;
+    }
+
+    for (const auto& neighbor : getNearbyQubits(currentQubit)) {
+      if (std::ranges::find(currentPath, neighbor) == currentPath.end()) {
+        auto newPath = currentPath;
+        newPath.push_back(neighbor);
+        pathsQueue.push(newPath);
+      }
+    }
+  }
+
+  return allPaths;
+}
 void HardwareQubits::resetSwapDistances() {
   // TODO Improve to only reset the swap distances necessary (use a breadth
   // first search)
-  swapDistances = qc::SymmetricMatrix(arch->getNqubits(), -1);
+  swapDistances = qc::SymmetricMatrix(nQubits, -1);
 }
 
-void HardwareQubits::move(HwQubit hwQubit, CoordIndex newCoord) {
+void HardwareQubits::move(HwQubit hwQubit, const CoordIndex newCoord) {
   if (newCoord >= arch->getNpositions()) {
     throw std::runtime_error("Invalid coordinate");
   }
   // check if new coordinate is already occupied
-  for (const auto& [qubit, coord] : hwToCoordIdx) {
+  for (const auto& coord : hwToCoordIdx | std::views::values) {
     if (coord == newCoord) {
       throw std::runtime_error("Coordinate already occupied");
     }
   }
 
+  const auto oldCoord = hwToCoordIdx.at(hwQubit);
+  if (const auto it = std::ranges::find(occupiedCoordinates, oldCoord);
+      it != occupiedCoordinates.end()) {
+    occupiedCoordinates.erase(it);
+  }
+  occupiedCoordinates.emplace_back(newCoord);
+  freeCoordinates.emplace_back(oldCoord);
+  if (const auto it2 = std::ranges::find(freeCoordinates, newCoord);
+      it2 != freeCoordinates.end()) {
+    freeCoordinates.erase(it2);
+  }
+
   // remove qubit from old nearby qubits
-  auto prevNearbyQubits = nearbyQubits.at(hwQubit);
+  const auto prevNearbyQubits = nearbyQubits.at(hwQubit);
   for (const auto& qubit : prevNearbyQubits) {
-    nearbyQubits.at(qubit).erase(std::find(
-        nearbyQubits.at(qubit).begin(), nearbyQubits.at(qubit).end(), hwQubit));
+    auto& neigh = nearbyQubits.at(qubit);
+    if (auto it3 = std::ranges::find(neigh, hwQubit); it3 != neigh.end()) {
+      neigh.erase(it3);
+    }
   }
   // move qubit and compute new nearby qubits
   hwToCoordIdx.at(hwQubit) = newCoord;
   computeNearbyQubits(hwQubit);
 
   // add qubit to new nearby qubits
-  auto newNearbyQubits = nearbyQubits.at(hwQubit);
+  const auto newNearbyQubits = nearbyQubits.at(hwQubit);
   for (const auto& qubit : newNearbyQubits) {
     nearbyQubits.at(qubit).emplace(hwQubit);
   }
@@ -133,11 +188,11 @@ std::vector<Swap> HardwareQubits::getNearbySwaps(HwQubit q) const {
   return swaps;
 }
 
-void HardwareQubits::computeNearbyQubits(HwQubit q) {
+void HardwareQubits::computeNearbyQubits(const HwQubit qubit) {
   std::set<HwQubit> newNearbyQubits;
-  auto coordQ = hwToCoordIdx.at(q);
+  const auto coordQ = hwToCoordIdx.at(qubit);
   for (const auto& coord : hwToCoordIdx) {
-    if (coord.first == q) {
+    if (coord.first == qubit) {
       continue;
     }
     if (arch->getEuclideanDistance(coordQ, coord.second) <=
@@ -145,15 +200,15 @@ void HardwareQubits::computeNearbyQubits(HwQubit q) {
       newNearbyQubits.emplace(coord.first);
     }
   }
-  nearbyQubits.insert_or_assign(q, newNearbyQubits);
+  nearbyQubits.insert_or_assign(qubit, newNearbyQubits);
 }
 
 qc::fp HardwareQubits::getAllToAllSwapDistance(std::set<HwQubit>& qubits) {
   // two qubit gates
   if (qubits.size() == 2) {
     auto it = qubits.begin();
-    auto q1 = *it;
-    auto q2 = *(++it);
+    const auto q1 = *it;
+    const auto q2 = *++it;
     return getSwapDistance(q1, q2);
   }
   // for n > 2 all qubits need to be within the interaction radius of each other
@@ -167,10 +222,10 @@ qc::fp HardwareQubits::getAllToAllSwapDistance(std::set<HwQubit>& qubits) {
 }
 
 std::set<HwQubit>
-HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
+HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) const {
   std::set<HwQubit> blockedQubits;
   for (const auto& qubit : qubits) {
-    for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
+    for (uint32_t i = 0; i < hwToCoordIdx.maxKey(); ++i) {
       if (i == qubit) {
         continue;
       }
@@ -187,59 +242,79 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
 }
 
 std::set<CoordIndex>
-HardwareQubits::getNearbyFreeCoordinatesByCoord(CoordIndex idx) {
+HardwareQubits::getNearbyFreeCoordinatesByCoord(const CoordIndex idx) const {
   std::set<CoordIndex> nearbyFreeCoordinates;
-  for (auto const& coordIndex : this->arch->getNearbyCoordinates(idx)) {
-    if (!this->isMapped(coordIndex)) {
+  for (auto const& coordIndex : arch->getNearbyCoordinates(idx)) {
+    if (!isMapped(coordIndex)) {
       nearbyFreeCoordinates.emplace(coordIndex);
     }
   }
   return nearbyFreeCoordinates;
 }
 
-std::set<CoordIndex>
-HardwareQubits::getNearbyOccupiedCoordinatesByCoord(CoordIndex idx) const {
-  auto nearbyHwQubits = this->getNearbyQubits(this->getHwQubit(idx));
-  return this->getCoordIndices(nearbyHwQubits);
+std::set<CoordIndex> HardwareQubits::getNearbyOccupiedCoordinatesByCoord(
+    const CoordIndex idx) const {
+  const auto nearbyHwQubits = getNearbyQubits(getHwQubit(idx));
+  return getCoordIndices(nearbyHwQubits);
 }
 
 std::vector<CoordIndex>
-HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
-                                     const CoordIndices& excludeCoord) {
-  // return the closest free coord in general
-  // and the closest free coord in the given direction
-  std::vector<CoordIndex> closestFreeCoords;
-  std::queue<CoordIndex> queue;
-  queue.push(coord);
-  std::set<CoordIndex> visited;
-  visited.emplace(coord);
-  bool foundClosest = false;
-  while (!queue.empty()) {
-    auto currentCoord = queue.front();
-    queue.pop();
-    auto nearbyCoords = this->arch->getNN(currentCoord);
-    for (const auto& nearbyCoord : nearbyCoords) {
-      if (std::ranges::find(std::ranges::reverse_view(visited), nearbyCoord) ==
-          visited.rend()) {
-        visited.emplace(nearbyCoord);
-        if (!this->isMapped(nearbyCoord) &&
-            std::ranges::find(excludeCoord, nearbyCoord) ==
-                excludeCoord.end()) {
-          if (!foundClosest) {
-            closestFreeCoords.emplace_back(nearbyCoord);
-          }
-          foundClosest = true;
-          if (direction == arch->getVector(coord, nearbyCoord).direction) {
-            closestFreeCoords.emplace_back(nearbyCoord);
-            return closestFreeCoords;
-          }
-        } else {
-          queue.push(nearbyCoord);
-        }
-      }
+HardwareQubits::findClosestFreeCoord(const CoordIndex coord,
+                                     const Direction direction,
+                                     const CoordIndices& excludedCoords) const {
+  std::vector<CoordIndex> freeCoordsInDirection;
+  for (const auto& freeCoord : freeCoordinates) {
+    if (std::ranges::find(excludedCoords, freeCoord) != excludedCoords.end()) {
+      continue;
+    }
+    if (direction == arch->getVector(coord, freeCoord).direction) {
+      freeCoordsInDirection.emplace_back(freeCoord);
     }
   }
-  return closestFreeCoords;
+  if (freeCoordsInDirection.empty()) {
+    // return all free coords except excluded
+    auto allFreeCoords = freeCoordinates;
+    for (const auto& excludedCoord : excludedCoords) {
+      if (const auto pos = std::ranges::find(allFreeCoords, excludedCoord);
+          pos != allFreeCoords.end()) {
+        allFreeCoords.erase(pos);
+      }
+    }
+    return allFreeCoords;
+  }
+  auto minDistance = std::numeric_limits<qc::fp>::max();
+  CoordIndex minCoord = freeCoordsInDirection.front();
+  for (const auto& freeCoord : freeCoordsInDirection) {
+    if (const auto distance = arch->getEuclideanDistance(coord, freeCoord);
+        distance < minDistance) {
+      minDistance = distance;
+      minCoord = freeCoord;
+    }
+  }
+  return {minCoord};
+}
+
+HwQubit HardwareQubits::getClosestQubit(const CoordIndex coord,
+                                        const HwQubits& ignored) const {
+  HwQubit closestQubit = 0;
+  bool noneFound = true;
+  auto minDistance = std::numeric_limits<qc::fp>::max();
+  for (auto const& [qubit, idx] : hwToCoordIdx) {
+    if (ignored.contains(qubit)) {
+      continue;
+    }
+    if (const auto distance = arch->getEuclideanDistance(coord, idx);
+        distance < minDistance) {
+      minDistance = distance;
+      closestQubit = qubit;
+      noneFound = false;
+    }
+  }
+  if (noneFound) {
+    throw std::runtime_error(
+        "No available qubit found when searching for closest qubit.");
+  }
+  return closestQubit;
 }
 
 } // namespace na

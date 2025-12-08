@@ -14,51 +14,42 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "na/entities/Location.hpp"
 
+#include <array>
+#include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <set>
+#include <spdlog/spdlog.h>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace na {
 /**
- * @brief Class to store the properties of a neutral atom architecture
- * @details
- * The properties of a neutral atom architecture are:
- * - number of rows
- * - number of columns
- * - number of AODs
- * - number of AOD coordinates
- * - inter-qubit distance
- * - interaction radius
- * - blocking factor
- * - minimal AOD distance
- * The properties are loaded from a JSON file.
- *
- * The class also provides functions to compute the swap distances between
- * qubits and the nearby qubits for each qubit.
+ * @brief Device model for a neutral atom architecture.
+ * @details Holds fixed device properties and run-time parameters loaded from
+ * JSON, derives coordinate layout, connectivity (swap distances), and proximity
+ * lists. Provides timing and fidelity queries, distance helpers, and optional
+ * animation export.
+ * It requires at last one default "none" entry in gate times and fidelities.
  */
 class NeutralAtomArchitecture {
   /**
-   * @brief Class to store the properties of a neutral atom architecture
-   * @details
-   * The properties of a neutral atom architecture are:
-   * - number of rows
-   * - number of columns
-   * - number of AODs
-   * - number of AOD coordinates
-   * - inter-qubit distance
-   * - interaction radius
-   * - blocking factor
-   * - minimal AOD distance
-   * The properties are loaded from a JSON file and are fixed for each
-   * architecture.
+   * @brief Fixed, immutable properties of a device.
+   * @details Encodes grid layout and geometry: rows/columns, number of AODs and
+   * coordinates, inter-qubit distance, interaction radius, blocking factor, and
+   * derived AOD intermediate levels.
    */
   class Properties {
   protected:
@@ -72,64 +63,101 @@ class NeutralAtomArchitecture {
     qc::fp blockingFactor;
 
   public:
+    /**
+     * @brief Default-construct with zeroed properties.
+     */
     Properties() = default;
-    Properties(std::uint16_t rows, std::uint16_t columns, std::uint16_t aods,
-               std::uint16_t aodCoordinates, qc::fp qubitDistance,
-               qc::fp radius, qc::fp blockingFac, qc::fp aodDist)
+    /**
+     * @brief Construct with explicit device properties.
+     * @param rows Grid rows.
+     * @param columns Grid columns.
+     * @param aods Number of AODs.
+     * @param aodCoordinates Number of AOD coordinates.
+     * @param qubitDistance Inter-qubit spacing (grid unit).
+     * @param radius Interaction radius (in grid units or scaled distance).
+     * @param blockingFac Blocking factor for concurrent operations.
+     * @param aodDist Minimum AOD step distance used to derive intermediate
+     * levels.
+     */
+    Properties(const std::uint16_t rows, const std::uint16_t columns,
+               const std::uint16_t aods, const std::uint16_t aodCoordinates,
+               const qc::fp qubitDistance, const qc::fp radius,
+               const qc::fp blockingFac, const qc::fp aodDist)
         : nRows(rows), nColumns(columns), nAods(aods),
-          nAodIntermediateLevels(
-              static_cast<uint16_t>(qubitDistance / aodDist)),
           nAodCoordinates(aodCoordinates), interQubitDistance(qubitDistance),
-          interactionRadius(radius), blockingFactor(blockingFac) {}
+          interactionRadius(radius), blockingFactor(blockingFac) {
+      assert(aodDist > 0);
+      nAodIntermediateLevels = static_cast<uint16_t>(qubitDistance / aodDist);
+      assert(nAodIntermediateLevels >= 1);
+    }
+    /**
+     * @brief Total grid sites (rows*columns).
+     * @return Number of positions.
+     */
     [[nodiscard]] std::uint16_t getNpositions() const {
       return nRows * nColumns;
     }
+    /**
+     * @brief Grid rows.
+     */
     [[nodiscard]] std::uint16_t getNrows() const { return nRows; }
+    /**
+     * @brief Grid columns.
+     */
     [[nodiscard]] std::uint16_t getNcolumns() const { return nColumns; }
+    /**
+     * @brief Number of AODs.
+     */
     [[nodiscard]] std::uint16_t getNAods() const { return nAods; }
+    /**
+     * @brief Number of AOD coordinates.
+     */
     [[nodiscard]] std::uint16_t getNAodCoordinates() const {
       return nAodCoordinates;
     }
+    /**
+     * @brief Number of intermediate AOD steps between neighboring sites.
+     */
     [[nodiscard]] std::uint16_t getNAodIntermediateLevels() const {
       return nAodIntermediateLevels;
     }
+    /**
+     * @brief Inter-qubit spacing.
+     */
     [[nodiscard]] qc::fp getInterQubitDistance() const {
       return interQubitDistance;
     }
+    /**
+     * @brief Interaction radius.
+     */
     [[nodiscard]] qc::fp getInteractionRadius() const {
       return interactionRadius;
     }
+    /**
+     * @brief Blocking factor.
+     */
     [[nodiscard]] qc::fp getBlockingFactor() const { return blockingFactor; }
   };
 
   /**
-   * @brief Class to store the parameters of a neutral atom architecture
-   * @details
-   * The parameters of a neutral atom architecture are:
-   * - number of qubits
-   * - gate times
-   * - gate average fidelities
-   * - shuttling times
-   * - shuttling average fidelities
-   * - decoherence times
-   * The parameters are loaded from a JSON file.
-   * The difference to the properties is that the parameters can change
-   * from run to run.
+   * @brief Run-time parameters of a device (may vary per run).
+   * @details Includes number of active qubits, gate and shuttling
+   * times/fidelities, and decoherence times loaded from JSON.
    */
   struct Parameters {
     /**
-     * @brief Struct to store the decoherence times of a neutral atom
-     * architecture
-     * @details
-     * The decoherence times of a neutral atom architecture are:
-     * - T1 [µs]
-     * - T2 [µs]
-     * - effective decoherence time [µs]
+     * @brief Longitudinal and transverse decoherence times.
+     * @details Provides an effective time tEff = (T1*T2)/(T1+T2) when both are
+     * non-zero.
      */
     struct DecoherenceTimes {
       qc::fp t1 = 0;
       qc::fp t2 = 0;
 
+      /**
+       * @brief Effective decoherence time.
+       * @return 0 if both T1 and T2 are zero; otherwise (T1*T2)/(T1+T2).
+       */
       [[nodiscard]] qc::fp tEff() const {
         if (t1 == 0 && t2 == 0) {
           return 0;
@@ -137,7 +165,7 @@ class NeutralAtomArchitecture {
         return t1 * t2 / (t1 + t2);
       }
     };
-    CoordIndex nQubits;
+    CoordIndex nQubits = 0;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
     std::map<qc::OpType, qc::fp> shuttlingTimes;
@@ -153,25 +181,24 @@ protected:
   qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
+  // Bridges only makes sense for short distances (3-9) so we limit its size
+  BridgeCircuits bridgeCircuits = BridgeCircuits(10);
+
   /**
-   * @brief Create the coordinates.
+   * @brief Create grid coordinates for each position on the device.
    */
   void createCoordinates();
   /**
-   * @brief Compute the swap distances between the coordinates
-   * @details
-   * The swap distances are computed using the coordinates of the qubits.
-   * The swap distance is the distance between the qubits in terms of
-   * edges in the resulting connectivity graph. This can be computed
-   * beforehand.
+   * @brief Precompute swap distances between coordinates.
+   * @details Build connectivity graph based on interaction radius and compute
+   * shortest-path distances in number of edges.
+   * @param interactionRadius Interaction radius used to define connectivity.
    */
   void computeSwapDistances(qc::fp interactionRadius);
   /**
-   * @brief Compute the nearby coordinates for each coordinate
-   * @details
-   * The nearby qubits are the qubits that are close enough to be connected
-   * by an edge in the resulting connectivity graph. This can be be computed
-   * beforehand.
+   * @brief Precompute per-site lists of nearby coordinates.
+   * @details Nearby coordinates are those within interaction radius forming
+   * edges in the connectivity graph.
    */
   void computeNearbyCoordinates();
 
@@ -179,183 +206,196 @@ public:
   std::string name;
 
   /**
-   * @brief Construct a new Neutral Atom Architecture object
-   * @details
-   * The properties of the architecture are loaded from a JSON file.
-   * @param filename The name of the JSON file
+   * @brief Construct an architecture by loading its JSON description.
+   * @param filename Path to the JSON file.
+   * @details Loads properties and parameters, then derives coordinates,
+   * connectivity, and proximity tables.
+   * @throw std::runtime_error If the file cannot be opened or parsed (depending
+   * on JSON loader implementation).
    */
   explicit NeutralAtomArchitecture(const std::string& filename);
 
   /**
-   * @brief Load the properties of the architecture from a JSON file
-   * @param filename The name of the JSON file
+   * @brief Load (or reload) properties and parameters from JSON.
+   * @param filename Path to the JSON file.
+   * @throw std::runtime_error If the file cannot be opened or parsed (depending
+   * on JSON loader implementation).
    */
   void loadJson(const std::string& filename);
 
   // Getters
   /**
-   * @brief Get the number of rows
-   * @return The number of rows
+   * @brief Get the number of rows.
+   * @return Row count.
    */
   [[nodiscard]] std::uint16_t getNrows() const { return properties.getNrows(); }
   /**
-   * @brief Get the number of columns
-   * @return The number of columns
+   * @brief Get the number of columns.
+   * @return Column count.
    */
   [[nodiscard]] std::uint16_t getNcolumns() const {
     return properties.getNcolumns();
   }
   /**
-   * @brief Get the number of positions
-   * @return The number of positions
+   * @brief Get the number of grid positions.
+   * @return Positions (rows*columns).
    */
   [[nodiscard]] std::uint16_t getNpositions() const {
     return properties.getNpositions();
   }
   /**
-   * @brief Get the number of AODs
-   * @return The number of AODs
+   * @brief Get the number of AODs.
+   * @return AOD count.
    */
   [[maybe_unused]] [[nodiscard]] std::uint16_t getNAods() const {
     return properties.getNAods();
   }
   /**
-   * @brief Get the number of AOD coordinates
-   * @return The number of AOD coordinates
+   * @brief Get the number of AOD coordinates.
+   * @return AOD coordinate count.
    */
   [[nodiscard]] [[maybe_unused]] std::uint16_t getNAodCoordinates() const {
     return properties.getNAodCoordinates();
   }
   /**
-   * @brief Get the number of qubits
-   * @return The number of qubits
+   * @brief Get the number of qubits.
+   * @return Active qubit count.
    */
   [[nodiscard]] CoordIndex getNqubits() const { return parameters.nQubits; }
   /**
-   * @brief Get the inter-qubit distance
-   * @return The inter-qubit distance
+   * @brief Get the inter-qubit distance.
+   * @return Spacing between neighboring sites.
    */
   [[nodiscard]] qc::fp getInterQubitDistance() const {
     return properties.getInterQubitDistance();
   }
+  /**
+   * @brief Distance represented by one AOD intermediate level.
+   * @return Inter-qubit distance divided by number of AOD intermediate levels.
+   */
+  [[nodiscard]] qc::fp getOffsetDistance() const {
+    return getInterQubitDistance() / getNAodIntermediateLevels();
+  }
 
   /**
-   * @brief Get the interaction radius
-   * @return The interaction radius
+   * @brief Get the interaction radius.
+   * @return Interaction radius.
    */
   [[nodiscard]] qc::fp getInteractionRadius() const {
     return properties.getInteractionRadius();
   }
   /**
-   * @brief Get the blocking factor
-   * @return The blocking factor
+   * @brief Get the blocking factor.
+   * @return Blocking factor.
    */
   [[nodiscard]] qc::fp getBlockingFactor() const {
     return properties.getBlockingFactor();
   }
   /**
-   * @brief Get precomputed swap distance between two coordinates
-   * @param idx1 The index of the first coordinate
-   * @param idx2 The index of the second coordinate
-   * @return The swap distance between the two coordinates
+   * @brief Get precomputed swap distance between two coordinates.
+   * @param idx1 First coordinate index.
+   * @param idx2 Second coordinate index.
+   * @return Swap distance (#edges) between the coordinates.
    */
-  [[nodiscard]] SwapDistance getSwapDistance(CoordIndex idx1,
-                                             CoordIndex idx2) const {
+  [[nodiscard]] SwapDistance getSwapDistance(const CoordIndex idx1,
+                                             const CoordIndex idx2) const {
     return swapDistances(idx1, idx2);
   }
   /**
-   * @brief Get precomputed swap distance between two coordinates
-   * @param c1 The first coordinate
-   * @param c2 The second coordinate
-   * @return The swap distance between the two coordinates
+   * @brief Get precomputed swap distance between two coordinates.
+   * @param c1 First coordinate.
+   * @param c2 Second coordinate.
+   * @return Swap distance (#edges) between the coordinates.
    */
   [[nodiscard]] SwapDistance getSwapDistance(const Location& c1,
                                              const Location& c2) const {
     return swapDistances(
-        static_cast<size_t>(c1.x + c1.y) * properties.getNcolumns(),
-        static_cast<size_t>(c2.x + c2.y) * properties.getNcolumns());
+        static_cast<size_t>(c1.x + (c1.y * properties.getNcolumns())),
+        static_cast<size_t>(c2.x + (c2.y * properties.getNcolumns())));
   }
 
   /**
-   * @brief Get the number of AOD intermediate levels, i.e. the number of
-   * possible positions between two coordinates.
-   * @return The number of AOD intermediate levels
+   * @brief Number of AOD intermediate levels (positions between two neighbors).
+   * @return AOD intermediate levels.
    */
   [[nodiscard]] uint16_t getNAodIntermediateLevels() const {
     return properties.getNAodIntermediateLevels();
   }
   /**
-   * @brief Get the execution time of an operation
-   * @param op The operation
-   * @return The execution time of the operation
+   * @brief Get the execution time of an operation.
+   * @param op Operation pointer.
+   * @return Duration of the operation on this device.
    */
   [[nodiscard]] qc::fp getOpTime(const qc::Operation* op) const;
   /**
-   * @brief Get the fidelity of an operation
-   * @param op The operation
-   * @return The fidelity of the operation
+   * @brief Get the average fidelity of an operation.
+   * @param op Operation pointer.
+   * @return Average fidelity for the operation on this device.
    */
   [[nodiscard]] qc::fp getOpFidelity(const qc::Operation* op) const;
   /**
-   * @brief Get indices of the nearby coordinates that are blocked by an
-   * operation
-   * @param op The operation
-   * @return The indices of the nearby coordinates that are blocked by the
-   * operation
+   * @brief Get indices of nearby coordinates blocked by an operation.
+   * @param op Operation pointer.
+   * @return Set of coordinate indices blocked while executing op.
    */
   [[nodiscard]] std::set<CoordIndex>
   getBlockedCoordIndices(const qc::Operation* op) const;
 
   // Getters for the parameters
+  /**
+   * @brief Retrieve the base time for a named gate.
+   * @param s Gate name.
+   * @return Gate time if present; otherwise falls back to the time of "none"
+   * and prints a message.
+   * @note If the fallback entry "none" is not present, an exception from
+   * std::map::at may be thrown.
+   */
   [[nodiscard]] qc::fp getGateTime(const std::string& s) const {
-    if (parameters.gateTimes.find(s) == parameters.gateTimes.end()) {
-      std::cout << "Gate time for " << s << " not found\n"
-                << "Returning default value\n";
+    if (!parameters.gateTimes.contains(s)) {
+      SPDLOG_WARN("Gate time for '{}' not found. Returning default value.", s);
       return parameters.gateTimes.at("none");
     }
     return parameters.gateTimes.at(s);
   }
   /**
-   * @brief Retrieves the average fidelity of a gate.
-   *
-   * This function is responsible for fetching the average fidelity of a gate
-   * specified by its name. If the gate is not found in the parameters, it will
-   * print a message to the console and return the average fidelity of a default
-   * gate.
-   *
-   * @param s The name of the gate.
-   * @return The average fidelity of the specified gate or the default gate if
-   * the specified gate is not found.
+   * @brief Retrieve the average fidelity for a named gate.
+   * @param s Gate name.
+   * @return Gate average fidelity if present; otherwise falls back to the
+   * fidelity of "none" and prints a message.
+   * @note If the fallback entry "none" is not present, an exception from
+   * std::map::at may be thrown.
    */
   [[nodiscard]] qc::fp getGateAverageFidelity(const std::string& s) const {
-    if (parameters.gateAverageFidelities.find(s) ==
-        parameters.gateAverageFidelities.end()) {
-      std::cout << "Gate average fidelity for " << s << " not found\n"
-                << "Returning default value\n";
+    if (!parameters.gateAverageFidelities.contains(s)) {
+      SPDLOG_WARN(
+          "Gate average fidelity for '{}' not found. Returning default value.",
+          s);
       return parameters.gateAverageFidelities.at("none");
     }
     return parameters.gateAverageFidelities.at(s);
   }
   /**
-   * @brief Get the shuttling time of a shuttling operation
-   * @param shuttlingType The type of the shuttling operation
-   * @return The shuttling time of the shuttling operation
+   * @brief Get the shuttling time of an operation type.
+   * @param shuttlingType Shuttling operation type (OpType).
+   * @return Shuttling time for the given type.
+   * @throw std::out_of_range If the operation type is unknown.
    */
-  [[nodiscard]] qc::fp getShuttlingTime(qc::OpType shuttlingType) const {
+  [[nodiscard]] qc::fp getShuttlingTime(const qc::OpType shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
-   * @brief Get the average fidelity of a shuttling operation
-   * @param shuttlingType The type of the shuttling operation
-   * @return The average fidelity of the shuttling operation
+   * @brief Get the average fidelity of a shuttling operation type.
+   * @param shuttlingType Shuttling operation type (OpType).
+   * @return Average shuttling fidelity for the given type.
+   * @throw std::out_of_range If the operation type is unknown.
    */
   [[nodiscard]] qc::fp
-  getShuttlingAverageFidelity(qc::OpType shuttlingType) const {
+  getShuttlingAverageFidelity(const qc::OpType shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
-   * @brief Get the decoherence time
-   * @return The decoherence time
+   * @brief Get the effective decoherence time of the device.
+   * @return Effective T (computed from T1 and T2).
    */
   [[nodiscard]] qc::fp getDecoherenceTime() const {
     return parameters.decoherenceTimes.tEff();
@@ -363,60 +403,131 @@ public:
 
   // Converters between indices and coordinates
   /**
-   * @brief Get a coordinate corresponding to an index
-   * @param idx The index
-   * @return The coordinate corresponding to the index
+   * @brief Convert an index to a grid coordinate.
+   * @param idx Coordinate index.
+   * @return Location at the given index.
    */
-  [[nodiscard]] Location getCoordinate(CoordIndex idx) const {
+  [[nodiscard]] Location getCoordinate(const CoordIndex idx) const {
     return coordinates[idx];
   }
   /**
-   * @brief Get the index corresponding to a coordinate
-   * @param c The coordinate
-   * @return The index corresponding to the coordinate
+   * @brief Convert a grid coordinate to its index.
+   * @param c Location.
+   * @return Linearized index for the coordinate.
    */
-  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Location& c) {
-    return static_cast<CoordIndex>(c.x + c.y * properties.getNcolumns());
+  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Location& c) const {
+    return static_cast<CoordIndex>(c.x + (c.y * properties.getNcolumns()));
+  }
+
+  /**
+   * @brief Retrieve a precomputed bridge circuit of a given chain length.
+   * @param length Linear chain length.
+   * @return QuantumComputation holding the bridge circuit.
+   */
+  [[nodiscard]] [[maybe_unused]] qc::QuantumComputation
+  getBridgeCircuit(const size_t length) const {
+    assert(length < bridgeCircuits.bridgeCircuits.size());
+    return bridgeCircuits.bridgeCircuits[length];
   }
 
   // Distance functions
   /**
-   * @brief Get the Euclidean distance between two coordinate indices
-   * @param idx1 The index of the first coordinate
-   * @param idx2 The index of the second coordinate
-   * @return The Euclidean distance between the two coordinate indices
+   * @brief Euclidean distance between two coordinate indices.
+   * @param idx1 First coordinate index.
+   * @param idx2 Second coordinate index.
+   * @return Euclidean distance.
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
     return coordinates.at(idx1).getEuclideanDistance(coordinates.at(idx2));
   }
   /**
-   * @brief Get the Euclidean distance between two coordinates
-   * @param c1 The first coordinate
-   * @param c2 The second coordinate
-   * @return The Euclidean distance between the two coordinates
+   * @brief Sum of pairwise Euclidean distances among a set of indices.
+   * @param coords Set of coordinate indices.
+   * @return Sum of distances across ordered pairs (i!=j).
+   */
+  [[nodiscard]] qc::fp
+  getAllToAllEuclideanDistance(const std::set<CoordIndex>& coords) const {
+    qc::fp dist = 0;
+    for (auto const c1 : coords) {
+      for (auto const c2 : coords) {
+        if (c1 == c2) {
+          continue;
+        }
+        dist += getEuclideanDistance(c1, c2);
+      }
+    }
+    return dist;
+  }
+  /**
+   * @brief Total Euclidean distance covered by an aggregate move combination.
+   * @param moveComb Combination of atom moves.
+   * @return Sum of Euclidean distances for each move.
+   */
+  [[nodiscard]] qc::fp
+  getMoveCombEuclideanDistance(const MoveComb& moveComb) const {
+    qc::fp dist = 0;
+    for (const auto& move : moveComb.moves) {
+      dist += getEuclideanDistance(move.c1, move.c2);
+    }
+    return dist;
+  }
+
+  /**
+   * @brief Estimated path length for a flying-ancilla combination.
+   * @param faComb Flying ancilla move combination.
+   * @return Sum of distances along origin->q1 and twice q1->q2 per step.
+   */
+  [[nodiscard]] qc::fp
+  getFaEuclideanDistance(const FlyingAncillaComb& faComb) const {
+    qc::fp dist = 0;
+    for (const auto& fa : faComb.moves) {
+      dist += getEuclideanDistance(fa.origin, fa.q1);
+      dist += getEuclideanDistance(fa.q1, fa.q2) * 2;
+    }
+    return dist;
+  }
+
+  /**
+   * @brief Estimated path length for a pass-by combination.
+   * @param pbComb Pass-by move combination.
+   * @return Twice the sum of distances of its constituent moves.
+   */
+  [[nodiscard]] qc::fp
+  getPassByEuclideanDistance(const PassByComb& pbComb) const {
+    qc::fp dist = 0;
+    for (const auto& fa : pbComb.moves) {
+      dist += getEuclideanDistance(fa.c1, fa.c2) * 2;
+    }
+    return dist;
+  }
+
+  /**
+   * @brief Euclidean distance between two coordinates.
+   * @param c1 First coordinate.
+   * @param c2 Second coordinate.
+   * @return Euclidean distance.
    */
   [[nodiscard]] static qc::fp getEuclideanDistance(const Location& c1,
                                                    const Location& c2) {
     return c1.getEuclideanDistance(c2);
   }
   /**
-   * @brief Get the Manhattan distance between two coordinate indices
-   * @param idx1 The index of the first coordinate
-   * @param idx2 The index of the second coordinate
-   * @return The Manhattan distance between the two coordinate indices
+   * @brief Manhattan distance in X between two indices.
+   * @param idx1 First index.
+   * @param idx2 Second index.
+   * @return |x1-x2|.
    */
   [[nodiscard]] CoordIndex getManhattanDistanceX(const CoordIndex idx1,
                                                  const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
-        this->coordinates.at(idx1).getManhattanDistanceX(
-            this->coordinates.at(idx2)));
+        coordinates.at(idx1).getManhattanDistanceX(coordinates.at(idx2)));
   }
   /**
-   * @brief Get the Manhattan distance between two coordinate indices
-   * @param idx1 The index of the first coordinate
-   * @param idx2 The index of the second coordinate
-   * @return The Manhattan distance between the two coordinate indices
+   * @brief Manhattan distance in Y between two indices.
+   * @param idx1 First index.
+   * @param idx2 Second index.
+   * @return |y1-y2|.
    */
   [[nodiscard]] CoordIndex getManhattanDistanceY(const CoordIndex idx1,
                                                  const CoordIndex idx2) const {
@@ -426,66 +537,62 @@ public:
 
   // Nearby coordinates
   /**
-   * @brief Get the precomputed nearby coordinates for a coordinate index
-   * @param idx The index of the coordinate
-   * @return The precomputed nearby coordinates for the coordinate index
+   * @brief Get precomputed nearby coordinates for an index.
+   * @param idx Coordinate index.
+   * @return Set of indices within interaction radius of idx.
    */
   [[nodiscard]] std::set<CoordIndex>
   getNearbyCoordinates(const CoordIndex idx) const {
     return nearbyCoordinates[idx];
   }
   /**
-   * @brief Get the coordinates which are exactly one step away from a
-   * coordinate index, i.e. the ones above, below, left and right.
-   * @param idx The index of the coordinate
-   * @return The coordinates which are exactly one step away from the
-   * coordinate index
+   * @brief Get coordinates exactly one grid step away (von Neumann
+   * neighborhood).
+   * @param idx Coordinate index.
+   * @return Indices of neighbors above, below, left, and right.
    */
   [[nodiscard]] std::vector<CoordIndex> getNN(CoordIndex idx) const;
 
   // MoveVector functions
   /**
-   * @brief Get the MoveVector between two coordinate indices
-   * @param idx1 The index of the first coordinate
-   * @param idx2 The index of the second coordinate
-   * @return The MoveVector between the two coordinate indices
+   * @brief Construct a MoveVector between two coordinate indices.
+   * @param idx1 Start index.
+   * @param idx2 End index.
+   * @return MoveVector from start to end.
    */
-  [[nodiscard]] MoveVector getVector(CoordIndex idx1, CoordIndex idx2) const {
-    return {this->coordinates[idx1].x, this->coordinates[idx1].y,
-            this->coordinates[idx2].x, this->coordinates[idx2].y};
+  [[nodiscard]] MoveVector getVector(const CoordIndex idx1,
+                                     const CoordIndex idx2) const {
+    return {coordinates[idx1].x, coordinates[idx1].y, coordinates[idx2].x,
+            coordinates[idx2].y};
   }
   /**
-   * @brief Computes the time it takes to move a qubit along a MoveVector
-   * @param v The MoveVector
-   * @return The time it takes to move a qubit along the MoveVector
+   * @brief Estimate time to move along a MoveVector.
+   * @param v MoveVector path.
+   * @return Shuttling time proportional to Euclidean length and device speed.
    */
   [[nodiscard]] qc::fp getVectorShuttlingTime(const MoveVector& v) const {
-    return v.getLength() * this->getInterQubitDistance() /
-           this->getShuttlingTime(qc::OpType::Move);
+    return v.getLength() * getInterQubitDistance() /
+           getShuttlingTime(qc::OpType::Move);
   }
 
   /**
-   * @brief Returns a csv string for the animation of the architecture
-   * @return The csv string for the animation of the architecture
+   * @brief Generate CSV content describing the device for animation.
+   * @param shuttlingSpeedFactor Scaling factor applied to shuttling speeds.
+   * @return CSV string describing layout and timing parameters.
    */
-  [[nodiscard]] std::string getAnimationCsv() const {
-    std::string csv = "x;y;size;color\n";
-    for (auto i = 0; i < getNcolumns(); i++) {
-      for (auto j = 0; j < getNrows(); j++) {
-        csv += std::to_string(i * getInterQubitDistance()) + ";" +
-               std::to_string(j * getInterQubitDistance()) + ";1;2\n";
-      }
-    }
-    return csv;
-  }
+  [[nodiscard]] std::string
+  getAnimationMachine(qc::fp shuttlingSpeedFactor) const;
 
   /**
-   * @brief Save the animation of the architecture to a csv file
-   * @param filename The name of the csv file
+   * @brief Save the device animation CSV to a file.
+   * @param filename Output CSV filename.
+   * @param shuttlingSpeedFactor Scaling factor applied to shuttling speeds.
    */
-  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) const {
+  [[maybe_unused]] void
+  saveAnimationMachine(const std::string& filename,
+                       const qc::fp shuttlingSpeedFactor) const {
     std::ofstream file(filename);
-    file << getAnimationCsv();
+    file << getAnimationMachine(shuttlingSpeedFactor);
   }
 };
 

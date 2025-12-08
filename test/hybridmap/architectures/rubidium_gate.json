@@ -6,7 +6,7 @@
     "nAods": 1,
     "nAodCoordinates": 5,
     "interQubitDistance": 3,
-    "minimalAodDistance": 0.1,
+    "minimalAodDistance": 1.5,
     "interactionRadius": 1.5,
     "blockingFactor": 1
   },
@@ -53,8 +53,8 @@
     "shuttlingAverageFidelities": {
       "move": 1,
       "aod_move": 1,
-      "aod_activate": 1,
-      "aod_deactivate": 1
+      "aod_activate": 0.98,
+      "aod_deactivate": 0.98
     }
   }
 }

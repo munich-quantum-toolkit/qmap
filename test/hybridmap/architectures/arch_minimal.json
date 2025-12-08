@@ -1,0 +1,38 @@
+{
+  "name": "minimal",
+  "properties": {
+    "nRows": 1,
+    "nColumns": 2,
+    "nAods": 1,
+    "nAodCoordinates": 1,
+    "interQubitDistance": 3,
+    "minimalAodDistance": 0.1,
+    "interactionRadius": 1,
+    "blockingFactor": 1
+  },
+  "parameters": {
+    "nQubits": 2,
+    "gateTimes": {
+      "none": 0.5
+    },
+    "gateAverageFidelities": {
+      "none": 0.999
+    },
+    "decoherenceTimes": {
+      "t1": 100000000,
+      "t2": 1500000
+    },
+    "shuttlingTimes": {
+      "move": 0.55,
+      "aod_move": 0.55,
+      "aod_activate": 20,
+      "aod_deactivate": 20
+    },
+    "shuttlingAverageFidelities": {
+      "move": 1,
+      "aod_move": 1,
+      "aod_activate": 1,
+      "aod_deactivate": 1
+    }
+  }
+}
