@@ -356,7 +356,7 @@ auto IndependentSetRouter::mergeGroups(
         if (const auto relaxedConflictingNeighbors =
                 relaxedConflictGraph.find(atom);
             relaxedConflictingNeighbors != relaxedConflictGraph.end()) {
-          for (const auto neighbor : relaxedConflictingNeighbors->second) {
+          for (const auto& neighbor : relaxedConflictingNeighbors->second) {
             auto [conflictIt, success] =
                 group->relaxedConflictingAtoms.try_emplace(neighbor.first,
                                                            neighbor.second);
