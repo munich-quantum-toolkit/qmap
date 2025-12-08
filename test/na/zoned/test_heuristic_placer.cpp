@@ -392,7 +392,7 @@ TEST(HeuristicPlacerTest, AStarSearch) {
       /* getCost: */
       [](const Node& /* unused */) -> double { return 1.0; },
       /* getHeuristic: */
-      [&nodes](const Node& node) -> double { return node.distanceToGoal; },
+      [](const Node& node) -> double { return node.distanceToGoal; },
       1'000'000);
   EXPECT_EQ(goal, nodes[14]);
 }
