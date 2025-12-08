@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace na::zoned {
-auto IndependentSetRouter::createConflictGraph(
+auto IndependentSetRouter::createStrictConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove, const Placement& startPlacement,
     const Placement& targetPlacement) const
     -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> {
@@ -48,14 +48,17 @@ auto IndependentSetRouter::createConflictGraph(
   }
   return conflictGraph;
 }
-auto IndependentSetRouter::createRelaxedConflictGraph(
+auto IndependentSetRouter::createRelaxedAndStrictConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove, const Placement& startPlacement,
     const Placement& targetPlacement) const
-    -> std::unordered_map<
-        qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>> {
+    -> std::pair<
+        std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>,
+        std::unordered_map<qc::Qubit, std::vector<std::pair<
+                                          qc::Qubit, std::optional<double>>>>> {
+  std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> strictConflictGraph;
   std::unordered_map<qc::Qubit,
                      std::vector<std::pair<qc::Qubit, std::optional<double>>>>
-      conflictGraph;
+      relaxedConflictGraph;
   for (auto atomIt = atomsToMove.cbegin(); atomIt != atomsToMove.cend();
        ++atomIt) {
     const auto& atom = *atomIt;
@@ -66,17 +69,21 @@ auto IndependentSetRouter::createRelaxedConflictGraph(
       const auto& neighbor = *neighborIt;
       const auto& neighborMovementVector = getMovementVector(
           startPlacement[neighbor], targetPlacement[neighbor]);
-      if (const auto& comp = isRelaxedCompatibleMovement(
-              atomMovementVector, neighborMovementVector);
-          comp.status != MovementCompatibility::Status::StrictlyCompatible) {
-        conflictGraph.try_emplace(atom).first->second.emplace_back(
+      const auto& comp = isRelaxedCompatibleMovement(atomMovementVector,
+                                                     neighborMovementVector);
+      if (comp.status != MovementCompatibility::Status::StrictlyCompatible) {
+        strictConflictGraph.try_emplace(atom).first->second.emplace_back(
+            neighbor);
+        strictConflictGraph.try_emplace(neighbor).first->second.emplace_back(
+            atom);
+        relaxedConflictGraph.try_emplace(atom).first->second.emplace_back(
             neighbor, comp.mergeCost);
-        conflictGraph.try_emplace(neighbor).first->second.emplace_back(
+        relaxedConflictGraph.try_emplace(neighbor).first->second.emplace_back(
             atom, comp.mergeCost);
       }
     }
   }
-  return conflictGraph;
+  return {strictConflictGraph, relaxedConflictGraph};
 }
 auto IndependentSetRouter::getMovementVector(
     const std::tuple<const SLM&, size_t, size_t>& start,
@@ -168,10 +175,9 @@ auto IndependentSetRouter::routeStrict(
   for (size_t i = 0; i + 1 < placement.size(); ++i) {
     const auto& startPlacement = placement[i];
     const auto& targetPlacement = placement[i + 1];
-    auto atomsToMove = getAtomsToMove(
-        getAtomsToMoveWithDistance(startPlacement, targetPlacement));
+    auto atomsToMove = getAtomsToMove(startPlacement, targetPlacement);
     const auto conflictGraph =
-        createConflictGraph(atomsToMove, startPlacement, targetPlacement);
+        createStrictConflictGraph(atomsToMove, startPlacement, targetPlacement);
     auto& currentRouting = routing.emplace_back();
     while (!atomsToMove.empty()) {
       auto& group = currentRouting.emplace_back();
@@ -216,7 +222,7 @@ auto IndependentSetRouter::makeStrictRoutingForRelaxedRouting(
     const std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>& conflictGraph,
     const std::unordered_map<
         qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>&
-        relaxedConflictGraph) const -> std::list<GroupInfo> {
+        relaxedConflictGraph) -> std::list<GroupInfo> {
   std::list<GroupInfo> groups;
   while (!atomsToMove.empty()) {
     auto& group = groups.emplace_back();
@@ -298,7 +304,7 @@ auto IndependentSetRouter::mergeGroups(
             // can be added with additional cost because there is only a
             // relaxed conflict
             const auto dist = atomsToDist.at(atom);
-            if (group.maxDistance > dist) {
+            if (group.maxDistance >= dist) {
               if (costCubed > *conflictIt->second) {
                 foundNewGroup = true;
                 atomToNewGroup.insert_or_assign(atom, &group);
@@ -381,15 +387,13 @@ auto IndependentSetRouter::routeRelaxed(
   for (size_t i = 0; i + 1 < placement.size(); ++i) {
     const auto& startPlacement = placement[i];
     const auto& targetPlacement = placement[i + 1];
-    const auto& atomsToDist =
+    auto [atomsToMove, atomsToDist] =
         getAtomsToMoveWithDistance(startPlacement, targetPlacement);
-    auto atomsToMove = getAtomsToMove(atomsToDist);
-    const auto conflictGraph =
-        createConflictGraph(atomsToMove, startPlacement, targetPlacement);
-    const auto relaxedConflictGraph = createRelaxedConflictGraph(
-        atomsToMove, startPlacement, targetPlacement);
+    const auto& [strictConflictGraph, relaxedConflictGraph] =
+        createRelaxedAndStrictConflictGraph(atomsToMove, startPlacement,
+                                            targetPlacement);
     auto groups = makeStrictRoutingForRelaxedRouting(
-        atomsToMove, atomsToDist, conflictGraph, relaxedConflictGraph);
+        atomsToMove, atomsToDist, strictConflictGraph, relaxedConflictGraph);
     mergeGroups(atomsToDist, relaxedConflictGraph, groups);
     auto& currentRouting = routing.emplace_back();
     currentRouting.reserve(groups.size());
@@ -400,17 +404,34 @@ auto IndependentSetRouter::routeRelaxed(
   return routing;
 }
 auto IndependentSetRouter::getAtomsToMove(
-    const std::unordered_map<qc::Qubit, double>& atomsToDist) const
+    const Placement& startPlacement, const Placement& targetPlacement) const
     -> std::vector<qc::Qubit> {
+  std::set<std::pair<double, qc::Qubit>, std::greater<>>
+      atomsToMoveOrderedAscByDist;
+  assert(startPlacement.size() == targetPlacement.size());
+  for (qc::Qubit atom = 0; atom < startPlacement.size(); ++atom) {
+    const auto& [startSLM, startRow, startColumn] = startPlacement[atom];
+    const auto& [targetSLM, targetRow, targetColumn] = targetPlacement[atom];
+    // if atom must be moved
+    if (&startSLM.get() != &targetSLM.get() || startRow != targetRow ||
+        startColumn != targetColumn) {
+      const auto distance = architecture_.get().distance(
+          startSLM, startRow, startColumn, targetSLM, targetRow, targetColumn);
+      atomsToMoveOrderedAscByDist.emplace(distance, atom);
+    }
+  }
   std::vector<qc::Qubit> atomsToMove;
-  atomsToMove.reserve(atomsToDist.size());
-  std::ranges::copy(atomsToDist | std::views::keys,
+  atomsToMove.reserve(atomsToMoveOrderedAscByDist.size());
+  // put the atoms into the vector such they are ordered decreasingly by their
+  // movement distance
+  std::ranges::copy(atomsToMoveOrderedAscByDist | std::views::values,
                     std::back_inserter(atomsToMove));
   return atomsToMove;
 }
 auto IndependentSetRouter::getAtomsToMoveWithDistance(
     const Placement& startPlacement, const Placement& targetPlacement) const
-    -> std::unordered_map<qc::Qubit, double> {
+    -> std::pair<std::vector<qc::Qubit>,
+                 std::unordered_map<qc::Qubit, double>> {
   std::set<std::pair<double, qc::Qubit>, std::greater<>>
       atomsToMoveOrderedAscByDist;
   std::unordered_map<qc::Qubit, double> atomsToDist;
@@ -427,6 +448,12 @@ auto IndependentSetRouter::getAtomsToMoveWithDistance(
       atomsToDist.emplace(atom, distance);
     }
   }
-  return atomsToDist;
+  std::vector<qc::Qubit> atomsToMove;
+  atomsToMove.reserve(atomsToMoveOrderedAscByDist.size());
+  // put the atoms into the vector such they are ordered decreasingly by their
+  // movement distance
+  std::ranges::copy(atomsToMoveOrderedAscByDist | std::views::values,
+                    std::back_inserter(atomsToMove));
+  return {atomsToMove, atomsToDist};
 }
 } // namespace na::zoned

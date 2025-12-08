@@ -32,9 +32,7 @@ if TYPE_CHECKING:
 nox.needs_version = ">=2025.10.16"
 nox.options.default_venv_backend = "uv"
 
-# TODO(burgholzer): Re-enable 3.14 when the Python 3.14.1 issues have been resolved
-#   https://github.com/munich-quantum-toolkit/qmap/issues/860
-PYTHON_ALL_VERSIONS = ["3.10", "3.11", "3.12", "3.13"]  # , "3.14"]
+PYTHON_ALL_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True

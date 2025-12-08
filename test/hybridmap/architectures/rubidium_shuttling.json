@@ -11,7 +11,7 @@
     "blockingFactor": 1
   },
   "parameters": {
-    "nQubits": 11,
+    "nQubits": 12,
     "gateTimes": {
       "none": 0.5,
       "rx": 0.5,

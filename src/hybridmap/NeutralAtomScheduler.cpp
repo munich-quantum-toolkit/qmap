@@ -23,66 +23,78 @@
 #include <cstdint>
 #include <cstdlib>
 #include <deque>
-#include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
 #include <vector>
 
-na::SchedulerResults
-na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
-                                   const std::map<HwQubit, HwQubit>& initHwPos,
-                                   bool verbose, bool createAnimationCsv,
-                                   qc::fp shuttlingSpeedFactor) {
+na::SchedulerResults na::NeutralAtomScheduler::schedule(
+    const qc::QuantumComputation& qc,
+    const std::map<HwQubit, CoordIndex>& initHwPos,
+    const std::map<HwQubit, CoordIndex>& initFaPos, const bool verbose,
+    const bool createAnimationCsv, const qc::fp shuttlingSpeedFactor) {
+  animation.clear();
+  animationMachine.clear();
   if (verbose) {
-    std::cout << "\n* schedule start!\n";
+    spdlog::info("* schedule start!");
   }
 
-  std::vector<qc::fp> totalExecutionTimes(arch.getNpositions(), 0);
-  // saves for each coord the time slots that are blocked by a multi qubit gate
+  const auto nPositions = static_cast<std::size_t>(arch->getNpositions());
+  const std::size_t numCoords = 3ULL * nPositions;
+  std::vector totalExecutionTimes(numCoords, qc::fp{0});
   std::vector<std::deque<std::pair<qc::fp, qc::fp>>> rydbergBlockedQubitsTimes(
-      arch.getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
+      numCoords);
   qc::fp aodLastBlockedTime = 0;
   qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
 
-  AnimationAtoms animationAtoms(initHwPos, arch);
+  std::optional<AnimationAtoms> animationAtoms;
   if (createAnimationCsv) {
-    animationCsv += animationAtoms.getInitString();
-    animationArchitectureCsv = arch.getAnimationCsv();
+    animationAtoms.emplace(initHwPos, initFaPos, *arch);
+    animation += animationAtoms->placeInitAtoms();
+    animationMachine = arch->getAnimationMachine(shuttlingSpeedFactor);
   }
 
   int index = 0;
-  int nAodActivate = 0;
+  uint32_t nAodActivate = 0;
+  uint32_t nAodMove = 0;
   uint32_t nCZs = 0;
   for (const auto& op : qc) {
     index++;
     if (verbose) {
-      std::cout << "\n" << index << "\n";
+      spdlog::info("{}", index);
     }
     if (op->getType() == qc::AodActivate) {
       nAodActivate++;
+    } else if (op->getType() == qc::AodMove) {
+      nAodMove++;
     } else if (op->getType() == qc::OpType::Z && op->getNcontrols() == 1) {
       nCZs++;
     }
 
     auto qubits = op->getUsedQubits();
-    auto opTime = arch.getOpTime(op.get());
+    auto opTime = arch->getOpTime(op.get());
     if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
         op->getType() == qc::AodDeactivate) {
       opTime *= shuttlingSpeedFactor;
     }
-    auto opFidelity = arch.getOpFidelity(op.get());
+    const auto opFidelity = arch->getOpFidelity(op.get());
 
     // DEBUG info
     if (verbose) {
-      std::cout << op->getName() << "  ";
-      for (const auto& qubit : qubits) {
-        std::cout << "q" << qubit << " ";
+      spdlog::info("{}", op->getName());
+      // print control qubits
+      for (const auto& c : op->getControls()) {
+        spdlog::info("c{} ", c.qubit);
       }
-      std::cout << "-> time: " << opTime << ", fidelity: " << opFidelity
-                << "\n";
+      // print target qubits
+      for (const auto& t : op->getTargets()) {
+        spdlog::info("q{} ", t);
+      }
+      spdlog::info("-> time: {}, fidelity: {}", opTime, opFidelity);
     }
 
     qc::fp maxTime = 0;
@@ -96,7 +108,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
       aodLastBlockedTime = maxTime + opTime;
     } else if (qubits.size() > 1) {
       // multi qubit gates -> take into consideration blocking
-      auto rydbergBlockedQubits = arch.getBlockedCoordIndices(op.get());
+      auto rydbergBlockedQubits = arch->getBlockedCoordIndices(op.get());
       // get max execution time over all blocked qubits
       bool rydbergBlocked = true;
       while (rydbergBlocked) {
@@ -109,13 +121,13 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
         for (const auto& qubit : rydbergBlockedQubits) {
           // check if qubit is blocked at maxTime
           for (const auto& startEnd : rydbergBlockedQubitsTimes[qubit]) {
-            auto start = startEnd.first;
-            auto end = startEnd.second;
+            const auto start = startEnd.first;
+            const auto end = startEnd.second;
             if ((start <= maxTime && end > maxTime) ||
                 (start <= maxTime + opTime && end > maxTime + opTime)) {
               rydbergBlocked = true;
               // update maxTime to the end of the blocking
-              maxTime = end;
+              maxTime = std::max(maxTime, end);
               // remove the blocking
               break;
             }
@@ -151,61 +163,44 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
 
     totalGateFidelities *= opFidelity;
     totalGateTime += opTime;
-    if (verbose) {
-      std::cout << "\n";
-      printTotalExecutionTimes(totalExecutionTimes, rydbergBlockedQubitsTimes);
-    }
 
     // update animation
     if (createAnimationCsv) {
-      animationCsv +=
-          animationAtoms.createCsvOp(op, maxTime, maxTime + opTime, arch);
+      animation += animationAtoms->opToNaViz(op, maxTime);
     }
   }
   if (verbose) {
-    std::cout << "\n* schedule end!\n";
-    std::cout << "nAodActivate: " << nAodActivate << "\n";
+    spdlog::info("* schedule end!");
   }
 
   const auto maxExecutionTime = *std::ranges::max_element(totalExecutionTimes);
   const auto totalIdleTime =
-      maxExecutionTime * arch.getNqubits() - totalGateTime;
+      maxExecutionTime * arch->getNqubits() - totalGateTime;
   const auto totalFidelities =
       totalGateFidelities *
-      std::exp(-totalIdleTime / arch.getDecoherenceTime());
+      std::exp(-totalIdleTime / arch->getDecoherenceTime());
 
-  if (createAnimationCsv) {
-    animationCsv += animationAtoms.getEndString(maxExecutionTime);
-  }
   if (verbose) {
     printSchedulerResults(totalExecutionTimes, totalIdleTime,
-                          totalGateFidelities, totalFidelities, nCZs);
+                          totalGateFidelities, totalFidelities, nCZs,
+                          nAodActivate, nAodMove);
   }
-  return {maxExecutionTime, totalIdleTime, totalGateFidelities, totalFidelities,
-          nCZs};
+  return {maxExecutionTime, totalIdleTime, totalGateFidelities,
+          totalFidelities,  nCZs,          nAodActivate,
+          nAodMove};
 }
 
 void na::NeutralAtomScheduler::printSchedulerResults(
-    std::vector<qc::fp>& totalExecutionTimes, qc::fp totalIdleTime,
-    qc::fp totalGateFidelities, qc::fp totalFidelities, uint32_t nCZs) {
-  auto totalExecutionTime = *std::ranges::max_element(totalExecutionTimes);
-  std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
-  std::cout << "totalIdleTime: " << totalIdleTime << "\n";
-  std::cout << "totalGateFidelities: " << totalGateFidelities << "\n";
-  std::cout << "totalFidelities: " << totalFidelities << "\n";
-  std::cout << "totalNumCZs: " << nCZs << "\n";
-}
-
-void na::NeutralAtomScheduler::printTotalExecutionTimes(
-    std::vector<qc::fp>& totalExecutionTimes,
-    std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes) {
-  std::cout << "ExecutionTime: "
-            << "\n";
-  for (size_t qubit = 0; qubit < totalExecutionTimes.size(); qubit++) {
-    std::cout << "[" << qubit << "] " << totalExecutionTimes[qubit] << " \t";
-    for (const auto& blockedTime : blockedQubitsTimes[qubit]) {
-      std::cout << blockedTime.first << "-" << blockedTime.second << " \t";
-    }
-    std::cout << "\n";
-  }
+    std::vector<qc::fp>& totalExecutionTimes, const qc::fp totalIdleTime,
+    const qc::fp totalGateFidelities, const qc::fp totalFidelities,
+    const uint32_t nCZs, const uint32_t nAodActivate, const uint32_t nAodMove) {
+  const auto totalExecutionTime = *std::ranges::max_element(
+      totalExecutionTimes.begin(), totalExecutionTimes.end());
+  spdlog::info("totalExecutionTimes: {}", totalExecutionTime);
+  spdlog::info("totalIdleTime: {}", totalIdleTime);
+  spdlog::info("totalGateFidelities: {}", totalGateFidelities);
+  spdlog::info("totalFidelities: {}", totalFidelities);
+  spdlog::info("totalNumCZs: {}", nCZs);
+  spdlog::info("nAodActivate: {}", nAodActivate);
+  spdlog::info("nAodMove: {}", nAodMove);
 }

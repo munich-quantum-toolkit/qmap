@@ -16,11 +16,14 @@
 #include "na/zoned/layout_synthesizer/router/RouterBase.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace na::zoned {
@@ -56,7 +59,8 @@ public:
      * groups based on the relaxed constraints. Higher values of this
      * parameter favor keeping groups separate; lower values favor merging.
      * In particular, a value of 0.0 merges all possible groups. (Default: 1.0)
-     * @note This value is only relevant if the routing method RELAXED is used.
+     * @note This value is only relevant if the routing method RELAXED is used
+     * and ignored otherwise.
      */
     double preferSplit = 1.0;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, method, preferSplit)
@@ -64,7 +68,7 @@ public:
 
 private:
   /// The configuration of the independent set router
-  Config config_;
+  const Config config_;
 
 public:
   /// Create an IndependentSetRouter with the given configuration
@@ -93,8 +97,8 @@ private:
   [[nodiscard]] auto routeStrict(const std::vector<Placement>& placement) const
       -> std::vector<Routing>;
   /**
-   * Updates the existing cost if the incoming cost is greater or infinite
-   * (i.e., std::nullopt).
+   * Updates the existing cost if the incoming cost is greater or indicating
+   * incompatibility (`std::nullopt`), which dominates any finite cost.
    * @param existing is the existing cost
    * @param incoming is the new cost
    */
@@ -118,23 +122,24 @@ private:
    * @param conflictGraph is the conflict graph based on the strict routing
    * constraints.
    * @param relaxedConflictGraph is the conflict graph based on the relaxed
-   * routing constraints with weights edges for strict conflicts.
+   * routing constraints with weighted edges for strict conflicts.
    * @returns a list of strict routing groups.
    */
-  [[nodiscard]] auto makeStrictRoutingForRelaxedRouting(
+  [[nodiscard]] static auto makeStrictRoutingForRelaxedRouting(
       std::vector<qc::Qubit> atomsToMove,
       const std::unordered_map<qc::Qubit, double>& atomsToDist,
       const std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>&
           conflictGraph,
       const std::unordered_map<
           qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>&
-          relaxedConflictGraph) const -> std::list<GroupInfo>;
+          relaxedConflictGraph) -> std::list<GroupInfo>;
   /**
    * Merges movement groups if all movement of one group can be combined with
-   * other movement groups based on the relaxed routing constaraints.
+   * other movement groups based on the relaxed routing constraints.
+   * The merging decisions are driven by the configured `preferSplit` threshold.
    * @param atomsToDist is a map from atoms to their movement distance.
    * @param relaxedConflictGraph is the conflict graph based on the relaxed
-   * routing constraints with weights edges for strict conflicts.
+   * routing constraints with weighted edges for strict conflicts.
    * @param groups is a list of movement groups that is modified by this
    * function.
    */
@@ -152,23 +157,26 @@ private:
   [[nodiscard]] auto routeRelaxed(const std::vector<Placement>& placement) const
       -> std::vector<Routing>;
   /**
-   * @param atomsToDist is a map from atoms to their movement distance.
-   * @returns the atoms to move, i.e., the keys of the map.
+   * @param startPlacement is the start placement.
+   * @param targetPlacement is the target placement.
+   * @returns the atoms to move
    */
-  [[nodiscard]] auto
-  getAtomsToMove(const std::unordered_map<qc::Qubit, double>& atomsToDist) const
+  [[nodiscard]] auto getAtomsToMove(const Placement& startPlacement,
+                                    const Placement& targetPlacement) const
       -> std::vector<qc::Qubit>;
   /**
    * @param startPlacement is the start placement.
    * @param targetPlacement is the target placement.
-   * @returns a map from atoms to their movement distance.
+   * @returns a pair consisting of a vector containing the atoms to move and a
+   * map from atoms to their movement distance.
    */
   [[nodiscard]] auto
   getAtomsToMoveWithDistance(const Placement& startPlacement,
                              const Placement& targetPlacement) const
-      -> std::unordered_map<qc::Qubit, double>;
+      -> std::pair<std::vector<qc::Qubit>,
+                   std::unordered_map<qc::Qubit, double>>;
   /**
-   * Creates the conflict graph.
+   * Creates the conflict graph with respect to the strict routing constraints.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
    * targetPlacement stands in conflict with each other. The graph is
@@ -181,29 +189,40 @@ private:
    * nodes and the values are vectors of their neighbors
    */
   [[nodiscard]] auto
-  createConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
-                      const Placement& startPlacement,
-                      const Placement& targetPlacement) const
+  createStrictConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                            const Placement& startPlacement,
+                            const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
-  [[nodiscard]] auto
   /**
-   * Creates the relaxed conflict graph.
+   * Creates the relaxed and strict conflict graph.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
-   * targetPlacement stands in conflict with each other based on the relaxed
+   * targetPlacement stands in conflict with each other based on the strict
    * routing constraints. The graph is represented as adjacency lists.
+   * @par
+   * * In contrast to the strict conflict graph, all edges that do not represent
+   * a conflict with respect to the relaxed routing constraints carry a weight
+   * representing the cost for merging the two adjacent movements. These edges
+   * correspond to the value `RelaxedCompatible` returned by @ref
+   * isRelaxedCompatibleMovement. The weight of other edges, i.e.,
+   * `Incompatible`, is `std::nullopt`.
    * @param atomsToMove are all atoms corresponding to nodes in the graph.
    * @param startPlacement is the start placement of all atoms as a mapping from
    * atoms to their sites.
    * @param targetPlacement is the target placement of the atoms.
-   * @return the conflict graph as an unordered_map, where the keys are the
-   * nodes and the values are vectors of their neighbors.
+   * @return the relaxed conflict graph as an unordered_map where the keys are
+   * the nodes and the values are vectors of (neighbor, optional merge cost)
+   * pairs.
    */
-  createRelaxedConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
-                             const Placement& startPlacement,
-                             const Placement& targetPlacement) const
-      -> std::unordered_map<
-          qc::Qubit, std::vector<std::pair<qc::Qubit, std::optional<double>>>>;
+  [[nodiscard]] auto
+  createRelaxedAndStrictConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                                      const Placement& startPlacement,
+                                      const Placement& targetPlacement) const
+      -> std::pair<
+          std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>,
+          std::unordered_map<
+              qc::Qubit,
+              std::vector<std::pair<qc::Qubit, std::optional<double>>>>>;
 
   /**
    * Takes two sites, the start and target site and returns a 4D-vector of the
@@ -219,12 +238,13 @@ private:
       -> std::tuple<size_t, size_t, size_t, size_t>;
 
   /**
-   * Check whether two movements are compatible, i.e., the topological order
-   * of the moved atoms remain the same.
+   * Check whether two movements are strictly compatible, i.e., atoms remain on
+   * the same row (column) and maintain their relative/topological order.
    * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
    * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
    * y-end)
-   * @return true, if the given movement vectors are compatible, otherwise false
+   * @returns `true` if the movements are (strictly) compatible, `false`
+   * otherwise.
    */
   [[nodiscard]] static auto
   isCompatibleMovement(const std::tuple<size_t, size_t, size_t, size_t>& v,
@@ -260,7 +280,7 @@ private:
     };
 
     /// Indicates the type of compatibility
-    Status status;
+    Status status = Status::Incompatible;
     /**
      * @brief In the case of `RelaxedCompatible`, the cost to merge the two
      * movements.
@@ -275,7 +295,7 @@ private:
      * then cubed again.
      * Hence, the cost must always be a non-negative number.
      */
-    std::optional<double> mergeCost;
+    std::optional<double> mergeCost = std::nullopt;
 
     /// Factory methods for strict compatibility
     [[nodiscard]] static auto strictlyCompatible() -> MovementCompatibility {
@@ -299,7 +319,8 @@ private:
    * @param v is a 4D-vector of the form (x-start, y-start, x-end, y-end)
    * @param w is the other 4D-vector of the form (x-start, y-start, x-end,
    * y-end)
-   * @returns a @ref MovementCompatibility object indicating the compatibility.
+   * @returns a @ref MovementCompatibility object indicating whether they are
+   * strictly compatible, relaxed compatible (with merge cost), or incompatible.
    */
   [[nodiscard]] static auto isRelaxedCompatibleMovement(
       const std::tuple<size_t, size_t, size_t, size_t>& v,

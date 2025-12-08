@@ -15,51 +15,84 @@
 #include "ir/Definitions.hpp"
 #include "ir/operations/Operation.hpp"
 
-#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 
 namespace na {
+/**
+ * @brief Helper to generate NaViz-style animation strings for neutral-atom
+ * layouts.
+ * @details Maintains bidirectional mappings between coordinate indices and
+ * atom identifiers, as well as continuous coordinates derived from the
+ * architecture's grid geometry. Provides utilities to emit initial placement
+ * lines and per-operation animation snippets.
+ * @note The architecture reference passed to the constructor must remain valid
+ * for the lifetime of this object.
+ */
 class AnimationAtoms {
-  using axesId = std::uint32_t;
-  using marginId = std::uint32_t;
-
 protected:
-  uint32_t colorSlm = 0;
-  uint32_t colorAod = 1;
-  uint32_t colorLocal = 2;
-  [[maybe_unused]] uint32_t colorGlobal = 3;
-  uint32_t colorCz = 4;
-
+  /** Map from discrete coordinate index to atom id. */
   std::map<CoordIndex, HwQubit> coordIdxToId;
+  /** Map from atom id to continuous (x,y) coordinates. */
   std::map<HwQubit, std::pair<qc::fp, qc::fp>> idToCoord;
-  std::map<HwQubit, uint32_t> axesIds;
-  std::map<HwQubit, uint32_t> marginIds;
-  uint32_t axesIdCounter = 0;
-  uint32_t marginIdCounter = 0;
+  const NeutralAtomArchitecture* arch;
 
-  axesId addAxis(HwQubit id);
-  void removeAxis(HwQubit id) { axesIds.erase(id); }
-  marginId addMargin(HwQubit id);
-  void removeMargin(HwQubit id) { marginIds.erase(id); }
+  /**
+   * @brief Initialize coordinate/id maps from initial hardware and ancilla
+   * positions.
+   * @details For hardware qubits, places atoms at grid points based on
+   * architecture columns and inter-qubit distance. Flying ancilla qubits are
+   * offset from the grid using a small per-index displacement that depends on
+   * the architecture's AOD intermediate levels, and their id space follows the
+   * hardware ids.
+   * @param initHwPos Initial mapping of hardware qubit id -> coordinate index.
+   * @param initFaPos Initial mapping of flying-ancilla id -> coordinate index.
+   */
+  void initPositions(const std::map<HwQubit, CoordIndex>& initHwPos,
+                     const std::map<HwQubit, CoordIndex>& initFaPos);
 
 public:
-  AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
-                 const NeutralAtomArchitecture& arch);
+  /**
+   * @brief Construct animation helper with initial positions.
+   * @param initHwPos Initial hardware id -> coordinate index mapping.
+   * @param initFaPos Initial flying-ancilla id -> coordinate index mapping.
+   * @param architecture Reference to the neutral atom architecture providing
+   * grid geometry and distances.
+   */
+  AnimationAtoms(const std::map<HwQubit, CoordIndex>& initHwPos,
+                 const std::map<HwQubit, CoordIndex>& initFaPos,
+                 const NeutralAtomArchitecture& architecture)
+      : arch(&architecture) {
+    initPositions(initHwPos, initFaPos);
+  }
 
-  std::string getInitString();
-  std::string getEndString(qc::fp endTime);
-  static std::string createCsvLine(qc::fp startTime, HwQubit id, qc::fp x,
-                                   qc::fp y, uint32_t size = 1,
-                                   uint32_t color = 0, bool axes = false,
-                                   axesId axId = 0, bool margin = false,
-                                   marginId marginId = 0,
-                                   qc::fp marginSize = 0);
-  std::string createCsvOp(const std::unique_ptr<qc::Operation>& op,
-                          qc::fp startTime, qc::fp endTime,
-                          const NeutralAtomArchitecture& arch);
+  /**
+   * @brief Emit NaViz lines that place all initial atoms.
+   * @details One line per atom with absolute coordinates and an atom label
+   * (e.g., "atom (x, y) atom<ID>").
+   * @return Concatenated lines suitable for a NaViz animation file.
+   */
+  [[nodiscard]] std::string placeInitAtoms() const;
+  /**
+   * @brief Convert a quantum operation into NaViz animation commands.
+   * @details Supports AOD load/store/move operations and standard gates.
+   * - AodActivate: emits a load block with listed atoms.
+   * - AodDeactivate: emits a store block with listed atoms.
+   * - AodMove: updates internal coordinates by matching AOD start/end lists and
+   *   emits move commands for affected atoms; also updates coordIdxToId for
+   *   origin/target coordinate-index pairs.
+   * - Multi-qubit gates: emits a grouped cz with all involved atoms.
+   * - Single-qubit gates: emits a simple rz 1 for the target atom (independent
+   * of the exact gate -> does not matter for visualization).
+   * - Other operations are currently not supported for animation output.
+   * @param op The operation to translate (uses coordinate indices as qubits).
+   * @param startTime The animation timestamp to annotate the command with.
+   * @return NaViz command string for the operation at the given time.
+   */
+  std::string opToNaViz(const std::unique_ptr<qc::Operation>& op,
+                        qc::fp startTime);
 };
 
 } // namespace na

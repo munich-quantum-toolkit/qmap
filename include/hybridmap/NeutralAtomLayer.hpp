@@ -22,11 +22,12 @@
 
 namespace na {
 /**
- * @brief Class to manage the creation of layers when traversing a quantum
- * circuit.
- * @details The class uses the qc::DAG of the circuit to create layers of gates
- * that can be executed at the same time. It can be used to create the front or
- * look ahead layer.
+ * @brief Helper for constructing executable or look-ahead layers from a circuit
+ * DAG.
+ * @details Consumes a per-qubit DAG representation and maintains frontier
+ * iterators to build either (a) the front layer of mutually commuting gates
+ * (ready to execute) or (b) look-ahead layers containing a bounded depth of
+ * forthcoming multi-qubit gates per qubit for heuristic evaluation.
  */
 
 class NeutralAtomLayer {
@@ -37,76 +38,115 @@ protected:
 
   DAG dag;
   DAGIterators iterators;
+  DAGIterators ends;
   GateList gates;
-  GateList mappedSingleQubitGates;
-  std::vector<GateList> candidates;
+  GateList newGates;
+  GateLists candidates;
+  uint32_t lookaheadDepth;
+  bool isFrontLayer;
 
   /**
-   * @brief Updates the gates for the given qubits
-   * @details The function iterates over the qc::DAG and updates the gates for
-   * the given qubits as far es possible.
-   * @param qubitsToUpdate The qubits that have been updated
-   * @param commuteWith Gates the new gates should commute with
+   * @brief Advance frontier and refresh candidates/gates for specified qubits.
+   * @details Moves DAG iterators forward for each qubit, replenishes candidate
+   * queues and promotes ready operations into the current layer (all involved
+   * qubits agree). Front-layer mode restricts to commuting operations;
+   * look-ahead mode gathers up to lookaheadDepth multi-qubit gates.
+   * @param qubitsToUpdate Logical qubits whose DAG frontier and candidate sets
+   * are updated.
    */
   void updateByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
+
   /**
-   * @brief Updates the candidates for the given qubits
+   * @brief Extend per-qubit candidate queues from DAG columns.
+   * @details Front-layer: continue pulling while new ops commute with existing
+   * layer and per-qubit candidates. Look-ahead: pull until lookaheadDepth
+   * multi-qubit ops encountered (including intervening single-qubit ops).
+   * @param qubitsToUpdate Logical qubits whose candidate queues should be
+   * extended.
    */
   void updateCandidatesByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
   /**
-   * @brief Checks the candidates and add them to the gates if possible
-   * @param qubitsToUpdate The qubits that have been updated
+   * @brief Promote multi-qubit candidates that are ready on all their qubits.
+   * @details Checks for each qubit whether the head candidate appears across
+   * candidate lists of all its operand qubits; if so, moves it to the layer and
+   * records it in newGates, removing from all candidate lists.
+   * @param qubitsToUpdate Logical qubits whose candidate lists are evaluated
+   * for promotion.
    */
   void candidatesToGates(const std::set<qc::Qubit>& qubitsToUpdate);
 
-  // Commutation checks
-  static bool commutesWithAtQubit(const GateList& layer,
-                                  const qc::Operation* opPointer,
-                                  const qc::Qubit& qubit);
-  static bool commuteAtQubit(const qc::Operation* opPointer1,
-                             const qc::Operation* opPointer2,
-                             const qc::Qubit& qubit);
-
 public:
-  // Constructor
-  explicit NeutralAtomLayer(DAG graph) : dag(std::move(graph)) {
+  /**
+   * @brief Construct a layer builder over a per-qubit DAG.
+   * @param graph Per-qubit DAG columns (each deque owns operation pointers).
+   * @param isFrontLayer True for executable front layer mode; false for
+   * look-ahead mode.
+   * @param lookaheadDepth Max number of multi-qubit gates to look ahead per
+   * qubit.
+   */
+  explicit NeutralAtomLayer(DAG graph, const bool isFrontLayer,
+                            const uint32_t lookaheadDepth = 1)
+      : dag(std::move(graph)), lookaheadDepth(lookaheadDepth),
+        isFrontLayer(isFrontLayer) {
     iterators.reserve(dag.size());
     candidates.reserve(dag.size());
     for (auto& i : dag) {
       auto it = i.begin();
       iterators.emplace_back(it);
+      ends.emplace_back(i.end());
       candidates.emplace_back();
     }
   }
 
   /**
-   * @brief Returns the current layer of gates
-   * @return The current layer of gates
+   * @brief Get the current executable/look-ahead layer gate list.
+   * @return Copy of current layer gates.
    */
-  GateList getGates() { return gates; }
+  [[nodiscard]] GateList getGates() const { return gates; }
   /**
-   * @brief Returns a vector of the iterator indices
-   * @return A copy of the current iterator indices
+   * @brief Get gates newly added during the latest update.
+   * @details Populated by the most recent update invocation then refreshed each
+   * subsequent update.
+   * @return Copy of gates added since prior update.
    */
-  std::vector<uint32_t> getIteratorOffset();
+  [[nodiscard]] GateList getNewGates() const { return newGates; }
   /**
-   * @brief Initializes the layer by updating all qubits starting from the
-   * iterators
-   * @param The iterator offset to start from
+   * @brief Initialize internal frontiers and populate initial candidates/gates.
+   * @details Advances all qubit DAG iterators, builds candidate queues and
+   * promotes ready operations.
    */
-  void initLayerOffset(const std::vector<uint32_t>& iteratorOffset = {});
+  void initAllQubits();
   /**
-   * @brief Removes the provided gates from the current layer and update the
-   * the layer depending on the qubits of the gates.
-   * @param gatesToRemove Gates to remove from the current layer
-   * @param commuteWith Gates the new gates should commute with
+   * @brief Remove specified gates then advance affected qubit frontiers.
+   * @details After erasing gates, updates candidates/gates for all qubits they
+   * touched, potentially adding new ready operations.
+   * @param gatesToRemove Gates to erase from current layer.
    */
   void removeGatesAndUpdate(const GateList& gatesToRemove);
-  /**
-   * @brief Returns the mapped single qubit gates
-   * @return The mapped single qubit gates
-   */
-  GateList getMappedSingleQubitGates() { return mappedSingleQubitGates; }
 };
 
+// Commutation checks
+/**
+ * @brief Determine if an operation commutes with all layer operations at a
+ * qubit.
+ * @param layer Current layer gate list.
+ * @param opPointer Operation to test.
+ * @param qubit Qubit index for commutation assessment.
+ * @return True if opPointer commutes with every gate in layer at qubit; false
+ * otherwise.
+ */
+bool commutesWithAtQubit(const GateList& layer, const qc::Operation* opPointer,
+                         const qc::Qubit& qubit);
+/**
+ * @brief Check pairwise commutation of two operations at a qubit.
+ * @details Simple syntactic rules: non-unitaries never commute; identities and
+ * single-qubit ops commute; ops not acting on the qubit commute; specific
+ * two-qubit control/target patterns are considered commuting.
+ * @param op1 First operation.
+ * @param op2 Second operation.
+ * @param qubit Qubit index for commutation assessment.
+ * @return True if operations commute at qubit; false otherwise.
+ */
+bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
+                    const qc::Qubit& qubit);
 } // namespace na

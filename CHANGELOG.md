@@ -19,6 +19,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 - ✨ Enable code generation for relaxed routing constraints ([#848]) ([**@ystade**])
 - ✨ Add `max_filling_factor` to scheduler in Zoned Neutral Atom Compiler ([#847]) ([**@ystade**])
+- ✨ Added extension to the hybrid routing mapper to also support Bridge gates, Passby moves and Flying ancillas ([#832]) ([**@lsschmid**])
+- ✨ Added hybrid synthesis routing for iterative circuit constructions ([#832]) ([**@lsschmid**])
 
 ## [3.4.0] - 2025-10-15
 
@@ -165,6 +167,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [#859]: https://github.com/munich-quantum-toolkit/qmap/pull/859
 [#848]: https://github.com/munich-quantum-toolkit/qmap/pull/848
 [#847]: https://github.com/munich-quantum-toolkit/qmap/pull/847
+[#832]: https://github.com/munich-quantum-toolkit/qmap/pull/832
 [#804]: https://github.com/munich-quantum-toolkit/qmap/pull/804
 [#803]: https://github.com/munich-quantum-toolkit/qmap/pull/803
 [#796]: https://github.com/munich-quantum-toolkit/qmap/pull/796
@@ -197,6 +200,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [**@burgholzer**]: https://github.com/burgholzer
 [**@ystade**]: https://github.com/ystade
 [**@denialhaag**]: https://github.com/denialhaag
+[**@lsschmid**]: https://github.com/lsschmid
 
 <!-- General links -->
 
