@@ -479,7 +479,8 @@ TEST(FastRoutingAwareCompilerTest, ImprovedLoadingStoring) {
       Architecture::fromJSONString(architectureSpecificationGraphstate);
   const RoutingAwareCompiler::Config config = {
       .layoutSynthesizerConfig =
-          {.placerConfig = {.method = HeuristicPlacer::Config::Method::IDS},
+          {.placerConfig = HeuristicPlacer::Config::createForMethod(
+               HeuristicPlacer::Config::Method::IDS),
            .routerConfig = {.method =
                                 IndependentSetRouter::Config::Method::RELAXED}},
       .codeGeneratorConfig = {.warnUnsupportedGates = false}};

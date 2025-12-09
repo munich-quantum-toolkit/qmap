@@ -126,14 +126,14 @@ public:
      * heuristic. However, this leads to a vast exploration of the search tree
      * and usually results in a huge number of nodes visited.
      */
-    float deepeningFactor = method == Method::IDS ? 0.01F : 0.8F;
+    float deepeningFactor = 0.01F;
     /**
      * @brief Before the sum of standard deviations is multiplied with the
      * number of unplaced nodes and @ref deepeningFactor_, this value is added
      * to the sum to amplify the influence of the unplaced nodes count.
      * @see deepeningFactor_
      */
-    float deepeningValue = method == Method::IDS ? 0.0F : 0.2F;
+    float deepeningValue = 0.0F;
     /**
      * @brief The cost function can consider the distance of atoms to their
      * interaction partner in the next layer.
@@ -142,7 +142,7 @@ public:
      * entirely. A factor of 1.0 implies that the lookahead is as important as
      * the distance to the target site, which is usually not desired.
      */
-    float lookaheadFactor = method == Method::IDS ? 0.4F : 0.2F;
+    float lookaheadFactor = 0.4F;
     /**
      * @brief The reuse level corresponds to the estimated extra fidelity loss
      * due to the extra trap transfers when the atom is not reused and instead
@@ -170,6 +170,21 @@ public:
      * @note This option is only relevant if the IDS heuristic method is used.
      */
     size_t queueCapacity = 100;
+
+  private:
+    /// @returns the default configuration for the A* method
+    [[nodiscard]] static auto createWithAStarDefaults() -> Config;
+
+    /// @returns the default configuration for the IDS method
+    [[nodiscard]] static auto createWithIDSDefaults() -> Config;
+
+  public:
+    /**
+     * @param method the method to use for the placer
+     * @returns the default configuration for a given method
+     */
+    [[nodiscard]] static auto createForMethod(Method method) -> Config;
+
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(
         Config, useWindow, windowMinWidth, windowRatio, windowShare, method,
         deepeningFactor, deepeningValue, lookaheadFactor, reuseLevel, maxNodes,

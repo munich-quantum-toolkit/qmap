@@ -1371,6 +1371,26 @@ auto HeuristicPlacer::checkCompatibilityAndAddPlacement(
   return false;
 }
 
+auto HeuristicPlacer::Config::createWithAStarDefaults() -> Config {
+  Config config;
+  config.method = Method::ASTAR;
+  config.deepeningFactor = 0.8F;
+  config.deepeningValue = 0.2F;
+  config.lookaheadFactor = 0.2F;
+  return config;
+}
+auto HeuristicPlacer::Config::createWithIDSDefaults() -> Config {
+  Config config;
+  config.method = Method::IDS;
+  config.deepeningFactor = 0.01F;
+  config.deepeningValue = 0.0F;
+  config.lookaheadFactor = 0.4F;
+  return config;
+}
+auto HeuristicPlacer::Config::createForMethod(const Method method) -> Config {
+  return method == Method::ASTAR ? createWithAStarDefaults()
+                                 : createWithIDSDefaults();
+}
 HeuristicPlacer::HeuristicPlacer(const Architecture& architecture,
                                  const Config& config)
     : architecture_(architecture), config_(config) {
