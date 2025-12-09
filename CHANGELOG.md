@@ -160,6 +160,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#874]: https://github.com/munich-quantum-toolkit/qmap/pull/874
 [#848]: https://github.com/munich-quantum-toolkit/qmap/pull/848
 [#847]: https://github.com/munich-quantum-toolkit/qmap/pull/847
 [#832]: https://github.com/munich-quantum-toolkit/qmap/pull/832
