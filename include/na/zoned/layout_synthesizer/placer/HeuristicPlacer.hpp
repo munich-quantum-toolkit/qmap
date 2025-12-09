@@ -641,8 +641,7 @@ private:
       } else {
         assert(trials > 0);
         if (!queue.empty()) {
-          SPDLOG_TRACE("No neighbors found, restart search with priority {}",
-                       goal->priority);
+          SPDLOG_TRACE("No neighbors found, restarting search");
           currentItem = std::move(queue.top());
           queue.pop();
         } else {

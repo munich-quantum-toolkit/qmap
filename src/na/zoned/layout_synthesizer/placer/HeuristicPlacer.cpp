@@ -642,6 +642,9 @@ auto HeuristicPlacer::placeGatesInEntanglementZone(
                               scaleFactors, node);
         },
         config_.maxNodes);
+    break;
+  default:
+    qc::unreachable();
   }
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -1055,6 +1058,9 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
                               scaleFactors, node);
         },
         config_.maxNodes);
+    break;
+  default:
+    qc::unreachable();
   }
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -1282,7 +1288,7 @@ auto HeuristicPlacer::getNeighbors(const std::vector<GateJob>& gateJobs,
         child.groups, child.maxDistancesOfPlacedAtomsPerGroup);
     child.lookaheadCost += lookaheadCost;
     // add the final child to the list of children to be returned
-    neighbors.emplace_back(std::make_shared<GateNode>(std::move(child)));
+    neighbors.emplace_back(std::make_shared<const GateNode>(std::move(child)));
   }
   return neighbors;
 }
