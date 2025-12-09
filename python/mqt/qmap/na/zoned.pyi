@@ -154,8 +154,6 @@ class RoutingAwareCompiler:
             max_filling_factor: is the maximum filling factor for the entanglement zone,
                 i.e., it sets the limit for the maximum number of entangling gates that
                 are scheduled in parallel
-            routing_method: is the routing method that should be used for the
-                independent set router
             use_window: is a flag whether to use a window for the placer
             window_min_width: is the minimum width of the window for the placer
             window_ratio: is the ratio between the height and the width of the window
@@ -178,6 +176,9 @@ class RoutingAwareCompiler:
                 is raised. In the current implementation, one node roughly consumes 120
                 Byte. Hence, allowing 50,000,000 nodes results in memory consumption of
                 about 6 GB plus the size of the rest of the data structures.
+            routing_method: is the routing method that should be used for the
+                independent set router
+            prefer_split: is the threshold factor for group merging decisions during routing.
             warn_unsupported_gates: is a flag whether to warn about unsupported gates
                 in the code generator
         """
