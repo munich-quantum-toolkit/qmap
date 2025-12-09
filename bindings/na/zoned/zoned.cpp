@@ -157,7 +157,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                const na::zoned::HeuristicPlacer::Config::Method placementMethod,
                const float deepeningFactor, const float deepeningValue,
                const float lookaheadFactor, const float reuseLevel,
-               const size_t maxNodes, const bool warnUnsupportedGates)
+               const size_t maxNodes, const size_t trials,
+               const size_t queueCapacity, const bool warnUnsupportedGates)
                 -> na::zoned::RoutingAwareCompiler {
               na::zoned::RoutingAwareCompiler::Config config;
               config.logLevel = spdlog::level::from_str(logLevel);
@@ -174,7 +175,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   .deepeningValue = deepeningValue,
                   .lookaheadFactor = lookaheadFactor,
                   .reuseLevel = reuseLevel,
-                  .maxNodes = maxNodes};
+                  .maxNodes = maxNodes,
+                  .trials = trials,
+                  .queueCapacity = queueCapacity,
+              };
               config.codeGeneratorConfig = {.warnUnsupportedGates =
                                                 warnUnsupportedGates};
               return {arch, config};
@@ -204,6 +208,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             defaultConfig.layoutSynthesizerConfig.placerConfig.reuseLevel,
         "max_nodes"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.maxNodes,
+        "trials"_a = defaultConfig.layoutSynthesizerConfig.placerConfig.trials,
+        "queueCapacity"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.queueCapacity,
         "warn_unsupported_gates"_a =
             defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
   }

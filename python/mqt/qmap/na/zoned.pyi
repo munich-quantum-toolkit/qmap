@@ -193,6 +193,8 @@ class RoutingAwareCompiler:
                 is raised. In the current implementation, one node roughly consumes 120
                 Byte. Hence, allowing 50,000,000 nodes results in memory consumption of
                 about 6 GB plus the size of the rest of the data structures.
+            trials: is the number of restarts during IDS.
+            queue_capacity: is the maximum capacity of the priority queue used during IDS.
             warn_unsupported_gates: is a flag whether to warn about unsupported gates
                 in the code generator
         """
