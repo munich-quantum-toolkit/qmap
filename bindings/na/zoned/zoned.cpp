@@ -84,20 +84,21 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
     routingAgnosticCompiler.def(
         py::init([](const na::zoned::Architecture& arch,
                     const std::string& logLevel, const double maxFillingFactor,
-                    const na::zoned::IndependentSetRouter::Config::Method
-                        routingMethod,
                     const bool useWindow, const size_t windowSize,
                     const bool dynamicPlacement,
-                    const bool warnUnsupportedGates)
+                    const na::zoned::IndependentSetRouter::Config::Method
+                        routingMethod,
+                    const double preferSplit, const bool warnUnsupportedGates)
                      -> na::zoned::RoutingAgnosticCompiler {
           na::zoned::RoutingAgnosticCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
           config.schedulerConfig.maxFillingFactor = maxFillingFactor;
-          config.layoutSynthesizerConfig.routerConfig.method = routingMethod;
           config.layoutSynthesizerConfig.placerConfig = {
               .useWindow = useWindow,
               .windowSize = windowSize,
               .dynamicPlacement = dynamicPlacement};
+          config.layoutSynthesizerConfig.routerConfig = {
+              .method = routingMethod, .preferSplit = preferSplit};
           config.codeGeneratorConfig = {.warnUnsupportedGates =
                                             warnUnsupportedGates};
           return {arch, config};
@@ -105,14 +106,16 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         py::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
-        "routing_method"_a =
-            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
         "use_window"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
         "window_size"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.windowSize,
         "dynamic_placement"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.dynamicPlacement,
+        "routing_method"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
+        "prefer_split"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.preferSplit,
         "warn_unsupported_gates"_a =
             defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
   }
@@ -149,22 +152,21 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
     routingAwareCompiler.def(
         py::init(
             [](const na::zoned::Architecture& arch, const std::string& logLevel,
-               const double maxFillingFactor,
-               const na::zoned::IndependentSetRouter::Config::Method
-                   routingMethod,
-               const bool useWindow, const size_t windowMinWidth,
-               const double windowRatio, const double windowShare,
+               const double maxFillingFactor, const bool useWindow,
+               const size_t windowMinWidth, const double windowRatio,
+               const double windowShare,
                const na::zoned::HeuristicPlacer::Config::Method placementMethod,
                const float deepeningFactor, const float deepeningValue,
                const float lookaheadFactor, const float reuseLevel,
                const size_t maxNodes, const size_t trials,
-               const size_t queueCapacity, const bool warnUnsupportedGates)
+               const size_t queueCapacity,
+               const na::zoned::IndependentSetRouter::Config::Method
+                   routingMethod,
+               const double preferSplit, const bool warnUnsupportedGates)
                 -> na::zoned::RoutingAwareCompiler {
               na::zoned::RoutingAwareCompiler::Config config;
               config.logLevel = spdlog::level::from_str(logLevel);
               config.schedulerConfig.maxFillingFactor = maxFillingFactor;
-              config.layoutSynthesizerConfig.routerConfig.method =
-                  routingMethod;
               config.layoutSynthesizerConfig.placerConfig = {
                   .useWindow = useWindow,
                   .windowMinWidth = windowMinWidth,
@@ -179,6 +181,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   .trials = trials,
                   .queueCapacity = queueCapacity,
               };
+              config.layoutSynthesizerConfig.routerConfig = {
+                  .method = routingMethod, .preferSplit = preferSplit};
               config.codeGeneratorConfig = {.warnUnsupportedGates =
                                                 warnUnsupportedGates};
               return {arch, config};
@@ -186,8 +190,6 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         py::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
-        "routing_method"_a =
-            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
         "use_window"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
         "window_min_width"_a =
@@ -211,6 +213,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         "trials"_a = defaultConfig.layoutSynthesizerConfig.placerConfig.trials,
         "queueCapacity"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.queueCapacity,
+        "routing_method"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
+        "prefer_split"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.preferSplit,
         "warn_unsupported_gates"_a =
             defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
   }
