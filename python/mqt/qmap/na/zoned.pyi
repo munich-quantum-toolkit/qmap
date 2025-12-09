@@ -92,7 +92,6 @@ class RoutingAgnosticCompiler:
         use_window: bool = ...,
         window_size: int = ...,
         dynamic_placement: bool = ...,
-        parking_offset: int = ...,
         warn_unsupported_gates: bool = ...,
     ) -> None:
         """Create a routing-agnostic compiler for the given architecture and configurations.
@@ -106,7 +105,6 @@ class RoutingAgnosticCompiler:
             use_window: whether to use a window for the placer
             window_size: the size of the window for the placer
             dynamic_placement: whether to use dynamic placement for the placer
-            parking_offset: the parking offset of the code generator
             warn_unsupported_gates: whether to warn about unsupported gates in the code generator
         """
     @classmethod
@@ -158,7 +156,6 @@ class RoutingAwareCompiler:
         lookahead_factor: float = ...,
         reuse_level: float = ...,
         max_nodes: int = ...,
-        parking_offset: int = ...,
         warn_unsupported_gates: bool = ...,
     ) -> None:
         """Create a routing-aware compiler for the given architecture and configurations.
@@ -196,7 +193,6 @@ class RoutingAwareCompiler:
                 is raised. In the current implementation, one node roughly consumes 120
                 Byte. Hence, allowing 50,000,000 nodes results in memory consumption of
                 about 6 GB plus the size of the rest of the data structures.
-            parking_offset: is the parking offset of the code generator
             warn_unsupported_gates: is a flag whether to warn about unsupported gates
                 in the code generator
         """
