@@ -109,3 +109,15 @@ else()
       TRUE
       CACHE INTERNAL "True if mqt-qmap is found on the system")
 endif()
+
+# on macOS with GCC, disable module scanning
+# https://www.reddit.com/r/cpp_questions/comments/1kwlkom/comment/ni5angh/
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+  else()
+    message(WARNING "CMake 3.28+ is required to disable C++ module scanning on macOS with GCC. "
+                    "Current version: ${CMAKE_VERSION}. "
+                    "Consider upgrading CMake to avoid potential build issues.")
+  endif()
+endif()
