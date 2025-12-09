@@ -158,7 +158,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                const na::zoned::HeuristicPlacer::Config::Method placementMethod,
                const float deepeningFactor, const float deepeningValue,
                const float lookaheadFactor, const float reuseLevel,
-               const size_t maxNodes,
+               const size_t maxNodes, const size_t trials,
+               const size_t queueCapacity,
                const na::zoned::IndependentSetRouter::Config::Method
                    routingMethod,
                const double preferSplit, const bool warnUnsupportedGates)
@@ -178,6 +179,8 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
                   .lookaheadFactor = lookaheadFactor,
                   .reuseLevel = reuseLevel,
                   .maxNodes = maxNodes,
+                  .trials = trials,
+                  .queueCapacity = queueCapacity,
               };
               config.layoutSynthesizerConfig.routerConfig = {
                   .method = routingMethod, .preferSplit = preferSplit};
@@ -208,6 +211,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             defaultConfig.layoutSynthesizerConfig.placerConfig.reuseLevel,
         "max_nodes"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.maxNodes,
+        "trials"_a = defaultConfig.layoutSynthesizerConfig.placerConfig.trials,
+        "queueCapacity"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.queueCapacity,
         "routing_method"_a =
             defaultConfig.layoutSynthesizerConfig.routerConfig.method,
         "prefer_split"_a =
