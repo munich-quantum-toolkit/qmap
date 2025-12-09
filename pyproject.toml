@@ -316,7 +316,7 @@ ignore = ["GH200"]
 
 [tool.cibuildwheel]
 build = "cp3*"
-skip = "*-musllinux*"
+skip = ["*-musllinux_*", "cp313t-*"]
 archs = "auto64"
 test-groups = ["test"]
 test-command = "pytest {project}/test/python"
@@ -327,7 +327,7 @@ manylinux-aarch64-image = "manylinux_2_28"
 manylinux-ppc64le-image = "manylinux_2_28"
 manylinux-s390x-image = "manylinux_2_28"
 test-skip = [
-  "cp3*t-*", # no freethreading qiskit wheels
+  "cp3??t-*", # no freethreading qiskit wheels
   "cp*-win_arm64", # no numpy, qiskit, ... wheels
 ]
 
@@ -353,7 +353,7 @@ environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} --ignore-missing-dependencies"
 
 [tool.cibuildwheel.windows]
-before-build = "uv pip install delvewheel>=1.9.0"
+before-build = "uv pip install delvewheel>=1.11.2"
 repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pkg mqt \
 --exclude mqt-core-ir.dll \
 --exclude mqt-core-qasm.dll \
