@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import queue
 import re
@@ -601,7 +602,7 @@ def main() -> None:
     astar_compiler = RoutingAwareCompiler(
         arch,
         log_level="error",
-        max_filling_factor=0.8,
+        max_filling_factor=0.9,
         use_window=True,
         window_min_width=16,
         window_ratio=1.0,
@@ -618,7 +619,7 @@ def main() -> None:
     ids_compiler = RoutingAwareCompiler(
         arch,
         log_level="error",
-        max_filling_factor=0.8,
+        max_filling_factor=0.9,
         use_window=True,
         window_min_width=16,
         window_ratio=1.0,
@@ -636,7 +637,7 @@ def main() -> None:
     relaxed_compiler = RoutingAwareCompiler(
         arch,
         log_level="error",
-        max_filling_factor=0.8,
+        max_filling_factor=0.9,
         use_window=True,
         window_min_width=16,
         window_ratio=1.0,
@@ -657,12 +658,13 @@ def main() -> None:
     evaluator.print_header()
 
     for benchmark, qc in benchmarks([
-        ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
-        ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-        ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        ("graphstate", (BenchmarkLevel.INDEP, [60])),
+        # ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
+        # ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
+        # ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
+        # ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
+        # ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        # ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
     ]):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
         process_benchmark(astar_compiler, "astar", qc, benchmark, evaluator)
@@ -673,4 +675,6 @@ def main() -> None:
 TIMEOUT = 15 * 60
 
 if __name__ == "__main__":
+    # set working directory to script location
+    os.chdir(pathlib.Path(pathlib.Path(__file__).resolve()).parent)
     main()
