@@ -46,7 +46,6 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
-  "parkingOffset" : 1,
   "warnUnsupportedGates" : true
 })";
 class CodeGeneratorGenerateTest : public ::testing::Test {
