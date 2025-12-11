@@ -76,10 +76,11 @@ class RoutingAgnosticCompiler:
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = ...,
         max_filling_factor: float = ...,
-        routing_method: RoutingMethod = ...,
         use_window: bool = ...,
         window_size: int = ...,
         dynamic_placement: bool = ...,
+        routing_method: RoutingMethod = ...,
+        prefer_split: float = ...,
         warn_unsupported_gates: bool = ...,
     ) -> None:
         """Create a routing-agnostic compiler for the given architecture and configurations.
@@ -88,12 +89,17 @@ class RoutingAgnosticCompiler:
             arch: is the zoned neutral atom architecture
             log_level: is the log level for the compiler, possible values are
                 "debug", "info", "warning", "error", "critical"
-            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
-            routing_method: is the routing method that should be used for the independent set router
+            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e.,
+                it sets the limit for the maximum number of entangling gates that are
+                scheduled in parallel
             use_window: whether to use a window for the placer
             window_size: the size of the window for the placer
             dynamic_placement: whether to use dynamic placement for the placer
-            warn_unsupported_gates: whether to warn about unsupported gates in the code generator
+            routing_method: is the routing method that should be used for the
+                independent set router
+            prefer_split: is the threshold factor for group merging decisions during routing.
+            warn_unsupported_gates: whether to warn about unsupported gates in the code
+                generator
         """
     @classmethod
     def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAgnosticCompiler:
@@ -133,7 +139,6 @@ class RoutingAwareCompiler:
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = ...,
         max_filling_factor: float = ...,
-        routing_method: RoutingMethod = ...,
         use_window: bool = ...,
         window_min_width: int = ...,
         window_ratio: float = ...,
@@ -143,6 +148,8 @@ class RoutingAwareCompiler:
         lookahead_factor: float = ...,
         reuse_level: float = ...,
         max_nodes: int = ...,
+        routing_method: RoutingMethod = ...,
+        prefer_split: float = ...,
         warn_unsupported_gates: bool = ...,
     ) -> None:
         """Create a routing-aware compiler for the given architecture and configurations.
