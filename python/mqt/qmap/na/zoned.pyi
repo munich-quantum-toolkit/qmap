@@ -55,17 +55,18 @@ class ZonedNeutralAtomArchitecture:
         """
 
 class RoutingMethod(Enum):
-    """Enumeration of the available routing methods for the independent set router.
+    """Enumeration of the available routing methods for the independent set router."""
 
-    Members:
-        strict: Strict routing, i.e., the relative order of atoms must be maintained
-            throughout a movement.
-        relaxed: Relaxed routing, i.e., the relative order of atoms may change
-            throughout a movement by applying offsets during pick-up and drop-off.
+    strict = ...
     """
-
-    strict: RoutingMethod
-    relaxed: RoutingMethod
+    Strict routing, i.e., the relative order of atoms must be
+    maintained throughout a movement.
+    """
+    relaxed = ...
+    """
+    Relaxed routing, i.e., the relative order of atoms may change
+    throughout a movement by applying offsets during pick-up and drop-off.
+    """
 
 class RoutingAgnosticCompiler:
     """MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler."""
