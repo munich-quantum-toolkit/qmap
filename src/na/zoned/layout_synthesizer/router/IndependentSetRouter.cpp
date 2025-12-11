@@ -117,12 +117,14 @@ auto IndependentSetRouter::isCompatibleMovement(
   return true;
 }
 namespace {
+/// @returns `(a^(1/3) + b^(1/3))^3`
 auto sumCubeRootsCubed(const double a, const double b) -> double {
   double x = std::cbrt(a);
   double y = std::cbrt(b);
   // (x+y)^3 = a + b + 3*x*y*(x+y)
   return a + b + 3.0 * x * y * (x + y);
 }
+/// @returns `(a^(1/3) - b^(1/3))^3`
 auto subCubeRootsCubed(const double a, const double b) -> double {
   double x = std::cbrt(a);
   double y = std::cbrt(b);
