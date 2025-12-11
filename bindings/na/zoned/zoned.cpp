@@ -212,7 +212,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
         "max_nodes"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.maxNodes,
         "trials"_a = defaultConfig.layoutSynthesizerConfig.placerConfig.trials,
-        "queueCapacity"_a =
+        "queue_capacity"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.queueCapacity,
         "routing_method"_a =
             defaultConfig.layoutSynthesizerConfig.routerConfig.method,
