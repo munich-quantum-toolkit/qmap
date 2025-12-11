@@ -194,7 +194,7 @@ private:
                             const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
   /**
-   * Creates the relaxed and strict conflict graph.
+   * Creates both the strict and relaxed conflict graphs.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
    * targetPlacement stands in conflict with each other based on the strict
@@ -210,9 +210,12 @@ private:
    * @param startPlacement is the start placement of all atoms as a mapping from
    * atoms to their sites.
    * @param targetPlacement is the target placement of the atoms.
-   * @return the relaxed conflict graph as an unordered_map where the keys are
-   * the nodes and the values are vectors of (neighbor, optional merge cost)
-   * pairs.
+   * @return a pair consisting of:
+   *   - the strict conflict graph as an unordered_map where the keys are the
+   *     nodes and the values are vectors of their neighbors, and
+   *   - the relaxed conflict graph as an unordered_map where the keys are the
+   *     nodes and the values are vectors of (neighbor, optional merge cost)
+   *     pairs.
    */
   [[nodiscard]] auto
   createRelaxedAndStrictConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
