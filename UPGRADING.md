@@ -20,6 +20,13 @@ Enabling/increasing the corresponding parameters allows enabling individually si
 
 The hybrid mapper now also optionally yields a `.naviz` output which can be handled similarly to the zoned architecture compiler.
 
+### Removal of Python 3.13t wheels
+
+Free-threading Python was introduced as an experimental feature in Python 3.13.
+It became stable in Python 3.14.
+To conserve space on PyPI and to reduce the CD build times, we have removed all wheels for Python 3.13t from our CI.
+We continue to provide wheels for the regular Python versions 3.10 to 3.14, as well as 3.14t.
+
 ## [3.4.0]
 
 ### End of support for Python 3.9
