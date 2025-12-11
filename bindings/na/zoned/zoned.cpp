@@ -167,6 +167,7 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
               na::zoned::RoutingAwareCompiler::Config config;
               config.logLevel = spdlog::level::from_str(logLevel);
               config.schedulerConfig.maxFillingFactor = maxFillingFactor;
+
               config.layoutSynthesizerConfig.placerConfig = {
                   .useWindow = useWindow,
                   .windowMinWidth = windowMinWidth,
