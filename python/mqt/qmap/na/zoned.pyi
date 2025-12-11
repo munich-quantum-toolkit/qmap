@@ -67,18 +67,17 @@ class PlacementMethod(Enum):
     """
 
 class RoutingMethod(Enum):
-    """Enumeration of the available routing methods for the independent set router."""
+    """Enumeration of the available routing methods for the independent set router.
 
-    strict = ...
+    Members:
+        strict: Strict routing, i.e., the relative order of atoms must be maintained
+            throughout a movement.
+        relaxed: Relaxed routing, i.e., the relative order of atoms may change
+            throughout a movement by applying offsets during pick-up and drop-off.
     """
-    Strict routing, i.e., the relative order of atoms must be
-    maintained throughout a movement.
-    """
-    relaxed = ...
-    """
-    Relaxed routing, i.e., the relative order of atoms may change
-    throughout a movement by applying offsets during pick-up and drop-off.
-    """
+
+    strict: RoutingMethod
+    relaxed: RoutingMethod
 
 class RoutingAgnosticCompiler:
     """MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler."""
