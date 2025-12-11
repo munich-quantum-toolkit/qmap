@@ -13,6 +13,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
+- ✨ Add iterative diving search as a more efficient placement heuristic method ([#862]) ([**@ystade**])
 - ✨ Add relaxed routing method to the zoned neutral atom compiler ([#859]) ([**@ystade**])
 
 ### Changed
@@ -173,6 +174,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#874]: https://github.com/munich-quantum-toolkit/qmap/pull/874
+[#862]: https://github.com/munich-quantum-toolkit/qmap/pull/862
 [#859]: https://github.com/munich-quantum-toolkit/qmap/pull/859
 [#848]: https://github.com/munich-quantum-toolkit/qmap/pull/848
 [#847]: https://github.com/munich-quantum-toolkit/qmap/pull/847
