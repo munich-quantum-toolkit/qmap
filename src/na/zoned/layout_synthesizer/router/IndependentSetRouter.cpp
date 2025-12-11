@@ -409,7 +409,7 @@ auto IndependentSetRouter::getAtomsToMove(
     const Placement& startPlacement, const Placement& targetPlacement) const
     -> std::vector<qc::Qubit> {
   std::set<std::pair<double, qc::Qubit>, std::greater<>>
-      atomsToMoveOrderedAscByDist;
+      atomsToMoveOrderedDescByDist;
   assert(startPlacement.size() == targetPlacement.size());
   for (qc::Qubit atom = 0; atom < startPlacement.size(); ++atom) {
     const auto& [startSLM, startRow, startColumn] = startPlacement[atom];
@@ -419,14 +419,14 @@ auto IndependentSetRouter::getAtomsToMove(
         startColumn != targetColumn) {
       const auto distance = architecture_.get().distance(
           startSLM, startRow, startColumn, targetSLM, targetRow, targetColumn);
-      atomsToMoveOrderedAscByDist.emplace(distance, atom);
+      atomsToMoveOrderedDescByDist.emplace(distance, atom);
     }
   }
   std::vector<qc::Qubit> atomsToMove;
-  atomsToMove.reserve(atomsToMoveOrderedAscByDist.size());
+  atomsToMove.reserve(atomsToMoveOrderedDescByDist.size());
   // put the atoms into the vector such they are ordered decreasingly by their
   // movement distance
-  std::ranges::copy(atomsToMoveOrderedAscByDist | std::views::values,
+  std::ranges::copy(atomsToMoveOrderedDescByDist | std::views::values,
                     std::back_inserter(atomsToMove));
   return atomsToMove;
 }
