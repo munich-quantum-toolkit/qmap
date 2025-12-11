@@ -88,16 +88,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on:
-          [ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm]
-        compiler: [gcc, clang, clang-19, clang-20]
+        runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+        compiler: [gcc, clang, clang-20, clang-21]
         config: [Release, Debug]
-        exclude:
-          # both combinations do not support C++20 due to the compiler being too old
-          - runs-on: ubuntu-22.04
-            compiler: clang
-          - runs-on: ubuntu-22.04-arm
-            compiler: clang
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-ubuntu.yml@89734354f64f30a80dd16602d4e271df34348987 # v1.17.4
     with:
       runs-on: ${{ matrix.runs-on }}
@@ -113,15 +106,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [macos-14, macos-15-intel, macos-15]
-        compiler: [clang, clang-19, clang-20, gcc-14, gcc-15]
+        runs-on: [macos-14, macos-15, macos-15-intel]
+        compiler: [clang, clang-20, clang-21, gcc-14, gcc-15]
         config: [Release, Debug]
-        exclude:
-          # see https://github.com/munich-quantum-toolkit/core/issues/979
-          - runs-on: macos-15
-            compiler: gcc-14
-          - runs-on: macos-15
-            compiler: gcc-15
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@89734354f64f30a80dd16602d4e271df34348987 # v1.17.4
     with:
       runs-on: ${{ matrix.runs-on }}
@@ -211,10 +198,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-22.04, ubuntu-22.04-arm, macos-15, windows-2025]
-        exclude:
-          # see https://github.com/munich-quantum-toolkit/qmap/issues/703
-          - runs-on: macos-15
+        runs-on: [macos-15, windows-2025]
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@89734354f64f30a80dd16602d4e271df34348987 # v1.17.4
     with:
       runs-on: ${{ matrix.runs-on }}
