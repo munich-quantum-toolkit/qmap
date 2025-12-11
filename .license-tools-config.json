@@ -14,7 +14,8 @@
     ".td": "SLASH_STYLE",
     ".yaml": "POUND_STYLE",
     ".toml": "POUND_STYLE",
-    ".yml": "POUND_STYLE"
+    ".yml": "POUND_STYLE",
+    ".nastyle": "SLASH_STYLE"
   },
   "exclude": [
     "^\\.[^/]+",

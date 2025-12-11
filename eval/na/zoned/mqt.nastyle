@@ -1,0 +1,193 @@
+// Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+// Copyright (c) 2025 Munich Quantum Software Company GmbH
+// All rights reserved.
+//
+// SPDX-License-Identifier: MIT
+//
+// Licensed under the MIT License
+
+name: "MQT debug"
+
+atom {
+	trapped {
+		color: #0065BD
+	}
+	shuttling {
+		color: #A2AD00
+	}
+	legend {
+		name {
+			^atom[_-]?(.*)$: ""
+			^.*$: ""
+		}
+		font {
+			family: "CMU Sans Serif"
+			size: 2
+			color: #000000
+		}
+	}
+	radius: 1
+	margin: 1
+}
+
+zone {
+	config ^(zone[_-]?)?cz.*$ {
+		color: #e37222
+		line {
+			thickness: 0.5
+			dash {
+				length: 0
+				duty: 100%
+			}
+		}
+		name: "CZ"
+	}
+	config ^_(zone[_-]?)?(.*)$ {
+		color: #98c6ea
+		line {
+			thickness: 0.5
+			dash {
+				length: 0
+				duty: 100%
+			}
+		}
+		name: ""
+	}
+	config ^(zone[_-]?)?(.*)$ {
+		color: #98c6ea
+		line {
+			thickness: 0.5
+			dash {
+				length: 0
+				duty: 100%
+			}
+		}
+		name: "$2"
+	}
+	legend {
+		display: true
+		title: "Zones"
+	}
+}
+
+operation {
+	config {
+		ry {
+			color: #98C6EA
+			name: "RY"
+			radius: 150%
+		}
+		rz {
+			color: #A2AD00
+			name: "RZ"
+			radius: 150%
+		}
+		cz {
+			color: #e37222
+			name: "CZ"
+			radius: 150%
+		}
+	}
+	legend {
+		display: true
+		title: "Gates"
+	}
+}
+
+machine {
+	trap {
+		color: #7F98AB
+		radius: 1
+		line_width: 0.2
+		name: "SLM"
+	}
+	shuttle {
+		color: #003359
+		line {
+			thickness: 0.2
+			dash {
+				length: 5
+				duty: 50%
+			}
+		}
+		name: "AOD"
+	}
+	legend {
+		display: true
+		title: "Atom States"
+	}
+}
+
+coordinate {
+	tick {
+		x: 10
+		y: 10
+		color: #999999
+		line {
+			thickness: 0.1
+			dash {
+				length: 0
+				duty: 100%
+			}
+		}
+		display: true
+	}
+	number {
+		x {
+			distance: 20
+			position: bottom
+		}
+		y {
+			distance: 20
+			position: left
+		}
+		display: true
+		font {
+			family: "CMU Sans Serif"
+			size: 2
+			color: #000000
+		}
+	}
+	axis {
+		x: "x"
+		y: "y"
+		display: true
+		font {
+			family: "CMU Sans Serif"
+			size: 2
+			color: #000000
+		}
+	}
+	margin: 5
+}
+
+sidebar {
+	font {
+		family: "CMU Sans Serif"
+		size: 32
+		color: #000000
+	}
+	margin: 8
+	padding {
+		color: 16
+		heading: 52
+		entry: 45
+	}
+	color_radius: 16
+}
+
+time {
+	display: true
+	prefix: "Time: "
+	precision: 1
+	font {
+		family: "CMU Sans Serif"
+		size: 12
+		color: #000000
+	}
+}
+
+viewport {
+	margin: 4
+	color: #ffffff
+}
