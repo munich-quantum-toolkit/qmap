@@ -658,18 +658,33 @@ def main() -> None:
     evaluator.print_header()
 
     for benchmark, qc in benchmarks([
-        ("graphstate", (BenchmarkLevel.INDEP, [60])),
-        # ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
-        # ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
-        # ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
-        # ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
-        # ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-        # ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
+        ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
+        ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
+        ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
+        ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
     ]):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
         process_benchmark(astar_compiler, "astar", qc, benchmark, evaluator)
         process_benchmark(ids_compiler, "ids", qc, benchmark, evaluator)
         process_benchmark(relaxed_compiler, "relaxed", qc, benchmark, evaluator)
+
+    print(
+        "\033[32m[INFO]\033[0m ==================================================================================, \n"
+        "\033[32m[INFO]\033[0m Now, \n"
+        "\033[32m[INFO]\033[0m    - the results are located in `results.csv`,\n"
+        "\033[32m[INFO]\033[0m    - the input circuits in the QASM format are located in\n"
+        "\033[32m[INFO]\033[0m      the `in` directory,\n"
+        "\033[32m[INFO]\033[0m    - the compiled circuits in the naviz format are located\n"
+        "\033[32m[INFO]\033[0m      in the `out` directory separated for each compiler and\n"
+        "\033[32m[INFO]\033[0m      setting, and\n"
+        "\033[32m[INFO]\033[0m    - the architecture specification compatible with NAViz is\n"
+        "\033[32m[INFO]\033[0m      located in `arch.namachine`\n"
+        "\033[32m[INFO]\033[0m \n"
+        "\033[32m[INFO]\033[0m The generated `.naviz` files can be animated with the\n"
+        "\033[32m[INFO]\033[0m MQT NAViz tool."
+    )
 
 
 TIMEOUT = 15 * 60
