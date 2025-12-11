@@ -161,6 +161,8 @@ class RoutingAwareCompiler:
         lookahead_factor: float = ...,
         reuse_level: float = ...,
         max_nodes: int = ...,
+        trials: int = ...,
+        queue_capacity: int = ...,
         routing_method: RoutingMethod = ...,
         prefer_split: float = ...,
         warn_unsupported_gates: bool = ...,
