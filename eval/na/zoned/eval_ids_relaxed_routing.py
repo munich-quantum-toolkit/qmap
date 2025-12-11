@@ -671,7 +671,7 @@ def main() -> None:
         process_benchmark(relaxed_compiler, "relaxed", qc, benchmark, evaluator)
 
     print(
-        "\033[32m[INFO]\033[0m ==================================================================================, \n"
+        "\033[32m[INFO]\033[0m =============================================================\n"
         "\033[32m[INFO]\033[0m Now, \n"
         "\033[32m[INFO]\033[0m    - the results are located in `results.csv`,\n"
         "\033[32m[INFO]\033[0m    - the input circuits in the QASM format are located in\n"
