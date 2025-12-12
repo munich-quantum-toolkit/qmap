@@ -155,9 +155,7 @@ public:
      * @brief The maximum number of nodes that are allowed to be visited in the
      * A* search tree.
      * @detsils If this number is exceeded, the search is aborted and an error
-     * is raised. In the current implementation, one node roughly consumes 140
-     * Byte. Hence, allowing 10,000,000 nodes results in memory consumption of
-     * about 2 GB plus the size of the rest of the data structures.
+     * is raised.
      */
     size_t maxNodes = 10'000'000;
     /**
@@ -627,6 +625,8 @@ private:
         return a.priority < b.priority;
       }
     };
+    // Initial capacity accounts for shrinking: popAndShrink() decrements
+    // capacity on each trial
     BoundedPriorityQueue<Item, ItemCompare> queue(queueCapacity + trials);
     std::optional<Item> goal;
     Item currentItem{getHeuristic(*start), start};
@@ -719,8 +719,8 @@ private:
    * particular node from the start node
    * @param getHeuristic is a function that returns the heuristic cost from the
    * node to any goal.
-   * @param maxNodes is the maximum number of held in the priority queue before
-   * the search is aborted. This parameter must be greater than 0.
+   * @param maxNodes is the maximum number of nodes held in the priority queue
+   * before the search is aborted. This parameter must be greater than 0.
    * @return a vector of node references representing the path from the start to
    * a goal
    */
@@ -763,7 +763,7 @@ private:
     //===--------------------------------------------------------------------===//
     // Perform A* search
     //===--------------------------------------------------------------------===//
-    while (openSet.size() < maxNodes && !openSet.empty()) {
+    while (!openSet.empty()) {
       auto itm = openSet.top();
       openSet.pop();
       // if a goal is reached, that is the shortest path to a goal under the
@@ -781,13 +781,12 @@ private:
           openSet.emplace(cost + heuristic, neighbor);
         }
       }
-    }
-    if (openSet.size() >= maxNodes) {
-      throw std::runtime_error(
-          "Maximum number of nodes reached. Increase max_nodes or increase "
-          "deepening_value and deepening_factor to reduce the number of "
-          "explored "
-          "nodes.");
+      if (openSet.size() >= maxNodes) {
+        throw std::runtime_error(
+            "Maximum number of nodes reached. Increase max_nodes or increase "
+            "deepening_value and deepening_factor to reduce the number of "
+            "explored nodes.");
+      }
     }
     throw std::runtime_error(
         "No path from start to any goal found. This may be caused by a too "
