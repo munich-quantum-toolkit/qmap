@@ -480,6 +480,13 @@ private:
     }
 
   public:
+    /**
+     * Constructs a new instance of the bounded priority queue.
+     * @param maxQueueSize is the maximum number of elements that can be stored
+     * in the queue.
+     * @note A capacity of 0 results in a no-op queue where push() discards all
+     * elements
+     */
     explicit BoundedPriorityQueue(const SizeType maxQueueSize)
         : heapCapacity_(maxQueueSize) {
       minHeap_.reserve(heapCapacity_);
