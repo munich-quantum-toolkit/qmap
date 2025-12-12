@@ -378,6 +378,8 @@ private:
     std::vector<Node*> maxHeap_;
     /// The maximum number of elements in the heap.
     SizeType heapCapacity_;
+    /// The comparison functor used to determine priority.
+    PriorityCompare compare_;
 
     /**
      * Starts to establish the min-heap property from the given index upwards.
@@ -387,7 +389,7 @@ private:
       assert(i < minHeap_.size());
       while (i > 0) {
         size_t parent = (i - 1) / 2;
-        if (PriorityCompare{}(minHeap_[i]->value, minHeap_[parent]->value)) {
+        if (compare_(minHeap_[i]->value, minHeap_[parent]->value)) {
           std::swap(minHeap_[i], minHeap_[parent]);
           minHeap_[i]->minHeapIndex = i;
           minHeap_[parent]->minHeapIndex = parent;
@@ -406,7 +408,7 @@ private:
       assert(i < maxHeap_.size());
       while (i > 0) {
         size_t parent = (i - 1) / 2;
-        if (PriorityCompare{}(maxHeap_[parent]->value, maxHeap_[i]->value)) {
+        if (compare_(maxHeap_[parent]->value, maxHeap_[i]->value)) {
           std::swap(maxHeap_[i], maxHeap_[parent]);
           maxHeap_[i]->maxHeapIndex = i;
           maxHeap_[parent]->maxHeapIndex = parent;
@@ -428,13 +430,11 @@ private:
         size_t smallest = i;
 
         if (leftChild < minHeap_.size() &&
-            PriorityCompare{}(minHeap_[leftChild]->value,
-                              minHeap_[smallest]->value)) {
+            compare_(minHeap_[leftChild]->value, minHeap_[smallest]->value)) {
           smallest = leftChild;
         }
         if (rightChild < minHeap_.size() &&
-            PriorityCompare{}(minHeap_[rightChild]->value,
-                              minHeap_[smallest]->value)) {
+            compare_(minHeap_[rightChild]->value, minHeap_[smallest]->value)) {
           smallest = rightChild;
         }
         if (smallest != i) {
@@ -459,13 +459,11 @@ private:
         size_t largest = i;
 
         if (leftChild < maxHeap_.size() &&
-            PriorityCompare{}(maxHeap_[largest]->value,
-                              maxHeap_[leftChild]->value)) {
+            compare_(maxHeap_[largest]->value, maxHeap_[leftChild]->value)) {
           largest = leftChild;
         }
         if (rightChild < maxHeap_.size() &&
-            PriorityCompare{}(maxHeap_[largest]->value,
-                              maxHeap_[rightChild]->value)) {
+            compare_(maxHeap_[largest]->value, maxHeap_[rightChild]->value)) {
           largest = rightChild;
         }
         if (largest != i) {
@@ -493,7 +491,7 @@ private:
       maxHeap_.reserve(heapCapacity_);
     }
     /**
-     * @returns the top element of the stack.
+     * @returns the top element of the priority queue.
      * @note If @ref empty returns `true`, calling this function is
      * undefined behavior.
      */
@@ -502,7 +500,7 @@ private:
       return minHeap_.front()->value;
     }
     /**
-     * @returns the top element of the stack.
+     * @returns the top element of the priority queue.
      * @note If @ref empty returns `true`, calling this function is
      * undefined behavior.
      */
@@ -541,9 +539,9 @@ private:
       assert(minHeap_.size() == maxHeap_.size());
       assert(minHeap_.size() <= heapCapacity_);
     }
-    /// @returns `true` if the stack is empty.
+    /// @returns `true` if the queue is empty.
     [[nodiscard]] auto empty() const -> bool { return minHeap_.empty(); }
-    /// @brief Inserts an element at the top.
+    /// @brief Inserts an element into the priority queue.
     auto push(ValueType&& value) -> void {
       assert(minHeap_.size() == maxHeap_.size());
       if (heapCapacity_ > 0) {
@@ -556,7 +554,7 @@ private:
         } else {
           assert(minHeap_.size() == heapCapacity_);
           // if capacity is reached, only insert the value if smaller than max
-          if (PriorityCompare{}(value, maxHeap_.front()->value)) {
+          if (compare_(value, maxHeap_.front()->value)) {
             const auto i = maxHeap_.front()->minHeapIndex;
             assert(i < minHeap_.size());
             minHeap_[i] = std::make_unique<Node>(i, 0, std::move(value));
