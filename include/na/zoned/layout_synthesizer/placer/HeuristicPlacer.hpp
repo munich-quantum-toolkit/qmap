@@ -720,7 +720,7 @@ private:
    * @param getHeuristic is a function that returns the heuristic cost from the
    * node to any goal.
    * @param maxNodes is the maximum number of held in the priority queue before
-   * the search is aborted.
+   * the search is aborted. This parameter must be greater than 0.
    * @return a vector of node references representing the path from the start to
    * a goal
    */
@@ -733,6 +733,9 @@ private:
                   const std::function<double(const Node&)>& getCost,
                   const std::function<double(const Node&)>& getHeuristic,
                   size_t maxNodes) -> std::shared_ptr<const Node> {
+    if (maxNodes == 0) {
+      throw std::invalid_argument("`maxNodes` must be greater than 0");
+    }
     //===--------------------------------------------------------------------===//
     // Setup open set structure
     //===--------------------------------------------------------------------===//
