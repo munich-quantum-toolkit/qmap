@@ -596,7 +596,8 @@ private:
    * @param getCost is a function returning the cost of a node in the graph.
    * @param getHeuristic is a function returning the heuristic value of a given
    * node.
-   * @param trials is the number of restarts IDS performs.
+   * @param trials is the number of attempts to find a goal node that are
+   * performed at most. This parameter must be greater than 0.
    * @param queueCapacity is the capacity of the queue used for the iterative
    * diving search. For the actual capacity, the current value of trial is
    * added.
@@ -611,6 +612,9 @@ private:
       const std::function<double(const Node&)>& getCost,
       const std::function<double(const Node&)>& getHeuristic, size_t trials,
       const size_t queueCapacity) -> std::shared_ptr<const Node> {
+    if (trials == 0) {
+      throw std::invalid_argument("IDS requires trials >= 1");
+    }
     struct Item {
       double priority;                  //< sum of cost and heuristic
       std::shared_ptr<const Node> node; //< pointer to the node
