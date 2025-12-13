@@ -49,7 +49,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Typing :: Typed",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.10, != 3.14.1"
 dependencies = [
     "mqt.core~=3.3.3",
     "qiskit[qasm3-import]>=1.0.0",

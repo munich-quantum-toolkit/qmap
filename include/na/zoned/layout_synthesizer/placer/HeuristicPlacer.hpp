@@ -70,7 +70,7 @@ class HeuristicPlacer : public PlacerBase {
   size_t windowMinHeight_;
 
 public:
-  /// The configuration of the A* placer
+  /// The configuration of the heuristic placer
   struct Config {
     /**
      * @brief This flag indicates whether the placement should use a window when
@@ -155,9 +155,7 @@ public:
      * @brief The maximum number of nodes that are allowed to be visited in the
      * A* search tree.
      * @detsils If this number is exceeded, the search is aborted and an error
-     * is raised. In the current implementation, one node roughly consumes 140
-     * Byte. Hence, allowing 10,000,000 nodes results in memory consumption of
-     * about 2 GB plus the size of the rest of the data structures.
+     * is raised.
      */
     size_t maxNodes = 10'000'000;
     /**
@@ -378,6 +376,8 @@ private:
     std::vector<Node*> maxHeap_;
     /// The maximum number of elements in the heap.
     SizeType heapCapacity_;
+    /// The comparison functor used to determine priority.
+    PriorityCompare compare_;
 
     /**
      * Starts to establish the min-heap property from the given index upwards.
@@ -387,7 +387,7 @@ private:
       assert(i < minHeap_.size());
       while (i > 0) {
         size_t parent = (i - 1) / 2;
-        if (PriorityCompare{}(minHeap_[i]->value, minHeap_[parent]->value)) {
+        if (compare_(minHeap_[i]->value, minHeap_[parent]->value)) {
           std::swap(minHeap_[i], minHeap_[parent]);
           minHeap_[i]->minHeapIndex = i;
           minHeap_[parent]->minHeapIndex = parent;
@@ -406,7 +406,7 @@ private:
       assert(i < maxHeap_.size());
       while (i > 0) {
         size_t parent = (i - 1) / 2;
-        if (PriorityCompare{}(maxHeap_[parent]->value, maxHeap_[i]->value)) {
+        if (compare_(maxHeap_[parent]->value, maxHeap_[i]->value)) {
           std::swap(maxHeap_[i], maxHeap_[parent]);
           maxHeap_[i]->maxHeapIndex = i;
           maxHeap_[parent]->maxHeapIndex = parent;
@@ -428,13 +428,11 @@ private:
         size_t smallest = i;
 
         if (leftChild < minHeap_.size() &&
-            PriorityCompare{}(minHeap_[leftChild]->value,
-                              minHeap_[smallest]->value)) {
+            compare_(minHeap_[leftChild]->value, minHeap_[smallest]->value)) {
           smallest = leftChild;
         }
         if (rightChild < minHeap_.size() &&
-            PriorityCompare{}(minHeap_[rightChild]->value,
-                              minHeap_[smallest]->value)) {
+            compare_(minHeap_[rightChild]->value, minHeap_[smallest]->value)) {
           smallest = rightChild;
         }
         if (smallest != i) {
@@ -459,13 +457,11 @@ private:
         size_t largest = i;
 
         if (leftChild < maxHeap_.size() &&
-            PriorityCompare{}(maxHeap_[largest]->value,
-                              maxHeap_[leftChild]->value)) {
+            compare_(maxHeap_[largest]->value, maxHeap_[leftChild]->value)) {
           largest = leftChild;
         }
         if (rightChild < maxHeap_.size() &&
-            PriorityCompare{}(maxHeap_[largest]->value,
-                              maxHeap_[rightChild]->value)) {
+            compare_(maxHeap_[largest]->value, maxHeap_[rightChild]->value)) {
           largest = rightChild;
         }
         if (largest != i) {
@@ -493,7 +489,7 @@ private:
       maxHeap_.reserve(heapCapacity_);
     }
     /**
-     * @returns the top element of the stack.
+     * @returns the top element of the priority queue.
      * @note If @ref empty returns `true`, calling this function is
      * undefined behavior.
      */
@@ -502,7 +498,7 @@ private:
       return minHeap_.front()->value;
     }
     /**
-     * @returns the top element of the stack.
+     * @returns the top element of the priority queue.
      * @note If @ref empty returns `true`, calling this function is
      * undefined behavior.
      */
@@ -535,15 +531,26 @@ private:
           std::swap(maxHeap_[i], maxHeap_.back());
           maxHeap_.pop_back();
           maxHeap_[i]->maxHeapIndex = i;
-          heapifyMaxHeapDown(i);
+          // Restoring heap property may require moving the swapped element up
+          // or down.
+          if (i > 0) {
+            const size_t parent = (i - 1) / 2;
+            if (compare_(maxHeap_[parent]->value, maxHeap_[i]->value)) {
+              heapifyMaxHeapUp(i);
+            } else {
+              heapifyMaxHeapDown(i);
+            }
+          } else {
+            heapifyMaxHeapDown(i);
+          }
         }
       }
       assert(minHeap_.size() == maxHeap_.size());
       assert(minHeap_.size() <= heapCapacity_);
     }
-    /// @returns `true` if the stack is empty.
+    /// @returns `true` if the queue is empty.
     [[nodiscard]] auto empty() const -> bool { return minHeap_.empty(); }
-    /// @brief Inserts an element at the top.
+    /// @brief Inserts an element into the priority queue.
     auto push(ValueType&& value) -> void {
       assert(minHeap_.size() == maxHeap_.size());
       if (heapCapacity_ > 0) {
@@ -556,7 +563,7 @@ private:
         } else {
           assert(minHeap_.size() == heapCapacity_);
           // if capacity is reached, only insert the value if smaller than max
-          if (PriorityCompare{}(value, maxHeap_.front()->value)) {
+          if (compare_(value, maxHeap_.front()->value)) {
             const auto i = maxHeap_.front()->minHeapIndex;
             assert(i < minHeap_.size());
             minHeap_[i] = std::make_unique<Node>(i, 0, std::move(value));
@@ -593,10 +600,12 @@ private:
    * given node.
    * @param isGoal is a function to determine whether a given node is a goal
    * node.
-   * @param getCost is a function returning the cost of a node in the graph.
+   * @param getCost is a function returning the cost of a node in the graph. The
+   * cost of the start node must be 0.
    * @param getHeuristic is a function returning the heuristic value of a given
    * node.
-   * @param trials is the number of restarts IDS performs.
+   * @param trials is the number of attempts to find a goal node that are
+   * performed at most. This parameter must be greater than 0.
    * @param queueCapacity is the capacity of the queue used for the iterative
    * diving search. For the actual capacity, the current value of trial is
    * added.
@@ -611,6 +620,9 @@ private:
       const std::function<double(const Node&)>& getCost,
       const std::function<double(const Node&)>& getHeuristic, size_t trials,
       const size_t queueCapacity) -> std::shared_ptr<const Node> {
+    if (trials == 0) {
+      throw std::invalid_argument("IDS requires trials >= 1");
+    }
     struct Item {
       double priority;                  //< sum of cost and heuristic
       std::shared_ptr<const Node> node; //< pointer to the node
@@ -625,6 +637,8 @@ private:
         return a.priority < b.priority;
       }
     };
+    // Initial capacity accounts for shrinking: popAndShrink() decrements
+    // capacity on each trial
     BoundedPriorityQueue<Item, ItemCompare> queue(queueCapacity + trials);
     std::optional<Item> goal;
     Item currentItem{getHeuristic(*start), start};
@@ -702,9 +716,6 @@ private:
    * general graphs. This is because it does not keep track of visited nodes and
    * therefore cannot detect cycles. Also, for DAGs it may expand nodes multiple
    * times when they can be reached by different paths from the start node.
-   * @note @p getHeuristic must be admissible, meaning that it never
-   * overestimates the cost to reach the goal from the current node calculated
-   * by @p getCost for every edge on the path.
    * @note The calling program has to make sure that the pointers passed to this
    * function are valid and that the iterators are not invalidated during the
    * search, e.g., by calling one of the passed functions like @p getNeighbors.
@@ -714,11 +725,11 @@ private:
    * @param isGoal is a function that returns true if a node is one of
    * potentially multiple goals
    * @param getCost is a function that returns the total cost to reach that
-   * particular node from the start node
+   * particular node from the start node. The cost of the start node must be 0.
    * @param getHeuristic is a function that returns the heuristic cost from the
    * node to any goal.
-   * @param maxNodes is the maximum number of held in the priority queue before
-   * the search is aborted.
+   * @param maxNodes is the maximum number of nodes held in the priority queue
+   * before the search is aborted. This parameter must be greater than 0.
    * @return a vector of node references representing the path from the start to
    * a goal
    */
@@ -731,6 +742,9 @@ private:
                   const std::function<double(const Node&)>& getCost,
                   const std::function<double(const Node&)>& getHeuristic,
                   size_t maxNodes) -> std::shared_ptr<const Node> {
+    if (maxNodes == 0) {
+      throw std::invalid_argument("`maxNodes` must be greater than 0");
+    }
     //===--------------------------------------------------------------------===//
     // Setup open set structure
     //===--------------------------------------------------------------------===//
@@ -758,7 +772,7 @@ private:
     //===--------------------------------------------------------------------===//
     // Perform A* search
     //===--------------------------------------------------------------------===//
-    while (openSet.size() < maxNodes && !openSet.empty()) {
+    while (!openSet.empty()) {
       auto itm = openSet.top();
       openSet.pop();
       // if a goal is reached, that is the shortest path to a goal under the
@@ -776,13 +790,12 @@ private:
           openSet.emplace(cost + heuristic, neighbor);
         }
       }
-    }
-    if (openSet.size() >= maxNodes) {
-      throw std::runtime_error(
-          "Maximum number of nodes reached. Increase max_nodes or increase "
-          "deepening_value and deepening_factor to reduce the number of "
-          "explored "
-          "nodes.");
+      if (openSet.size() >= maxNodes) {
+        throw std::runtime_error(
+            "Maximum number of nodes reached. Increase max_nodes or increase "
+            "deepening_value and deepening_factor to reduce the number of "
+            "explored nodes.");
+      }
     }
     throw std::runtime_error(
         "No path from start to any goal found. This may be caused by a too "
