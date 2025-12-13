@@ -70,7 +70,7 @@ class HeuristicPlacer : public PlacerBase {
   size_t windowMinHeight_;
 
 public:
-  /// The configuration of the A* placer
+  /// The configuration of the heuristic placer
   struct Config {
     /**
      * @brief This flag indicates whether the placement should use a window when
