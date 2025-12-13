@@ -531,7 +531,18 @@ private:
           std::swap(maxHeap_[i], maxHeap_.back());
           maxHeap_.pop_back();
           maxHeap_[i]->maxHeapIndex = i;
-          heapifyMaxHeapDown(i);
+          // Restoring heap property may require moving the swapped element up
+          // or down.
+          if (i > 0) {
+            const size_t parent = (i - 1) / 2;
+            if (compare_(maxHeap_[parent]->value, maxHeap_[i]->value)) {
+              heapifyMaxHeapUp(i);
+            } else {
+              heapifyMaxHeapDown(i);
+            }
+          } else {
+            heapifyMaxHeapDown(i);
+          }
         }
       }
       assert(minHeap_.size() == maxHeap_.size());
@@ -589,7 +600,8 @@ private:
    * given node.
    * @param isGoal is a function to determine whether a given node is a goal
    * node.
-   * @param getCost is a function returning the cost of a node in the graph.
+   * @param getCost is a function returning the cost of a node in the graph. The
+   * cost of the start node must be 0.
    * @param getHeuristic is a function returning the heuristic value of a given
    * node.
    * @param trials is the number of attempts to find a goal node that are
@@ -704,9 +716,6 @@ private:
    * general graphs. This is because it does not keep track of visited nodes and
    * therefore cannot detect cycles. Also, for DAGs it may expand nodes multiple
    * times when they can be reached by different paths from the start node.
-   * @note @p getHeuristic must be admissible, meaning that it never
-   * overestimates the cost to reach the goal from the current node calculated
-   * by @p getCost for every edge on the path.
    * @note The calling program has to make sure that the pointers passed to this
    * function are valid and that the iterators are not invalidated during the
    * search, e.g., by calling one of the passed functions like @p getNeighbors.
@@ -716,7 +725,7 @@ private:
    * @param isGoal is a function that returns true if a node is one of
    * potentially multiple goals
    * @param getCost is a function that returns the total cost to reach that
-   * particular node from the start node
+   * particular node from the start node. The cost of the start node must be 0.
    * @param getHeuristic is a function that returns the heuristic cost from the
    * node to any goal.
    * @param maxNodes is the maximum number of nodes held in the priority queue
