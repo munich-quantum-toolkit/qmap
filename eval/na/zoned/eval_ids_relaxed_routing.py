@@ -82,6 +82,7 @@ def run_with_process_timeout(func: Callable[P, R], timeout: float, *args: P.args
         TimeoutError: If the function times out.
         Exception: If the function raises an exception.
     """
+    # "fork" context avoids pickling bound methods but is Unix/macOS only.
     ctx = get_context("fork")  # use fork so bound methods don't need to be pickled on macOS/Unix
     q = ctx.Queue()
     p = ctx.Process(target=_proc_target, args=(q, func, args, kwargs))
