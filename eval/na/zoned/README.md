@@ -11,10 +11,10 @@ Before running the evaluation script, ensure you have the following installed:
 
 ## Usage
 
-The main evaluation script is `evaluate_ids_relaxed_routing.py`. You can directly run it from the command line.
+The main evaluation script is `eval_ids_relaxed_routing.py`. You can run it from the repository root via:
 
 ```bash
-evaluate_ids_relaxed_routing.py
+ uv run eval/na/zoned/eval_ids_relaxed_routing.py
 ```
 
 ## Output

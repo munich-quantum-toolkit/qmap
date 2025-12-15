@@ -270,7 +270,7 @@ class Evaluator:
 
         self.rearrangement_duration = 0.0
         self.two_qubit_gate_layer = 0
-        self.max_two_qubit_gates = None
+        self.max_two_qubit_gates = 0
 
         self.atom_locations = {}
 
@@ -298,8 +298,11 @@ class Evaluator:
             # Single atom load
             match = re.match(r"@\+ load (\w+)", line)
             if match:
-                assert match.group(1) in self.atom_locations, f"Atom {match.group(1)} not found in atom locations"
-                atoms.append(match.group(1))
+                atom = match.group(1)
+                if atom not in self.atom_locations:
+                    msg = f"Atom {atom} not found in atom locations"
+                    raise ValueError(msg)
+                atoms.append(atom)
         self._apply_load(atoms)
 
     def _process_move(self, line: str, it: Iterator[str]) -> None:
@@ -481,9 +484,7 @@ class Evaluator:
             atoms: List of atoms involved in the cz operation.
         """
         self.two_qubit_gate_layer += 1
-        self.max_two_qubit_gates = (
-            max(self.max_two_qubit_gates, len(atoms) // 2) if self.max_two_qubit_gates else len(atoms) // 2
-        )
+        self.max_two_qubit_gates = max(self.max_two_qubit_gates, len(atoms) // 2)
 
     def _apply_u(self, atoms: list[str]) -> None:
         """Apply an u operation.
