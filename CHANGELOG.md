@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
+## [3.5.0]
+
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
@@ -159,7 +161,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.5.0
 [3.4.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.4.0
 [3.3.1]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.3.1
 [3.3.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.3.0

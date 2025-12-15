@@ -10,10 +10,10 @@
 # /// script
 # dependencies = [
 #   "mqt.bench==2.1.0",
-#   "mqt.qmap @ git+https://github.com/munich-quantum-toolkit/qmap@28bf309dc166d87eed234bfa5dc2192e8900f865",
+#   "mqt.qmap==3.5.0",
 # ]
 # [tool.uv]
-# exclude-newer = "2025-12-16T00:00:00Z"
+# exclude-newer = "2025-12-16T12:59:59Z"
 # ///
 
 """Script for evaluating the routing-aware zoned neutral atom compiler.

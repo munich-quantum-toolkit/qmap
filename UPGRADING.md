@@ -4,6 +4,8 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+## [3.5.0]
+
 As part of this release, the scheduler of the zoned neutral atom compiler now features a new parameter `max_filling_factor`.
 It allows limiting the maximum number of parallel entangling gates relative to the maximum capacity of the entangling zone.
 Note, the default is set to `0.9`.
@@ -106,7 +108,8 @@ Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`]
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.1.0...v3.2.0
