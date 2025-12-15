@@ -16,7 +16,12 @@
 # exclude-newer = "2025-12-16T00:00:00Z"
 # ///
 
-"""Script for evaluating the fast relaxed compiler."""
+"""Script for evaluating the routing-aware zoned neutral atom compiler.
+
+In particular, it compares the iterative diving search method against
+the A* search method. Additionally, it evaluates the impact of relaxed
+routing.
+"""
 
 from __future__ import annotations
 
