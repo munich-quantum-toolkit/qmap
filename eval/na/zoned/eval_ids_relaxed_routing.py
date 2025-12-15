@@ -16,6 +16,7 @@ import os
 import pathlib
 import queue
 import re
+from itertools import chain
 from math import sqrt
 from multiprocessing import get_context
 from typing import TYPE_CHECKING
@@ -29,12 +30,16 @@ from mqt.qmap.na.zoned import PlacementMethod, RoutingAwareCompiler, RoutingMeth
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator, Mapping
     from multiprocessing import Queue
-    from typing import Any, ParamSpec
+    from typing import Any, ParamSpec, TypeVar
 
     from mqt.core.ir import QuantumComputation
 
     P = ParamSpec("P")
-    R = ParamSpec("R")
+    R = TypeVar("R")
+
+
+"""Timeout for running the benchmark in seconds."""
+TIMEOUT = 15 * 60  # sec
 
 
 def _proc_target(q: Queue, func: Callable[P, R], args: P.args, kwargs: P.kwargs) -> None:
@@ -178,6 +183,7 @@ def process_benchmark(
         return False
     except RuntimeError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
+        evaluator.print_error(benchmark_name, qc, compiler_name, setting_name)
         return False
 
     code = "\n".join(line for line in code.splitlines() if not line.startswith("@+ u"))
@@ -228,23 +234,7 @@ class Evaluator:
         self.arch = arch
         self.filename = filename
 
-        self.circuit_name = ""
-        self.num_qubits = 0
-        self.setting = ""
-        self.two_qubit_gates = 0
-
-        self.scheduling_time = 0
-        self.reuse_analysis_time = 0
-        self.placement_time = 0
-        self.routing_time = 0
-        self.code_generation_time = 0
-        self.total_time = 0
-
-        self.rearrangement_duration = 0.0
-        self.two_qubit_gate_layer = 0
-        self.max_two_qubit_gates = None
-
-        self.atom_locations = {}
+        self.reset()
 
     def reset(self) -> None:
         """Reset the Evaluator."""
@@ -529,7 +519,7 @@ class Evaluator:
                 self.atom_locations[atom_name] = (int(float(x)), int(float(y)))
             else:
                 # put line back on top of iterator
-                it = iter([line, *list(it)])
+                it = chain([line], it)
                 break
 
         for line in it:
@@ -543,9 +533,11 @@ class Evaluator:
                 self._process_cz()
             elif line.startswith("@+ u"):
                 self._process_u(line, it)
-            else:
-                assert line.startswith("@+ rz"), f"Unrecognized operation: {line}"
+            elif line.startswith("@+ rz"):
                 self._process_rz(line, it)
+            else:
+                msg = f"Unrecognized operation: {line}"
+                raise ValueError(msg)
 
     def print_header(self) -> None:
         """Print the header of the CSV file."""
@@ -566,29 +558,38 @@ class Evaluator:
                 f"{self.max_two_qubit_gates},{self.rearrangement_duration}\n"
             )
 
-    def print_timeout(self, circuit_name: str, qc: QuantumComputation, compiler: str, setting: str) -> None:
+    def print_timeout(self, circuit_name: str, qc: QuantumComputation, setting: str) -> None:
         """Print the data of the CSV file.
 
         Args:
             circuit_name: Name of the circuit.
             qc: The quantum circuit.
-            compiler: Name of the compiler.
             setting: Compiler setting name.
         """
         with pathlib.Path(self.filename).open("a", encoding="utf-8") as csv:
-            csv.write(f"{circuit_name},{qc.num_qubits},{compiler},{setting},timeout,,,,,,,,,,,,,,,,,,,,,,,,,\n")
+            csv.write(f"{circuit_name},{qc.num_qubits},{setting},timeout,,,,,,,,,\n")
 
-    def print_memout(self, circuit_name: str, qc: QuantumComputation, compiler: str, setting: str) -> None:
+    def print_memout(self, circuit_name: str, qc: QuantumComputation, setting: str) -> None:
         """Print the data of the CSV file.
 
         Args:
             circuit_name: Name of the circuit.
             qc: The quantum circuit.
-            compiler: Name of the compiler.
             setting: Compiler setting name.
         """
         with pathlib.Path(self.filename).open("a", encoding="utf-8") as csv:
-            csv.write(f"{circuit_name},{qc.num_qubits},{compiler},{setting},memout,,,,,,,,,,,,,,,,,,,,,,,,,\n")
+            csv.write(f"{circuit_name},{qc.num_qubits},{setting},memout,,,,,,,,,\n")
+
+    def print_error(self, circuit_name: str, qc: QuantumComputation, setting: str) -> None:
+        """Print the data of the CSV file.
+
+        Args:
+            circuit_name: Name of the circuit.
+            qc: The quantum circuit.
+            setting: Compiler setting name.
+        """
+        with pathlib.Path(self.filename).open("a", encoding="utf-8") as csv:
+            csv.write(f"{circuit_name},{qc.num_qubits},{setting},error,,,,,,,,,\n")
 
 
 def main() -> None:
@@ -656,6 +657,7 @@ def main() -> None:
 
     evaluator = Evaluator(arch_dict, "results.csv")
     evaluator.print_header()
+    pathlib.Path("in").mkdir(exist_ok=True)
 
     for benchmark, qc in benchmarks([
         ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
@@ -686,8 +688,6 @@ def main() -> None:
         "\033[32m[INFO]\033[0m MQT NAViz tool."
     )
 
-
-TIMEOUT = 15 * 60
 
 if __name__ == "__main__":
     # set working directory to script location
