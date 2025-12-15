@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 ## [Unreleased]
 
-_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#Unreleased)._
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ## [3.5.0]
 
