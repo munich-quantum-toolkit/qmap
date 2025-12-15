@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script --quiet
 # Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
 # Copyright (c) 2025 Munich Quantum Software Company GmbH
 # All rights reserved.
@@ -6,6 +6,15 @@
 # SPDX-License-Identifier: MIT
 #
 # Licensed under the MIT License
+#
+# /// script
+# dependencies = [
+#   "mqt.bench==2.1.0",
+#   "mqt.qmap @ git+https://github.com/munich-quantum-toolkit/qmap@28bf309dc166d87eed234bfa5dc2192e8900f865",
+# ]
+# [tool.uv]
+# exclude-newer = "2025-12-16T00:00:00Z"
+# ///
 
 """Script for evaluating the fast relaxed compiler."""
 
@@ -168,6 +177,9 @@ def process_benchmark(
         qc: The benchmark circuit to compile.
         benchmark_name: Name of the benchmark.
         evaluator: The evaluator to use.
+
+    Returns:
+        True if compilation succeeded, False otherwise.
     """
     compiler_name = type(compiler).__name__
     print(f"\033[32m[INFO]\033[0m Compiling {benchmark_name} with {qc.num_qubits} qubits with {compiler_name}...")
@@ -175,15 +187,15 @@ def process_benchmark(
         code, stats = run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
     except TimeoutError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
-        evaluator.print_timeout(benchmark_name, qc, compiler_name, setting_name)
+        evaluator.print_timeout(benchmark_name, qc, setting_name)
         return False
     except MemoryError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
-        evaluator.print_memout(benchmark_name, qc, compiler_name, setting_name)
+        evaluator.print_memout(benchmark_name, qc, setting_name)
         return False
     except RuntimeError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
-        evaluator.print_error(benchmark_name, qc, compiler_name, setting_name)
+        evaluator.print_error(benchmark_name, qc, setting_name)
         return False
 
     code = "\n".join(line for line in code.splitlines() if not line.startswith("@+ u"))
@@ -272,9 +284,9 @@ class Evaluator:
                 next_line_stripped = next_line.strip()
                 if next_line_stripped == "]":
                     break
-                assert next_line_stripped in self.atom_locations, (
-                    f"Atom {next_line_stripped} not found in atom locations"
-                )
+                if next_line_stripped not in self.atom_locations:
+                    msg = f"Atom {next_line_stripped} not found in atom locations"
+                    raise ValueError(msg)
                 atoms.append(next_line_stripped)
         else:
             # Single atom load
@@ -432,10 +444,11 @@ class Evaluator:
                 )
                 max_distance = max(max_distance, distance)
 
-        t_d_max = 200
-        d_max = 110
-        jerk = 32 * d_max / t_d_max**3  # 0.00044
-        v_max = d_max / t_d_max * 2  # 1.1
+        # Movement timing model parameters (units: um, us)
+        t_d_max = 200  # Time to traverse max distance (us)
+        d_max = 110  # Maximum distance for cubic profile (um)
+        jerk = 32 * d_max / t_d_max**3  # 0.00044, Jerk constant (um/us³)
+        v_max = d_max / t_d_max * 2  # = 1.1, Maximum velocity (um/us)
 
         if max_distance <= d_max:
             rearrangement_time = 2 * (4 * max_distance / jerk) ** (1 / 3)
@@ -463,7 +476,7 @@ class Evaluator:
         """
         self.two_qubit_gate_layer += 1
         self.max_two_qubit_gates = (
-            max(self.max_two_qubit_gates, len(atoms) / 2) if self.max_two_qubit_gates else len(atoms) / 2
+            max(self.max_two_qubit_gates, len(atoms) // 2) if self.max_two_qubit_gates else len(atoms) // 2
         )
 
     def _apply_u(self, atoms: list[str]) -> None:
@@ -594,6 +607,8 @@ class Evaluator:
 
 def main() -> None:
     """Main function for evaluating the fast relaxed compiler."""
+    # set working directory to script location
+    os.chdir(pathlib.Path(pathlib.Path(__file__).resolve()).parent)
     print("\033[32m[INFO]\033[0m Reading in architecture...")
     with pathlib.Path("square_architecture.json").open(encoding="utf-8") as f:
         arch_dict = json.load(f)
@@ -617,56 +632,41 @@ def main() -> None:
         routing_method=RoutingMethod.strict,
         warn_unsupported_gates=False,
     )
-    ids_compiler = RoutingAwareCompiler(
-        arch,
-        log_level="error",
-        max_filling_factor=0.9,
-        use_window=True,
-        window_min_width=16,
-        window_ratio=1.0,
-        window_share=0.8,
-        placement_method=PlacementMethod.ids,
-        deepening_factor=0.01,
-        deepening_value=0.0,
-        lookahead_factor=0.4,
-        reuse_level=5.0,
-        trials=4,
-        queue_capacity=100,
-        routing_method=RoutingMethod.strict,
-        warn_unsupported_gates=False,
-    )
+    common_ids_config = {
+        "log_level": "error",
+        "max_filling_factor": 0.9,
+        "use_window": True,
+        "window_min_width": 16,
+        "window_ratio": 1.0,
+        "window_share": 0.8,
+        "placement_method": PlacementMethod.ids,
+        "deepening_factor": 0.01,
+        "deepening_value": 0.0,
+        "lookahead_factor": 0.4,
+        "reuse_level": 5.0,
+        "trials": 4,
+        "queue_capacity": 100,
+        "warn_unsupported_gates": False,
+    }
+    ids_compiler = RoutingAwareCompiler(arch, **common_ids_config, routing_method=RoutingMethod.strict)
     relaxed_compiler = RoutingAwareCompiler(
-        arch,
-        log_level="error",
-        max_filling_factor=0.9,
-        use_window=True,
-        window_min_width=16,
-        window_ratio=1.0,
-        window_share=0.8,
-        placement_method=PlacementMethod.ids,
-        deepening_factor=0.01,
-        deepening_value=0.0,
-        lookahead_factor=0.4,
-        reuse_level=5.0,
-        trials=4,
-        queue_capacity=100,
-        routing_method=RoutingMethod.relaxed,
-        prefer_split=1.0,
-        warn_unsupported_gates=False,
+        arch, **common_ids_config, routing_method=RoutingMethod.relaxed, prefer_split=1.0
     )
 
     evaluator = Evaluator(arch_dict, "results.csv")
     evaluator.print_header()
     pathlib.Path("in").mkdir(exist_ok=True)
 
-    for benchmark, qc in benchmarks([
+    benchmark_list = [
         ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
         ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
         ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
         ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
         ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
         ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-    ]):
+    ]
+
+    for benchmark, qc in benchmarks(benchmark_list):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
         process_benchmark(astar_compiler, "astar", qc, benchmark, evaluator)
         process_benchmark(ids_compiler, "ids", qc, benchmark, evaluator)
@@ -690,6 +690,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # set working directory to script location
-    os.chdir(pathlib.Path(pathlib.Path(__file__).resolve()).parent)
     main()
