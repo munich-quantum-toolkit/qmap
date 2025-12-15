@@ -7,14 +7,14 @@ The script automates the process of running QMAP on a set of benchmark circuits 
 
 Before running the evaluation script, ensure you have the following installed:
 
-- uv 0.9.13
+- uv 0.9.13+
 
 ## Usage
 
 The main evaluation script is `eval_ids_relaxed_routing.py`. You can run it from the repository root via:
 
 ```bash
- uv run eval/na/zoned/eval_ids_relaxed_routing.py
+ eval/na/zoned/eval_ids_relaxed_routing.py
 ```
 
 ## Output
