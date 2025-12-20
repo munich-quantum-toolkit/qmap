@@ -206,10 +206,9 @@ def process_benchmark(
 
     code = "\n".join(line for line in code.splitlines() if not line.startswith("@+ u"))
     pathlib.Path(f"out/{compiler_name}/{setting_name}").mkdir(exist_ok=True, parents=True)
-    with pathlib.Path(f"out/{compiler_name}/{setting_name}/{benchmark_name}_{qc.num_qubits}.naviz").open(
-        "w", encoding="utf-8"
-    ) as f:
-        f.write(code)
+    pathlib.Path(f"out/{compiler_name}/{setting_name}/{benchmark_name}_{qc.num_qubits}.naviz").write_text(
+        code, encoding="utf-8"
+    )
     print("\033[32m[INFO]\033[0m Done")
 
     print(f"\033[32m[INFO]\033[0m Evaluating {benchmark_name} with {qc.num_qubits} qubits...")
@@ -561,12 +560,12 @@ class Evaluator:
 
     def print_header(self) -> None:
         """Print the header of the CSV file."""
-        with pathlib.Path(self.filename).open("w", encoding="utf-8") as csv:
-            csv.write(
-                "circuit_name,num_qubits,setting,status,two_qubit_gates,scheduling_time,reuse_analysis_time,"
-                "placement_time,routing_time,code_generation_time,total_time,two_qubit_gate_layer,max_two_qubit_gates,"
-                "rearrangement_duration\n"
-            )
+        pathlib.Path(self.filename).write_text(
+            "circuit_name,num_qubits,setting,status,two_qubit_gates,scheduling_time,reuse_analysis_time,"
+            "placement_time,routing_time,code_generation_time,total_time,two_qubit_gate_layer,max_two_qubit_gates,"
+            "rearrangement_duration\n",
+            encoding="utf-8",
+        )
 
     def print_data(self) -> None:
         """Print the data of the CSV file."""

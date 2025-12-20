@@ -470,7 +470,8 @@ def reset_inconsistent_results() -> None:
     logger.info("Resetting inconsistent synthesis results and their timeouts...")
     with Session(engine) as session:
         cliff_results = (
-            session.query(SynthesisResult)
+            session
+            .query(SynthesisResult)
             .filter(
                 SynthesisResult.qmap_cliff_iter_gate_count.isnot(None),
                 SynthesisResult.qmap_cliff_maxsat_gate_count.isnot(None),
@@ -480,7 +481,8 @@ def reset_inconsistent_results() -> None:
         )
 
         circ_results = (
-            session.query(SynthesisResult)
+            session
+            .query(SynthesisResult)
             .filter(
                 SynthesisResult.qmap_circ_iter_gate_count.isnot(None),
                 SynthesisResult.qmap_circ_maxsat_gate_count.isnot(None),
@@ -606,7 +608,8 @@ def prune_excess_benchmarks() -> None:
         for q in [1, 2, 3, 4, 5, 6]:
             allowed = _allowed_num_gates(q)
             deleted = (
-                session.query(SynthesisResult)
+                session
+                .query(SynthesisResult)
                 .filter(
                     SynthesisResult.num_qubits == q,
                     ~SynthesisResult.num_gates.in_(list(allowed)),

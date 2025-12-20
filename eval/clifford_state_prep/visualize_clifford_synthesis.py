@@ -119,7 +119,8 @@ def _read_results() -> pd.DataFrame:
 def _long_format(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     # Melt runtimes
     rt_long = (
-        df.melt(
+        df
+        .melt(
             id_vars=["num_qubits", "num_gates", "instance"],
             value_vars=list(RUNTIME_COLS.keys()),
             var_name="metric",
@@ -132,7 +133,8 @@ def _long_format(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # Melt gate counts
     gc_long = (
-        df.melt(
+        df
+        .melt(
             id_vars=["num_qubits", "num_gates", "instance"],
             value_vars=list(GATE_COLS.keys()),
             var_name="metric",
