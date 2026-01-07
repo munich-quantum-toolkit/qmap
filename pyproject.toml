@@ -364,7 +364,11 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 
 [tool.uv]
 required-version = ">=0.5.20"
-reinstall-package = ["mqt.qmap"]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { git = { commit = true, tags = true } },
+  { file = "bindings/**/*.cpp"},
+]
 
 
 [tool.uv.sources]
