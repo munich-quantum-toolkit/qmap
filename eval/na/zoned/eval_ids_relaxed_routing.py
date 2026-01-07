@@ -7,6 +7,15 @@
 #
 # Licensed under the MIT License
 
+# /// script
+# dependencies = [
+#   "mqt.bench==2.1.0",
+#   "mqt.qmap==3.5.0",
+# ]
+# [tool.uv]
+# exclude-newer = "2025-12-16T12:59:59Z"
+# ///
+
 """Script for evaluating the routing-aware zoned neutral atom compiler.
 
 In particular, it compares the iterative diving search method against
