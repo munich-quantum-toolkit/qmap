@@ -1,20 +1,11 @@
 #!/usr/bin/env -S uv run --script --quiet
-# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
-# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
 # All rights reserved.
 #
 # SPDX-License-Identifier: MIT
 #
 # Licensed under the MIT License
-#
-# /// script
-# dependencies = [
-#   "mqt.bench==2.1.0",
-#   "mqt.qmap==3.5.0",
-# ]
-# [tool.uv]
-# exclude-newer = "2025-12-16T12:59:59Z"
-# ///
 
 """Script for evaluating the routing-aware zoned neutral atom compiler.
 
