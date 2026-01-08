@@ -172,7 +172,7 @@ public:
     const auto schedulingStart = std::chrono::system_clock::now();
     const auto& schedule = SELF.schedule(qComp);
     const auto schedulingEnd = std::chrono::system_clock::now();
-    const auto& singleQubitGateRefLayers = schedule.first;
+    const auto& singleQubitGateLayers = schedule.first;
     const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
@@ -181,7 +181,7 @@ public:
     SPDLOG_INFO("Time for scheduling: {}us", statistics_.schedulingTime);
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
     SPDLOG_DEBUG("Number of single-qubit gate layers: {}",
-                 singleQubitGateRefLayers.size());
+                 singleQubitGateLayers.size());
     SPDLOG_DEBUG("Number of two-qubit gate layers: {}",
                  twoQubitGateLayers.size());
     if (!twoQubitGateLayers.empty() &&
@@ -204,8 +204,8 @@ public:
 
     SPDLOG_DEBUG("Decomposing...");
     const auto decomposingStart = std::chrono::system_clock::now();
-    const auto& singleQubitGateLayers =
-        SELF.decompose(singleQubitGateRefLayers);
+    const auto& decomposedSingleQubitGateLayers =
+        SELF.decompose(singleQubitGateLayers);
     const auto decomposingEnd = std::chrono::system_clock::now();
     statistics_.decomposingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
@@ -240,7 +240,7 @@ public:
     SPDLOG_DEBUG("Generating code...");
     const auto codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
-        SELF.generate(singleQubitGateLayers, placement, routing);
+        SELF.generate(decomposedSingleQubitGateLayers, placement, routing);
     const auto codeGenerationEnd = std::chrono::system_clock::now();
     assert(code.validate().first);
     statistics_.codeGenerationTime =

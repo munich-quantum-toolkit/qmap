@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "ir/QuantumComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
 #include "na/zoned/decomposer/DecomposerBase.hpp"
@@ -19,8 +18,8 @@
 
 namespace na::zoned {
 /**
- * The class NoOpDecomposer implements the as-soon-as-possible scheduling
- * strategy for the zoned neutral atom compiler.
+ * The class NoOpDecomposer implements a dummy no-op decomposer that just copies
+ * every operation.
  */
 class NoOpDecomposer : public DecomposerBase {
 
