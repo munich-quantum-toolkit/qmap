@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/zoned/decomposer//NoOpDecomposer.hpp"
+#include "na/zoned/decomposer/NoOpDecomposer.hpp"
 
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Architecture.hpp"

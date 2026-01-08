@@ -12,6 +12,7 @@
 
 #include "Architecture.hpp"
 #include "code_generator/CodeGenerator.hpp"
+#include "decomposer/NoOpDecomposer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 #include "layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
@@ -239,7 +240,7 @@ public:
     SPDLOG_DEBUG("Generating code...");
     const auto codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
-        SELF.generate(singleQubitGateRefLayers, placement, routing);
+        SELF.generate(singleQubitGateLayers, placement, routing);
     const auto codeGenerationEnd = std::chrono::system_clock::now();
     assert(code.validate().first);
     statistics_.codeGenerationTime =
@@ -274,7 +275,7 @@ public:
       : PlaceAndRouteSynthesizer(architecture) {}
 };
 class RoutingAgnosticCompiler final
-    : public Compiler<RoutingAgnosticCompiler, ASAPScheduler,
+    : public Compiler<RoutingAgnosticCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAgnosticSynthesizer,
                       CodeGenerator> {
 public:
@@ -296,7 +297,7 @@ public:
       : PlaceAndRouteSynthesizer(architecture) {}
 };
 class RoutingAwareCompiler final
-    : public Compiler<RoutingAwareCompiler, ASAPScheduler,
+    : public Compiler<RoutingAwareCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
                       CodeGenerator> {
 public:

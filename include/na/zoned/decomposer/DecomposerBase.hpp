@@ -10,10 +10,8 @@
 
 #pragma once
 
-#include "ir/QuantumComputation.hpp"
 #include "na/zoned/Types.hpp"
 
-#include <utility>
 #include <vector>
 
 namespace na::zoned {

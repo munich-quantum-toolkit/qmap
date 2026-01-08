@@ -15,8 +15,6 @@
 #include "na/zoned/Types.hpp"
 #include "na/zoned/decomposer/DecomposerBase.hpp"
 
-#include <functional>
-#include <utility>
 #include <vector>
 
 namespace na::zoned {
@@ -52,6 +50,6 @@ public:
 
   [[nodiscard]] auto decompose(
       const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers) const
-      -> std::vector<SingleQubitGateLayer>;
+      -> std::vector<SingleQubitGateLayer> override;
 };
 } // namespace na::zoned
