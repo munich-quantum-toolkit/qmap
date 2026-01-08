@@ -62,12 +62,11 @@ auto CodeGenerator::appendSingleQubitGates(
     // This flag is used for circuit consisting of only one qubit since in this
     // case, global and local gates are the same.
     bool singleQubitGate = false;
-    if (op.get().isGlobal(nQubits)) {
+    if (op->isGlobal(nQubits)) {
       // a global operation can be wrapped in a compound operation or a standard
       // operation acting on all qubits
-      if (op.get().isCompoundOperation()) {
-        const auto& compOp =
-            dynamic_cast<const qc::CompoundOperation&>(op.get());
+      if (op->isCompoundOperation()) {
+        const auto& compOp = dynamic_cast<const qc::CompoundOperation&>(*op);
         const auto opType = compOp.front()->getType();
         if (opType == qc::RY) {
           code.emplaceBack<GlobalRYOp>(globalZone,
@@ -80,9 +79,8 @@ auto CodeGenerator::appendSingleQubitGates(
           assert(false);
         }
       } else {
-        if (const auto opType = op.get().getType(); opType == qc::RY) {
-          code.emplaceBack<GlobalRYOp>(globalZone,
-                                       op.get().getParameter().front());
+        if (const auto opType = op->getType(); opType == qc::RY) {
+          code.emplaceBack<GlobalRYOp>(globalZone, op->getParameter().front());
         } else if (opType == qc::Y) {
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
         } else if (nQubits == 1) {
@@ -101,21 +99,20 @@ auto CodeGenerator::appendSingleQubitGates(
     if (singleQubitGate) {
       // one qubit gates act exactly on one qubit and are converted to local
       // gates
-      assert(op.get().getNqubits() == 1);
-      const qc::Qubit qubit = op.get().getTargets().front();
+      assert(op->getNqubits() == 1);
+      const qc::Qubit qubit = op->getTargets().front();
       // By default, all variants of rotational z-gates are supported
-      if (op.get().getType() == qc::RZ || op.get().getType() == qc::P) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit],
-                                    op.get().getParameter().front());
-      } else if (op.get().getType() == qc::Z) {
+      if (op->getType() == qc::RZ || op->getType() == qc::P) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit], op->getParameter().front());
+      } else if (op->getType() == qc::Z) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI);
-      } else if (op.get().getType() == qc::S) {
+      } else if (op->getType() == qc::S) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_2);
-      } else if (op.get().getType() == qc::Sdg) {
+      } else if (op->getType() == qc::Sdg) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_2);
-      } else if (op.get().getType() == qc::T) {
+      } else if (op->getType() == qc::T) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_4);
-      } else if (op.get().getType() == qc::Tdg) {
+      } else if (op->getType() == qc::Tdg) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_4);
       } else {
         // in this case, the gate is not any variant of a rotational z-gate.
@@ -123,37 +120,35 @@ auto CodeGenerator::appendSingleQubitGates(
         if (config_.warnUnsupportedGates) {
           SPDLOG_WARN(
               "Gate not part of basis gates will be inserted as U3 gate: {}",
-              qc::toString(op.get().getType()));
+              qc::toString(op->getType()));
         }
-        if (op.get().getType() == qc::U) {
-          code.emplaceBack<LocalUOp>(
-              atoms[qubit], op.get().getParameter().front(),
-              op.get().getParameter().at(1), op.get().getParameter().at(2));
-        } else if (op.get().getType() == qc::U2) {
+        if (op->getType() == qc::U) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], op->getParameter().front(),
+                                     op->getParameter().at(1),
+                                     op->getParameter().at(2));
+        } else if (op->getType() == qc::U2) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2,
-                                     op.get().getParameter().front(),
-                                     op.get().getParameter().at(1));
-        } else if (op.get().getType() == qc::RX) {
-          code.emplaceBack<LocalUOp>(atoms[qubit],
-                                     op.get().getParameter().front(), -qc::PI_2,
-                                     qc::PI_2);
-        } else if (op.get().getType() == qc::RY) {
-          code.emplaceBack<LocalUOp>(atoms[qubit],
-                                     op.get().getParameter().front(), 0, 0);
-        } else if (op.get().getType() == qc::H) {
+                                     op->getParameter().front(),
+                                     op->getParameter().at(1));
+        } else if (op->getType() == qc::RX) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], op->getParameter().front(),
+                                     -qc::PI_2, qc::PI_2);
+        } else if (op->getType() == qc::RY) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], op->getParameter().front(),
+                                     0, 0);
+        } else if (op->getType() == qc::H) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, 0, qc::PI);
-        } else if (op.get().getType() == qc::X) {
+        } else if (op->getType() == qc::X) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, 0, qc::PI);
-        } else if (op.get().getType() == qc::Y) {
+        } else if (op->getType() == qc::Y) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, qc::PI_2, qc::PI_2);
-        } else if (op.get().getType() == qc::Vdg) {
+        } else if (op->getType() == qc::Vdg) {
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, qc::PI_2,
                                      -qc::PI_2);
-        } else if (op.get().getType() == qc::SX) {
+        } else if (op->getType() == qc::SX) {
           code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
-        } else if (op.get().getType() == qc::SXdg ||
-                   op.get().getType() == qc::V) {
+        } else if (op->getType() == qc::SXdg || op->getType() == qc::V) {
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
         } else {
@@ -161,7 +156,7 @@ auto CodeGenerator::appendSingleQubitGates(
           // gate is not included in the output.
           std::ostringstream oss;
           oss << "\033[1;31m[ERROR]\033[0m Unsupported single-qubit gate: "
-              << op.get().getType() << "\n";
+              << op->getType() << "\n";
           throw std::invalid_argument(oss.str());
         }
       }

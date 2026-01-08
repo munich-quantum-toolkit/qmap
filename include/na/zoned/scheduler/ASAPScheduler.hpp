@@ -67,7 +67,7 @@ public:
    * operations. A pair of qubits represents every two-qubit operation.
    */
   [[nodiscard]] auto schedule(const qc::QuantumComputation& qc) const
-      -> std::pair<std::vector<SingleQubitGateLayer>,
+      -> std::pair<std::vector<SingleQubitGateRefLayer>,
                    std::vector<TwoQubitGateLayer>>;
 };
 } // namespace na::zoned

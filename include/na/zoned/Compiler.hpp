@@ -43,9 +43,10 @@ namespace na::zoned {
  * allowing for better performance than having the components as members of the
  * compiler and setting them at runtime.
  */
-template <class ConcreteType, class Scheduler, class ReuseAnalyzer,
-          class LayoutSynthesizer, class CodeGenerator>
+template <class ConcreteType, class Scheduler, class Decomposer,
+          class ReuseAnalyzer, class LayoutSynthesizer, class CodeGenerator>
 class Compiler : protected Scheduler,
+                 protected Decomposer,
                  protected ReuseAnalyzer,
                  protected LayoutSynthesizer,
                  protected CodeGenerator {
@@ -59,6 +60,8 @@ public:
   struct Config {
     /// Configuration for the scheduler
     typename Scheduler::Config schedulerConfig{};
+    /// Configuration for the decomposer
+    typename Decomposer::Config decomposerConfig{};
     /// Configuration for the reuse analyzer
     typename ReuseAnalyzer::Config reuseAnalyzerConfig{};
     /// Configuration for the layout synthesizer
@@ -68,6 +71,7 @@ public:
     /// Log level for the compiler
     spdlog::level::level_enum logLevel = spdlog::level::info;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, schedulerConfig,
+                                                decomposerConfig,
                                                 reuseAnalyzerConfig,
                                                 layoutSynthesizerConfig,
                                                 codeGeneratorConfig, logLevel);
@@ -78,6 +82,7 @@ public:
    */
   struct Statistics {
     int64_t schedulingTime;    ///< Time taken for scheduling in us
+    int64_t decomposingTime;   ///< Time taken for decomposing in us
     int64_t reuseAnalysisTime; ///< Time taken for reuse analysis in us
     /// Statistics collected during layout synthesis.
     typename LayoutSynthesizer::Statistics layoutSynthesizerStatistics;
@@ -106,6 +111,7 @@ private:
    */
   Compiler(const Architecture& architecture, const Config& config)
       : Scheduler(architecture, config.schedulerConfig),
+        Decomposer(architecture, config.decomposerConfig),
         ReuseAnalyzer(architecture, config.reuseAnalyzerConfig),
         LayoutSynthesizer(architecture, config.layoutSynthesizerConfig),
         CodeGenerator(architecture, config.codeGeneratorConfig),
@@ -165,7 +171,7 @@ public:
     const auto schedulingStart = std::chrono::system_clock::now();
     const auto& schedule = SELF.schedule(qComp);
     const auto schedulingEnd = std::chrono::system_clock::now();
-    const auto& singleQubitGateLayers = schedule.first;
+    const auto& singleQubitGateRefLayers = schedule.first;
     const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
@@ -174,7 +180,7 @@ public:
     SPDLOG_INFO("Time for scheduling: {}us", statistics_.schedulingTime);
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
     SPDLOG_DEBUG("Number of single-qubit gate layers: {}",
-                 singleQubitGateLayers.size());
+                 singleQubitGateRefLayers.size());
     SPDLOG_DEBUG("Number of two-qubit gate layers: {}",
                  twoQubitGateLayers.size());
     if (!twoQubitGateLayers.empty() &&
@@ -194,6 +200,17 @@ public:
           avg, max);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
+
+    SPDLOG_DEBUG("Decomposing...");
+    const auto decomposingStart = std::chrono::system_clock::now();
+    const auto& singleQubitGateLayers =
+        SELF.decompose(singleQubitGateRefLayers);
+    const auto decomposingEnd = std::chrono::system_clock::now();
+    statistics_.decomposingTime =
+        std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
+                                                              decomposingStart)
+            .count();
+    SPDLOG_INFO("Time for decomposing: {}us", statistics_.decomposingTime);
 
     SPDLOG_DEBUG("Analyzing reuse...");
     const auto reuseAnalysisStart = std::chrono::system_clock::now();
@@ -222,7 +239,7 @@ public:
     SPDLOG_DEBUG("Generating code...");
     const auto codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
-        SELF.generate(singleQubitGateLayers, placement, routing);
+        SELF.generate(singleQubitGateRefLayers, placement, routing);
     const auto codeGenerationEnd = std::chrono::system_clock::now();
     assert(code.validate().first);
     statistics_.codeGenerationTime =

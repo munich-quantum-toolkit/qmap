@@ -20,8 +20,10 @@
 
 namespace na::zoned {
 /// A list of single-qubit gates representing a single-qubit gate layer.
-using SingleQubitGateLayer =
+using SingleQubitGateRefLayer =
     std::vector<std::reference_wrapper<const qc::Operation>>;
+/// A list of single-qubit gates representing a single-qubit gate layer.
+using SingleQubitGateLayer = std::vector<std::unique_ptr<const qc::Operation>>;
 /// A pair of qubits as an array that allows iterating over the qubits.
 using QubitPair = std::array<qc::Qubit, 2>;
 /// A list of two-qubit gates representing a two-qubit gate layer.
