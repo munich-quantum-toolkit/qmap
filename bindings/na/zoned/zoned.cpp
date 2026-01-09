@@ -243,4 +243,105 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       [](const na::zoned::RoutingAwareCompiler& self) -> nlohmann::json {
         return self.getStatistics();
       });
+
+  //===--------------------------------------------------------------------===//
+  // Placement and Routing-aware Compiler
+  //===--------------------------------------------------------------------===//
+  py::class_<na::zoned::PlacementAndRoutingAwareCompiler>
+      placementAndRoutingAwareCompiler(m, "PlacementAndRoutingAwareCompiler");
+  {
+    const na::zoned::PlacementAndRoutingAwareCompiler::Config defaultConfig;
+    placementAndRoutingAwareCompiler.def(
+        py::init(
+            [](const na::zoned::Architecture& arch, const std::string& logLevel,
+               const double maxFillingFactor, const bool useWindow,
+               const size_t windowMinWidth, const double windowRatio,
+               const double windowShare,
+               const na::zoned::HeuristicPlacer::Config::Method placementMethod,
+               const float deepeningFactor, const float deepeningValue,
+               const float lookaheadFactor, const float reuseLevel,
+               const size_t maxNodes, const size_t trials,
+               const size_t queueCapacity,
+               const na::zoned::IndependentSetRouter::Config::Method
+                   routingMethod,
+               const double preferSplit, const bool warnUnsupportedGates)
+                -> na::zoned::PlacementAndRoutingAwareCompiler {
+              na::zoned::PlacementAndRoutingAwareCompiler::Config config;
+              config.logLevel = spdlog::level::from_str(logLevel);
+              config.schedulerConfig.maxFillingFactor = maxFillingFactor;
+
+              config.layoutSynthesizerConfig.placerConfig = {
+                  .useWindow = useWindow,
+                  .windowMinWidth = windowMinWidth,
+                  .windowRatio = windowRatio,
+                  .windowShare = windowShare,
+                  .method = placementMethod,
+                  .deepeningFactor = deepeningFactor,
+                  .deepeningValue = deepeningValue,
+                  .lookaheadFactor = lookaheadFactor,
+                  .reuseLevel = reuseLevel,
+                  .maxNodes = maxNodes,
+                  .trials = trials,
+                  .queueCapacity = queueCapacity,
+              };
+              config.layoutSynthesizerConfig.routerConfig = {
+                  .method = routingMethod, .preferSplit = preferSplit};
+              config.codeGeneratorConfig = {.warnUnsupportedGates =
+                                                warnUnsupportedGates};
+              return {arch, config};
+            }),
+        py::keep_alive<1, 2>(), "arch"_a,
+        "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
+        "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
+        "use_window"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
+        "window_min_width"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.windowMinWidth,
+        "window_ratio"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.windowRatio,
+        "window_share"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.windowShare,
+        "placement_method"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.method,
+        "deepening_factor"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.deepeningFactor,
+        "deepening_value"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.deepeningValue,
+        "lookahead_factor"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.lookaheadFactor,
+        "reuse_level"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.reuseLevel,
+        "max_nodes"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.maxNodes,
+        "trials"_a = defaultConfig.layoutSynthesizerConfig.placerConfig.trials,
+        "queue_capacity"_a =
+            defaultConfig.layoutSynthesizerConfig.placerConfig.queueCapacity,
+        "routing_method"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.method,
+        "prefer_split"_a =
+            defaultConfig.layoutSynthesizerConfig.routerConfig.preferSplit,
+        "warn_unsupported_gates"_a =
+            defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
+  }
+  placementAndRoutingAwareCompiler.def_static(
+      "from_json_string",
+      [](const na::zoned::Architecture& arch, const std::string& json)
+          -> na::zoned::PlacementAndRoutingAwareCompiler {
+        // The correct header <nlohmann/json.hpp> is included, but clang-tidy
+        // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
+        // NOLINTNEXTLINE(misc-include-cleaner)
+        return {arch, nlohmann::json::parse(json)};
+      },
+      "arch"_a, "json"_a);
+  placementAndRoutingAwareCompiler.def(
+      "compile",
+      [](na::zoned::PlacementAndRoutingAwareCompiler& self,
+         const qc::QuantumComputation& qc) -> std::string {
+        return self.compile(qc).toString();
+      },
+      "qc"_a);
+  placementAndRoutingAwareCompiler.def(
+      "stats",
+      [](const na::zoned::PlacementAndRoutingAwareCompiler& self)
+          -> nlohmann::json { return self.getStatistics(); });
 }

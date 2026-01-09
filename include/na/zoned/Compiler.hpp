@@ -21,6 +21,7 @@
 #include "na/NAComputation.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 #include "scheduler/ASAPScheduler.hpp"
+#include "scheduler/MinFlowScheduler.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -286,6 +287,17 @@ public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
   explicit RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+class PlacementAndRoutingAwareCompiler final
+    : public Compiler<PlacementAndRoutingAwareCompiler, MinFlowScheduler,
+                      VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
+                      CodeGenerator> {
+public:
+  PlacementAndRoutingAwareCompiler(const Architecture& architecture,
+                                   const Config& config)
+      : Compiler(architecture, config) {}
+  explicit PlacementAndRoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned

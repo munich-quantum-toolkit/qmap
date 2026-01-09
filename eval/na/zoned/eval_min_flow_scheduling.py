@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --script --quiet
+#!/usr/bin/env python
 # Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
 # Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
 # All rights reserved.
@@ -7,20 +7,10 @@
 #
 # Licensed under the MIT License
 
-# /// script
-# dependencies = [
-#   "mqt.bench==2.1.0",
-#   "mqt.qmap==3.5.0",
-# ]
-# [tool.uv]
-# exclude-newer = "2025-12-16T12:59:59Z"
-# ///
-
 """Script for evaluating the routing-aware zoned neutral atom compiler.
 
-In particular, it compares the iterative diving search method against
-the A* search method. Additionally, it evaluates the impact of relaxed
-routing.
+In particular, it compares the minimum cost maximum flow scheduler against
+the as-soon-as-possible method.
 """
 
 from __future__ import annotations
@@ -32,7 +22,13 @@ import pathlib
 from eval_helper import Evaluator, benchmarks, process_benchmark
 from mqt.bench import BenchmarkLevel
 
-from mqt.qmap.na.zoned import PlacementMethod, RoutingAwareCompiler, RoutingMethod, ZonedNeutralAtomArchitecture
+from mqt.qmap.na.zoned import (
+    PlacementAndRoutingAwareCompiler,
+    PlacementMethod,
+    RoutingAwareCompiler,
+    RoutingMethod,
+    ZonedNeutralAtomArchitecture,
+)
 
 
 def main() -> None:
@@ -45,24 +41,8 @@ def main() -> None:
     arch = ZonedNeutralAtomArchitecture.from_json_file("square_architecture.json")
     arch.to_namachine_file("arch.namachine")
     print("\033[32m[INFO]\033[0m Done")
-    astar_compiler = RoutingAwareCompiler(
-        arch,
-        log_level="error",
-        max_filling_factor=0.9,
-        use_window=True,
-        window_min_width=16,
-        window_ratio=1.0,
-        window_share=0.8,
-        placement_method=PlacementMethod.astar,
-        deepening_factor=0.9,
-        deepening_value=8.0,
-        lookahead_factor=0.2,
-        reuse_level=5.0,
-        max_nodes=int(1e7),
-        routing_method=RoutingMethod.strict,
-        warn_unsupported_gates=False,
-    )
-    common_ids_config = {
+
+    common_config = {
         "log_level": "error",
         "max_filling_factor": 0.9,
         "use_window": True,
@@ -76,31 +56,33 @@ def main() -> None:
         "reuse_level": 5.0,
         "trials": 4,
         "queue_capacity": 100,
+        "routing_method": RoutingMethod.relaxed,
+        "prefer_split": 1.0,
         "warn_unsupported_gates": False,
     }
-    ids_compiler = RoutingAwareCompiler(arch, **common_ids_config, routing_method=RoutingMethod.strict)
-    relaxed_compiler = RoutingAwareCompiler(
-        arch, **common_ids_config, routing_method=RoutingMethod.relaxed, prefer_split=1.0
-    )
+    asap_compiler = RoutingAwareCompiler(arch, **common_config)
+    min_flow_compiler = PlacementAndRoutingAwareCompiler(arch, **common_config)
 
     evaluator = Evaluator(arch_dict, "results.csv")
     evaluator.print_header()
     pathlib.Path("in").mkdir(exist_ok=True)
 
     benchmark_list = [
-        ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
-        ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-        ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        ("graphstate", (BenchmarkLevel.INDEP, [10])),
     ]
+    # benchmark_list = [
+    #     ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
+    #     ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
+    #     ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
+    #     ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
+    #     ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+    #     ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+    # ]
 
     for benchmark, qc in benchmarks(benchmark_list):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
-        process_benchmark(astar_compiler, "astar", qc, benchmark, evaluator)
-        process_benchmark(ids_compiler, "ids", qc, benchmark, evaluator)
-        process_benchmark(relaxed_compiler, "relaxed", qc, benchmark, evaluator)
+        process_benchmark(asap_compiler, "asap", qc, benchmark, evaluator)
+        process_benchmark(min_flow_compiler, "min_flow", qc, benchmark, evaluator)
 
     print(
         "\033[32m[INFO]\033[0m =============================================================\n"

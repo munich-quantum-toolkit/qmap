@@ -123,6 +123,29 @@ constexpr std::string_view fastRelaxedRoutingAwareConfiguration = R"({
     }
   }
 })";
+constexpr std::string_view placementAndRoutingAwareConfiguration = R"({
+  "logLevel" : 1,
+  "codeGeneratorConfig" : {
+    "warnUnsupportedGates" : false
+  },
+  "layoutSynthesizerConfig" : {
+    "placerConfig" : {
+      "useWindow" : true,
+      "windowMinWidth" : 4,
+      "windowRatio" : 1.5,
+      "windowShare" : 0.6,
+      "method" : "ids",
+      "deepeningFactor" : 0.01,
+      "deepeningValue" : 0.0,
+      "lookaheadFactor": 0.4,
+      "reuseLevel": 5.0
+    },
+    "routerConfig" : {
+      "method" : "relaxed",
+      "preferSplit" : 0.0
+    }
+  }
+})";
 #define COMPILER_TEST(test_name, compiler_type, config)                        \
   TEST(test_name##Test, ConstructorWithoutConfig) {                            \
     Architecture architecture(                                                 \
@@ -185,6 +208,9 @@ COMPILER_TEST(RelaxedRoutingAwareCompiler, RoutingAwareCompiler,
               relaxedRoutingAwareConfiguration);
 COMPILER_TEST(FastRelaxedRoutingAwareCompiler, RoutingAwareCompiler,
               fastRelaxedRoutingAwareConfiguration);
+COMPILER_TEST(PlacementAndRoutingAwareCompiler,
+              PlacementAndRoutingAwareCompiler,
+              placementAndRoutingAwareConfiguration);
 
 // Tests that the bug described in issue
 // https://github.com/munich-quantum-toolkit/qmap/issues/727 is fixed.
