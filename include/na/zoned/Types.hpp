@@ -14,6 +14,7 @@
 #include "na/zoned/Architecture.hpp"
 
 #include <array>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>

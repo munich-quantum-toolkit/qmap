@@ -16,6 +16,7 @@
 
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <memory>
 #include <utility>
 #include <vector>
 
