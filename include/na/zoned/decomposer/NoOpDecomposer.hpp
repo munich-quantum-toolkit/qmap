@@ -38,7 +38,7 @@ public:
         nlohmann::detail::enable_if_t<
             nlohmann::detail::is_basic_json<BasicJsonType>::value, int> = 0>
     friend void from_json(const BasicJsonType& /* unused */,
-                          Config& /* unused */) {};
+                          Config& /* unused */) {}
   };
 
   /**

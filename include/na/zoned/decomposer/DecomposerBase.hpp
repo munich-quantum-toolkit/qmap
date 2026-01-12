@@ -16,7 +16,7 @@
 
 namespace na::zoned {
 /**
- * The  Abstract Base Class for the Decomposer of the MQT's Zoned Neutral Atom
+ * The Abstract Base Class for the Decomposer of the MQT's Zoned Neutral Atom
  * Compiler.
  */
 class DecomposerBase {
