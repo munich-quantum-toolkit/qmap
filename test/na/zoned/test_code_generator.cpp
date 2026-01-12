@@ -253,7 +253,7 @@ TEST_F(CodeGeneratorGenerateTest, U2Gate) {
   EXPECT_EQ(
       codeGenerator
           .generate(makeSingleOpLayer<qc::StandardOperation>(
-                        0U, qc::U, std::vector{0.1, 0.2}),
+                        0U, qc::U2, std::vector{0.1, 0.2}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
