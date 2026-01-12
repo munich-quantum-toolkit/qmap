@@ -20,6 +20,15 @@
 #include <vector>
 
 namespace na::zoned {
+template <typename OpType, typename... Args>
+auto makeSingleOpLayer(Args&&... args) {
+  OpType op(std::forward<Args>(args)...);
+  SingleQubitGateLayer layer;
+  layer.emplace_back(std::make_unique<OpType>(std::move(op)));
+  std::vector<SingleQubitGateLayer> layers;
+  layers.emplace_back(std::move(layer));
+  return layers;
+}
 constexpr std::string_view architectureJson = R"({
   "name": "code_generator_architecture",
   "storage_zones": [{
@@ -67,14 +76,10 @@ TEST_F(CodeGeneratorGenerateTest, Empty) {
 }
 TEST_F(CodeGeneratorGenerateTest, GlobalRYGate) {
   const auto& slm = *architecture.storageZones.front();
-  qc::StandardOperation ry{0, qc::RY, {0.1}};
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(ry)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::RY,
+                                                             std::vector{0.1}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -85,14 +90,9 @@ TEST_F(CodeGeneratorGenerateTest, GlobalRYGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, GlobalYGate) {
   const auto& slm = *architecture.storageZones.front();
-  qc::StandardOperation y{0, qc::Y};
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(y)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::Y),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -105,7 +105,7 @@ TEST_F(CodeGeneratorGenerateTest, GlobalCompoundRYGate) {
   const auto& slm = *architecture.storageZones.front();
   // Create a compound operation with a single RY gate
   qc::CompoundOperation cry;
-  cry.emplace_back<qc::StandardOperation>(0, qc::RY, std::vector{0.1});
+  cry.emplace_back<qc::StandardOperation>(0U, qc::RY, std::vector{0.1});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::CompoundOperation>(std::move(cry)));
   std::vector<SingleQubitGateLayer> layers;
@@ -125,7 +125,7 @@ TEST_F(CodeGeneratorGenerateTest, GlobalCompoundYGate) {
   const auto& slm = *architecture.storageZones.front();
   // Create a compound operation with a single Y gate
   qc::CompoundOperation cy;
-  cy.emplace_back<qc::StandardOperation>(0, qc::Y);
+  cy.emplace_back<qc::StandardOperation>(0U, qc::Y);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::CompoundOperation>(std::move(cy)));
   std::vector<SingleQubitGateLayer> layers;
@@ -143,14 +143,10 @@ TEST_F(CodeGeneratorGenerateTest, GlobalCompoundYGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, RZGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto rz = qc::StandardOperation(0, qc::RZ, {0.1});
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(rz)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::RZ,
+                                                             std::vector{0.1}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -161,14 +157,10 @@ TEST_F(CodeGeneratorGenerateTest, RZGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, PGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto p = qc::StandardOperation(0, qc::P, {0.1});
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(p)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::P,
+                                                             std::vector{0.1}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -179,14 +171,9 @@ TEST_F(CodeGeneratorGenerateTest, PGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, ZGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto z = qc::StandardOperation(0, qc::Z);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(z)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::Z),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -197,14 +184,9 @@ TEST_F(CodeGeneratorGenerateTest, ZGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto s = qc::StandardOperation(0, qc::S);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(s)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::S),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -215,14 +197,9 @@ TEST_F(CodeGeneratorGenerateTest, SGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto sdg = qc::StandardOperation(0, qc::Sdg);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(sdg)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::Sdg),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -233,14 +210,9 @@ TEST_F(CodeGeneratorGenerateTest, SdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, TGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto t = qc::StandardOperation(0, qc::T);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(t)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::T),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -251,14 +223,9 @@ TEST_F(CodeGeneratorGenerateTest, TGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, TdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto tdg = qc::StandardOperation(0, qc::Tdg);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(tdg)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::Tdg),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -269,14 +236,10 @@ TEST_F(CodeGeneratorGenerateTest, TdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, U3Gate) {
   const auto& slm = *architecture.storageZones.front();
-  auto u = qc::StandardOperation(0, qc::U, {0.1, 0.2, 0.3});
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(u)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(
+                        0U, qc::U, std::vector{0.1, 0.2, 0.3}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -287,14 +250,10 @@ TEST_F(CodeGeneratorGenerateTest, U3Gate) {
 }
 TEST_F(CodeGeneratorGenerateTest, U2Gate) {
   const auto& slm = *architecture.storageZones.front();
-  auto u2 = qc::StandardOperation(0, qc::U2, {0.1, 0.2});
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(u2)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(
+                        0U, qc::U, std::vector{0.1, 0.2}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -305,14 +264,10 @@ TEST_F(CodeGeneratorGenerateTest, U2Gate) {
 }
 TEST_F(CodeGeneratorGenerateTest, RXGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto rx = qc::StandardOperation(0, qc::RX, {0.1});
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(rx)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::RX,
+                                                             std::vector{0.1}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -323,14 +278,10 @@ TEST_F(CodeGeneratorGenerateTest, RXGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, RYGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto ry = qc::StandardOperation(0, qc::RY, {0.1});
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(ry)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::RY,
+                                                             std::vector{0.1}),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}, {slm, 0, 1}}},
@@ -342,14 +293,9 @@ TEST_F(CodeGeneratorGenerateTest, RYGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, YGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto ry = qc::StandardOperation(0, qc::Y);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(ry)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::Y),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}, {slm, 0, 1}}},
@@ -361,14 +307,9 @@ TEST_F(CodeGeneratorGenerateTest, YGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, HGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto h = qc::StandardOperation(0, qc::H);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(h)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::H),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -379,14 +320,9 @@ TEST_F(CodeGeneratorGenerateTest, HGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, XGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto x = qc::StandardOperation(0, qc::X);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(x)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::X),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -397,14 +333,9 @@ TEST_F(CodeGeneratorGenerateTest, XGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, VGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto v = qc::StandardOperation(0, qc::V);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(v)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::V),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -415,14 +346,9 @@ TEST_F(CodeGeneratorGenerateTest, VGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, VdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto vdg = qc::StandardOperation(0, qc::Vdg);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(vdg)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::Vdg),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -433,14 +359,9 @@ TEST_F(CodeGeneratorGenerateTest, VdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SXGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto sx = qc::StandardOperation(0, qc::SX);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(sx)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::SX),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -451,14 +372,9 @@ TEST_F(CodeGeneratorGenerateTest, SXGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SXdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto sxdg = qc::StandardOperation(0, qc::SXdg);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(sxdg)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_EQ(
       codeGenerator
-          .generate(layers,
+          .generate(makeSingleOpLayer<qc::StandardOperation>(0U, qc::SXdg),
                     std::vector<std::vector<std::tuple<
                         std::reference_wrapper<const SLM>, size_t, size_t>>>{
                         {{slm, 0, 0}}},
@@ -469,15 +385,9 @@ TEST_F(CodeGeneratorGenerateTest, SXdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, UnsupportedGate) {
   const auto& slm = *architecture.storageZones.front();
-  auto unsupported = qc::NonUnitaryOperation(0, 0);
-  SingleQubitGateLayer layer;
-  layer.emplace_back(
-      std::make_unique<qc::NonUnitaryOperation>(std::move(unsupported)));
-  std::vector<SingleQubitGateLayer> layers;
-  layers.emplace_back(std::move(layer));
   EXPECT_THROW(
       std::ignore = codeGenerator.generate(
-          layers,
+          makeSingleOpLayer<qc::NonUnitaryOperation>(0U, 0U),
           std::vector<std::vector<
               std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>{
               {{slm, 0, 0}}},

@@ -14,6 +14,7 @@
 #include "na/zoned/Types.hpp"
 #include "na/zoned/decomposer/DecomposerBase.hpp"
 
+#include <nlohmann/json.hpp>
 #include <vector>
 
 namespace na::zoned {
