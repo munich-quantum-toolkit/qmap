@@ -228,10 +228,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       "Neutral Atom Mapper that can evaluate different synthesis steps "
       "to choose the best one.")
       .def(py::init<const na::NeutralAtomArchitecture&,
-                    const na::MapperParameters&>(),
+                    const na::MapperParameters&, uint32_t>(),
            "Create Hybrid Synthesis Mapper with mapper parameters.",
            py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a,
-           "params"_a = na::MapperParameters())
+           "params"_a = na::MapperParameters(), "buffer_size"_a = 0)
       .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
            "Set the parameters for the Hybrid Synthesis Mapper.", "params"_a,
            py::keep_alive<1, 2>())
@@ -268,21 +268,14 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "mapped to the hardware as qasm2 to a file.",
            "filename"_a)
       .def(
-          "append_without_mapping",
-          [](na::HybridSynthesisMapper& mapper, qc::QuantumComputation& qc) {
-            mapper.appendWithoutMapping(qc);
-          },
-          "Appends the given QuantumComputation to the synthesized "
-          "QuantumComputation without mapping it to the hardware.",
-          "qc"_a)
-      .def(
           "append_with_mapping",
-          [](na::HybridSynthesisMapper& mapper, qc::QuantumComputation& qc) {
-            mapper.appendWithMapping(qc);
+          [](na::HybridSynthesisMapper& mapper, qc::QuantumComputation& qc,
+             bool completeRemap) {
+            mapper.appendWithMapping(qc, completeRemap);
           },
           "Appends the given QuantumComputation to the synthesized "
           "QuantumComputation and maps the gates to the hardware.",
-          "qc"_a)
+          "qc"_a, "complete_remap"_a = false)
       .def(
           "get_circuit_adjacency_matrix",
           [](const na::HybridSynthesisMapper& mapper) {
@@ -301,15 +294,20 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def(
           "evaluate_synthesis_steps",
           [](na::HybridSynthesisMapper& mapper,
-             std::vector<qc::QuantumComputation>& qcs, bool alsoMap) {
-            return mapper.evaluateSynthesisSteps(qcs, alsoMap);
+             std::vector<qc::QuantumComputation>& qcs, bool completeRemap,
+             bool alsoMap) {
+            return mapper.evaluateSynthesisSteps(qcs, completeRemap, alsoMap);
           },
           "Evaluates the synthesis steps proposed by the ZX extraction. "
           "Returns a list of fidelities of the mapped synthesis steps.",
-          "synthesis_steps"_a, "also_map"_a = false)
-      .def("complete_remap", &na::HybridSynthesisMapper::completeRemap,
-           "Remaps the synthesized QuantumComputation to the hardware.",
-           "initial_mapping"_a = na::InitialMapping::Identity)
+          "synthesis_steps"_a, "complete_remap"_a = false, "also_map"_a = false)
+      .def(
+          "complete_remap",
+          [](na::HybridSynthesisMapper& mapper, bool includeBuffer) {
+            mapper.completeRemap(includeBuffer);
+          },
+          "Remaps the QuantumComputation to the hardware.",
+          "include_buffer"_a = true)
       .def(
           "schedule",
           [](na::HybridSynthesisMapper& mapper, const bool verbose,

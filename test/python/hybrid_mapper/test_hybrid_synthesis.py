@@ -74,7 +74,6 @@ def test_hybrid_synthesis_input_output(arch_filename: str, tmp_path: Path) -> No
     synthesis_mapper.init_mapping(3)
 
     synthesis_mapper.append_with_mapping(qc1)
-    synthesis_mapper.append_without_mapping(qc2)
 
     qasm = synthesis_mapper.get_mapped_qc_qasm()
     assert qasm is not None
