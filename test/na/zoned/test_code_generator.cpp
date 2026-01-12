@@ -23,9 +23,8 @@
 namespace na::zoned {
 template <typename OpType, typename... Args>
 auto makeSingleOpLayer(Args&&... args) {
-  OpType op(std::forward<Args>(args)...);
   SingleQubitGateLayer layer;
-  layer.emplace_back(std::make_unique<OpType>(std::move(op)));
+  layer.emplace_back(std::make_unique<OpType>(std::forward<Args>(args)...));
   std::vector<SingleQubitGateLayer> layers;
   layers.emplace_back(std::move(layer));
   return layers;
