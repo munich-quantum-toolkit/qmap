@@ -26,7 +26,6 @@
 #include <cassert>
 #include <chrono>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
@@ -77,6 +76,7 @@ public:
                                                 layoutSynthesizerConfig,
                                                 codeGeneratorConfig, logLevel);
   };
+
   /**
    * Collection of statistics collected during the compilation process for the
    * different components.
@@ -90,12 +90,10 @@ public:
     int64_t layoutSynthesisTime; ///< Time taken for layout synthesis in us
     int64_t codeGenerationTime;  ///< Time taken for code generation in us
     int64_t totalTime;           ///< Total time taken for the compilation in us
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
-                                                  reuseAnalysisTime,
-                                                  layoutSynthesizerStatistics,
-                                                  layoutSynthesisTime,
-                                                  codeGenerationTime,
-                                                  totalTime);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(
+        Statistics, schedulingTime, decomposingTime, reuseAnalysisTime,
+        layoutSynthesizerStatistics, layoutSynthesisTime, codeGenerationTime,
+        totalTime);
   };
 
 private:
@@ -257,6 +255,7 @@ public:
     SPDLOG_INFO("Total time: {}us", statistics_.totalTime);
     return code;
   }
+
   /// @return the statistics collected during the compilation process.
   [[nodiscard]] auto getStatistics() const -> const Statistics& {
     return statistics_;
@@ -271,9 +270,11 @@ public:
   RoutingAgnosticSynthesizer(const Architecture& architecture,
                              const Config& config)
       : PlaceAndRouteSynthesizer(architecture, config) {}
+
   explicit RoutingAgnosticSynthesizer(const Architecture& architecture)
       : PlaceAndRouteSynthesizer(architecture) {}
 };
+
 class RoutingAgnosticCompiler final
     : public Compiler<RoutingAgnosticCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAgnosticSynthesizer,
@@ -282,6 +283,7 @@ public:
   RoutingAgnosticCompiler(const Architecture& architecture,
                           const Config& config)
       : Compiler(architecture, config) {}
+
   explicit RoutingAgnosticCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
@@ -293,9 +295,11 @@ public:
   RoutingAwareSynthesizer(const Architecture& architecture,
                           const Config& config)
       : PlaceAndRouteSynthesizer(architecture, config) {}
+
   explicit RoutingAwareSynthesizer(const Architecture& architecture)
       : PlaceAndRouteSynthesizer(architecture) {}
 };
+
 class RoutingAwareCompiler final
     : public Compiler<RoutingAwareCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
@@ -303,6 +307,7 @@ class RoutingAwareCompiler final
 public:
   RoutingAwareCompiler(const Architecture& architecture, const Config& config)
       : Compiler(architecture, config) {}
+
   explicit RoutingAwareCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };

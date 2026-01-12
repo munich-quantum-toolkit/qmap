@@ -14,13 +14,8 @@
 #include "ir/operations/SymbolicOperation.hpp"
 #include "na/zoned/code_generator/CodeGenerator.hpp"
 
-#include <cstddef>
 #include <gmock/gmock-matchers.h>
-#include <gmock/gmock-more-matchers.h>
 #include <gtest/gtest.h>
-#include <map>
-#include <optional>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -148,7 +143,7 @@ TEST_F(CodeGeneratorGenerateTest, GlobalCompoundYGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, RZGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto rz = qc::StandardOperation(0, qc::RZ, {0.1});
+  auto rz = qc::StandardOperation(0, qc::RZ, {0.1});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(rz)));
   std::vector<SingleQubitGateLayer> layers;
@@ -166,7 +161,7 @@ TEST_F(CodeGeneratorGenerateTest, RZGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, PGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto p = qc::StandardOperation(0, qc::P, {0.1});
+  auto p = qc::StandardOperation(0, qc::P, {0.1});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(p)));
   std::vector<SingleQubitGateLayer> layers;
@@ -184,7 +179,7 @@ TEST_F(CodeGeneratorGenerateTest, PGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, ZGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto z = qc::StandardOperation(0, qc::Z);
+  auto z = qc::StandardOperation(0, qc::Z);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(z)));
   std::vector<SingleQubitGateLayer> layers;
@@ -202,7 +197,7 @@ TEST_F(CodeGeneratorGenerateTest, ZGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto s = qc::StandardOperation(0, qc::S);
+  auto s = qc::StandardOperation(0, qc::S);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(s)));
   std::vector<SingleQubitGateLayer> layers;
@@ -220,7 +215,7 @@ TEST_F(CodeGeneratorGenerateTest, SGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto sdg = qc::StandardOperation(0, qc::Sdg);
+  auto sdg = qc::StandardOperation(0, qc::Sdg);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(sdg)));
   std::vector<SingleQubitGateLayer> layers;
@@ -238,7 +233,7 @@ TEST_F(CodeGeneratorGenerateTest, SdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, TGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto t = qc::StandardOperation(0, qc::T);
+  auto t = qc::StandardOperation(0, qc::T);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(t)));
   std::vector<SingleQubitGateLayer> layers;
@@ -256,7 +251,7 @@ TEST_F(CodeGeneratorGenerateTest, TGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, TdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto tdg = qc::StandardOperation(0, qc::Tdg);
+  auto tdg = qc::StandardOperation(0, qc::Tdg);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(tdg)));
   std::vector<SingleQubitGateLayer> layers;
@@ -274,7 +269,7 @@ TEST_F(CodeGeneratorGenerateTest, TdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, U3Gate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto u = qc::StandardOperation(0, qc::U, {0.1, 0.2, 0.3});
+  auto u = qc::StandardOperation(0, qc::U, {0.1, 0.2, 0.3});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(u)));
   std::vector<SingleQubitGateLayer> layers;
@@ -292,7 +287,7 @@ TEST_F(CodeGeneratorGenerateTest, U3Gate) {
 }
 TEST_F(CodeGeneratorGenerateTest, U2Gate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto u2 = qc::StandardOperation(0, qc::U2, {0.1, 0.2});
+  auto u2 = qc::StandardOperation(0, qc::U2, {0.1, 0.2});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(u2)));
   std::vector<SingleQubitGateLayer> layers;
@@ -310,7 +305,7 @@ TEST_F(CodeGeneratorGenerateTest, U2Gate) {
 }
 TEST_F(CodeGeneratorGenerateTest, RXGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto rx = qc::StandardOperation(0, qc::RX, {0.1});
+  auto rx = qc::StandardOperation(0, qc::RX, {0.1});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(rx)));
   std::vector<SingleQubitGateLayer> layers;
@@ -328,7 +323,7 @@ TEST_F(CodeGeneratorGenerateTest, RXGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, RYGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto ry = qc::StandardOperation(0, qc::RY, {0.1});
+  auto ry = qc::StandardOperation(0, qc::RY, {0.1});
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(ry)));
   std::vector<SingleQubitGateLayer> layers;
@@ -347,7 +342,7 @@ TEST_F(CodeGeneratorGenerateTest, RYGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, YGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto ry = qc::StandardOperation(0, qc::Y);
+  auto ry = qc::StandardOperation(0, qc::Y);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(ry)));
   std::vector<SingleQubitGateLayer> layers;
@@ -366,7 +361,7 @@ TEST_F(CodeGeneratorGenerateTest, YGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, HGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto h = qc::StandardOperation(0, qc::H);
+  auto h = qc::StandardOperation(0, qc::H);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(h)));
   std::vector<SingleQubitGateLayer> layers;
@@ -384,7 +379,7 @@ TEST_F(CodeGeneratorGenerateTest, HGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, XGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto x = qc::StandardOperation(0, qc::X);
+  auto x = qc::StandardOperation(0, qc::X);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(x)));
   std::vector<SingleQubitGateLayer> layers;
@@ -402,7 +397,7 @@ TEST_F(CodeGeneratorGenerateTest, XGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, VGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto v = qc::StandardOperation(0, qc::V);
+  auto v = qc::StandardOperation(0, qc::V);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(v)));
   std::vector<SingleQubitGateLayer> layers;
@@ -420,7 +415,7 @@ TEST_F(CodeGeneratorGenerateTest, VGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, VdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto vdg = qc::StandardOperation(0, qc::Vdg);
+  auto vdg = qc::StandardOperation(0, qc::Vdg);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(vdg)));
   std::vector<SingleQubitGateLayer> layers;
@@ -438,7 +433,7 @@ TEST_F(CodeGeneratorGenerateTest, VdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SXGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto sx = qc::StandardOperation(0, qc::SX);
+  auto sx = qc::StandardOperation(0, qc::SX);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(sx)));
   std::vector<SingleQubitGateLayer> layers;
@@ -456,7 +451,7 @@ TEST_F(CodeGeneratorGenerateTest, SXGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, SXdgGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto sxdg = qc::StandardOperation(0, qc::SXdg);
+  auto sxdg = qc::StandardOperation(0, qc::SXdg);
   SingleQubitGateLayer layer;
   layer.emplace_back(std::make_unique<qc::StandardOperation>(std::move(sxdg)));
   std::vector<SingleQubitGateLayer> layers;
@@ -474,7 +469,7 @@ TEST_F(CodeGeneratorGenerateTest, SXdgGate) {
 }
 TEST_F(CodeGeneratorGenerateTest, UnsupportedGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto unsupported = qc::NonUnitaryOperation(0, 0);
+  auto unsupported = qc::NonUnitaryOperation(0, 0);
   SingleQubitGateLayer layer;
   layer.emplace_back(
       std::make_unique<qc::NonUnitaryOperation>(std::move(unsupported)));
