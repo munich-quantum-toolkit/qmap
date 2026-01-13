@@ -10,6 +10,7 @@
 
 #include "ir/operations/StandardOperation.hpp"
 #include "na/zoned/scheduler/MinFlowScheduler.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
@@ -328,5 +329,66 @@ TEST(MinFlowSchedulerConfigTest, InvalidMaxFillingFactor) {
   constexpr MinFlowScheduler::Config config2{.maxFillingFactor = 1.1};
   EXPECT_THROW(MinFlowScheduler scheduler(architecture, config2),
                std::invalid_argument);
+}
+constexpr std::string_view circuitGraphstate10 = R"(OPENQASM 3.0;
+include "stdgates.inc";
+qubit[10] q;
+bit[10] c;
+h q[0];
+h q[1];
+h q[2];
+h q[3];
+cz q[2], q[3];
+h q[4];
+cz q[1], q[4];
+h q[5];
+cz q[3], q[5];
+h q[6];
+cz q[0], q[6];
+cz q[5], q[6];
+h q[7];
+cz q[2], q[7];
+h q[8];
+cz q[1], q[8];
+cz q[7], q[8];
+h q[9];
+cz q[0], q[9];
+cz q[4], q[9];
+)";
+constexpr std::string_view architectureSpecification = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": { "rydberg_gate": 0.36, "single_qubit_gate": 52, "atom_transfer": 15 },
+  "operation_fidelity": { "rydberg_gate": 0.995, "single_qubit_gate": 0.9997, "atom_transfer": 0.999 },
+  "qubit_spec": { "T": 1.5e6 },
+  "storage_zones": [
+    {
+      "zone_id": 0,
+      "slms": [ { "id": 0, "site_separation": [4, 4], "r": 73, "c": 101, "location": [0, 0] } ],
+      "offset": [0, 0],
+      "dimension": [400, 288]
+    }
+  ],
+  "entanglement_zones": [
+    {
+      "zone_id": 0,
+      "slms": [
+        { "id": 1, "site_separation": [12, 10], "r": 10, "c": 34, "location": [1, 309] },
+        { "id": 2, "site_separation": [12, 10], "r": 10, "c": 34, "location": [3, 309] }
+      ],
+      "offset": [1, 309],
+      "dimension": [398, 90]
+    }
+  ],
+  "aods": [ { "id": 0, "site_separation": 2, "r": 100, "c": 100 } ],
+  "arch_range": [ [0, 0], [400, 400] ],
+  "rydberg_range": [ [ [0, 308], [400, 400] ] ]
+}
+)";
+TEST(MinFlowScheduler, Graphstate10) {
+  const auto qc = qasm3::Importer::imports(circuitGraphstate10.data());
+  const auto arch = Architecture::fromJSONString(architectureSpecification);
+  constexpr MinFlowScheduler::Config config{.maxFillingFactor = 0.9};
+  const MinFlowScheduler scheduler(arch, config);
+  EXPECT_NO_THROW(std::ignore = scheduler.schedule(qc));
 }
 } // namespace na::zoned
