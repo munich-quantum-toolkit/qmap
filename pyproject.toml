@@ -8,7 +8,7 @@
 
 [build-system]
 requires = [
-  "pybind11>=3.0.1",
+  "nanobind>=2.10.2",
   "setuptools-scm>=9.2.2",
   "scikit-build-core>=0.11.6",
   "mqt.core~=3.4.0",
@@ -379,7 +379,7 @@ mqt-qmap = { workspace = true }
 
 [dependency-groups]
 build = [
-  "pybind11>=3.0.1",
+  "nanobind>=2.10.2",
   "setuptools-scm>=9.2.2",
   "scikit-build-core>=0.11.6",
   "mqt.core~=3.4.0",

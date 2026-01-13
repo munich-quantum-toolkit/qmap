@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-add_mqt_python_binding(
+add_mqt_python_binding_nanobind(
   QMAP
   ${MQT_QMAP_TARGET_NAME}-na-zoned-bindings
   zoned.cpp
@@ -16,5 +16,4 @@ add_mqt_python_binding(
   ./na
   LINK_LIBS
   MQT::QMapNAZoned
-  MQT::CoreQASM
-  pybind11_json)
+  MQT::CoreQASM)

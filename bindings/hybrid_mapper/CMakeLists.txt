@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-add_mqt_python_binding(
+add_mqt_python_binding_nanobind(
   QMAP
   ${MQT_QMAP_TARGET_NAME}-hybrid_mapper-bindings
   hybrid_mapper.cpp
@@ -16,8 +16,7 @@ add_mqt_python_binding(
   .
   LINK_LIBS
   MQT::QMapHybrid
-  MQT::CoreQASM
-  pybind11_json)
+  MQT::CoreQASM)
 
 # install the Python stub files in editable mode for better IDE support
 if(SKBUILD_STATE STREQUAL "editable")
