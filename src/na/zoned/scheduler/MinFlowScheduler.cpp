@@ -298,6 +298,7 @@ auto MinFlowScheduler::minCostFlowScheduling(
       }
     }
   }
+  SPDLOG_INFO("Flow through gates: {}", vFlowEdge.size());
   start = std::chrono::high_resolution_clock::now();
   // std::cout << "Optimal count: " << vFlowEdge.size() << std::endl;
   // Build result scheduling
@@ -812,9 +813,9 @@ auto MinFlowScheduler::constructNodeSchedule(
         }
       }
 
-      // if (tmp != SIZE_MAX) {
-      //   usUnassignedReuseCompIdxs.erase(tmp);
-      // }
+      if (tmp != SIZE_MAX) {
+        usUnassignedReuseCompIdxs.erase(tmp);
+      }
     }
   }
   // Fix any remaining conflicts
