@@ -425,12 +425,12 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def_prop_rw("name", &Architecture::getName, &Architecture::setName)
       .def_prop_rw("num_qubits", &Architecture::getNqubits,
                    &Architecture::setNqubits)
-      .def_prop_rw("coupling_map",
-                   nb::overload_cast<>(&Architecture::getCouplingMap),
-                   &Architecture::setCouplingMap)
-      .def_prop_rw("properties",
-                   nb::overload_cast<>(&Architecture::getProperties),
-                   &Architecture::setProperties)
+      .def_prop_rw(
+          "coupling_map", nb::overload_cast<>(&Architecture::getCouplingMap),
+          &Architecture::setCouplingMap, nb::rv_policy::reference_internal)
+      .def_prop_rw(
+          "properties", nb::overload_cast<>(&Architecture::getProperties),
+          &Architecture::setProperties, nb::rv_policy::reference_internal)
       .def("load_coupling_map",
            nb::overload_cast<AvailableArchitecture>(
                &Architecture::loadCouplingMap),
