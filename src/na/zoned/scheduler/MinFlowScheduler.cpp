@@ -791,7 +791,7 @@ auto MinFlowScheduler::constructNodeSchedule(
 
             for (int j_int = static_cast<int>(sortedComp.size()) - 2;
                  j_int >= 0; j_int--) {
-              size_t j = static_cast<size_t>(j);
+              size_t j = static_cast<size_t>(j_int);
               if (vNodeTime[sortedComp[j + 1]] - 1 <=
                   vNodeTime[sortedComp[j]] + vNodeSlack[sortedComp[j]]) {
                 vNodeTime[sortedComp[j]] = vNodeTime[sortedComp[j + 1]] - 1;
