@@ -13,8 +13,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
-- ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#909]) ([**@denialhaag**])
-- 📦️ Provide Stable ABI wheels for Python 3.12+ ([#909]) ([**@denialhaag**])
+- ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#911]) ([**@denialhaag**])
+- 📦️ Provide Stable ABI wheels for Python 3.12+ ([#911]) ([**@denialhaag**])
 
 ## [3.5.0] - 2025-12-16
 
@@ -183,7 +183,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#909]: https://github.com/munich-quantum-toolkit/qmap/pull/909
+[#911]: https://github.com/munich-quantum-toolkit/qmap/pull/911
 [#874]: https://github.com/munich-quantum-toolkit/qmap/pull/874
 [#862]: https://github.com/munich-quantum-toolkit/qmap/pull/862
 [#859]: https://github.com/munich-quantum-toolkit/qmap/pull/859
