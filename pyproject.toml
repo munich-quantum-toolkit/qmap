@@ -83,6 +83,9 @@ wheel.install-dir = "mqt/qmap"
 # Explicitly set the package directory
 wheel.packages = ["python/mqt"]
 
+# Enable Stable ABI builds for CPython 3.12+
+wheel.py-api = "cp312"
+
 # Set required Ninja version
 ninja.version = ">=1.10"
 
@@ -363,6 +366,11 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-circuit-optimizer.dll \
 --exclude mqt-core-ds.dll \
 --exclude mqt-core-na.dll"""
+
+[[tool.cibuildwheel.overrides]]
+select = "cp312-*"
+inherit.repair-wheel-command = "append"
+repair-wheel-command = "uvx abi3audit --strict --report {wheel}"
 
 
 [tool.uv]
