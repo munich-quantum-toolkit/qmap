@@ -11,7 +11,12 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
-## [3.5.0]
+### Changed
+
+- ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#909]) ([**@denialhaag**])
+- 📦️ Provide Stable ABI wheels for Python 3.12+ ([#909]) ([**@denialhaag**])
+
+## [3.5.0] - 2025-12-16
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#350)._
 
@@ -178,6 +183,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#909]: https://github.com/munich-quantum-toolkit/qmap/pull/909
 [#874]: https://github.com/munich-quantum-toolkit/qmap/pull/874
 [#862]: https://github.com/munich-quantum-toolkit/qmap/pull/862
 [#859]: https://github.com/munich-quantum-toolkit/qmap/pull/859
