@@ -216,8 +216,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def("json",
            [](const Configuration& config) {
              const nb::module_ json = nb::module_::import_("json");
-             const nb::object dumps = json.attr("dumps");
-             return dumps(config.json());
+             const nb::object loads = json.attr("loads");
+             return loads(config.json().dump());
            })
       .def("__repr__", &Configuration::toString);
 
@@ -239,8 +239,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def("json",
            [](const MappingResults& results) {
              const nb::module_ json = nb::module_::import_("json");
-             const nb::object dumps = json.attr("dumps");
-             return dumps(results.json());
+             const nb::object loads = json.attr("loads");
+             return loads(results.json().dump());
            })
       .def("__repr__", &MappingResults::toString);
 
@@ -278,8 +278,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
               &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor)
       .def("json", [](const MappingResults::HeuristicBenchmarkInfo& info) {
         const nb::module_ json = nb::module_::import_("json");
-        const nb::object dumps = json.attr("dumps");
-        return dumps(info.json());
+        const nb::object loads = json.attr("loads");
+        return loads(info.json().dump());
       });
 
   // Heuristic benchmark information for individual layers
@@ -315,8 +315,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
               &MappingResults::LayerHeuristicBenchmarkInfo::earlyTermination)
       .def("json", [](const MappingResults::LayerHeuristicBenchmarkInfo& info) {
         const nb::module_ json = nb::module_::import_("json");
-        const nb::object dumps = json.attr("dumps");
-        return dumps(info.json());
+        const nb::object loads = json.attr("loads");
+        return loads(info.json().dump());
       });
 
   auto arch = nb::class_<Architecture>(
@@ -406,8 +406,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
           "json",
           [](const Architecture::Properties& props) {
             const nb::module_ json = nb::module_::import_("json");
-            const nb::object dumps = json.attr("dumps");
-            return dumps(props.json());
+            const nb::object loads = json.attr("loads");
+            return loads(props.json().dump());
           },
           "Returns a JSON-style dictionary of all the information present in "
           "the :class:`.Properties`")
