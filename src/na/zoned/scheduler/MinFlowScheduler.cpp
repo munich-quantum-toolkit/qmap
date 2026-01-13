@@ -621,16 +621,16 @@ auto MinFlowScheduler::constructNodeSchedule(
     vFlowSucc[u].push_back(v);
     vFlowPred[v].push_back(u);
   }
-
+  // SPDLOG_INFO("find weaklyConnectedComponents");
   std::vector<std::unordered_set<size_t>> wccs =
       weaklyConnectedComponents(numGates, vFlowSucc, vFlowPred);
   // Debug: weakly connected components and EST (commented out)
   // std::cout << "wccs" << std::endl;
   // for (auto s : wccs){
+  //   SPDLOG_INFO("one wccs");
   //   for (auto i : s){
-  //     std::cout << i << " ";
+  //     SPDLOG_INFO("{}", i);
   //   }
-  //   std::cout << std::endl;
   // }
   // std::cout << "vEst" << std::endl;
   // for (auto i : vEst){
@@ -639,7 +639,7 @@ auto MinFlowScheduler::constructNodeSchedule(
   // std::cout << std::endl;
   std::vector<int> vNodeTime(numGates, -1);
   std::vector<std::unordered_set<size_t>> vUnassignedReuseComps;
-
+  // SPDLOG_INFO("Process weaklyConnectedComponents");
   // Process each weakly connected component
   for (const auto& comp : wccs) {
     size_t seed = SIZE_MAX;
@@ -664,7 +664,7 @@ auto MinFlowScheduler::constructNodeSchedule(
     vNodeTime[seed] = vEst[seed];
     // use a deque for BFS propagation starting from the seed.
     std::deque<size_t> queue = {seed};
-
+    // SPDLOG_INFO("propagate queue");
     while (!queue.empty()) {
       size_t curr = queue.front();
       queue.pop_front();
@@ -736,71 +736,85 @@ auto MinFlowScheduler::constructNodeSchedule(
   // }
   // std::cout << std::endl;
   // Assign unscheduled gates to EST
+  // SPDLOG_INFO("Node time");
   for (size_t i = 0; i < vNodeTime.size(); i++) {
     if (vNodeTime[i] == -1 || vNodeSlack[i] == 0) {
       vNodeTime[i] = vEst[i];
+      // SPDLOG_INFO("vNodeTime[{}]: {}", i, vNodeTime[i]);
     }
   }
-
   // Process unassigned reuse components
-  std::unordered_set<size_t> usUnassignedReuseCompIdxs;
-  for (size_t i = 0; i < vUnassignedReuseComps.size(); i++) {
-    usUnassignedReuseCompIdxs.insert(i);
-  }
+  if (vUnassignedReuseComps.size()) {
+    // SPDLOG_INFO("Process unassigned reuse components");
+    std::unordered_set<size_t> usUnassignedReuseCompIdxs;
+    for (size_t i = 0; i < vUnassignedReuseComps.size(); i++) {
+      usUnassignedReuseCompIdxs.insert(i);
+    }
 
-  for (int i = static_cast<int>(numGates) - 1; i >= 0; i--) {
-    size_t i_size = static_cast<size_t>(i);
-    size_t tmp = SIZE_MAX;
+    for (int i = static_cast<int>(numGates) - 1; i >= 0; i--) {
+      size_t tmp = SIZE_MAX;
 
-    for (size_t compIdx : usUnassignedReuseCompIdxs) {
-      const auto& comp = vUnassignedReuseComps[compIdx];
-      if (comp.find(i_size) != comp.end()) {
-        tmp = compIdx;
-        std::vector<size_t> sortedComp(comp.begin(), comp.end());
-        std::sort(sortedComp.begin(), sortedComp.end());
+      // SPDLOG_INFO("gate {}", i);
+      // SPDLOG_INFO("usUnassignedReuseCompIdxs");
+      for (size_t compIdx : usUnassignedReuseCompIdxs) {
+        const auto& comp = vUnassignedReuseComps[compIdx];
+        if (comp.find(static_cast<size_t>(i)) != comp.end()) {
+          // SPDLOG_INFO("compIdx {}", compIdx);
+          tmp = compIdx;
+          // for (auto tmp_idx : comp){
+          //   SPDLOG_INFO("node {}", tmp_idx);
+          // }
+          std::vector<size_t> sortedComp(comp.begin(), comp.end());
+          std::sort(sortedComp.begin(), sortedComp.end());
 
-        std::vector<int> timeAssignment = {vEst[sortedComp.back()],
-                                           vEst[sortedComp.back()] +
-                                               vNodeSlack[sortedComp.back()]};
+          // SPDLOG_INFO("for loop bound {}->{}", vEst[sortedComp.back()],
+          // vEst[sortedComp.back()] + vNodeSlack[sortedComp.back()]);
+          std::vector<int> timeAssignment = {vEst[sortedComp.back()],
+                                             vEst[sortedComp.back()] +
+                                                 vNodeSlack[sortedComp.back()]};
 
-        if (vNodeSlack[sortedComp.back()] > 2) {
-          for (int t = vEst[sortedComp.back()] + 1;
-               t < vEst[sortedComp.back()] + vNodeSlack[sortedComp.back()];
-               t++) {
-            timeAssignment.push_back(t);
-          }
-        }
-
-        int maxContinuousGateTimes = 0;
-        std::vector<int> bestGateTime;
-
-        for (int t : timeAssignment) {
-          vNodeTime[sortedComp.back()] = t;
-          int numContinuous = 0;
-
-          for (size_t j = sortedComp.size() - 2; j >= 0; j--) {
-            if (vNodeTime[sortedComp[j + 1]] - 1 <=
-                vNodeTime[sortedComp[j]] + vNodeSlack[sortedComp[j]]) {
-              vNodeTime[sortedComp[j]] = vNodeTime[sortedComp[j + 1]] - 1;
-              numContinuous++;
+          if (vNodeSlack[sortedComp.back()] > 2) {
+            for (int t = vEst[sortedComp.back()] + 1;
+                 t < vEst[sortedComp.back()] + vNodeSlack[sortedComp.back()];
+                 t++) {
+              timeAssignment.push_back(t);
             }
           }
 
-          if (numContinuous > maxContinuousGateTimes) {
-            maxContinuousGateTimes = numContinuous;
-            bestGateTime = vNodeTime;
+          int maxContinuousGateTimes = 0;
+          std::vector<int> bestGateTime;
+          // SPDLOG_INFO("in timeAssignment");
+          for (int t : timeAssignment) {
+            // SPDLOG_INFO("t: {}", t);
+            vNodeTime[sortedComp.back()] = t;
+            int numContinuous = 0;
+
+            for (int j_int = static_cast<int>(sortedComp.size()) - 2;
+                 j_int >= 0; j_int--) {
+              size_t j = static_cast<size_t>(j);
+              if (vNodeTime[sortedComp[j + 1]] - 1 <=
+                  vNodeTime[sortedComp[j]] + vNodeSlack[sortedComp[j]]) {
+                vNodeTime[sortedComp[j]] = vNodeTime[sortedComp[j + 1]] - 1;
+                numContinuous++;
+              }
+            }
+
+            if (numContinuous > maxContinuousGateTimes) {
+              maxContinuousGateTimes = numContinuous;
+              bestGateTime = vNodeTime;
+            }
           }
-        }
 
-        if (!bestGateTime.empty()) {
-          vNodeTime = bestGateTime;
+          if (!bestGateTime.empty()) {
+            vNodeTime = bestGateTime;
+          }
+          break;
         }
-        break;
       }
-    }
 
-    if (tmp != SIZE_MAX) {
-      usUnassignedReuseCompIdxs.erase(tmp);
+      // if (tmp != SIZE_MAX) {
+      //   usUnassignedReuseCompIdxs.erase(tmp);
+      // }
     }
   }
   // Fix any remaining conflicts
@@ -814,7 +828,7 @@ auto MinFlowScheduler::constructNodeSchedule(
       }
     }
   }
-
+  // SPDLOG_INFO("Build result scheduling");
   // Build result scheduling
   size_t numStage = static_cast<size_t>(
       *std::max_element(vNodeTime.begin(), vNodeTime.end()) + 1);
