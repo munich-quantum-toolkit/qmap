@@ -196,7 +196,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
                   "Constructs a synthesizer for a tableau representing the "
                   "target state.");
   synthesizer.def(nb::init<qc::QuantumComputation&, bool>(), "qc"_a,
-                  "use_destabilizers"_a
+                  "use_destabilizers"_a,
                   "Constructs a synthesizer for a quantum computation "
                   "representing the target state.");
   synthesizer.def(

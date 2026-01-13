@@ -42,8 +42,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .value("random", na::InitialCoordinateMapping::Random, "Random mapping.");
 
   nb::enum_<na::InitialMapping>(
-      m, "InitialCircuitMapping"
-         "Initial mapping between circuit qubits and hardware qubits.")
+      m, "InitialCircuitMapping",
+      "Initial mapping between circuit qubits and hardware qubits.")
       .value("identity", na::InitialMapping::Identity, "Identity mapping.")
       .value("graph", na::InitialMapping::Graph, "Graph matching mapping.");
 

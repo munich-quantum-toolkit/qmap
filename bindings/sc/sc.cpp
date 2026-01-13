@@ -80,8 +80,6 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
 NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   nb::module_::import_("mqt.core.ir");
 
-  m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
-
   // Pre-defined architecture available within QMAP
   nb::enum_<AvailableArchitecture>(m, "Arch")
       .value("IBM_QX4", AvailableArchitecture::IbmQx4,
