@@ -31,6 +31,7 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
 NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   nb::module_::import_("mqt.core.ir");
 
