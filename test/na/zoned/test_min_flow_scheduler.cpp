@@ -363,25 +363,25 @@ constexpr std::string_view architectureSpecification = R"({
   "storage_zones": [
     {
       "zone_id": 0,
-      "slms": [ { "id": 0, "site_separation": [4, 4], "r": 73, "c": 101, "location": [0, 0] } ],
+      "slms": [ { "id": 0, "site_separation": [4, 4], "r": 8, "c": 22, "location": [0, 0] } ],
       "offset": [0, 0],
-      "dimension": [400, 288]
+      "dimension": [88, 28]
     }
   ],
   "entanglement_zones": [
     {
       "zone_id": 0,
       "slms": [
-        { "id": 1, "site_separation": [12, 10], "r": 10, "c": 34, "location": [1, 309] },
-        { "id": 2, "site_separation": [12, 10], "r": 10, "c": 34, "location": [3, 309] }
+        { "id": 1, "site_separation": [12, 10], "r": 4, "c": 8, "location": [1, 49] },
+        { "id": 2, "site_separation": [12, 10], "r": 4, "c": 8, "location": [3, 49] }
       ],
-      "offset": [1, 309],
-      "dimension": [398, 90]
+      "offset": [1, 49],
+      "dimension": [86, 30]
     }
   ],
   "aods": [ { "id": 0, "site_separation": 2, "r": 100, "c": 100 } ],
-  "arch_range": [ [0, 0], [400, 400] ],
-  "rydberg_range": [ [ [0, 308], [400, 400] ] ]
+  "arch_range": [ [0, 0], [88, 80] ],
+  "rydberg_range": [ [ [0, 48], [88, 80] ] ]
 }
 )";
 TEST(MinFlowScheduler, Graphstate10) {
