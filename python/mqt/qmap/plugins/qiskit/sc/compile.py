@@ -33,8 +33,7 @@ from .load_calibration import load_calibration
 
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit
-    from qiskit.providers import Backend
-    from qiskit.providers.models import BackendProperties
+    from qiskit.providers import BackendV2
     from qiskit.transpiler.target import Target
 
     from ....sc import Arch, Architecture, MappingResults
@@ -44,8 +43,8 @@ if TYPE_CHECKING:
 
 def compile(  # noqa: A001
     circ: CircuitInputType,
-    arch: str | Arch | Architecture | Backend | None,
-    calibration: str | BackendProperties | Target | None = None,
+    arch: str | Arch | Architecture | BackendV2 | None,
+    calibration: str | Target | None = None,
     method: Method = Method.heuristic,
     heuristic: Heuristic = Heuristic.gate_count_max_distance,
     initial_layout: InitialLayout = InitialLayout.dynamic,

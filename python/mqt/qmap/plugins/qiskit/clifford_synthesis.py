@@ -52,10 +52,10 @@ def _import_tableau(tableau: str | Clifford | PauliList | Tableau, include_desta
         except AttributeError:
             if include_destabilizers:
                 return Tableau(
-                    str(_reverse_paulis(tableau.stabilizer.to_labels())),
-                    str(_reverse_paulis(tableau.destabilizer.to_labels())),
+                    str(_reverse_paulis(tableau.stab.to_labels())),
+                    str(_reverse_paulis(tableau.destab.to_labels())),
                 )
-            return Tableau(str(_reverse_paulis(tableau.stabilizer.to_labels())))
+            return Tableau(str(_reverse_paulis(tableau.stab.to_labels())))
     elif isinstance(tableau, PauliList):
         return Tableau(str(_reverse_paulis(tableau.to_labels())))
     elif isinstance(tableau, str):

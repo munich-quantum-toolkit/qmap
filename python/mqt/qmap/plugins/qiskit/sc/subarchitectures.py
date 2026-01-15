@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from typing import TypeAlias
 
     from matplotlib import figure
-    from qiskit.providers import BackendV1, BackendV2
+    from qiskit.providers import BackendV1, BackendV2  # ty: ignore[unresolved-import]
 
     from ....sc import Architecture
 
@@ -258,7 +258,9 @@ class SubarchitectureOrder:
         colors = [SubarchitectureOrder.inactive_color for _ in range(self.arch.num_nodes())]
         for node in subarchitecture.nodes():
             colors[node] = SubarchitectureOrder.active_color
-        return rxviz.mpl_draw(self.arch, node_color=colors)
+        fig = rxviz.mpl_draw(self.arch, node_color=colors)
+        assert fig is not None
+        return fig
 
     def draw_subarchitectures(self, subarchitectures: list[Graph] | list[tuple[int, int]]) -> list[figure.Figure]:
         """Create matplotlib figures showing subarchitectures within the entire architecture.

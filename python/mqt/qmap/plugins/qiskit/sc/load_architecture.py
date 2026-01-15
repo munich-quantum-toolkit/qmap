@@ -10,12 +10,12 @@
 
 from __future__ import annotations
 
-from qiskit.providers import Backend
+from qiskit.providers import BackendV2
 
 from ....sc import Arch, Architecture
 
 
-def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
+def load_architecture(arch: str | Arch | Architecture | BackendV2 | None = None) -> Architecture:
     """Load a superconducting architecture from a string, Arch, Architecture, or Backend.
 
     If None is passed, no architecture is loaded.
@@ -38,7 +38,7 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
             architecture.load_coupling_map(arch)
         elif isinstance(arch, Architecture):
             architecture = arch
-        elif isinstance(arch, Backend):
+        elif isinstance(arch, BackendV2):
             from .import_backend import import_backend  # noqa: PLC0415 to decouple from Qiskit
 
             architecture = import_backend(arch)

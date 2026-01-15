@@ -22,6 +22,8 @@ from random import shuffle
 from typing import TYPE_CHECKING, Literal, TypedDict
 
 import networkx as nx
+import plotly.basedatatypes
+import plotly.callbacks
 import plotly.graph_objects as go
 from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator  # noqa: PLC2701
 from distinctipy import distinctipy
@@ -34,7 +36,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, MutableMapping
     from typing import TypeAlias
 
-    import plotly
     from ipywidgets import Widget
 
     Position: TypeAlias = tuple[float, float]
@@ -717,7 +718,7 @@ def _draw_swap_arrows(
 
 
 def _visualize_layout(
-    fig: go.Figure,
+    fig: go.FigureWidget,
     search_node: SearchNode,
     arch_node_trace: go.Scatter,
     arch_node_positions: MutableMapping[int, Position],
@@ -1076,7 +1077,7 @@ def _visualize_search_graph_check_parameters(
     _PlotlySettings,  # plotly_settings
 ]:
     if not isinstance(data_logging_path, str):
-        msg = "data_logging_path must be a string"  # type: ignore[unreachable]
+        msg = "data_logging_path must be a string"
         raise TypeError(msg)
     if data_logging_path[-1] != "/":
         data_logging_path += "/"
@@ -1085,7 +1086,7 @@ def _visualize_search_graph_check_parameters(
         raise FileNotFoundError(msg)
 
     if not isinstance(layer, int) and layer != "interactive":
-        msg = 'layer must be an integer or string literal "interactive"'  # type: ignore[unreachable]
+        msg = 'layer must be an integer or string literal "interactive"'
         raise TypeError(msg)
 
     if architecture_node_positions is not None:
@@ -1141,26 +1142,26 @@ def _visualize_search_graph_check_parameters(
         raise TypeError(msg)
 
     if not isinstance(use3d, bool):
-        msg = "use3d must be a boolean"  # type: ignore[unreachable]
+        msg = "use3d must be a boolean"
         raise TypeError(msg)
 
     if projection not in {"orthographic", "perspective"}:
         msg = 'projection must be either "orthographic" or "perspective"'
         raise TypeError(msg)
 
-    if not isinstance(width, int) or width < 1:  # type: ignore[redundant-expr]
+    if not isinstance(width, int) or width < 1:
         msg = "width must be a positive integer"
         raise TypeError(msg)
 
-    if not isinstance(height, int) or height < 1:  # type: ignore[redundant-expr]
+    if not isinstance(height, int) or height < 1:
         msg = "height must be a positive integer"
         raise TypeError(msg)
 
     if not isinstance(draw_search_edges, bool):
-        msg = "draw_search_edges must be a boolean"  # type: ignore[unreachable]
+        msg = "draw_search_edges must be a boolean"
         raise TypeError(msg)
 
-    if not isinstance(search_edges_width, float) or search_edges_width <= 0:  # type: ignore[redundant-expr]
+    if not isinstance(search_edges_width, float) or search_edges_width <= 0:
         msg = "search_edges_width must be a positive float"
         raise TypeError(msg)
 
@@ -1179,7 +1180,7 @@ def _visualize_search_graph_check_parameters(
         raise TypeError(msg)
 
     if not isinstance(tapered_search_layer_heights, bool):
-        msg = "tapered_search_layer_heights must be a boolean"  # type: ignore[unreachable]
+        msg = "tapered_search_layer_heights must be a boolean"
         raise TypeError(msg)
 
     if show_layout not in {"hover", "click"} and show_layout is not None:
@@ -1188,15 +1189,15 @@ def _visualize_search_graph_check_parameters(
     hide_layout = show_layout is None
 
     if not isinstance(show_swaps, bool):
-        msg = "show_swaps must be a boolean"  # type: ignore[unreachable]
+        msg = "show_swaps must be a boolean"
         raise TypeError(msg)
 
     if not isinstance(show_shared_swaps, bool):
-        msg = "show_shared_swaps must be a boolean"  # type: ignore[unreachable]
+        msg = "show_shared_swaps must be a boolean"
         raise TypeError(msg)
 
     if not isinstance(show_only_solution_path, bool):
-        msg = "show_only_solution_path must be a boolean"  # type: ignore[unreachable]
+        msg = "show_only_solution_path must be a boolean"
         raise TypeError(msg)
 
     if (
@@ -1218,10 +1219,10 @@ def _visualize_search_graph_check_parameters(
         )
 
     if not isinstance(draw_stems, bool):
-        msg = "draw_stems must be a boolean"  # type: ignore[unreachable]
+        msg = "draw_stems must be a boolean"
         raise TypeError(msg)
 
-    if not isinstance(stems_width, float) or stems_width <= 0:  # type: ignore[redundant-expr]
+    if not isinstance(stems_width, float) or stems_width <= 0:
         msg = "stems_width must be a positive float"
         raise TypeError(msg)
 
@@ -1240,10 +1241,10 @@ def _visualize_search_graph_check_parameters(
         raise TypeError(msg)
 
     if not isinstance(show_search_progression, bool):
-        msg = "show_search_progression must be a boolean"  # type: ignore[unreachable]
+        msg = "show_search_progression must be a boolean"
         raise TypeError(msg)
 
-    if not isinstance(search_progression_step, int) or search_progression_step < 1:  # type: ignore[redundant-expr]
+    if not isinstance(search_progression_step, int) or search_progression_step < 1:
         msg = "search_porgression_step must be a positive integer"
         raise TypeError(msg)
 
@@ -1332,7 +1333,7 @@ def _visualize_search_graph_check_parameters(
 
     if search_node_colorbar_title is None:
         search_node_colorbar_title = [None] * number_of_node_traces
-    if isinstance(search_node_colorbar_title, Sequence) and not isinstance(search_node_colorbar_title, str):  # type: ignore[redundant-expr]
+    if isinstance(search_node_colorbar_title, Sequence) and not isinstance(search_node_colorbar_title, str):
         search_node_colorbar_title = list(search_node_colorbar_title)
         if len(search_node_colorbar_title) > 1 and not use3d:
             msg = "search_node_colorbar_title can only be a list in a 3D plot."
@@ -1367,15 +1368,15 @@ def _visualize_search_graph_check_parameters(
                 else:
                     search_node_colorbar_title[i] = color
             elif not isinstance(title, str):
-                msg = "search_node_colorbar_title must be None, a string, or list of strings and None."  # type: ignore[unreachable]
+                msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
                 raise TypeError(msg)
     elif isinstance(search_node_colorbar_title, str):
         search_node_colorbar_title = [search_node_colorbar_title] * number_of_node_traces
     else:
-        msg = "search_node_colorbar_title must be None, a string, or list of strings and None."  # type: ignore[unreachable]
+        msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
         raise TypeError(msg)
 
-    if isinstance(search_node_color_scale, Sequence) and not isinstance(search_node_color_scale, str):  # type: ignore[redundant-expr]
+    if isinstance(search_node_color_scale, Sequence) and not isinstance(search_node_color_scale, str):
         if len(search_node_color_scale) > 1 and not use3d:
             msg = "search_node_color_scale can only be a list in a 3D plot."
             raise TypeError(msg)
@@ -1404,7 +1405,7 @@ def _visualize_search_graph_check_parameters(
             raise TypeError(msg) from err
         search_node_color_scale = [search_node_color_scale] * number_of_node_traces
 
-    if isinstance(search_node_invert_color_scale, Sequence) and not isinstance(search_node_invert_color_scale, str):  # type: ignore[unreachable]
+    if isinstance(search_node_invert_color_scale, Sequence) and not isinstance(search_node_invert_color_scale, str):
         if len(search_node_invert_color_scale) > 1 and not use3d:
             msg = "search_node_invert_color_scale can only be a list in a 3D plot."
             raise TypeError(msg)
@@ -1413,15 +1414,15 @@ def _visualize_search_graph_check_parameters(
             raise TypeError(msg)
         for invert in search_node_invert_color_scale:
             if not isinstance(invert, bool):
-                msg = "search_node_invert_color_scale must be a boolean or list of booleans."  # type: ignore[unreachable]
+                msg = "search_node_invert_color_scale must be a boolean or list of booleans."
                 raise TypeError(msg)
     elif not isinstance(search_node_invert_color_scale, bool):
-        msg = "search_node_invert_color_scale must be a boolean or list of booleans."  # type: ignore[unreachable]
+        msg = "search_node_invert_color_scale must be a boolean or list of booleans."
         raise TypeError(msg)
     else:
         search_node_invert_color_scale = [search_node_invert_color_scale] * number_of_node_traces
 
-    if isinstance(prioritize_search_node_color, Sequence) and not isinstance(prioritize_search_node_color, str):  # type: ignore[unreachable]
+    if isinstance(prioritize_search_node_color, Sequence) and not isinstance(prioritize_search_node_color, str):
         if len(prioritize_search_node_color) > 1 and not use3d:
             msg = "prioritize_search_node_color can only be a list in a 3D plot."
             raise TypeError(msg)
@@ -1430,10 +1431,10 @@ def _visualize_search_graph_check_parameters(
             raise TypeError(msg)
         for prioritize in prioritize_search_node_color:
             if not isinstance(prioritize, bool):
-                msg = "prioritize_search_node_color must be a boolean or list of booleans."  # type: ignore[unreachable]
+                msg = "prioritize_search_node_color must be a boolean or list of booleans."
                 raise TypeError(msg)
     elif not isinstance(prioritize_search_node_color, bool):
-        msg = "prioritize_search_node_color must be a boolean or list of booleans."  # type: ignore[unreachable]
+        msg = "prioritize_search_node_color must be a boolean or list of booleans."
         raise TypeError(msg)
     else:
         prioritize_search_node_color = [prioritize_search_node_color] * number_of_node_traces
@@ -1499,7 +1500,7 @@ def _visualize_search_graph_check_parameters(
                     search_node_height[i] = cost_lambda
                     lambdas.add(cost_lambda)
                 elif not callable(c):
-                    msg = (  # type: ignore[unreachable]
+                    msg = (
                         "search_node_height must be a cost function preset ('total_cost', 'total_fixed_cost', 'fixed_cost', 'heuristic_cost', "
                         "'lookahead_penalty') or a respective callable, or a list of the above."
                     )
@@ -1906,19 +1907,16 @@ def visualize_search_graph(
 
     # define interactive callbacks
     def visualize_search_node_layout(
-        trace: plotly.basedatatypes.BaseTraceType,  # noqa: ARG001
-        points: plotly.callbacks.Points,
-        selector: plotly.callbacks.InputDeviceState,  # noqa: ARG001
+        trace: plotly.basedatatypes.BaseTraceType | None,  # noqa: ARG001
+        points: plotly.callbacks.Points | list[int],
+        selector: plotly.callbacks.InputDeviceState | None,  # noqa: ARG001
     ) -> None:
         nonlocal current_node_layout_visualized
 
         if current_layer is None:
             return
-        point_inds = []
-        try:
-            point_inds = points.point_inds
-        except AttributeError:
-            point_inds = points
+        point_inds: list[int] = []
+        point_inds = points.point_inds if isinstance(points, plotly.callbacks.Points) else points
         if len(point_inds) == 0:
             return
         if current_node_layout_visualized == point_inds[0]:
@@ -1927,7 +1925,7 @@ def visualize_search_graph(
         node_index = list(search_graph.nodes())[current_node_layout_visualized]  # type: ignore[union-attr]
 
         # this function is only called if hide_layout==False, therefore all variables are defined
-        # since mypy's type inference fails in this regard, we need to use "type: ignore[arg-type]" here
+        assert arch_node_trace is not None
         _visualize_layout(
             fig,
             search_graph.nodes[node_index]["data"],  # type: ignore[union-attr]
@@ -2070,6 +2068,7 @@ def visualize_search_graph(
                 use3d,
             )
             if draw_stems:
+                assert search_node_stem_trace is not None
                 _draw_search_graph_stems(
                     search_node_stem_trace,
                     search_node_stem_scatter_data_x[current_layer],
@@ -2086,6 +2085,7 @@ def visualize_search_graph(
                 )
 
             if not hide_layout:
+                assert arch_node_trace is not None
                 _draw_architecture_nodes(
                     arch_node_trace,
                     architecture_node_positions,  # type: ignore[arg-type]
