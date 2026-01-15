@@ -163,7 +163,6 @@ def test_heuristic(test_config: Configuration) -> None:
 def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal tableau synthesis."""
     assert test_config.target_tableau is not None
-    assert test_config.initial_tableau is not None
     circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
@@ -180,7 +179,6 @@ def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool)
 def test_synthesize_clifford_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test depth-optimal tableau synthesis."""
     assert test_config.target_tableau is not None
-    assert test_config.initial_tableau is not None
     circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
@@ -197,7 +195,6 @@ def test_synthesize_clifford_depth(test_config: Configuration, use_maxsat: bool)
 def test_synthesize_clifford_gates_at_minimal_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal tableau synthesis at minimal depth."""
     assert test_config.target_tableau is not None
-    assert test_config.initial_tableau is not None
     circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
@@ -215,7 +212,6 @@ def test_synthesize_clifford_gates_at_minimal_depth(test_config: Configuration, 
 def test_synthesize_clifford_two_qubit_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test two-qubit gate-optimal tableau synthesis."""
     assert test_config.target_tableau is not None
-    assert test_config.initial_tableau is not None
     circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
@@ -233,7 +229,6 @@ def test_synthesize_clifford_two_qubit_gates(test_config: Configuration, use_max
 def test_synthesize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal tableau synthesis at minimal two-qubit gate count."""
     assert test_config.target_tableau is not None
-    assert test_config.initial_tableau is not None
     circ, results = synthesize_clifford(
         target_tableau=test_config.target_tableau,
         initial_tableau=test_config.initial_tableau,
