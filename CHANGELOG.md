@@ -22,8 +22,6 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ## [3.5.0] - 2025-12-16
 
-## [3.5.0]
-
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#350)._
 
 ### Added
