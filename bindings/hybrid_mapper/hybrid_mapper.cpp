@@ -17,140 +17,129 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <pybind11/attr.h>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/native_enum.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <pybind11/stl.h> // NOLINT(misc-include-cleaner)
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/map.h>           // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/set.h>           // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/string.h>        // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/unordered_map.h> // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/vector.h>        // NOLINT(misc-include-cleaner)
 #include <string>
 #include <vector>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
-PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
+  nb::module_::import_("mqt.core.ir");
+
   // Neutral Atom Hybrid Mapper
-  py::native_enum<na::InitialCoordinateMapping>(
-      m, "InitialCoordinateMapping", "enum.Enum",
+  nb::enum_<na::InitialCoordinateMapping>(
+      m, "InitialCoordinateMapping",
       "Initial mapping between hardware qubits hardware coordinates.")
       .value("trivial", na::InitialCoordinateMapping::Trivial,
              "Trivial identity mapping.")
-      .value("random", na::InitialCoordinateMapping::Random, "Random mapping.")
-      .export_values()
-      .finalize();
+      .value("random", na::InitialCoordinateMapping::Random, "Random mapping.");
 
-  py::native_enum<na::InitialMapping>(
-      m, "InitialCircuitMapping", "enum.Enum",
+  nb::enum_<na::InitialMapping>(
+      m, "InitialCircuitMapping",
       "Initial mapping between circuit qubits and hardware qubits.")
       .value("identity", na::InitialMapping::Identity, "Identity mapping.")
-      .value("graph", na::InitialMapping::Graph, "Graph matching mapping.")
-      .export_values()
-      .finalize();
+      .value("graph", na::InitialMapping::Graph, "Graph matching mapping.");
 
-  py::class_<na::MapperParameters>(
+  nb::class_<na::MapperParameters>(
       m, "MapperParameters", "Parameters controlling the mapper behavior.")
-      .def(py::init<>(),
+      .def(nb::init<>(),
            "Create a MapperParameters instance with default values.")
-      .def_readwrite("lookahead_depth", &na::MapperParameters::lookaheadDepth,
-                     "Depth of lookahead for mapping decisions.")
-      .def_readwrite("lookahead_weight_swaps",
-                     &na::MapperParameters::lookaheadWeightSwaps,
-                     "Weight assigned to swap operations during lookahead.")
-      .def_readwrite("lookahead_weight_moves",
-                     &na::MapperParameters::lookaheadWeightMoves,
-                     "Weight assigned to move operations during lookahead.")
-      .def_readwrite("decay", &na::MapperParameters::decay,
-                     "Decay factor for gate blocking.")
-      .def_readwrite("shuttling_time_weight",
-                     &na::MapperParameters::shuttlingTimeWeight,
-                     "Weight for shuttling time in cost evaluation.")
-      .def_readwrite(
+      .def_rw("lookahead_depth", &na::MapperParameters::lookaheadDepth,
+              "Depth of lookahead for mapping decisions.")
+      .def_rw("lookahead_weight_swaps",
+              &na::MapperParameters::lookaheadWeightSwaps,
+              "Weight assigned to swap operations during lookahead.")
+      .def_rw("lookahead_weight_moves",
+              &na::MapperParameters::lookaheadWeightMoves,
+              "Weight assigned to move operations during lookahead.")
+      .def_rw("decay", &na::MapperParameters::decay,
+              "Decay factor for gate blocking.")
+      .def_rw("shuttling_time_weight",
+              &na::MapperParameters::shuttlingTimeWeight,
+              "Weight for shuttling time in cost evaluation.")
+      .def_rw(
           "dynamic_mapping_weight", &na::MapperParameters::dynamicMappingWeight,
           "Weight for dynamic remapping (SWAPs or MOVEs) in cost evaluation.")
-      .def_readwrite("gate_weight", &na::MapperParameters::gateWeight,
-                     "Weight for gate execution in cost evaluation.")
-      .def_readwrite("shuttling_weight", &na::MapperParameters::shuttlingWeight,
-                     "Weight for shuttling operations in cost evaluation.")
-      .def_readwrite(
-          "seed", &na::MapperParameters::seed,
-          "Random seed for stochastic decisions (initial mapping, etc.).")
-      .def_readwrite("num_flying_ancillas",
-                     &na::MapperParameters::numFlyingAncillas,
-                     "Number of ancilla qubits to be used (0 or 1 for now).")
-      .def_readwrite("limit_shuttling_layer",
-                     &na::MapperParameters::limitShuttlingLayer,
-                     "Maximum allowed shuttling layer (default: 10).")
-      .def_readwrite("max_bridge_distance",
-                     &na::MapperParameters::maxBridgeDistance,
-                     "Maximum distance for bridge operations.")
-      .def_readwrite("use_pass_by", &na::MapperParameters::usePassBy,
-                     "Enable or disable pass-by operations.")
-      .def_readwrite("verbose", &na::MapperParameters::verbose,
-                     "Enable verbose logging for debugging.")
-      .def_readwrite("initial_coord_mapping",
-                     &na::MapperParameters::initialCoordMapping,
-                     "Strategy for initial coordinate mapping.");
+      .def_rw("gate_weight", &na::MapperParameters::gateWeight,
+              "Weight for gate execution in cost evaluation.")
+      .def_rw("shuttling_weight", &na::MapperParameters::shuttlingWeight,
+              "Weight for shuttling operations in cost evaluation.")
+      .def_rw("seed", &na::MapperParameters::seed,
+              "Random seed for stochastic decisions (initial mapping, etc.).")
+      .def_rw("num_flying_ancillas", &na::MapperParameters::numFlyingAncillas,
+              "Number of ancilla qubits to be used (0 or 1 for now).")
+      .def_rw("limit_shuttling_layer",
+              &na::MapperParameters::limitShuttlingLayer,
+              "Maximum allowed shuttling layer (default: 10).")
+      .def_rw("max_bridge_distance", &na::MapperParameters::maxBridgeDistance,
+              "Maximum distance for bridge operations.")
+      .def_rw("use_pass_by", &na::MapperParameters::usePassBy,
+              "Enable or disable pass-by operations.")
+      .def_rw("verbose", &na::MapperParameters::verbose,
+              "Enable verbose logging for debugging.")
+      .def_rw("initial_coord_mapping",
+              &na::MapperParameters::initialCoordMapping,
+              "Strategy for initial coordinate mapping.");
 
-  py::class_<na::MapperStats>(m, "MapperStats")
-      .def(py::init<>())
-      .def_readwrite("num_swaps", &na::MapperStats::nSwaps,
-                     "Number of swap operations performed.")
-      .def_readwrite("num_bridges", &na::MapperStats::nBridges,
-                     "Number of bridge operations performed.")
-      .def_readwrite("num_f_ancillas", &na::MapperStats::nFAncillas,
-                     "Number of fresh ancilla qubits used.")
-      .def_readwrite("num_moves", &na::MapperStats::nMoves,
-                     "Number of move operations performed.")
-      .def_readwrite("num_pass_by", &na::MapperStats::nPassBy,
-                     "Number of pass-by operations performed.");
+  nb::class_<na::MapperStats>(m, "MapperStats")
+      .def(nb::init<>())
+      .def_rw("num_swaps", &na::MapperStats::nSwaps,
+              "Number of swap operations performed.")
+      .def_rw("num_bridges", &na::MapperStats::nBridges,
+              "Number of bridge operations performed.")
+      .def_rw("num_f_ancillas", &na::MapperStats::nFAncillas,
+              "Number of fresh ancilla qubits used.")
+      .def_rw("num_moves", &na::MapperStats::nMoves,
+              "Number of move operations performed.")
+      .def_rw("num_pass_by", &na::MapperStats::nPassBy,
+              "Number of pass-by operations performed.");
 
-  py::class_<na::NeutralAtomArchitecture>(m, "NeutralAtomHybridArchitecture")
-      .def(py::init<const std::string&>(), "filename"_a)
+  nb::class_<na::NeutralAtomArchitecture>(m, "NeutralAtomHybridArchitecture")
+      .def(nb::init<const std::string&>(), "filename"_a)
       .def("load_json", &na::NeutralAtomArchitecture::loadJson,
            "json_filename"_a)
-      .def_readwrite("name", &na::NeutralAtomArchitecture::name,
-                     "Name of the architecture.")
-      .def_property_readonly(
-          "num_rows", &na::NeutralAtomArchitecture::getNrows,
-          "Number of rows in a rectangular grid SLM arrangement.")
-      .def_property_readonly(
-          "num_columns", &na::NeutralAtomArchitecture::getNcolumns,
-          "Number of columns in a rectangular grid SLM arrangement.")
-      .def_property_readonly(
+      .def_rw("name", &na::NeutralAtomArchitecture::name,
+              "Name of the architecture.")
+      .def_prop_ro("num_rows", &na::NeutralAtomArchitecture::getNrows,
+                   "Number of rows in a rectangular grid SLM arrangement.")
+      .def_prop_ro("num_columns", &na::NeutralAtomArchitecture::getNcolumns,
+                   "Number of columns in a rectangular grid SLM arrangement.")
+      .def_prop_ro(
           "num_positions", &na::NeutralAtomArchitecture::getNpositions,
           "Total number of positions in a rectangular grid SLM arrangement.")
-      .def_property_readonly(
-          "num_aods", &na::NeutralAtomArchitecture::getNAods,
-          "Number of independent 2D acousto-optic deflectors.")
-      .def_property_readonly("num_qubits",
-                             &na::NeutralAtomArchitecture::getNqubits,
-                             "Number of atoms in the neutral atom quantum "
-                             "computer that can be used as qubits.")
-      .def_property_readonly(
-          "inter_qubit_distance",
-          &na::NeutralAtomArchitecture::getInterQubitDistance,
-          "Distance between SLM traps in micrometers.")
-      .def_property_readonly("interaction_radius",
-                             &na::NeutralAtomArchitecture::getInteractionRadius,
-                             "Interaction radius in inter-qubit distances.")
-      .def_property_readonly("blocking_factor",
-                             &na::NeutralAtomArchitecture::getBlockingFactor,
-                             "Blocking factor for parallel Rydberg gates.")
-      .def_property_readonly(
-          "naod_intermediate_levels",
-          &na::NeutralAtomArchitecture::getNAodIntermediateLevels,
-          "Number of possible AOD positions between two SLM traps.")
-      .def_property_readonly("decoherence_time",
-                             &na::NeutralAtomArchitecture::getDecoherenceTime,
-                             "Decoherence time in microseconds.")
+      .def_prop_ro("num_aods", &na::NeutralAtomArchitecture::getNAods,
+                   "Number of independent 2D acousto-optic deflectors.")
+      .def_prop_ro("num_qubits", &na::NeutralAtomArchitecture::getNqubits,
+                   "Number of atoms in the neutral atom quantum "
+                   "computer that can be used as qubits.")
+      .def_prop_ro("inter_qubit_distance",
+                   &na::NeutralAtomArchitecture::getInterQubitDistance,
+                   "Distance between SLM traps in micrometers.")
+      .def_prop_ro("interaction_radius",
+                   &na::NeutralAtomArchitecture::getInteractionRadius,
+                   "Interaction radius in inter-qubit distances.")
+      .def_prop_ro("blocking_factor",
+                   &na::NeutralAtomArchitecture::getBlockingFactor,
+                   "Blocking factor for parallel Rydberg gates.")
+      .def_prop_ro("naod_intermediate_levels",
+                   &na::NeutralAtomArchitecture::getNAodIntermediateLevels,
+                   "Number of possible AOD positions between two SLM traps.")
+      .def_prop_ro("decoherence_time",
+                   &na::NeutralAtomArchitecture::getDecoherenceTime,
+                   "Decoherence time in microseconds.")
       .def("compute_swap_distance",
            static_cast<int (na::NeutralAtomArchitecture::*)(
                std::uint32_t, std::uint32_t) const>(
                &na::NeutralAtomArchitecture::getSwapDistance),
            "Number of SWAP gates required between two positions.",
-           py::arg("idx1"), py::arg("idx2"))
+           nb::arg("idx1"), nb::arg("idx2"))
       .def("get_gate_time", &na::NeutralAtomArchitecture::getGateTime,
            "Execution time of certain gate in microseconds.", "s"_a)
       .def("get_gate_average_fidelity",
@@ -162,18 +151,18 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
            "position.",
            "idx"_a);
 
-  py::class_<na::NeutralAtomMapper>(
+  nb::class_<na::NeutralAtomMapper>(
       m, "HybridNAMapper",
       "Neutral Atom Hybrid Mapper that can use both SWAP gates and AOD "
       "movements to map a quantum circuit to a neutral atom quantum "
       "computer.")
       .def(
-          py::init<const na::NeutralAtomArchitecture&, na::MapperParameters&>(),
+          nb::init<const na::NeutralAtomArchitecture&, na::MapperParameters&>(),
           "Create Hybrid NA Mapper with mapper parameters.",
-          py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a, "params"_a)
+          nb::keep_alive<1, 2>(), nb::keep_alive<1, 3>(), "arch"_a, "params"_a)
       .def("set_parameters", &na::NeutralAtomMapper::setParameters,
            "Set the parameters for the Hybrid NA Mapper.", "params"_a,
-           py::keep_alive<1, 2>())
+           nb::keep_alive<1, 2>())
       .def("get_init_hw_pos", &na::NeutralAtomMapper::getInitHwPos,
            "Get the initial hardware positions, required to create an "
            "animation.")
@@ -223,18 +212,18 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .def("get_animation_viz", &na::NeutralAtomMapper::getAnimationViz,
            "Returns the .naviz event-log content for the last scheduling.");
 
-  py::class_<na::HybridSynthesisMapper>(
+  nb::class_<na::HybridSynthesisMapper>(
       m, "HybridSynthesisMapper",
       "Neutral Atom Mapper that can evaluate different synthesis steps "
       "to choose the best one.")
-      .def(py::init<const na::NeutralAtomArchitecture&,
+      .def(nb::init<const na::NeutralAtomArchitecture&,
                     const na::MapperParameters&, uint32_t>(),
            "Create Hybrid Synthesis Mapper with mapper parameters.",
-           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a,
+           nb::keep_alive<1, 2>(), nb::keep_alive<1, 3>(), "arch"_a,
            "params"_a = na::MapperParameters(), "buffer_size"_a = 0)
       .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
            "Set the parameters for the Hybrid Synthesis Mapper.", "params"_a,
-           py::keep_alive<1, 2>())
+           nb::keep_alive<1, 2>())
       .def("init_mapping", &na::HybridSynthesisMapper::initMapping,
            "Initializes the synthesized and mapped circuits and mapping "
            "structures for the given number of qubits.",

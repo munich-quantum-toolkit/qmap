@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-add_mqt_python_binding(
+add_mqt_python_binding_nanobind(
   QMAP
   ${MQT_QMAP_TARGET_NAME}-sc-bindings
   sc.cpp
@@ -17,8 +17,8 @@ add_mqt_python_binding(
   LINK_LIBS
   MQT::QMapSCExact
   MQT::QMapSCHeuristic
-  MQT::CoreQASM
-  pybind11_json)
+  MQT::CoreQASM)
+
 target_compile_definitions(${MQT_QMAP_TARGET_NAME}-sc-bindings PRIVATE Z3_FOUND)
 
 # install the Python stub files in editable mode for better IDE support

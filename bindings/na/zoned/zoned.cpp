@@ -18,25 +18,24 @@
 #include "na/zoned/layout_synthesizer/router/IndependentSetRouter.hpp"
 
 #include <cstddef>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>      // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/string_view.h> // NOLINT(misc-include-cleaner)
 // The header <nlohmann/json.hpp> is used, but clang-tidy confuses it with the
 // wrong forward header <nlohmann/json_fwd.hpp>
 // NOLINTNEXTLINE(misc-include-cleaner)
 #include <nlohmann/json.hpp>
-#include <pybind11/attr.h>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/native_enum.h>
-#include <pybind11/pybind11.h>
-// NOLINTNEXTLINE(misc-include-cleaner)
-#include <pybind11_json/pybind11_json.hpp>
 #include <spdlog/common.h>
 #include <string>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
-PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
-  py::class_<na::zoned::Architecture> architecture(
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
+  nb::module_::import_("mqt.core.ir");
+
+  nb::class_<na::zoned::Architecture> architecture(
       m, "ZonedNeutralAtomArchitecture");
   architecture.def_static("from_json_file",
                           &na::zoned::Architecture::fromJSONFile, "filename"_a);
@@ -56,40 +55,33 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
   //===--------------------------------------------------------------------===//
   // Placement Method Enum
   //===--------------------------------------------------------------------===//
-  py::native_enum<na::zoned::HeuristicPlacer::Config::Method>(
-      m, "PlacementMethod", "enum.Enum")
+  nb::enum_<na::zoned::HeuristicPlacer::Config::Method>(m, "PlacementMethod")
       .value("astar", na::zoned::HeuristicPlacer::Config::Method::ASTAR)
-      .value("ids", na::zoned::HeuristicPlacer::Config::Method::IDS)
-      .export_values()
-      .finalize();
+      .value("ids", na::zoned::HeuristicPlacer::Config::Method::IDS);
 
   //===--------------------------------------------------------------------===//
   // Routing Method Enum
   //===--------------------------------------------------------------------===//
-  py::native_enum<na::zoned::IndependentSetRouter::Config::Method>(
-      m, "RoutingMethod", "enum.Enum")
+  nb::enum_<na::zoned::IndependentSetRouter::Config::Method>(m, "RoutingMethod")
       .value("strict", na::zoned::IndependentSetRouter::Config::Method::STRICT)
       .value("relaxed",
-             na::zoned::IndependentSetRouter::Config::Method::RELAXED)
-      .export_values()
-      .finalize();
+             na::zoned::IndependentSetRouter::Config::Method::RELAXED);
 
   //===--------------------------------------------------------------------===//
   // Routing-agnostic Compiler
   //===--------------------------------------------------------------------===//
-  py::class_<na::zoned::RoutingAgnosticCompiler> routingAgnosticCompiler(
+  nb::class_<na::zoned::RoutingAgnosticCompiler> routingAgnosticCompiler(
       m, "RoutingAgnosticCompiler");
   {
     const na::zoned::RoutingAgnosticCompiler::Config defaultConfig;
     routingAgnosticCompiler.def(
-        py::init([](const na::zoned::Architecture& arch,
-                    const std::string& logLevel, const double maxFillingFactor,
-                    const bool useWindow, const size_t windowSize,
-                    const bool dynamicPlacement,
-                    const na::zoned::IndependentSetRouter::Config::Method
-                        routingMethod,
-                    const double preferSplit, const bool warnUnsupportedGates)
-                     -> na::zoned::RoutingAgnosticCompiler {
+        "__init__",
+        [](na::zoned::RoutingAgnosticCompiler* self,
+           const na::zoned::Architecture& arch, const std::string& logLevel,
+           const double maxFillingFactor, const bool useWindow,
+           const size_t windowSize, const bool dynamicPlacement,
+           const na::zoned::IndependentSetRouter::Config::Method routingMethod,
+           const double preferSplit, const bool warnUnsupportedGates) {
           na::zoned::RoutingAgnosticCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
           config.schedulerConfig.maxFillingFactor = maxFillingFactor;
@@ -101,9 +93,9 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
               .method = routingMethod, .preferSplit = preferSplit};
           config.codeGeneratorConfig = {.warnUnsupportedGates =
                                             warnUnsupportedGates};
-          return {arch, config};
-        }),
-        py::keep_alive<1, 2>(), "arch"_a,
+          new (self) na::zoned::RoutingAgnosticCompiler{arch, config};
+        },
+        nb::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
         "use_window"_a =
@@ -137,58 +129,58 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       },
       "qc"_a);
   routingAgnosticCompiler.def(
-      "stats",
-      [](const na::zoned::RoutingAgnosticCompiler& self) -> nlohmann::json {
-        return self.getStatistics();
+      "stats", [](const na::zoned::RoutingAgnosticCompiler& self) {
+        const nb::module_ json = nb::module_::import_("json");
+        const nb::object loads = json.attr("loads");
+        const nlohmann::json stats = self.getStatistics();
+        return loads(stats.dump());
       });
 
   //===--------------------------------------------------------------------===//
   // Routing-aware Compiler
   //===--------------------------------------------------------------------===//
-  py::class_<na::zoned::RoutingAwareCompiler> routingAwareCompiler(
+  nb::class_<na::zoned::RoutingAwareCompiler> routingAwareCompiler(
       m, "RoutingAwareCompiler");
   {
     const na::zoned::RoutingAwareCompiler::Config defaultConfig;
     routingAwareCompiler.def(
-        py::init(
-            [](const na::zoned::Architecture& arch, const std::string& logLevel,
-               const double maxFillingFactor, const bool useWindow,
-               const size_t windowMinWidth, const double windowRatio,
-               const double windowShare,
-               const na::zoned::HeuristicPlacer::Config::Method placementMethod,
-               const float deepeningFactor, const float deepeningValue,
-               const float lookaheadFactor, const float reuseLevel,
-               const size_t maxNodes, const size_t trials,
-               const size_t queueCapacity,
-               const na::zoned::IndependentSetRouter::Config::Method
-                   routingMethod,
-               const double preferSplit, const bool warnUnsupportedGates)
-                -> na::zoned::RoutingAwareCompiler {
-              na::zoned::RoutingAwareCompiler::Config config;
-              config.logLevel = spdlog::level::from_str(logLevel);
-              config.schedulerConfig.maxFillingFactor = maxFillingFactor;
-
-              config.layoutSynthesizerConfig.placerConfig = {
-                  .useWindow = useWindow,
-                  .windowMinWidth = windowMinWidth,
-                  .windowRatio = windowRatio,
-                  .windowShare = windowShare,
-                  .method = placementMethod,
-                  .deepeningFactor = deepeningFactor,
-                  .deepeningValue = deepeningValue,
-                  .lookaheadFactor = lookaheadFactor,
-                  .reuseLevel = reuseLevel,
-                  .maxNodes = maxNodes,
-                  .trials = trials,
-                  .queueCapacity = queueCapacity,
-              };
-              config.layoutSynthesizerConfig.routerConfig = {
-                  .method = routingMethod, .preferSplit = preferSplit};
-              config.codeGeneratorConfig = {.warnUnsupportedGates =
-                                                warnUnsupportedGates};
-              return {arch, config};
-            }),
-        py::keep_alive<1, 2>(), "arch"_a,
+        "__init__",
+        [](na::zoned::RoutingAwareCompiler* self,
+           const na::zoned::Architecture& arch, const std::string& logLevel,
+           const double maxFillingFactor, const bool useWindow,
+           const size_t windowMinWidth, const double windowRatio,
+           const double windowShare,
+           const na::zoned::HeuristicPlacer::Config::Method placementMethod,
+           const float deepeningFactor, const float deepeningValue,
+           const float lookaheadFactor, const float reuseLevel,
+           const size_t maxNodes, const size_t trials,
+           const size_t queueCapacity,
+           const na::zoned::IndependentSetRouter::Config::Method routingMethod,
+           const double preferSplit, const bool warnUnsupportedGates) {
+          na::zoned::RoutingAwareCompiler::Config config;
+          config.logLevel = spdlog::level::from_str(logLevel);
+          config.schedulerConfig.maxFillingFactor = maxFillingFactor;
+          config.layoutSynthesizerConfig.placerConfig = {
+              .useWindow = useWindow,
+              .windowMinWidth = windowMinWidth,
+              .windowRatio = windowRatio,
+              .windowShare = windowShare,
+              .method = placementMethod,
+              .deepeningFactor = deepeningFactor,
+              .deepeningValue = deepeningValue,
+              .lookaheadFactor = lookaheadFactor,
+              .reuseLevel = reuseLevel,
+              .maxNodes = maxNodes,
+              .trials = trials,
+              .queueCapacity = queueCapacity,
+          };
+          config.layoutSynthesizerConfig.routerConfig = {
+              .method = routingMethod, .preferSplit = preferSplit};
+          config.codeGeneratorConfig = {.warnUnsupportedGates =
+                                            warnUnsupportedGates};
+          new (self) na::zoned::RoutingAwareCompiler{arch, config};
+        },
+        nb::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
         "use_window"_a =
@@ -239,8 +231,10 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       },
       "qc"_a);
   routingAwareCompiler.def(
-      "stats",
-      [](const na::zoned::RoutingAwareCompiler& self) -> nlohmann::json {
-        return self.getStatistics();
+      "stats", [](const na::zoned::RoutingAwareCompiler& self) {
+        const nb::module_ json = nb::module_::import_("json");
+        const nb::object loads = json.attr("loads");
+        const nlohmann::json stats = self.getStatistics();
+        return loads(stats.dump());
       });
 }

@@ -8,10 +8,10 @@
 
 [build-system]
 requires = [
-  "pybind11>=3.0.1",
+  "nanobind>=2.10.2",
   "setuptools-scm>=9.2.2",
   "scikit-build-core>=0.11.6",
-  "mqt.core~=3.3.3",
+  "mqt.core~=3.4.0",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -51,7 +51,7 @@ classifiers = [
 ]
 requires-python = ">=3.10, != 3.14.1"
 dependencies = [
-    "mqt.core~=3.3.3",
+    "mqt.core~=3.4.0",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "typing_extensions>=4.6; python_version < '3.11'",
@@ -82,6 +82,9 @@ wheel.install-dir = "mqt/qmap"
 
 # Explicitly set the package directory
 wheel.packages = ["python/mqt"]
+
+# Enable Stable ABI builds for CPython 3.12+
+wheel.py-api = "cp312"
 
 # Set required Ninja version
 ninja.version = ">=1.10"
@@ -344,11 +347,11 @@ before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
     """auditwheel repair -w {dest_dir} {wheel} \
---exclude libmqt-core-ir.so.3.3 \
---exclude libmqt-core-qasm.so.3.3 \
---exclude libmqt-core-circuit-optimizer.so.3.3 \
---exclude libmqt-core-ds.so.3.3 \
---exclude libmqt-core-na.so.3.3""",
+--exclude libmqt-core-ir.so.3.4 \
+--exclude libmqt-core-qasm.so.3.4 \
+--exclude libmqt-core-circuit-optimizer.so.3.4 \
+--exclude libmqt-core-ds.so.3.4 \
+--exclude libmqt-core-na.so.3.4""",
 ]
 
 [tool.cibuildwheel.macos]
@@ -363,6 +366,11 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-circuit-optimizer.dll \
 --exclude mqt-core-ds.dll \
 --exclude mqt-core-na.dll"""
+
+[[tool.cibuildwheel.overrides]]
+select = "cp312-*"
+inherit.repair-wheel-command = "append"
+repair-wheel-command = "uvx abi3audit --strict --report {wheel}"
 
 
 [tool.uv]
@@ -379,10 +387,10 @@ mqt-qmap = { workspace = true }
 
 [dependency-groups]
 build = [
-  "pybind11>=3.0.1",
+  "nanobind>=2.10.2",
   "setuptools-scm>=9.2.2",
   "scikit-build-core>=0.11.6",
-  "mqt.core~=3.3.3",
+  "mqt.core~=3.4.0",
 ]
 docs = [
   "distinctipy>=1.3.4",
@@ -413,7 +421,7 @@ test = [
   "pytest-cov>=7.0.0",
   "pytest-sugar>=1.1.1",
   "pytest-xdist>=3.8.0",
-  "mqt.qcec>=3.3.0",
+  "mqt.qcec>=3.4.0",
 ]
 dev = [
   {include-group = "build"},

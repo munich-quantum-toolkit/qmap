@@ -16,34 +16,38 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/pybind11.h>
-// NOLINTNEXTLINE(misc-include-cleaner)
-#include <pybind11/stl.h>
-// NOLINTNEXTLINE(misc-include-cleaner)
-#include <pybind11_json/pybind11_json.hpp>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h> // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/pair.h>     // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/string.h>   // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/vector.h>   // NOLINT(misc-include-cleaner)
+#include <nlohmann/json.hpp>       // NOLINT(misc-include-cleaner)
 #include <string>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
-PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
+NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
+  nb::module_::import_("mqt.core.ir");
+
   // Neutral Atom State Preparation
-  py::class_<na::NASolver>(m, "NAStatePreparationSolver")
-      .def(py::init<uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t,
+  nb::class_<na::NASolver>(m, "NAStatePreparationSolver")
+      .def(nb::init<uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t,
                     uint16_t, uint16_t, uint16_t, uint16_t>(),
            "max_x"_a, "max_y"_a, "max_c"_a, "max_r"_a, "max_h_offset"_a,
            "max_v_offset"_a, "max_h_dist"_a, "max_v_dist"_a,
            "min_entangling_y"_a, "max_entangling_y"_a)
       .def("solve", &na::NASolver::solve, "ops"_a, "num_qubits"_a,
-           "num_stages"_a, "num_transfers"_a, "mind_ops_order"_a,
-           "shield_idle_qubits"_a);
+           "num_stages"_a, "num_transfers"_a = nb::none(),
+           "mind_ops_order"_a = false, "shield_idle_qubits"_a = true);
 
-  py::class_<na::NASolver::Result>(m, "NAStatePreparationSolver.Result")
-      .def(py::init<>())
-      .def("json",
-           [](const na::NASolver::Result& result) { return result.json(); });
+  nb::class_<na::NASolver::Result>(m, "NAStatePreparationSolver.Result")
+      .def(nb::init<>())
+      .def("json", [](const na::NASolver::Result& result) {
+        const nb::module_ json = nb::module_::import_("json");
+        const nb::object loads = json.attr("loads");
+        return loads(result.json().dump());
+      });
 
   m.def(
       "generate_code",

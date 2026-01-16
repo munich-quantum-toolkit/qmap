@@ -31,19 +31,18 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/native_enum.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <pybind11/stl.h> // NOLINT(misc-include-cleaner)
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/pair.h>   // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/set.h>    // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/string.h> // NOLINT(misc-include-cleaner)
+#include <nanobind/stl/vector.h> // NOLINT(misc-include-cleaner)
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
+namespace nb = nanobind;
+using namespace nb::literals;
 
 namespace {
 // c++ binding function
@@ -78,11 +77,11 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
 }
 } // namespace
 
-PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
-  m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
+NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
+  nb::module_::import_("mqt.core.ir");
 
   // Pre-defined architecture available within QMAP
-  py::native_enum<AvailableArchitecture>(m, "Arch", "enum.Enum")
+  nb::enum_<AvailableArchitecture>(m, "Arch")
       .value("IBM_QX4", AvailableArchitecture::IbmQx4,
              "5 qubit, directed bow tie layout")
       .value("IBM_QX5", AvailableArchitecture::IbmQx5,
@@ -100,53 +99,47 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
       .value("Rigetti_Agave", AvailableArchitecture::RigettiAgave,
              "8 qubit, undirected ring layout")
       .value("Rigetti_Aspen", AvailableArchitecture::RigettiAspen,
-             "16 qubit, undirected dumbbell layout")
-      .finalize();
+             "16 qubit, undirected dumbbell layout");
 
   // Mapping methodology to use
-  py::native_enum<Method>(m, "Method", "enum.Enum")
+  nb::enum_<Method>(m, "Method")
       .value("heuristic", Method::Heuristic)
-      .value("exact", Method::Exact)
-      .finalize();
+      .value("exact", Method::Exact);
 
   // Initial layout strategy
-  py::native_enum<InitialLayout>(m, "InitialLayout", "enum.Enum")
+  nb::enum_<InitialLayout>(m, "InitialLayout")
       .value("identity", InitialLayout::Identity)
       .value("static", InitialLayout::Static)
-      .value("dynamic", InitialLayout::Dynamic)
-      .finalize();
+      .value("dynamic", InitialLayout::Dynamic);
 
   // Heuristic function
-  py::native_enum<Heuristic>(m, "Heuristic", "enum.Enum")
+  nb::enum_<Heuristic>(m, "Heuristic")
       .value("gate_count_max_distance", Heuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance", Heuristic::GateCountSumDistance)
       .value("gate_count_sum_distance_minus_shared_swaps",
              Heuristic::GateCountSumDistanceMinusSharedSwaps)
       .value("gate_count_max_distance_or_sum_distance_minus_shared_swaps",
              Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps)
-      .value("fidelity_best_location", Heuristic::FidelityBestLocation)
-      .finalize();
+      .value("fidelity_best_location", Heuristic::FidelityBestLocation);
 
   // Lookahead heuristic function
-  py::native_enum<LookaheadHeuristic>(m, "LookaheadHeuristic", "enum.Enum")
+  nb::enum_<LookaheadHeuristic>(m, "LookaheadHeuristic")
       .value("none", LookaheadHeuristic::None)
       .value("gate_count_max_distance",
              LookaheadHeuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance",
-             LookaheadHeuristic::GateCountSumDistance)
-      .finalize();
+             LookaheadHeuristic::GateCountSumDistance);
 
   // Gate clustering / layering strategy
-  py::native_enum<Layering>(m, "Layering", "enum.Enum")
+  nb::enum_<Layering>(m, "Layering")
       .value("individual_gates", Layering::IndividualGates)
       .value("disjoint_qubits", Layering::DisjointQubits)
       .value("odd_gates", Layering::OddGates)
       .value("qubit_triangle", Layering::QubitTriangle)
-      .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks)
-      .finalize();
+      .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks);
 
   // Early termination strategy in heuristic mapper
-  py::native_enum<EarlyTermination>(m, "EarlyTermination", "enum.Enum")
+  nb::enum_<EarlyTermination>(m, "EarlyTermination")
       .value("none", EarlyTermination::None)
       .value("expanded_nodes", EarlyTermination::ExpandedNodes)
       .value("expanded_nodes_after_first_solution",
@@ -155,187 +148,189 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
              EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution)
       .value("solution_nodes", EarlyTermination::SolutionNodes)
       .value("solution_nodes_after_current_optimal_solution",
-             EarlyTermination::SolutionNodesAfterCurrentOptimalSolution)
-      .finalize();
+             EarlyTermination::SolutionNodesAfterCurrentOptimalSolution);
 
   // Encoding settings for at-most-one and exactly-one constraints
-  py::native_enum<Encoding>(m, "Encoding", "enum.Enum")
+  nb::enum_<Encoding>(m, "Encoding")
       .value("naive", Encoding::Naive)
       .value("commander", Encoding::Commander)
-      .value("bimander", Encoding::Bimander)
-      .finalize();
+      .value("bimander", Encoding::Bimander);
 
   // Grouping settings if using the commander encoding
-  py::native_enum<CommanderGrouping>(m, "CommanderGrouping", "enum.Enum")
+  nb::enum_<CommanderGrouping>(m, "CommanderGrouping")
       .value("fixed2", CommanderGrouping::Fixed2)
       .value("fixed3", CommanderGrouping::Fixed3)
       .value("halves", CommanderGrouping::Halves)
-      .value("logarithm", CommanderGrouping::Logarithm)
-      .finalize();
+      .value("logarithm", CommanderGrouping::Logarithm);
 
   // Strategy for reducing the number of permutations/swaps considered in front
   // of every gate
-  py::native_enum<SwapReduction>(m, "SwapReduction", "enum.Enum")
+  nb::enum_<SwapReduction>(m, "SwapReduction")
       .value("none", SwapReduction::None)
       .value("coupling_limit", SwapReduction::CouplingLimit)
       .value("custom", SwapReduction::Custom)
-      .value("increasing", SwapReduction::Increasing)
-      .finalize();
+      .value("increasing", SwapReduction::Increasing);
 
   // All configuration options for QMAP
-  py::class_<Configuration>(
+  nb::class_<Configuration>(
       m, "Configuration",
       "Configuration options for the MQT QMAP quantum circuit mapping tool")
-      .def(py::init<>())
-      .def_readwrite("method", &Configuration::method)
-      .def_readwrite("heuristic", &Configuration::heuristic)
-      .def_readwrite("verbose", &Configuration::verbose)
-      .def_readwrite("debug", &Configuration::debug)
-      .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
-      .def_readwrite("layering", &Configuration::layering)
-      .def_readwrite("automatic_layer_splits",
-                     &Configuration::automaticLayerSplits)
-      .def_readwrite("automatic_layer_splits_node_limit",
-                     &Configuration::automaticLayerSplitsNodeLimit)
-      .def_readwrite("early_termination", &Configuration::earlyTermination)
-      .def_readwrite("early_termination_limit",
-                     &Configuration::earlyTerminationLimit)
-      .def_readwrite("initial_layout", &Configuration::initialLayout)
-      .def_readwrite("iterative_bidirectional_routing",
-                     &Configuration::iterativeBidirectionalRouting)
-      .def_readwrite("iterative_bidirectional_routing_passes",
-                     &Configuration::iterativeBidirectionalRoutingPasses)
-      .def_readwrite("lookahead_heuristic", &Configuration::lookaheadHeuristic)
-      .def_readwrite("lookaheads", &Configuration::nrLookaheads)
-      .def_readwrite("first_lookahead_factor",
-                     &Configuration::firstLookaheadFactor)
-      .def_readwrite("lookahead_factor", &Configuration::lookaheadFactor)
-      .def_readwrite("timeout", &Configuration::timeout)
-      .def_readwrite("encoding", &Configuration::encoding)
-      .def_readwrite("commander_grouping", &Configuration::commanderGrouping)
-      .def_readwrite("use_subsets", &Configuration::useSubsets)
-      .def_readwrite("include_WCNF", &Configuration::includeWCNF)
-      .def_readwrite("enable_limits", &Configuration::enableSwapLimits)
-      .def_readwrite("swap_reduction", &Configuration::swapReduction)
-      .def_readwrite("swap_limit", &Configuration::swapLimit)
-      .def_readwrite("subgraph", &Configuration::subgraph)
-      .def_readwrite("pre_mapping_optimizations",
-                     &Configuration::preMappingOptimizations)
-      .def_readwrite("post_mapping_optimizations",
-                     &Configuration::postMappingOptimizations)
-      .def_readwrite("add_measurements_to_mapped_circuit",
-                     &Configuration::addMeasurementsToMappedCircuit)
-      .def_readwrite("add_barriers_between_layers",
-                     &Configuration::addBarriersBetweenLayers)
-      .def("json", &Configuration::json)
+      .def(nb::init<>())
+      .def_rw("method", &Configuration::method)
+      .def_rw("heuristic", &Configuration::heuristic)
+      .def_rw("verbose", &Configuration::verbose)
+      .def_rw("debug", &Configuration::debug)
+      .def_rw("data_logging_path", &Configuration::dataLoggingPath)
+      .def_rw("layering", &Configuration::layering)
+      .def_rw("automatic_layer_splits", &Configuration::automaticLayerSplits)
+      .def_rw("automatic_layer_splits_node_limit",
+              &Configuration::automaticLayerSplitsNodeLimit)
+      .def_rw("early_termination", &Configuration::earlyTermination)
+      .def_rw("early_termination_limit", &Configuration::earlyTerminationLimit)
+      .def_rw("initial_layout", &Configuration::initialLayout)
+      .def_rw("iterative_bidirectional_routing",
+              &Configuration::iterativeBidirectionalRouting)
+      .def_rw("iterative_bidirectional_routing_passes",
+              &Configuration::iterativeBidirectionalRoutingPasses)
+      .def_rw("lookahead_heuristic", &Configuration::lookaheadHeuristic)
+      .def_rw("lookaheads", &Configuration::nrLookaheads)
+      .def_rw("first_lookahead_factor", &Configuration::firstLookaheadFactor)
+      .def_rw("lookahead_factor", &Configuration::lookaheadFactor)
+      .def_rw("timeout", &Configuration::timeout)
+      .def_rw("encoding", &Configuration::encoding)
+      .def_rw("commander_grouping", &Configuration::commanderGrouping)
+      .def_rw("use_subsets", &Configuration::useSubsets)
+      .def_rw("include_WCNF", &Configuration::includeWCNF)
+      .def_rw("enable_limits", &Configuration::enableSwapLimits)
+      .def_rw("swap_reduction", &Configuration::swapReduction)
+      .def_rw("swap_limit", &Configuration::swapLimit)
+      .def_rw("subgraph", &Configuration::subgraph)
+      .def_rw("pre_mapping_optimizations",
+              &Configuration::preMappingOptimizations)
+      .def_rw("post_mapping_optimizations",
+              &Configuration::postMappingOptimizations)
+      .def_rw("add_measurements_to_mapped_circuit",
+              &Configuration::addMeasurementsToMappedCircuit)
+      .def_rw("add_barriers_between_layers",
+              &Configuration::addBarriersBetweenLayers)
+      .def("json",
+           [](const Configuration& config) {
+             const nb::module_ json = nb::module_::import_("json");
+             const nb::object loads = json.attr("loads");
+             return loads(config.json().dump());
+           })
       .def("__repr__", &Configuration::toString);
 
   // Results of the mapping process
-  py::class_<MappingResults>(
+  nb::class_<MappingResults>(
       m, "MappingResults",
       "Results of the MQT QMAP quantum circuit mapping tool")
-      .def(py::init<>())
-      .def_readwrite("input", &MappingResults::input)
-      .def_readwrite("output", &MappingResults::output)
-      .def_readwrite("configuration", &MappingResults::config)
-      .def_readwrite("time", &MappingResults::time)
-      .def_readwrite("timeout", &MappingResults::timeout)
-      .def_readwrite("mapped_circuit", &MappingResults::mappedCircuit)
-      .def_readwrite("heuristic_benchmark", &MappingResults::heuristicBenchmark)
-      .def_readwrite("layer_heuristic_benchmark",
-                     &MappingResults::layerHeuristicBenchmark)
-      .def_readwrite("wcnf", &MappingResults::wcnf)
-      .def("json", &MappingResults::json)
+      .def(nb::init<>())
+      .def_rw("input", &MappingResults::input)
+      .def_rw("output", &MappingResults::output)
+      .def_rw("configuration", &MappingResults::config)
+      .def_rw("time", &MappingResults::time)
+      .def_rw("timeout", &MappingResults::timeout)
+      .def_rw("mapped_circuit", &MappingResults::mappedCircuit)
+      .def_rw("heuristic_benchmark", &MappingResults::heuristicBenchmark)
+      .def_rw("layer_heuristic_benchmark",
+              &MappingResults::layerHeuristicBenchmark)
+      .def_rw("wcnf", &MappingResults::wcnf)
+      .def("json",
+           [](const MappingResults& results) {
+             const nb::module_ json = nb::module_::import_("json");
+             const nb::object loads = json.attr("loads");
+             return loads(results.json().dump());
+           })
       .def("__repr__", &MappingResults::toString);
 
   // Main class for storing circuit information
-  py::class_<MappingResults::CircuitInfo>(m, "CircuitInfo",
+  nb::class_<MappingResults::CircuitInfo>(m, "CircuitInfo",
                                           "Circuit information")
-      .def(py::init<>())
-      .def_readwrite("name", &MappingResults::CircuitInfo::name)
-      .def_readwrite("qubits", &MappingResults::CircuitInfo::qubits)
-      .def_readwrite("gates", &MappingResults::CircuitInfo::gates)
-      .def_readwrite("single_qubit_gates",
-                     &MappingResults::CircuitInfo::singleQubitGates)
-      .def_readwrite("cnots", &MappingResults::CircuitInfo::cnots)
-      .def_readwrite("layers", &MappingResults::CircuitInfo::layers)
-      .def_readwrite("total_fidelity",
-                     &MappingResults::CircuitInfo::totalFidelity)
-      .def_readwrite("total_log_fidelity",
-                     &MappingResults::CircuitInfo::totalLogFidelity)
-      .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
-      .def_readwrite("direction_reverse",
-                     &MappingResults::CircuitInfo::directionReverse);
+      .def(nb::init<>())
+      .def_rw("name", &MappingResults::CircuitInfo::name)
+      .def_rw("qubits", &MappingResults::CircuitInfo::qubits)
+      .def_rw("gates", &MappingResults::CircuitInfo::gates)
+      .def_rw("single_qubit_gates",
+              &MappingResults::CircuitInfo::singleQubitGates)
+      .def_rw("cnots", &MappingResults::CircuitInfo::cnots)
+      .def_rw("layers", &MappingResults::CircuitInfo::layers)
+      .def_rw("total_fidelity", &MappingResults::CircuitInfo::totalFidelity)
+      .def_rw("total_log_fidelity",
+              &MappingResults::CircuitInfo::totalLogFidelity)
+      .def_rw("swaps", &MappingResults::CircuitInfo::swaps)
+      .def_rw("direction_reverse",
+              &MappingResults::CircuitInfo::directionReverse);
 
   // Heuristic benchmark information
-  py::class_<MappingResults::HeuristicBenchmarkInfo>(
+  nb::class_<MappingResults::HeuristicBenchmarkInfo>(
       m, "HeuristicBenchmarkInfo", "Heuristic benchmark information")
-      .def(py::init<>())
-      .def_readwrite("expanded_nodes",
-                     &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
-      .def_readwrite("generated_nodes",
-                     &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
-      .def_readwrite("time_per_node",
-                     &MappingResults::HeuristicBenchmarkInfo::secondsPerNode)
-      .def_readwrite(
-          "average_branching_factor",
-          &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
-      .def_readwrite(
-          "effective_branching_factor",
-          &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor)
-      .def("json", &MappingResults::HeuristicBenchmarkInfo::json);
+      .def(nb::init<>())
+      .def_rw("expanded_nodes",
+              &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
+      .def_rw("generated_nodes",
+              &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
+      .def_rw("time_per_node",
+              &MappingResults::HeuristicBenchmarkInfo::secondsPerNode)
+      .def_rw("average_branching_factor",
+              &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
+      .def_rw("effective_branching_factor",
+              &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor)
+      .def("json", [](const MappingResults::HeuristicBenchmarkInfo& info) {
+        const nb::module_ json = nb::module_::import_("json");
+        const nb::object loads = json.attr("loads");
+        return loads(info.json().dump());
+      });
 
   // Heuristic benchmark information for individual layers
-  py::class_<MappingResults::LayerHeuristicBenchmarkInfo>(
+  nb::class_<MappingResults::LayerHeuristicBenchmarkInfo>(
       m, "LayerHeuristicBenchmarkInfo", "Heuristic benchmark information")
-      .def(py::init<>())
-      .def_readwrite(
-          "expanded_nodes",
-          &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodes)
-      .def_readwrite(
-          "generated_nodes",
-          &MappingResults::LayerHeuristicBenchmarkInfo::generatedNodes)
-      .def_readwrite("expanded_nodes_after_first_solution",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::
-                         expandedNodesAfterFirstSolution)
-      .def_readwrite("expanded_nodes_after_optimal_solution",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::
-                         expandedNodesAfterOptimalSolution)
-      .def_readwrite(
-          "solution_nodes",
-          &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodes)
-      .def_readwrite("solution_nodes_after_optimal_solution",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::
-                         solutionNodesAfterOptimalSolution)
-      .def_readwrite(
-          "solution_depth",
-          &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
-      .def_readwrite(
-          "time_per_node",
-          &MappingResults::LayerHeuristicBenchmarkInfo::secondsPerNode)
-      .def_readwrite(
+      .def(nb::init<>())
+      .def_rw("expanded_nodes",
+              &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodes)
+      .def_rw("generated_nodes",
+              &MappingResults::LayerHeuristicBenchmarkInfo::generatedNodes)
+      .def_rw("expanded_nodes_after_first_solution",
+              &MappingResults::LayerHeuristicBenchmarkInfo::
+                  expandedNodesAfterFirstSolution)
+      .def_rw("expanded_nodes_after_optimal_solution",
+              &MappingResults::LayerHeuristicBenchmarkInfo::
+                  expandedNodesAfterOptimalSolution)
+      .def_rw("solution_nodes",
+              &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodes)
+      .def_rw("solution_nodes_after_optimal_solution",
+              &MappingResults::LayerHeuristicBenchmarkInfo::
+                  solutionNodesAfterOptimalSolution)
+      .def_rw("solution_depth",
+              &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
+      .def_rw("time_per_node",
+              &MappingResults::LayerHeuristicBenchmarkInfo::secondsPerNode)
+      .def_rw(
           "average_branching_factor",
           &MappingResults::LayerHeuristicBenchmarkInfo::averageBranchingFactor)
-      .def_readwrite("effective_branching_factor",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::
-                         effectiveBranchingFactor)
-      .def_readwrite(
-          "early_termination",
-          &MappingResults::LayerHeuristicBenchmarkInfo::earlyTermination)
-      .def("json", &MappingResults::LayerHeuristicBenchmarkInfo::json);
+      .def_rw("effective_branching_factor",
+              &MappingResults::LayerHeuristicBenchmarkInfo::
+                  effectiveBranchingFactor)
+      .def_rw("early_termination",
+              &MappingResults::LayerHeuristicBenchmarkInfo::earlyTermination)
+      .def("json", [](const MappingResults::LayerHeuristicBenchmarkInfo& info) {
+        const nb::module_ json = nb::module_::import_("json");
+        const nb::object loads = json.attr("loads");
+        return loads(info.json().dump());
+      });
 
-  auto arch = py::class_<Architecture>(
+  auto arch = nb::class_<Architecture>(
       m, "Architecture", "Class representing device/backend information");
-  auto properties = py::class_<Architecture::Properties>(
+  auto properties = nb::class_<Architecture::Properties>(
       arch, "Properties", "Class representing properties of an architecture");
 
   // Properties of an architecture (e.g. number of qubits, connectivity, error
   // rates, ...)
-  properties.def(py::init<>())
-      .def_property("name", &Architecture::Properties::getName,
-                    &Architecture::Properties::setName)
-      .def_property("num_qubits", &Architecture::Properties::getNqubits,
-                    &Architecture::Properties::setNqubits)
+  properties.def(nb::init<>())
+      .def_prop_rw("name", &Architecture::Properties::getName,
+                   &Architecture::Properties::setName)
+      .def_prop_rw("num_qubits", &Architecture::Properties::getNqubits,
+                   &Architecture::Properties::setNqubits)
       .def("get_single_qubit_error",
            &Architecture::Properties::getSingleQubitErrorRate, "qubit"_a,
            "operation"_a)
@@ -407,43 +402,49 @@ PYBIND11_MODULE(MQT_QMAP_MODULE_NAME, m, py::mod_gil_not_used()) {
             props.calibrationDate.set(qubit, date);
           },
           "qubit"_a, "calibration_date"_a)
-      .def("json", &Architecture::Properties::json,
-           "Returns a JSON-style dictionary of all the information present in "
-           "the :class:`.Properties`")
+      .def(
+          "json",
+          [](const Architecture::Properties& props) {
+            const nb::module_ json = nb::module_::import_("json");
+            const nb::object loads = json.attr("loads");
+            return loads(props.json().dump());
+          },
+          "Returns a JSON-style dictionary of all the information present in "
+          "the :class:`.Properties`")
       .def("__repr__", &Architecture::Properties::toString,
            "Prints a JSON-formatted representation of all the information "
            "present in the :class:`.Properties`");
 
   // Interface to the QMAP internal architecture class
-  arch.def(py::init<>())
-      .def(py::init<std::uint16_t, const CouplingMap&>(), "num_qubits"_a,
+  arch.def(nb::init<>())
+      .def(nb::init<std::uint16_t, const CouplingMap&>(), "num_qubits"_a,
            "coupling_map"_a)
-      .def(py::init<std::uint16_t, const CouplingMap&,
+      .def(nb::init<std::uint16_t, const CouplingMap&,
                     const Architecture::Properties&>(),
            "num_qubits"_a, "coupling_map"_a, "properties"_a)
-      .def_property("name", &Architecture::getName, &Architecture::setName)
-      .def_property("num_qubits", &Architecture::getNqubits,
-                    &Architecture::setNqubits)
-      .def_property("coupling_map",
-                    py::overload_cast<>(&Architecture::getCouplingMap),
-                    &Architecture::setCouplingMap)
-      .def_property("properties",
-                    py::overload_cast<>(&Architecture::getProperties),
-                    &Architecture::setProperties)
+      .def_prop_rw("name", &Architecture::getName, &Architecture::setName)
+      .def_prop_rw("num_qubits", &Architecture::getNqubits,
+                   &Architecture::setNqubits)
+      .def_prop_rw(
+          "coupling_map", nb::overload_cast<>(&Architecture::getCouplingMap),
+          &Architecture::setCouplingMap, nb::rv_policy::reference_internal)
+      .def_prop_rw(
+          "properties", nb::overload_cast<>(&Architecture::getProperties),
+          &Architecture::setProperties, nb::rv_policy::reference_internal)
       .def("load_coupling_map",
-           py::overload_cast<AvailableArchitecture>(
+           nb::overload_cast<AvailableArchitecture>(
                &Architecture::loadCouplingMap),
            "available_architecture"_a)
       .def(
           "load_coupling_map",
-          py::overload_cast<const std::string&>(&Architecture::loadCouplingMap),
+          nb::overload_cast<const std::string&>(&Architecture::loadCouplingMap),
           "coupling_map_file"_a)
       .def("load_properties",
-           py::overload_cast<const Architecture::Properties&>(
+           nb::overload_cast<const Architecture::Properties&>(
                &Architecture::loadProperties),
            "properties"_a)
       .def("load_properties",
-           py::overload_cast<const std::string&>(&Architecture::loadProperties),
+           nb::overload_cast<const std::string&>(&Architecture::loadProperties),
            "properties"_a);
 
   // Main mapping function
