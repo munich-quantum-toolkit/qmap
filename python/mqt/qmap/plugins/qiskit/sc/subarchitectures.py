@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from typing import TypeAlias
 
     from matplotlib import figure
-    from qiskit.providers import BackendV1, BackendV2  # ty: ignore[unresolved-import]
+    from qiskit.providers import BackendV2
 
     from ....sc import Architecture
 
@@ -93,19 +93,6 @@ class SubarchitectureOrder:
         graph.add_edges_from_no_data(list(coupling_map))
 
         return cls.from_retworkx_graph(graph)
-
-    @classmethod
-    def from_backend(cls, backend: BackendV1) -> SubarchitectureOrder:
-        """Construct the partial order from a coupling map defined as a Qiskit backend.
-
-        Args:
-            backend: Qiskit backend.
-
-        Returns:
-            The resulting partial order.
-        """
-        coupling_map = [(c[0], c[1]) for c in backend.configuration().coupling_map]
-        return cls.from_coupling_map(coupling_map)
 
     @classmethod
     def from_backend_v2(cls, backend: BackendV2) -> SubarchitectureOrder:
