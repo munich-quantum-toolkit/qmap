@@ -13,7 +13,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
-- ✨ Add a (dummy) decomposer component to the zoned neutral atom compiler ([#902]) ([**@ystade**])
+- ✨ Add a (no-op) decomposer component to the zoned neutral atom compiler ([#902]) ([**@ystade**])
 
 ## [3.5.0]
 
