@@ -16,7 +16,7 @@ from ....sc import Arch, Architecture
 
 
 def load_architecture(arch: str | Arch | Architecture | BackendV2 | None = None) -> Architecture:
-    """Load a superconducting architecture from a string, Arch, Architecture, or Backend.
+    """Load a superconducting architecture from a string, Arch, Architecture, or BackendV2.
 
     If None is passed, no architecture is loaded.
 
