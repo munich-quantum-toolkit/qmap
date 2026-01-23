@@ -37,6 +37,7 @@
     ".*\\.profile",
     "uv\\.lock",
     "py\\.typed",
-    ".*build.*"
+    ".*build.*",
+    "qmap_patterns.txt"
   ]
 }

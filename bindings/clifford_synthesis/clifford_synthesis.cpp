@@ -50,9 +50,9 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .value("verbose", plog::Severity::verbose, "Show all information.");
 
   // Configuration for the synthesis
-  nb::class_<cs::Configuration>(
-      m, "SynthesisConfiguration",
-      "Configuration options for the MQT QMAP Clifford synthesis tool.")
+  nb::class_<cs::Configuration>(m, "SynthesisConfiguration",
+                                "Class representing the configuration for the "
+                                "Clifford synthesis techniques.")
       .def(nb::init<>())
       .def_rw("initial_timestep_limit",
               &cs::Configuration::initialTimestepLimit,
@@ -143,8 +143,9 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
           "present in the :class:`.Configuration`");
 
   // Results of the synthesis
-  nb::class_<cs::Results>(m, "SynthesisResults",
-                          "Results of the MQT QMAP Clifford synthesis tool.")
+  nb::class_<cs::Results>(
+      m, "SynthesisResults",
+      "Class representing the results of the Clifford synthesis techniques.")
       .def(nb::init<>())
       .def_prop_ro("gates", &cs::Results::getGates,
                    "Returns the number of gates in the circuit.")
@@ -171,7 +172,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
            "Returns `true` if the synthesis was unsuccessful.");
 
   auto tableau = nb::class_<cs::Tableau>(
-      m, "Tableau", "A class for representing stabilizer tableaus.");
+      m, "Tableau", "Class representing a Clifford tableau.");
   tableau.def(nb::init<std::size_t, bool>(), "n"_a,
               "include_destabilizers"_a = false,
               "Creates a tableau for an n-qubit Clifford.");
@@ -186,7 +187,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       "and Destabilizers.");
 
   auto synthesizer = nb::class_<cs::CliffordSynthesizer>(
-      m, "CliffordSynthesizer", "A class for synthesizing Clifford circuits.");
+      m, "CliffordSynthesizer",
+      "The main class for the Clifford synthesis techniques.");
 
   synthesizer.def(nb::init<cs::Tableau, cs::Tableau>(), "initial_tableau"_a,
                   "target_tableau"_a,

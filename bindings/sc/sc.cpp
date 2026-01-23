@@ -174,7 +174,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   // All configuration options for QMAP
   nb::class_<Configuration>(
       m, "Configuration",
-      "Configuration options for the MQT QMAP quantum circuit mapping tool")
+      "Class representing the configuration for the mapping.")
       .def(nb::init<>())
       .def_rw("method", &Configuration::method)
       .def_rw("heuristic", &Configuration::heuristic)
@@ -222,11 +222,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def("__repr__", &Configuration::toString);
 
   // Results of the mapping process
-  nb::class_<MappingResults>(
-      m, "MappingResults",
-      "Results of the MQT QMAP quantum circuit mapping tool")
+  nb::class_<MappingResults>(m, "MappingResults",
+                             "Class representing the results of a mapping.")
       .def(nb::init<>())
-      .def_rw("input", &MappingResults::input)
+      .def_rw("input_", &MappingResults::input)
       .def_rw("output", &MappingResults::output)
       .def_rw("configuration", &MappingResults::config)
       .def_rw("time", &MappingResults::time)
@@ -245,8 +244,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def("__repr__", &MappingResults::toString);
 
   // Main class for storing circuit information
-  nb::class_<MappingResults::CircuitInfo>(m, "CircuitInfo",
-                                          "Circuit information")
+  nb::class_<MappingResults::CircuitInfo>(
+      m, "CircuitInfo", "Class containing circuit information.")
       .def(nb::init<>())
       .def_rw("name", &MappingResults::CircuitInfo::name)
       .def_rw("qubits", &MappingResults::CircuitInfo::qubits)
@@ -320,9 +319,9 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       });
 
   auto arch = nb::class_<Architecture>(
-      m, "Architecture", "Class representing device/backend information");
+      m, "Architecture", "Class representing device/backend information.");
   auto properties = nb::class_<Architecture::Properties>(
-      arch, "Properties", "Class representing properties of an architecture");
+      arch, "Properties", "Class representing properties of an architecture.");
 
   // Properties of an architecture (e.g. number of qubits, connectivity, error
   // rates, ...)
@@ -448,5 +447,14 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
            "properties"_a);
 
   // Main mapping function
-  m.def("map", &map, "map a quantum circuit", "circ"_a, "arch"_a, "config"_a);
+  m.def("map", &map, "circ"_a, "arch"_a, "config"_a,
+        R"pb(Map a quantum circuit to an architecture.
+
+Args:
+    circ: The quantum circuit to map.
+    arch: The architecture to map to.
+    config: The mapping configuration.
+
+Returns:
+    A tuple containing the mapped circuit and the mapping results.)pb");
 }

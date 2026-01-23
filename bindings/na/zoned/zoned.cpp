@@ -36,42 +36,88 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   nb::module_::import_("mqt.core.ir");
 
   nb::class_<na::zoned::Architecture> architecture(
-      m, "ZonedNeutralAtomArchitecture");
+      m, "ZonedNeutralAtomArchitecture",
+      "Class representing a zoned neutral atom architecture.");
+
   architecture.def_static("from_json_file",
-                          &na::zoned::Architecture::fromJSONFile, "filename"_a);
+                          &na::zoned::Architecture::fromJSONFile, "filename"_a,
+                          R"pb(Create an architecture from a JSON file.
+
+Args:
+    filename: The path to the JSON file
+
+Returns:
+    The architecture
+
+Raises:
+    ValueError: if the file does not exist or is not a valid JSON file)pb");
+
   architecture.def_static("from_json_string",
-                          &na::zoned::Architecture::fromJSONString, "json"_a);
+                          &na::zoned::Architecture::fromJSONString, "json"_a,
+                          R"pb(Create an architecture from a JSON string.
+
+Args:
+    json: The JSON string
+
+Returns:
+    The architecture
+
+Raises:
+    ValueError: If the string is not a valid JSON)pb");
   architecture.def(
       "to_namachine_file",
       [](na::zoned::Architecture& self, const std::string& filename) -> void {
         self.exportNAVizMachine(filename);
       },
-      "filename"_a);
-  architecture.def("to_namachine_string",
-                   [](na::zoned::Architecture& self) -> std::string {
-                     return self.exportNAVizMachine();
-                   });
+      "filename"_a, R"pb(Write the architecture to a .namachine file.
+
+Args:
+    filename: The path to the .namachine file)pb");
+
+  architecture.def(
+      "to_namachine_string",
+      [](na::zoned::Architecture& self) -> std::string {
+        return self.exportNAVizMachine();
+      },
+      R"pb(Get the architecture as a .namachine string.
+
+Returns:
+    The architecture as a .namachine string)pb");
 
   //===--------------------------------------------------------------------===//
   // Placement Method Enum
   //===--------------------------------------------------------------------===//
-  nb::enum_<na::zoned::HeuristicPlacer::Config::Method>(m, "PlacementMethod")
-      .value("astar", na::zoned::HeuristicPlacer::Config::Method::ASTAR)
-      .value("ids", na::zoned::HeuristicPlacer::Config::Method::IDS);
+  nb::enum_<na::zoned::HeuristicPlacer::Config::Method>(
+      m, "PlacementMethod",
+      "Enumeration of the available placement methods for the heuristic "
+      "placer.")
+      .value("astar", na::zoned::HeuristicPlacer::Config::Method::ASTAR,
+             "A-star algorithm.")
+      .value("ids", na::zoned::HeuristicPlacer::Config::Method::IDS,
+             "Iterative diving search.");
 
   //===--------------------------------------------------------------------===//
   // Routing Method Enum
   //===--------------------------------------------------------------------===//
-  nb::enum_<na::zoned::IndependentSetRouter::Config::Method>(m, "RoutingMethod")
-      .value("strict", na::zoned::IndependentSetRouter::Config::Method::STRICT)
+  nb::enum_<na::zoned::IndependentSetRouter::Config::Method>(
+      m, "RoutingMethod",
+      "Enumeration of the available routing methods for the independent set "
+      "router.")
+      .value("strict", na::zoned::IndependentSetRouter::Config::Method::STRICT,
+             "Strict routing, i.e., the relative order of atoms must be "
+             "maintained throughout a movement.")
       .value("relaxed",
-             na::zoned::IndependentSetRouter::Config::Method::RELAXED);
+             na::zoned::IndependentSetRouter::Config::Method::RELAXED,
+             "Relaxed routing, i.e., the relative order of atoms may change "
+             "throughout a movement by applying offsets during pick-up and "
+             "drop-off.");
 
   //===--------------------------------------------------------------------===//
   // Routing-agnostic Compiler
   //===--------------------------------------------------------------------===//
   nb::class_<na::zoned::RoutingAgnosticCompiler> routingAgnosticCompiler(
-      m, "RoutingAgnosticCompiler");
+      m, "RoutingAgnosticCompiler",
+      "Routing-agnostic zoned neutral atom compiler.");
   {
     const na::zoned::RoutingAgnosticCompiler::Config defaultConfig;
     routingAgnosticCompiler.def(
@@ -109,8 +155,21 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
         "prefer_split"_a =
             defaultConfig.layoutSynthesizerConfig.routerConfig.preferSplit,
         "warn_unsupported_gates"_a =
-            defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
+            defaultConfig.codeGeneratorConfig.warnUnsupportedGates,
+        R"pb(Create a routing-agnostic compiler for the given architecture and configurations.
+
+Args:
+    arch: The zoned neutral atom architecture
+    log_level: The log level for the compiler, possible values are "debug", "info", "warning", "error", "critical"
+    max_filling_factor: The maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
+    use_window: Whether to use a window for the placer
+    window_size: The size of the window for the placer
+    dynamic_placement: Whether to use dynamic placement for the placer
+    routing_method: The routing method that should be used for the independent set router
+    prefer_split: The threshold factor for group merging decisions during routing.
+    warn_unsupported_gates: Whether to warn about unsupported gates in the code generator)pb");
   }
+
   routingAgnosticCompiler.def_static(
       "from_json_string",
       [](const na::zoned::Architecture& arch,
@@ -120,27 +179,52 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
-      "arch"_a, "json"_a);
+      "arch"_a, "json"_a,
+      R"pb(Create a compiler for the given architecture and with configurations from a JSON string.
+
+Args:
+    arch: The zoned neutral atom architecture
+    json: The JSON string
+
+Returns:
+    The initialized compiler
+
+Raises:
+    ValueError: If the string is not a valid JSON)pb");
+
   routingAgnosticCompiler.def(
       "compile",
       [](na::zoned::RoutingAgnosticCompiler& self,
          const qc::QuantumComputation& qc) -> std::string {
         return self.compile(qc).toString();
       },
-      "qc"_a);
+      "qc"_a,
+      R"pb(Compile a quantum circuit for the zoned neutral atom architecture.
+
+Args:
+    qc: The quantum circuit
+
+Returns:
+    The compilations result as a string in the .naviz format.)pb");
+
   routingAgnosticCompiler.def(
-      "stats", [](const na::zoned::RoutingAgnosticCompiler& self) {
+      "stats",
+      [](const na::zoned::RoutingAgnosticCompiler& self) {
         const nb::module_ json = nb::module_::import_("json");
         const nb::object loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         return loads(stats.dump());
-      });
+      },
+      R"pb(Get the statistics of the last compilation.
+
+Returns:
+    The statistics as a dictionary)pb");
 
   //===--------------------------------------------------------------------===//
   // Routing-aware Compiler
   //===--------------------------------------------------------------------===//
   nb::class_<na::zoned::RoutingAwareCompiler> routingAwareCompiler(
-      m, "RoutingAwareCompiler");
+      m, "RoutingAwareCompiler", "Routing-aware zoned neutral atom compiler.");
   {
     const na::zoned::RoutingAwareCompiler::Config defaultConfig;
     routingAwareCompiler.def(
@@ -211,8 +295,33 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
         "prefer_split"_a =
             defaultConfig.layoutSynthesizerConfig.routerConfig.preferSplit,
         "warn_unsupported_gates"_a =
-            defaultConfig.codeGeneratorConfig.warnUnsupportedGates);
+            defaultConfig.codeGeneratorConfig.warnUnsupportedGates,
+        R"pb(Create a routing-aware compiler for the given architecture and configurations.
+
+Args:
+    arch: The zoned neutral atom architecture
+    log_level: The log level for the compiler, possible values are "debug", "info", "warning", "error", "critical"
+    max_filling_factor: The maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
+    use_window: Whether to use a window for the placer
+    window_min_width: The minimum width of the window for the placer
+    window_ratio: The ratio between the height and the width of the window
+    window_share: The share of free sites in the window in relation to the number of atoms to be moved in this step
+    placement_method: The placement method that should be used for the heuristic placer
+    deepening_factor: Controls the impact of the term in the heuristic of the A* search that resembles the standard deviation of the differences between the current and target sites of the atoms to be moved in every orientation
+    deepening_value: Is added to the sum of standard deviations before it is multiplied with the number of unplaced nodes and :attr:`deepening_factor`
+    lookahead_factor: Controls the lookahead's influence that considers the distance of atoms to their interaction partner in the next layer
+    reuse_level: The reuse level that corresponds to the estimated extra fidelity loss due to the extra trap transfers when the atom is not reused and instead moved to the storage zone and back to the entanglement zone
+    max_nodes: The maximum number of nodes that are considered in the A* search.
+        If this number is exceeded, the search is aborted and an error is raised.
+        In the current implementation, one node roughly consumes 120 Byte.
+        Hence, allowing 50,000,000 nodes results in memory consumption of about 6 GB plus the size of the rest of the data structures.
+    trials: The number of restarts during IDS.
+    queue_capacity: The maximum capacity of the priority queue used during IDS.
+    routing_method: The routing method that should be used for the independent set router
+    prefer_split: The threshold factor for group merging decisions during routing.
+    warn_unsupported_gates: Whether to warn about unsupported gates in the code generator)pb");
   }
+
   routingAwareCompiler.def_static(
       "from_json_string",
       [](const na::zoned::Architecture& arch,
@@ -222,19 +331,44 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
-      "arch"_a, "json"_a);
+      "arch"_a, "json"_a,
+      R"pb(Create a compiler for the given architecture and configurations from a JSON string.
+
+Args:
+    arch: The zoned neutral atom architecture
+    json: The JSON string
+
+Returns:
+    The initialized compiler
+
+Raises:
+    ValueError: If the string is not a valid JSON)pb");
+
   routingAwareCompiler.def(
       "compile",
       [](na::zoned::RoutingAwareCompiler& self,
          const qc::QuantumComputation& qc) -> std::string {
         return self.compile(qc).toString();
       },
-      "qc"_a);
+      "qc"_a,
+      R"pb(Compile a quantum circuit for the zoned neutral atom architecture.
+
+Args:
+    qc: The quantum circuit
+
+Returns:
+    The compilations result as a string in the .naviz format.)pb");
+
   routingAwareCompiler.def(
-      "stats", [](const na::zoned::RoutingAwareCompiler& self) {
+      "stats",
+      [](const na::zoned::RoutingAwareCompiler& self) {
         const nb::module_ json = nb::module_::import_("json");
         const nb::object loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         return loads(stats.dump());
-      });
+      },
+      R"pb(Get the statistics of the last compilation.
+
+Returns:
+    The statistics as a dictionary)pb");
 }

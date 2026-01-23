@@ -76,8 +76,7 @@ class RoutingMethod(Enum):
     """
     relaxed = ...
     """
-    Relaxed routing, i.e., the relative order of atoms may change
-    throughout a movement by applying offsets during pick-up and drop-off.
+    Relaxed routing, i.e., the relative order of atoms may change throughout a movement by applying offsets during pick-up and drop-off.
     """
 
 class RoutingAgnosticCompiler:
@@ -131,10 +130,10 @@ class RoutingAgnosticCompiler:
         """Compile a quantum circuit for the zoned neutral atom architecture.
 
         Args:
-            qc: is the quantum circuit
+            qc: The quantum circuit
 
         Returns:
-            the compilations result as a string in the .naviz format.
+            The compilations result as a string in the .naviz format.
         """
     def stats(self) -> dict[str, float]:
         """Get the statistics of the last compilation.
@@ -213,27 +212,27 @@ class RoutingAwareCompiler:
         """Create a compiler for the given architecture and configurations from a JSON string.
 
         Args:
-            arch: is the zoned neutral atom architecture
-            json: is the JSON string
+            arch: The zoned neutral atom architecture
+            json: The JSON string
 
         Returns:
-            the initialized compiler
+            The initialized compiler
 
         Raises:
-            ValueError: if the string is not a valid JSON
+            ValueError: If the string is not a valid JSON
         """
     def compile(self, qc: QuantumComputation) -> str:
         """Compile a quantum circuit for the zoned neutral atom architecture.
 
         Args:
-            qc: is the quantum circuit
+            qc: The quantum circuit
 
         Returns:
-            the compilations result as a string in the .naviz format.
+            The compilations result as a string in the .naviz format.
         """
     def stats(self) -> dict[str, float]:
         """Get the statistics of the last compilation.
 
         Returns:
-            the statistics as a dictionary
+            The statistics as a dictionary
         """
