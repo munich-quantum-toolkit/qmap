@@ -68,11 +68,11 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
               "is known.")
       .def_rw(
           "use_maxsat", &cs::Configuration::useMaxSAT,
-          "Use MaxSAT to solve the synthesis problem or to really on the "
-          "binary search scheme for finding the optimum. Defaults to `false`.")
+          "Use MaxSAT to solve the synthesis problem or to rely on the "
+          "binary search scheme for finding the optimum. Defaults to `False`.")
       .def_rw("linear_search", &cs::Configuration::linearSearch,
               "Use linear search instead of binary search "
-              "scheme for finding the optimum. Defaults to `false`.")
+              "scheme for finding the optimum. Defaults to `False`.")
       .def_rw("target_metric", &cs::Configuration::target,
               "Target metric for the Clifford synthesis. Defaults to `gates`.")
       .def_rw("use_symmetry_breaking", &cs::Configuration::useSymmetryBreaking,
@@ -81,7 +81,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def_rw("dump_intermediate_results",
               &cs::Configuration::dumpIntermediateResults,
               "Dump intermediate results of the synthesis process. "
-              "Defaults to `false`.")
+              "Defaults to `False`.")
       .def_rw("intermediate_results_path",
               &cs::Configuration::intermediateResultsPath,
               "Path to the directory where intermediate results should "
@@ -98,7 +98,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
           &cs::Configuration::minimizeGatesAfterDepthOptimization,
           "Depth optimization might produce a circuit with more gates than "
           "necessary. This option enables an additional run of the synthesizer "
-          "to minimize the overall number of gates. Defaults to `false`.")
+          "to minimize the overall number of gates. Defaults to `False`.")
       .def_rw(
           "try_higher_gate_limit_for_two_qubit_gate_optimization",
           &cs::Configuration::tryHigherGateLimitForTwoQubitGateOptimization,
@@ -106,7 +106,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
           "to find an optimal solution for a certain timestep limit, but there "
           "might be a better solution for some higher timestep limit. This "
           "option enables an additional run of the synthesizer with a higher "
-          "gate limit. Defaults to `false`.")
+          "gate limit. Defaults to `False`.")
       .def_rw("gate_limit_factor", &cs::Configuration::gateLimitFactor,
               "Factor by which the gate limit is increased when "
               "trying to find a better solution for the two-qubit "
@@ -116,11 +116,11 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
               "Two-qubit gate optimization might produce a circuit "
               "with more gates than necessary. This option enables "
               "an additional run of the synthesizer to minimize the "
-              "overall number of gates. Defaults to `false`.")
+              "overall number of gates. Defaults to `False`.")
       .def_rw("heuristic", &cs::Configuration::heuristic,
               "Use heuristic to synthesize the circuit. "
               "This method synthesizes shallow intermediate circuits "
-              "and combines them. Defaults to `false`.")
+              "and combines them. Defaults to `False`.")
       .def_rw("split_size", &cs::Configuration::splitSize,
               "Size of subcircuits used in heuristic. "
               "Defaults to `5`.")

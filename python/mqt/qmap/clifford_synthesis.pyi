@@ -62,13 +62,13 @@ class SynthesisConfiguration:
     def minimal_timesteps(self, arg: int, /) -> None: ...
     @property
     def use_maxsat(self) -> bool:
-        """Use MaxSAT to solve the synthesis problem or to really on the binary search scheme for finding the optimum. Defaults to `false`."""
+        """Use MaxSAT to solve the synthesis problem or to rely on the binary search scheme for finding the optimum. Defaults to `False`."""
 
     @use_maxsat.setter
     def use_maxsat(self, arg: bool, /) -> None: ...
     @property
     def linear_search(self) -> bool:
-        """Use linear search instead of binary search scheme for finding the optimum. Defaults to `false`."""
+        """Use linear search instead of binary search scheme for finding the optimum. Defaults to `False`."""
 
     @linear_search.setter
     def linear_search(self, arg: bool, /) -> None: ...
@@ -86,7 +86,7 @@ class SynthesisConfiguration:
     def use_symmetry_breaking(self, arg: bool, /) -> None: ...
     @property
     def dump_intermediate_results(self) -> bool:
-        """Dump intermediate results of the synthesis process. Defaults to `false`."""
+        """Dump intermediate results of the synthesis process. Defaults to `False`."""
 
     @dump_intermediate_results.setter
     def dump_intermediate_results(self, arg: bool, /) -> None: ...
@@ -110,13 +110,13 @@ class SynthesisConfiguration:
     def solver_parameters(self, arg: Mapping[str, bool | int | float | str], /) -> None: ...
     @property
     def minimize_gates_after_depth_optimization(self) -> bool:
-        """Depth optimization might produce a circuit with more gates than necessary. This option enables an additional run of the synthesizer to minimize the overall number of gates. Defaults to `false`."""
+        """Depth optimization might produce a circuit with more gates than necessary. This option enables an additional run of the synthesizer to minimize the overall number of gates. Defaults to `False`."""
 
     @minimize_gates_after_depth_optimization.setter
     def minimize_gates_after_depth_optimization(self, arg: bool, /) -> None: ...
     @property
     def try_higher_gate_limit_for_two_qubit_gate_optimization(self) -> bool:
-        """When optimizing two-qubit gates, the synthesizer might fail to find an optimal solution for a certain timestep limit, but there might be a better solution for some higher timestep limit. This option enables an additional run of the synthesizer with a higher gate limit. Defaults to `false`."""
+        """When optimizing two-qubit gates, the synthesizer might fail to find an optimal solution for a certain timestep limit, but there might be a better solution for some higher timestep limit. This option enables an additional run of the synthesizer with a higher gate limit. Defaults to `False`."""
 
     @try_higher_gate_limit_for_two_qubit_gate_optimization.setter
     def try_higher_gate_limit_for_two_qubit_gate_optimization(self, arg: bool, /) -> None: ...
@@ -128,13 +128,13 @@ class SynthesisConfiguration:
     def gate_limit_factor(self, arg: float, /) -> None: ...
     @property
     def minimize_gates_after_two_qubit_gate_optimization(self) -> bool:
-        """Two-qubit gate optimization might produce a circuit with more gates than necessary. This option enables an additional run of the synthesizer to minimize the overall number of gates. Defaults to `false`."""
+        """Two-qubit gate optimization might produce a circuit with more gates than necessary. This option enables an additional run of the synthesizer to minimize the overall number of gates. Defaults to `False`."""
 
     @minimize_gates_after_two_qubit_gate_optimization.setter
     def minimize_gates_after_two_qubit_gate_optimization(self, arg: bool, /) -> None: ...
     @property
     def heuristic(self) -> bool:
-        """Use heuristic to synthesize the circuit. This method synthesizes shallow intermediate circuits and combines them. Defaults to `false`."""
+        """Use heuristic to synthesize the circuit. This method synthesizes shallow intermediate circuits and combines them. Defaults to `False`."""
 
     @heuristic.setter
     def heuristic(self, arg: bool, /) -> None: ...
