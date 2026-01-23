@@ -130,9 +130,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def(
           "json",
           [](const cs::Configuration& config) {
-            const nb::module_ json = nb::module_::import_("json");
-            const nb::object loads = json.attr("loads");
-            return loads(config.json().dump());
+            const auto json = nb::module_::import_("json");
+            const auto loads = json.attr("loads");
+            const auto dict = loads(config.json().dump());
+            return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
           },
           "Returns a JSON-style dictionary of all the information present in "
           "the :class:`.Configuration`")

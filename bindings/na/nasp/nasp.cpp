@@ -119,14 +119,15 @@ Raises:
       .def(
           "json",
           [](const na::NASolver::Result& result) {
-            const nb::module_ json = nb::module_::import_("json");
-            const nb::object loads = json.attr("loads");
-            return loads(result.json().dump());
+            const auto json = nb::module_::import_("json");
+            const auto loads = json.attr("loads");
+            const auto dict = loads(result.json().dump());
+            return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
           },
-          R"pb(Returns the result as a JSON string.
+          R"pb(Returns the result as JSON-style dictionary.
 
 Returns:
-    The result as a JSON string)pb");
+    The result as a JSON-style dictionary)pb");
 
   m.def(
       "generate_code",

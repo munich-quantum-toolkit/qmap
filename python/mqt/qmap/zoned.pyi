@@ -7,6 +7,7 @@
 # Licensed under the MIT License
 
 import enum
+from typing import Any
 
 import mqt.core.ir
 
@@ -38,7 +39,7 @@ class ZonedNeutralAtomArchitecture:
             The architecture
 
         Raises:
-            ValueError: If the string is not a valid JSON
+            ValueError: If the string is not a valid JSON string
         """
 
     def to_namachine_file(self, filename: str) -> None:
@@ -118,7 +119,7 @@ class RoutingAgnosticCompiler:
             The initialized compiler
 
         Raises:
-            ValueError: If the string is not a valid JSON
+            ValueError: If the string is not a valid JSON string
         """
 
     def compile(self, qc: mqt.core.ir.QuantumComputation) -> str:
@@ -131,11 +132,11 @@ class RoutingAgnosticCompiler:
             The compilations result as a string in the .naviz format.
         """
 
-    def stats(self) -> object:
-        """Get the statistics of the last compilation.
+    def stats(self) -> dict[str, Any]:
+        """Get the statistics of the last compilation as a JSON-style dictionary.
 
         Returns:
-            The statistics as a dictionary
+            The statistics as a JSON-style dictionary
         """
 
 class RoutingAwareCompiler:
@@ -200,7 +201,7 @@ class RoutingAwareCompiler:
             The initialized compiler
 
         Raises:
-            ValueError: If the string is not a valid JSON
+            ValueError: If the string is not a valid JSON string
         """
 
     def compile(self, qc: mqt.core.ir.QuantumComputation) -> str:

@@ -7,6 +7,7 @@
 # Licensed under the MIT License
 
 from collections.abc import Sequence
+from typing import Any
 
 import mqt.core.ir
 
@@ -114,11 +115,11 @@ class NAStatePreparationSolver:
         def __init__(self) -> None:
             """Create a result object."""
 
-        def json(self) -> object:
-            """Returns the result as a JSON string.
+        def json(self) -> dict[str, Any]:
+            """Returns the result as JSON-style dictionary.
 
             Returns:
-                The result as a JSON string
+                The result as a JSON-style dictionary
             """
 
 def generate_code(

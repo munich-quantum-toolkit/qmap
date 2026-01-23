@@ -215,9 +215,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
               &Configuration::addBarriersBetweenLayers)
       .def("json",
            [](const Configuration& config) {
-             const nb::module_ json = nb::module_::import_("json");
-             const nb::object loads = json.attr("loads");
-             return loads(config.json().dump());
+             const auto json = nb::module_::import_("json");
+             const auto loads = json.attr("loads");
+             const auto dict = loads(config.json().dump());
+             return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
            })
       .def("__repr__", &Configuration::toString);
 
@@ -237,9 +238,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def_rw("wcnf", &MappingResults::wcnf)
       .def("json",
            [](const MappingResults& results) {
-             const nb::module_ json = nb::module_::import_("json");
-             const nb::object loads = json.attr("loads");
-             return loads(results.json().dump());
+             const auto json = nb::module_::import_("json");
+             const auto loads = json.attr("loads");
+             const auto dict = loads(results.json().dump());
+             return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
            })
       .def("__repr__", &MappingResults::toString);
 
@@ -276,9 +278,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def_rw("effective_branching_factor",
               &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor)
       .def("json", [](const MappingResults::HeuristicBenchmarkInfo& info) {
-        const nb::module_ json = nb::module_::import_("json");
-        const nb::object loads = json.attr("loads");
-        return loads(info.json().dump());
+        const auto json = nb::module_::import_("json");
+        const auto loads = json.attr("loads");
+        const auto dict = loads(info.json().dump());
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
       });
 
   // Heuristic benchmark information for individual layers
@@ -313,9 +316,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def_rw("early_termination",
               &MappingResults::LayerHeuristicBenchmarkInfo::earlyTermination)
       .def("json", [](const MappingResults::LayerHeuristicBenchmarkInfo& info) {
-        const nb::module_ json = nb::module_::import_("json");
-        const nb::object loads = json.attr("loads");
-        return loads(info.json().dump());
+        const auto json = nb::module_::import_("json");
+        const auto loads = json.attr("loads");
+        const auto dict = loads(info.json().dump());
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
       });
 
   auto arch = nb::class_<Architecture>(
@@ -404,9 +408,10 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def(
           "json",
           [](const Architecture::Properties& props) {
-            const nb::module_ json = nb::module_::import_("json");
-            const nb::object loads = json.attr("loads");
-            return loads(props.json().dump());
+            const auto json = nb::module_::import_("json");
+            const auto loads = json.attr("loads");
+            const auto dict = loads(props.json().dump());
+            return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
           },
           "Returns a JSON-style dictionary of all the information present in "
           "the :class:`.Properties`")

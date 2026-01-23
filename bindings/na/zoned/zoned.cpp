@@ -63,7 +63,7 @@ Returns:
     The architecture
 
 Raises:
-    ValueError: If the string is not a valid JSON)pb");
+    ValueError: If the string is not a valid JSON string)pb");
   architecture.def(
       "to_namachine_file",
       [](na::zoned::Architecture& self, const std::string& filename) -> void {
@@ -190,7 +190,7 @@ Returns:
     The initialized compiler
 
 Raises:
-    ValueError: If the string is not a valid JSON)pb");
+    ValueError: If the string is not a valid JSON string)pb");
 
   routingAgnosticCompiler.def(
       "compile",
@@ -210,15 +210,16 @@ Returns:
   routingAgnosticCompiler.def(
       "stats",
       [](const na::zoned::RoutingAgnosticCompiler& self) {
-        const nb::module_ json = nb::module_::import_("json");
-        const nb::object loads = json.attr("loads");
+        const auto json = nb::module_::import_("json");
+        const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
-        return loads(stats.dump());
+        const auto dict = loads(stats.dump());
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
       },
-      R"pb(Get the statistics of the last compilation.
+      R"pb(Get the statistics of the last compilation as a JSON-style dictionary.
 
 Returns:
-    The statistics as a dictionary)pb");
+    The statistics as a JSON-style dictionary)pb");
 
   //===--------------------------------------------------------------------===//
   // Routing-aware Compiler
@@ -342,7 +343,7 @@ Returns:
     The initialized compiler
 
 Raises:
-    ValueError: If the string is not a valid JSON)pb");
+    ValueError: If the string is not a valid JSON string)pb");
 
   routingAwareCompiler.def(
       "compile",
@@ -362,8 +363,8 @@ Returns:
   routingAwareCompiler.def(
       "stats",
       [](const na::zoned::RoutingAwareCompiler& self) {
-        const nb::module_ json = nb::module_::import_("json");
-        const nb::object loads = json.attr("loads");
+        const auto json = nb::module_::import_("json");
+        const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         return loads(stats.dump());
       },

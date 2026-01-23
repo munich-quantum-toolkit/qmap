@@ -8,7 +8,7 @@
 
 import enum
 from collections.abc import Mapping
-from typing import overload
+from typing import Any, overload
 
 import mqt.core.ir
 
@@ -150,7 +150,7 @@ class SynthesisConfiguration:
 
     @n_threads_heuristic.setter
     def n_threads_heuristic(self, arg: int, /) -> None: ...
-    def json(self) -> object:
+    def json(self) -> dict[str, Any]:
         """Returns a JSON-style dictionary of all the information present in the :class:`.Configuration`."""
 
 class SynthesisResults:
