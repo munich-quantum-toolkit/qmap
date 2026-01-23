@@ -18,7 +18,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 ### Changed
 
 - 🔧 Replace `mypy` with `ty` ([#912]) ([**@denialhaag**])
-- ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#911]) ([**@denialhaag**])
+- ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#911], [#916]) ([**@denialhaag**])
 - 📦️ Provide Stable ABI wheels for Python 3.12+ ([#911]) ([**@denialhaag**])
 
 ## [3.5.0] - 2025-12-16
@@ -188,6 +188,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#916]: https://github.com/munich-quantum-toolkit/qmap/pull/916
 [#912]: https://github.com/munich-quantum-toolkit/qmap/pull/912
 [#911]: https://github.com/munich-quantum-toolkit/qmap/pull/911
 [#902]: https://github.com/munich-quantum-toolkit/qmap/pull/902
