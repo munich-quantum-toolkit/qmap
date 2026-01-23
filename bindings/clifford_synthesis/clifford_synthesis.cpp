@@ -71,13 +71,13 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
           "Use MaxSAT to solve the synthesis problem or to really on the "
           "binary search scheme for finding the optimum. Defaults to `false`.")
       .def_rw("linear_search", &cs::Configuration::linearSearch,
-              "Use liner search instead of binary search "
+              "Use linear search instead of binary search "
               "scheme for finding the optimum. Defaults to `false`.")
       .def_rw("target_metric", &cs::Configuration::target,
               "Target metric for the Clifford synthesis. Defaults to `gates`.")
       .def_rw("use_symmetry_breaking", &cs::Configuration::useSymmetryBreaking,
               "Use symmetry breaking clauses to speed up the synthesis "
-              "process. Defaults to `true`.")
+              "process. Defaults to `True`.")
       .def_rw("dump_intermediate_results",
               &cs::Configuration::dumpIntermediateResults,
               "Dump intermediate results of the synthesis process. "
@@ -168,9 +168,9 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
                    "Returns a string representation of the "
                    "synthesized circuit's tableau.")
       .def("sat", &cs::Results::sat,
-           "Returns `true` if the synthesis was successful.")
+           "Returns `True` if the synthesis was successful.")
       .def("unsat", &cs::Results::unsat,
-           "Returns `true` if the synthesis was unsuccessful.");
+           "Returns `True` if the synthesis was unsuccessful.");
 
   auto tableau = nb::class_<cs::Tableau>(
       m, "Tableau", "Class representing a Clifford tableau.");
@@ -184,8 +184,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   tableau.def(
       nb::init<const std::string&, const std::string&>(), "stabilizers"_a,
       "destabilizers"_a,
-      "Constructs a tableau from two lists of Pauli strings, the Stabilizers"
-      "and Destabilizers.");
+      "Constructs a tableau from two lists of Pauli strings, the stabilizers "
+      "and destabilizers.");
 
   auto synthesizer = nb::class_<cs::CliffordSynthesizer>(
       m, "CliffordSynthesizer",

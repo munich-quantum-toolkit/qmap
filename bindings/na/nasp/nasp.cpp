@@ -44,19 +44,19 @@ The neutral atom state preparation solver generates an optimal sequence of neutr
               "min_entangling_y"_a, "max_entangling_y"_a,
               R"pb(Create a solver instance for the neutral atom state preparation problem.
 
-        The solver is based on a 2D grid abstraction of the neutral atom quantum computer.
-        The 2D plane is divided into interaction sites.
-        Each interaction site is denoted by abstract x- and y-coordinates.
-        The parameter `max_x` specifies the maximum x-coordinate, and `max_y` specifies the maximum y-coordinate.
-        In the center of an interaction site, sits an SLM trap.
-        Around that trap there are several possible discrete AOD positions arranged as a grid.
-        The specific position of an atom within an interaction site is determined by the x- and y-offset from the SLM trap, i.e., those can be positive and negative.
-        The maximum absolute value of the x- and y-offset is specified by `max_h_offset` and `max_v_offset`, respectively.
-        Then, the parameter `max_c` specifies the maximum number of AOD columns, and `max_r` specifies the maximum number of AOD rows.
-        Finally, in order to interact during a Rydberg stage, atoms must be located within a certain distance.
-        The maximum horizontal and vertical distance between two atoms is specified by `max_h_dist` and `max_v_dist`, respectively.
-        The parameter `min_entangling_y` specifies the minimum y-coordinate for entangling operations, and `max_entangling_y` specifies the maximum y-coordinate for entangling operations.
-        Hence, y-coordinates outside of this range are located in the storage zone.
+The solver is based on a 2D grid abstraction of the neutral atom quantum computer.
+The 2D plane is divided into interaction sites.
+Each interaction site is denoted by abstract x- and y-coordinates.
+The parameter `max_x` specifies the maximum x-coordinate, and `max_y` specifies the maximum y-coordinate.
+In the center of an interaction site, sits an SLM trap.
+Around that trap there are several possible discrete AOD positions arranged as a grid.
+The specific position of an atom within an interaction site is determined by the x- and y-offset from the SLM trap, i.e., those can be positive and negative.
+The maximum absolute value of the x- and y-offset is specified by `max_h_offset` and `max_v_offset`, respectively.
+Then, the parameter `max_c` specifies the maximum number of AOD columns, and `max_r` specifies the maximum number of AOD rows.
+Finally, in order to interact during a Rydberg stage, atoms must be located within a certain distance.
+The maximum horizontal and vertical distance between two atoms is specified by `max_h_dist` and `max_v_dist`, respectively.
+The parameter `min_entangling_y` specifies the minimum y-coordinate for entangling operations, and `max_entangling_y` specifies the maximum y-coordinate for entangling operations.
+Hence, y-coordinates outside of this range are located in the storage zone.
 
 Note:
     The solver can only handle a single storage zone below the entangling zone, i.e., in this case `min_entangling_y` must be zero and `max_entangling_y` must be less than `max_y`.
@@ -150,6 +150,9 @@ Args:
     min_atom_dist: The minimum distance between atoms
     no_interaction_radius: The radius around an atom where no other atom can be placed during an entangling operation that should not interact with the atom
     zone_dist: The distance between zones, i.e., the minimal distance between two atoms in different zones
+
+Returns:
+    The generated code as a string
 
 Raises:
     ValueError: If one of the numeral parameters is invalid, e.g., is a negative value)pb");

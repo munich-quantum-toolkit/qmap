@@ -68,7 +68,7 @@ class SynthesisConfiguration:
     def use_maxsat(self, arg: bool, /) -> None: ...
     @property
     def linear_search(self) -> bool:
-        """Use liner search instead of binary search scheme for finding the optimum. Defaults to `false`."""
+        """Use linear search instead of binary search scheme for finding the optimum. Defaults to `false`."""
 
     @linear_search.setter
     def linear_search(self, arg: bool, /) -> None: ...
@@ -80,7 +80,7 @@ class SynthesisConfiguration:
     def target_metric(self, arg: TargetMetric, /) -> None: ...
     @property
     def use_symmetry_breaking(self) -> bool:
-        """Use symmetry breaking clauses to speed up the synthesis process. Defaults to `true`."""
+        """Use symmetry breaking clauses to speed up the synthesis process. Defaults to `True`."""
 
     @use_symmetry_breaking.setter
     def use_symmetry_breaking(self, arg: bool, /) -> None: ...
@@ -190,10 +190,10 @@ class SynthesisResults:
         """Returns a string representation of the synthesized circuit's tableau."""
 
     def sat(self) -> bool:
-        """Returns `true` if the synthesis was successful."""
+        """Returns `True` if the synthesis was successful."""
 
     def unsat(self) -> bool:
-        """Returns `true` if the synthesis was unsuccessful."""
+        """Returns `True` if the synthesis was unsuccessful."""
 
 class Tableau:
     """Class representing a Clifford tableau."""
@@ -208,7 +208,7 @@ class Tableau:
 
     @overload
     def __init__(self, stabilizers: str, destabilizers: str) -> None:
-        """Constructs a tableau from two lists of Pauli strings, the Stabilizersand Destabilizers."""
+        """Constructs a tableau from two lists of Pauli strings, the stabilizers and destabilizers."""
 
 class CliffordSynthesizer:
     """The main class for the Clifford synthesis techniques."""

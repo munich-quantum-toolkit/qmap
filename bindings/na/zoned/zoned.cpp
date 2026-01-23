@@ -205,7 +205,7 @@ Args:
     qc: The quantum circuit
 
 Returns:
-    The compilations result as a string in the .naviz format.)pb");
+    The compilation result as a string in the .naviz format.)pb");
 
   routingAgnosticCompiler.def(
       "stats",
@@ -358,7 +358,7 @@ Args:
     qc: The quantum circuit
 
 Returns:
-    The compilations result as a string in the .naviz format.)pb");
+    The compilation result as a string in the .naviz format.)pb");
 
   routingAwareCompiler.def(
       "stats",
