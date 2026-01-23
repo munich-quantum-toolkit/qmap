@@ -368,7 +368,6 @@ Returns:
         const nlohmann::json stats = self.getStatistics();
         const auto dict = loads(stats.dump());
         return nb::cast<nb::typed<nb::dict, nb::str, nb::float_>>(dict);
-        ;
       },
       R"pb(Get the statistics of the last compilation.
 
