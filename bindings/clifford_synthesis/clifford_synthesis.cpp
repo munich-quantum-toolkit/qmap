@@ -213,7 +213,11 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   synthesizer.def_prop_ro("results", &cs::CliffordSynthesizer::getResults,
                           nb::rv_policy::reference_internal,
                           "Returns the results of the synthesis.");
-  synthesizer.def_prop_ro("result_circuit", [](cs::CliffordSynthesizer& self) {
-    return qasm3::Importer::imports(self.getResults().getResultCircuit());
-  });
+  synthesizer.def_prop_ro(
+      "result_circuit",
+      [](cs::CliffordSynthesizer& self) {
+        return qasm3::Importer::imports(self.getResults().getResultCircuit());
+      },
+      "Returns the synthesized circuit as a "
+      ":class:`~mqt.core.ir.QuantumComputation` object.");
 }

@@ -237,4 +237,5 @@ class CliffordSynthesizer:
         """Returns the results of the synthesis."""
 
     @property
-    def result_circuit(self) -> mqt.core.ir.QuantumComputation: ...
+    def result_circuit(self) -> mqt.core.ir.QuantumComputation:
+        """Returns the synthesized circuit as a :class:`~mqt.core.ir.QuantumComputation` object."""
