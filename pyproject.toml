@@ -96,8 +96,7 @@ build-dir = "build/{wheel_tag}/{build_type}"
 build.targets = [
   "mqt-qmap-clifford_synthesis-bindings",
   "mqt-qmap-hybrid_mapper-bindings",
-  "mqt-qmap-na-zoned-bindings",
-  "mqt-qmap-na-nasp-bindings",
+  "mqt-qmap-na-bindings",
   "mqt-qmap-sc-bindings",
 ]
 

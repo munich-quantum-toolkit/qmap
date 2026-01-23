@@ -27,7 +27,8 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
+// NOLINTNEXTLINE(misc-use-internal-linkage)
+void registerStatePreparation(nb::module_& m) {
   nb::module_::import_("mqt.core.ir");
 
   // Neutral Atom State Preparation

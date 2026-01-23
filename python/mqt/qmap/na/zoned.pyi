@@ -6,209 +6,190 @@
 #
 # Licensed under the MIT License
 
-"""Python bindings module for MQT QMAP's Zoned Neutral Atom Compiler."""
+import enum
 
-from enum import Enum
-
-from mqt.core.ir import QuantumComputation
+import mqt.core.ir
 
 class ZonedNeutralAtomArchitecture:
-    """Class representing a Zoned Neutral Atom Architecture."""
+    """Class representing a zoned neutral atom architecture."""
 
-    @classmethod
-    def from_json_file(cls, filename: str) -> ZonedNeutralAtomArchitecture:
+    @staticmethod
+    def from_json_file(filename: str) -> ZonedNeutralAtomArchitecture:
         """Create an architecture from a JSON file.
 
         Args:
-            filename: is the path to the JSON file
+            filename: The path to the JSON file
 
         Returns:
-            the architecture
+            The architecture
 
         Raises:
             ValueError: if the file does not exist or is not a valid JSON file
         """
-    @classmethod
-    def from_json_string(cls, json: str) -> ZonedNeutralAtomArchitecture:
+
+    @staticmethod
+    def from_json_string(json: str) -> ZonedNeutralAtomArchitecture:
         """Create an architecture from a JSON string.
 
         Args:
-            json: is the JSON string
+            json: The JSON string
 
         Returns:
-            the architecture
+            The architecture
 
         Raises:
-            ValueError: if the string is not a valid JSON
+            ValueError: If the string is not a valid JSON string
         """
+
     def to_namachine_file(self, filename: str) -> None:
         """Write the architecture to a .namachine file.
 
         Args:
-            filename: is the path to the .namachine file
+            filename: The path to the .namachine file
         """
+
     def to_namachine_string(self) -> str:
         """Get the architecture as a .namachine string.
 
         Returns:
-            the architecture as a .namachine string
+            The architecture as a .namachine string
         """
 
-class PlacementMethod(Enum):
+class PlacementMethod(enum.Enum):
     """Enumeration of the available placement methods for the heuristic placer."""
 
-    astar = ...
-    """
-    A-star algorithm
-    """
-    ids = ...
-    """
-    Iterative diving search
-    """
+    astar = 0
+    """A-star algorithm."""
 
-class RoutingMethod(Enum):
+    ids = 1
+    """Iterative diving search."""
+
+class RoutingMethod(enum.Enum):
     """Enumeration of the available routing methods for the independent set router."""
 
-    strict = ...
+    strict = 0
     """
-    Strict routing, i.e., the relative order of atoms must be
-    maintained throughout a movement.
+    Strict routing, i.e., the relative order of atoms must be maintained throughout a movement.
     """
-    relaxed = ...
+
+    relaxed = 1
     """
     Relaxed routing, i.e., the relative order of atoms may change throughout a movement by applying offsets during pick-up and drop-off.
     """
 
 class RoutingAgnosticCompiler:
-    """MQT QMAP's routing-agnostic Zoned Neutral Atom Compiler."""
+    """Routing-agnostic zoned neutral atom compiler."""
 
     def __init__(
         self,
         arch: ZonedNeutralAtomArchitecture,
-        log_level: str = ...,
-        max_filling_factor: float = ...,
-        use_window: bool = ...,
-        window_size: int = ...,
-        dynamic_placement: bool = ...,
+        log_level: str = "I",
+        max_filling_factor: float = 0.9,
+        use_window: bool = True,
+        window_size: int = 10,
+        dynamic_placement: bool = True,
         routing_method: RoutingMethod = ...,
-        prefer_split: float = ...,
-        warn_unsupported_gates: bool = ...,
+        prefer_split: float = 1.0,
+        warn_unsupported_gates: bool = True,
     ) -> None:
         """Create a routing-agnostic compiler for the given architecture and configurations.
 
         Args:
-            arch: is the zoned neutral atom architecture
-            log_level: is the log level for the compiler, possible values are
-                "debug", "info", "warning", "error", "critical"
-            max_filling_factor: is the maximum filling factor for the entanglement zone, i.e.,
-                it sets the limit for the maximum number of entangling gates that are
-                scheduled in parallel
-            use_window: whether to use a window for the placer
-            window_size: the size of the window for the placer
-            dynamic_placement: whether to use dynamic placement for the placer
-            routing_method: is the routing method that should be used for the
-                independent set router
-            prefer_split: is the threshold factor for group merging decisions during routing.
-            warn_unsupported_gates: whether to warn about unsupported gates in the code
-                generator
+            arch: The zoned neutral atom architecture
+            log_level: The log level for the compiler, possible values are "debug", "info", "warning", "error", "critical"
+            max_filling_factor: The maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
+            use_window: Whether to use a window for the placer
+            window_size: The size of the window for the placer
+            dynamic_placement: Whether to use dynamic placement for the placer
+            routing_method: The routing method that should be used for the independent set router
+            prefer_split: The threshold factor for group merging decisions during routing.
+            warn_unsupported_gates: Whether to warn about unsupported gates in the code generator
         """
-    @classmethod
-    def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAgnosticCompiler:
+
+    @staticmethod
+    def from_json_string(arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAgnosticCompiler:
         """Create a compiler for the given architecture and with configurations from a JSON string.
 
         Args:
-            arch: is the zoned neutral atom architecture
-            json: is the JSON string
+            arch: The zoned neutral atom architecture
+            json: The JSON string
 
         Returns:
-            the initialized compiler
+            The initialized compiler
 
         Raises:
-            ValueError: if the string is not a valid JSON
+            ValueError: If the string is not a valid JSON string
         """
-    def compile(self, qc: QuantumComputation) -> str:
+
+    def compile(self, qc: mqt.core.ir.QuantumComputation) -> str:
         """Compile a quantum circuit for the zoned neutral atom architecture.
 
         Args:
             qc: The quantum circuit
 
         Returns:
-            The compilations result as a string in the .naviz format.
+            The compilation result as a string in the .naviz format.
         """
+
     def stats(self) -> dict[str, float]:
-        """Get the statistics of the last compilation.
+        """Get the statistics of the last compilation as a JSON-style dictionary.
 
         Returns:
-            the statistics as a dictionary
+            The statistics as a JSON-style dictionary
         """
 
 class RoutingAwareCompiler:
-    """MQT QMAP's routing-aware Zoned Neutral Atom Compiler."""
+    """Routing-aware zoned neutral atom compiler."""
 
     def __init__(
         self,
         arch: ZonedNeutralAtomArchitecture,
-        log_level: str = ...,
-        max_filling_factor: float = ...,
-        use_window: bool = ...,
-        window_min_width: int = ...,
-        window_ratio: float = ...,
-        window_share: float = ...,
+        log_level: str = "I",
+        max_filling_factor: float = 0.9,
+        use_window: bool = True,
+        window_min_width: int = 16,
+        window_ratio: float = 1.0,
+        window_share: float = 0.8,
         placement_method: PlacementMethod = ...,
         deepening_factor: float = ...,
-        deepening_value: float = ...,
+        deepening_value: float = 0.0,
         lookahead_factor: float = ...,
-        reuse_level: float = ...,
-        max_nodes: int = ...,
-        trials: int = ...,
-        queue_capacity: int = ...,
+        reuse_level: float = 5.0,
+        max_nodes: int = 10000000,
+        trials: int = 4,
+        queue_capacity: int = 100,
         routing_method: RoutingMethod = ...,
-        prefer_split: float = ...,
-        warn_unsupported_gates: bool = ...,
+        prefer_split: float = 1.0,
+        warn_unsupported_gates: bool = True,
     ) -> None:
         """Create a routing-aware compiler for the given architecture and configurations.
 
         Args:
-            arch: is the zoned neutral atom architecture
-            log_level: is the log level for the compiler, possible values are
-                "debug", "info", "warning", "error", "critical"
-            max_filling_factor: is the maximum filling factor for the entanglement zone,
-                i.e., it sets the limit for the maximum number of entangling gates that
-                are scheduled in parallel
-            use_window: is a flag whether to use a window for the placer
-            window_min_width: is the minimum width of the window for the placer
-            window_ratio: is the ratio between the height and the width of the window
-            window_share: is the share of free sites in the window in relation to the
-                number of atoms to be moved in this step
-            placement_method: is the placement method that should be used for the heuristic
-                placer
-            deepening_factor: controls the impact of the term in the heuristic of the
-                A* search that resembles the standard deviation of the differences
-                between the current and target sites of the atoms to be moved in every
-                orientation
-            deepening_value: is added to the sum of standard deviations before it is
-                multiplied with the number of unplaced nodes and :attr:`deepening_factor`
-            lookahead_factor: controls the lookahead's influence that considers the
-                distance of atoms to their interaction partner in the next layer
-            reuse_level: is the reuse level that corresponds to the estimated extra
-                fidelity loss due to the extra trap transfers when the atom is not
-                reused and instead moved to the storage zone and back to the
-                entanglement zone
-            max_nodes: is the maximum number of nodes that are considered in the A*
-                search. If this number is exceeded, the search is aborted and an error
-                is raised. In the current implementation, one node roughly consumes 120
-                Byte. Hence, allowing 50,000,000 nodes results in memory consumption of
-                about 6 GB plus the size of the rest of the data structures.
-            trials: is the number of restarts during IDS.
-            queue_capacity: is the maximum capacity of the priority queue used during IDS.
-            routing_method: is the routing method that should be used for the
-                independent set router
-            prefer_split: is the threshold factor for group merging decisions during routing.
-            warn_unsupported_gates: is a flag whether to warn about unsupported gates
-                in the code generator
+            arch: The zoned neutral atom architecture
+            log_level: The log level for the compiler, possible values are "debug", "info", "warning", "error", "critical"
+            max_filling_factor: The maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
+            use_window: Whether to use a window for the placer
+            window_min_width: The minimum width of the window for the placer
+            window_ratio: The ratio between the height and the width of the window
+            window_share: The share of free sites in the window in relation to the number of atoms to be moved in this step
+            placement_method: The placement method that should be used for the heuristic placer
+            deepening_factor: Controls the impact of the term in the heuristic of the A* search that resembles the standard deviation of the differences between the current and target sites of the atoms to be moved in every orientation
+            deepening_value: Is added to the sum of standard deviations before it is multiplied with the number of unplaced nodes and :attr:`deepening_factor`
+            lookahead_factor: Controls the lookahead's influence that considers the distance of atoms to their interaction partner in the next layer
+            reuse_level: The reuse level that corresponds to the estimated extra fidelity loss due to the extra trap transfers when the atom is not reused and instead moved to the storage zone and back to the entanglement zone
+            max_nodes: The maximum number of nodes that are considered in the A* search.
+                If this number is exceeded, the search is aborted and an error is raised.
+                In the current implementation, one node roughly consumes 120 Byte.
+                Hence, allowing 50,000,000 nodes results in memory consumption of about 6 GB plus the size of the rest of the data structures.
+            trials: The number of restarts during IDS.
+            queue_capacity: The maximum capacity of the priority queue used during IDS.
+            routing_method: The routing method that should be used for the independent set router
+            prefer_split: The threshold factor for group merging decisions during routing.
+            warn_unsupported_gates: Whether to warn about unsupported gates in the code generator
         """
-    @classmethod
-    def from_json_string(cls, arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAwareCompiler:
+
+    @staticmethod
+    def from_json_string(arch: ZonedNeutralAtomArchitecture, json: str) -> RoutingAwareCompiler:
         """Create a compiler for the given architecture and configurations from a JSON string.
 
         Args:
@@ -219,17 +200,19 @@ class RoutingAwareCompiler:
             The initialized compiler
 
         Raises:
-            ValueError: If the string is not a valid JSON
+            ValueError: If the string is not a valid JSON string
         """
-    def compile(self, qc: QuantumComputation) -> str:
+
+    def compile(self, qc: mqt.core.ir.QuantumComputation) -> str:
         """Compile a quantum circuit for the zoned neutral atom architecture.
 
         Args:
             qc: The quantum circuit
 
         Returns:
-            The compilations result as a string in the .naviz format.
+            The compilation result as a string in the .naviz format.
         """
+
     def stats(self) -> dict[str, float]:
         """Get the statistics of the last compilation.
 

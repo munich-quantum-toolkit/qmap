@@ -31,8 +31,8 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-// NOLINTNEXTLINE(performance-unnecessary-value-param)
-NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
+// NOLINTNEXTLINE(misc-use-internal-linkage)
+void registerZoned(nb::module_& m) {
   nb::module_::import_("mqt.core.ir");
 
   nb::class_<na::zoned::Architecture> architecture(
@@ -214,7 +214,7 @@ Returns:
         const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         const auto dict = loads(stats.dump());
-        return nb::cast<nb::typed<nb::dict, nb::str, nb::any>>(dict);
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::float_>>(dict);
       },
       R"pb(Get the statistics of the last compilation as a JSON-style dictionary.
 
@@ -366,7 +366,9 @@ Returns:
         const auto json = nb::module_::import_("json");
         const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
-        return loads(stats.dump());
+        const auto dict = loads(stats.dump());
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::float_>>(dict);
+        ;
       },
       R"pb(Get the statistics of the last compilation.
 

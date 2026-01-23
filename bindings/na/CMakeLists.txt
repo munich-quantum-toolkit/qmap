@@ -6,8 +6,20 @@
 #
 # Licensed under the MIT License
 
-add_subdirectory(nasp)
-add_subdirectory(zoned)
+file(GLOB_RECURSE NA_SOURCES **.cpp)
+
+add_mqt_python_binding_nanobind(
+  QMAP
+  ${MQT_QMAP_TARGET_NAME}-na-bindings
+  ${NA_SOURCES}
+  MODULE_NAME
+  na
+  INSTALL_DIR
+  .
+  LINK_LIBS
+  MQT::NASP
+  MQT::QMapNAZoned
+  MQT::CoreQASM)
 
 # Install the Python stub files in editable mode for better IDE support
 if(SKBUILD_STATE STREQUAL "editable")

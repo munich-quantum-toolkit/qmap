@@ -6,11 +6,10 @@
 #
 # Licensed under the MIT License
 
-"""Python bindings module for MQT QMAP's Neutral Atom State Preparation."""
-
+from collections.abc import Sequence
 from typing import Any
 
-from mqt.core.ir import QuantumComputation
+import mqt.core.ir
 
 class NAStatePreparationSolver:
     """Neutral atom state preparation solver.
@@ -66,41 +65,29 @@ class NAStatePreparationSolver:
             ValueError: If one of the parameters is invalid, e.g., is a negative value
         """
 
-    class Result:
-        """The result of a :class:`~.NAStatePreparationSolver`."""
-        def __init__(self) -> None:
-            """Create a result object."""
-        def json(self) -> dict[str, Any]:
-            """Returns the result as a JSON string.
-
-            Returns:
-                The result as a JSON string
-            """
-
     def solve(
         self,
-        ops: list[tuple[int, int]],
+        ops: Sequence[tuple[int, int]],
         num_qubits: int,
         num_stages: int,
-        num_transfers: int | None = ...,
-        mind_ops_order: bool = ...,
-        shield_idle_qubits: bool = ...,
-    ) -> Result:
+        num_transfers: int | None = None,
+        mind_ops_order: bool = False,
+        shield_idle_qubits: bool = True,
+    ) -> NAStatePreparationSolver.Result:
         """Solve the neutral atom state preparation problem.
 
-        The solver generates an optimal sequence of neutral atom operations for a given
-        state preparation circuit. The circuit is given as a list of operations, where
-        each operation is a pair of qubits. The sequence is divided into stages. Each
-        stage is either a Rydberg stage or a transfer stage. In a Rydberg stage,
-        adjacent qubits in the entangling zone undergo an entangling gate. In a transfer
-        stage, atoms can be stored from AOD into SLM traps and loaded from SLM traps
-        into AOD. At the end of each stage, the atoms are shuttled to their next
-        position. The number of stages is specified by `num_stages`. The number of
-        transfers is fixed by `num_transfers` if given. If this parameter is not
-        specified, then the solver will determine the optimal number of transfers. The
-        parameter `mind_ops_order` specifies whether the order of the operations in the
-        circuit should be preserved. The parameter `shield_idle_qubits` specifies
-        whether idle qubits should be shielded from the entangling operations.
+        The solver generates an optimal sequence of neutral atom operations for a given state preparation circuit.
+        The circuit is given as a list of operations, where each operation is a pair of qubits.
+        The sequence is divided into stages.
+        Each stage is either a Rydberg stage or a transfer stage.
+        In a Rydberg stage, adjacent qubits in the entangling zone undergo an entangling gate.
+        In a transfer stage, atoms can be stored from AOD into SLM traps and loaded from SLM traps into AOD.
+        At the end of each stage, the atoms are shuttled to their next position.
+        The number of stages is specified by `num_stages`.
+        The number of transfers is fixed by `num_transfers` if given.
+        If this parameter is not specified, then the solver will determine the optimal number of transfers.
+        The parameter `mind_ops_order` specifies whether the order of the operations in the circuit should be preserved.
+        The parameter `shield_idle_qubits` specifies whether idle qubits should be shielded from the entangling operations.
 
         Note:
             To retrieve the list of qubit pairs from a quantum circuit, use the function :func:`get_ops_for_solver`.
@@ -122,11 +109,46 @@ class NAStatePreparationSolver:
             ValueError: if one of the numeral parameters is invalid, e.g., is a negative value
         """
 
+    class Result:
+        """The result of a :class:`~.NAStatePreparationSolver`."""
+
+        def __init__(self) -> None:
+            """Create a result object."""
+
+        def json(self) -> dict[str, Any]:
+            """Returns the result as JSON-style dictionary.
+
+            Returns:
+                The result as a JSON-style dictionary
+            """
+
+def generate_code(
+    qc: mqt.core.ir.QuantumComputation,
+    result: NAStatePreparationSolver.Result,
+    min_atom_dist: int = 1,
+    no_interaction_radius: int = 10,
+    zone_dist: int = 24,
+) -> str:
+    """Generate code for the given circuit using the solver's result.
+
+    Some parameters of the abstraction from the 2D grid used for the solver must be provided again.
+
+    Args:
+        qc: The quantum circuit
+        result: The result of the solver
+        min_atom_dist: The minimum distance between atoms
+        no_interaction_radius: The radius around an atom where no other atom can be placed during an entangling operation that should not interact with the atom
+        zone_dist: The distance between zones, i.e., the minimal distance between two atoms in different zones
+
+    Returns:
+        The generated code as a string
+
+    Raises:
+        ValueError: If one of the numeral parameters is invalid, e.g., is a negative value
+    """
+
 def get_ops_for_solver(
-    qc: QuantumComputation,
-    operation_type: str,
-    num_controls: int,
-    quiet: bool = ...,
+    qc: mqt.core.ir.QuantumComputation, operation_type: str = "Z", num_controls: int = 1, quiet: bool = True
 ) -> list[tuple[int, int]]:
     """Extract entangling operations as list of qubit pairs from the circuit.
 
@@ -146,26 +168,4 @@ def get_ops_for_solver(
     Raises:
         ValueError: If the circuit contains operations other than the specified operation type and quiet is False
         ValueError: If the operation has more than two operands including controls
-    """
-
-def generate_code(
-    qc: QuantumComputation,
-    result: NAStatePreparationSolver.Result,
-    min_atom_dist: int = ...,
-    no_interaction_radius: int = ...,
-    zone_dist: int = ...,
-) -> str:
-    """Generate code for the given circuit using the solver's result.
-
-    Some parameters of the abstraction from the 2D grid used for the solver must be provided again.
-
-    Args:
-        qc: The quantum circuit
-        result: The result of the solver
-        min_atom_dist: The minimum distance between atoms
-        no_interaction_radius: The radius around an atom where no other atom can be placed during an entangling operation that should not interact with the atom
-        zone_dist: The distance between zones, i.e., the minimal distance between two atoms in different zones
-
-    Raises:
-        ValueError: If one of the numeral parameters is invalid, e.g., is a negative value
     """

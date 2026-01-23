@@ -6,14 +6,5 @@
 #
 # Licensed under the MIT License
 
-add_mqt_python_binding_nanobind(
-  QMAP
-  ${MQT_QMAP_TARGET_NAME}-na-nasp-bindings
-  nasp.cpp
-  MODULE_NAME
-  state_preparation
-  INSTALL_DIR
-  ./na
-  LINK_LIBS
-  MQT::NASP
-  MQT::CoreQASM)
+from . import state_preparation as state_preparation
+from . import zoned as zoned
