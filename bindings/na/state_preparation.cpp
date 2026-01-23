@@ -162,11 +162,11 @@ Raises:
       "get_ops_for_solver",
       [](const qc::QuantumComputation& qc, const std::string& operationType,
          const uint64_t numControls, const bool quiet) {
-        auto opTypeLowerStr = operationType;
-        std::ranges::transform(opTypeLowerStr, opTypeLowerStr.begin(),
+        auto operationTypeLower = operationType;
+        std::ranges::transform(operationTypeLower, operationTypeLower.begin(),
                                [](unsigned char c) { return std::tolower(c); });
         return na::NASolver::getOpsForSolver(
-            qc, qc::opTypeFromString(operationType), numControls, quiet);
+            qc, qc::opTypeFromString(operationTypeLower), numControls, quiet);
       },
       "qc"_a, "operation_type"_a = "Z", "num_controls"_a = 1, "quiet"_a = true,
       R"pb(Extract entangling operations as list of qubit pairs from the circuit.
