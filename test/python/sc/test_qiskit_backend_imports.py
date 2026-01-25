@@ -15,7 +15,7 @@ from mqt.qcec import verify
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 
-from mqt.qmap.plugins.qiskit.sc import compile  # noqa: A004
+from mqt.qmap.plugins.qiskit.sc import compile_
 
 
 @pytest.fixture
@@ -37,13 +37,13 @@ def backend() -> GenericBackendV2:
 
 def test_backend_v2(example_circuit: QuantumCircuit, backend: GenericBackendV2) -> None:
     """Test that circuits can be mapped to Qiskit BackendV1 instances providing the old basis_gates."""
-    qc, results = compile(example_circuit, arch=backend)
+    qc, results = compile_(example_circuit, arch=backend)
     assert results.timeout is False
     assert verify(example_circuit, qc).considered_equivalent()
 
 
 def test_architecture_from_v2_target(example_circuit: QuantumCircuit, backend: GenericBackendV2) -> None:
     """Test that circuits can be mapped by simply providing the target (the BackendV2 way)."""
-    qc, results = compile(example_circuit, arch=None, calibration=backend.target)
+    qc, results = compile_(example_circuit, arch=None, calibration=backend.target)
     assert results.timeout is False
     assert verify(example_circuit, qc).considered_equivalent()

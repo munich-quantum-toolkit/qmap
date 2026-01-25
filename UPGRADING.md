@@ -4,6 +4,15 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+### Renamings
+
+To comply with established guidelines for function and attribute names, this release includes the following renamings:
+
+- `mqt.qmap.plugins.qiskit.sc.compile` has been renamed to `compile_`.
+- `mqt.qmap.sc.map` has been renamed to `map_`.
+- `mqt.qmap.sc.Configuration.include_WCNF` has been renamed to `include_wcnf`.
+- `mqt.qmap.sc.MappingResult.input` has been renamed to `input_`.
+
 ### Stable ABI wheels
 
 We are now providing Stable ABI wheels instead of separate version-specific wheels for Python 3.12+.

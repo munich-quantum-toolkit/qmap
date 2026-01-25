@@ -17,7 +17,7 @@ import pytest
 from mqt.qcec import verify
 from qiskit import QuantumCircuit
 
-from mqt.qmap.plugins.qiskit.sc import compile  # noqa: A004
+from mqt.qmap.plugins.qiskit.sc import compile_
 from mqt.qmap.sc import (
     Arch,
     Architecture,
@@ -47,7 +47,7 @@ def example_circuit() -> QuantumCircuit:
 def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
     """Test that either arch or calibration must be provided."""
     with pytest.raises(ValueError, match="Either arch or calibration must be specified"):
-        compile(example_circuit, arch=None, calibration=None)
+        compile_(example_circuit, arch=None, calibration=None)
 
 
 # test that all available architecture enumerations can be properly used
@@ -66,7 +66,7 @@ def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
 )
 def test_available_architectures(example_circuit: QuantumCircuit, arch: Arch) -> None:
     """Test that the available architecture enums can be properly used."""
-    example_circuit_mapped, results = compile(example_circuit, arch=arch)
+    example_circuit_mapped, results = compile_(example_circuit, arch=arch)
     assert results.timeout is False
 
     result = verify(example_circuit, example_circuit_mapped)
@@ -78,7 +78,7 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
     with Path("test_architecture.arch").open("w+", encoding=locale.getpreferredencoding(False)) as f:
         f.write("3\n0 1\n0 2\n1 2\n")
 
-    example_circuit_mapped, results = compile(example_circuit, arch="test_architecture.arch")
+    example_circuit_mapped, results = compile_(example_circuit, arch="test_architecture.arch")
     assert results.timeout is False
 
     result = verify(example_circuit, example_circuit_mapped)
@@ -88,7 +88,7 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
 def test_architecture_from_python(example_circuit: QuantumCircuit) -> None:
     """Test that architectures from python can be properly used."""
     arch = Architecture(3, {(0, 1), (0, 2), (1, 2)})
-    example_circuit_mapped, results = compile(example_circuit, arch=arch)
+    example_circuit_mapped, results = compile_(example_circuit, arch=arch)
     assert results.timeout is False
 
     result = verify(example_circuit, example_circuit_mapped)
@@ -103,7 +103,7 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
         f.write('Q1,0,0,0,1e-2,1e-4,"1_2: 1e-2"\n')
         f.write("Q2,0,0,0,1e-2,1e-4, \n")
 
-    example_circuit_mapped, results = compile(example_circuit, arch=None, calibration="test_calibration.cal")
+    example_circuit_mapped, results = compile_(example_circuit, arch=None, calibration="test_calibration.cal")
     assert results.timeout is False
 
     result = verify(example_circuit, example_circuit_mapped)
@@ -121,14 +121,14 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     properties.set_two_qubit_error(1, 2, 0.02, "cx")
     properties.set_two_qubit_error(2, 1, 0.02, "cx")
     arch = Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)}, properties)
-    _, results = compile(
+    _, results = compile_(
         example_circuit,
         arch=arch,
         method=Method.exact,
         encoding=Encoding.commander,
         commander_grouping=CommanderGrouping.fixed3,
         swap_reduction=SwapReduction.coupling_limit,
-        include_WCNF=False,
+        include_wcnf=False,
         use_subsets=True,
         subgraph=None,
         add_measurements_to_mapped_circuit=True,
@@ -137,13 +137,13 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.encoding == Encoding.commander
     assert results.configuration.commander_grouping == CommanderGrouping.fixed3
     assert results.configuration.swap_reduction == SwapReduction.coupling_limit
-    assert results.configuration.include_WCNF is False
+    assert results.configuration.include_wcnf is False
     assert results.configuration.use_subsets is True
     assert results.configuration.subgraph == set()
     assert results.configuration.add_measurements_to_mapped_circuit is True
 
     with SearchVisualizer() as visualizer:
-        _, results = compile(
+        _, results = compile_(
             example_circuit,
             arch=arch,
             method=Method.heuristic,
@@ -178,7 +178,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         assert results.configuration.debug is True
         assert results.configuration.data_logging_path == visualizer.data_logging_path
 
-    _, results = compile(
+    _, results = compile_(
         example_circuit,
         arch=arch,
         method=Method.heuristic,

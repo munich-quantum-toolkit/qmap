@@ -130,10 +130,10 @@ On directional architectures, it can be significantly cheaper to surround a CNOT
 Using the exact mapper is as simple as:
 
 ```{code-cell} ipython3
-from mqt.qmap.plugins.qiskit.sc import compile
+from mqt.qmap.plugins.qiskit.sc import compile_
 from mqt.qmap.sc import Method
 
-qc_mapped, res = compile(qc, arch, method=Method.exact, post_mapping_optimizations=False)
+qc_mapped, res = compile_(qc, arch, method=Method.exact, post_mapping_optimizations=False)
 
 qc_mapped.draw(output="mpl")
 ```
@@ -161,7 +161,7 @@ This allows to reliably determine suitable mappings for circuits with up to hund
 Using the heuristic mapper works completely analogous to the exact mapper.
 
 ```{code-cell} ipython3
-qc_mapped, res = compile(qc, arch, method=Method.heuristic, post_mapping_optimizations=False)
+qc_mapped, res = compile_(qc, arch, method=Method.heuristic, post_mapping_optimizations=False)
 
 qc_mapped.draw(output="mpl")
 ```

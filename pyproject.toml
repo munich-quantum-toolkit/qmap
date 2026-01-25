@@ -267,7 +267,7 @@ known-first-party = ["mqt.qmap"]
 "docs/**" = ["T20"]
 "eval/**" = ["T20"]
 "noxfile.py" = ["T20", "TID251"]
-"*.pyi" = ["A001", "D418", "E501", "N802", "PYI021"]
+"*.pyi" = ["D418", "E501", "PYI021"]
 "*.ipynb" = [
     "D",    # pydocstyle
     "E402", # Allow imports to appear anywhere in Jupyter notebooks

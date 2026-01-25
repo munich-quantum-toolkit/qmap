@@ -200,7 +200,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       .def_rw("encoding", &Configuration::encoding)
       .def_rw("commander_grouping", &Configuration::commanderGrouping)
       .def_rw("use_subsets", &Configuration::useSubsets)
-      .def_rw("include_WCNF", &Configuration::includeWCNF)
+      .def_rw("include_wcnf", &Configuration::includeWCNF)
       .def_rw("enable_limits", &Configuration::enableSwapLimits)
       .def_rw("swap_reduction", &Configuration::swapReduction)
       .def_rw("swap_limit", &Configuration::swapLimit)
@@ -452,7 +452,7 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
            "properties"_a);
 
   // Main mapping function
-  m.def("map", &map, "circ"_a, "arch"_a, "config"_a,
+  m.def("map_", &map, "circ"_a, "arch"_a, "config"_a,
         R"pb(Map a quantum circuit to an architecture.
 
 Args:

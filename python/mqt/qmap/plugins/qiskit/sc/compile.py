@@ -26,7 +26,7 @@ from ....sc import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
-    map,  # noqa: A004
+    map_,
 )
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from ....visualization import SearchVisualizer
 
 
-def compile(  # noqa: A001
+def compile_(
     circ: CircuitInputType,
     arch: str | Arch | Architecture | BackendV2 | None,
     calibration: str | Target | None = None,
@@ -60,7 +60,7 @@ def compile(  # noqa: A001
     commander_grouping: CommanderGrouping = CommanderGrouping.fixed3,
     swap_reduction: SwapReduction = SwapReduction.coupling_limit,
     swap_limit: int = 0,
-    include_WCNF: bool = False,  # noqa: N803
+    include_wcnf: bool = False,
     use_subsets: bool = True,
     subgraph: set[int] | None = None,
     pre_mapping_optimizations: bool = True,
@@ -92,7 +92,7 @@ def compile(  # noqa: A001
         commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to :attr:`~CommanderGrouping.halves`.
         swap_reduction: The swap reduction strategy to use. Defaults to :attr:`~SwapReduction.coupling_limit`.
         swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer. Defaults to 0.
-        include_WCNF: Include WCNF file in the results. Defaults to False.
+        include_wcnf: Include WCNF file in the results. Defaults to False.
         use_subsets: Use qubit subsets, or consider all available physical qubits at once. Defaults to True.
         subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered. Defaults to None.
         pre_mapping_optimizations: Run pre-mapping optimizations. Defaults to True.
@@ -137,7 +137,7 @@ def compile(  # noqa: A001
     config.commander_grouping = CommanderGrouping(commander_grouping)
     config.swap_reduction = SwapReduction(swap_reduction)
     config.swap_limit = swap_limit
-    config.include_WCNF = include_WCNF
+    config.include_wcnf = include_wcnf
     config.use_subsets = use_subsets
     config.subgraph = subgraph
     config.pre_mapping_optimizations = pre_mapping_optimizations
@@ -157,5 +157,5 @@ def compile(  # noqa: A001
     config.lookahead_factor = lookahead_factor
 
     qc = load(circ)
-    qc_mapped, results = map(qc, architecture, config)
+    qc_mapped, results = map_(qc, architecture, config)
     return mqt_to_qiskit(qc_mapped, set_layout=True), results
