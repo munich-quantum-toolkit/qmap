@@ -149,7 +149,7 @@ The resulting solution only requires _two_ SWAP gates for mapping the circuit.
 
 The exact mapping method implemented in QMAP is optimal with respect to the number of additional SWAP gates needed for mapping a given circuit.
 It is not guaranteed to be optimal with respect to the number of additional gates needed for mapping a given circuit, e.g., any sequence of a SWAP gate and a CNOT gate acting on the same qubits can be simplified to just two CNOT gates.
-Such an optimization pass is conducted by default in the `compile` method after the circuit has been mapped.
+Such an optimization pass is conducted by default in the `compile_` function after the circuit has been mapped.
 However, this cost reduction is not accounted for in the SAT formulation at the moment.
 ```
 
