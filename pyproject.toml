@@ -316,10 +316,6 @@ test-groups = ["test"]
 test-command = "pytest {project}/test/python"
 build-frontend = "build[uv]"
 enable = ["cpython-freethreading"]
-manylinux-x86_64-image = "manylinux_2_28"
-manylinux-aarch64-image = "manylinux_2_28"
-manylinux-ppc64le-image = "manylinux_2_28"
-manylinux-s390x-image = "manylinux_2_28"
 test-skip = [
   "cp3??t-*", # no freethreading qiskit wheels
   "cp*-win_arm64", # no numpy, qiskit, ... wheels
