@@ -71,7 +71,7 @@ class NAStatePreparationSolver:
         num_qubits: int,
         num_stages: int,
         num_transfers: int | None = None,
-        mind_ops_order: bool = False,
+        mind_ops_order: bool | None = False,
         shield_idle_qubits: bool = True,
     ) -> NAStatePreparationSolver.Result:
         """Solve the neutral atom state preparation problem.
