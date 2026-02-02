@@ -17,6 +17,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
+- ⬆️ Update `mqt-core` to version 3.4.1 ([#924]) ([**@denialhaag**])
+- ⬆️ Update `nanobind` to version 2.11.0 ([#924]) ([**@denialhaag**])
 - 🔧 Replace `mypy` with `ty` ([#912]) ([**@denialhaag**])
 - ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#911], [#916]) ([**@denialhaag**])
 - 📦️ Provide Stable ABI wheels for Python 3.12+ ([#911]) ([**@denialhaag**])
@@ -188,6 +190,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
 [#916]: https://github.com/munich-quantum-toolkit/qmap/pull/916
 [#912]: https://github.com/munich-quantum-toolkit/qmap/pull/912
 [#911]: https://github.com/munich-quantum-toolkit/qmap/pull/911
