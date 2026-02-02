@@ -419,7 +419,7 @@ test = [
   "pytest-cov>=7.0.0",
   "pytest-sugar>=1.1.1",
   "pytest-xdist>=3.8.0",
-  "mqt.qcec>=3.4.0",
+  "mqt.qcec>=3.5.0",
 ]
 dev = [
   {include-group = "build"},
