@@ -22,7 +22,7 @@ TEST(Configuration, MethodOfString) {
             na::nalac::NAMappingMethod::MaximizeParallelismHeuristic);
   EXPECT_EQ(na::nalac::getMethodOfString("NaIvE"),
             na::nalac::NAMappingMethod::Naive);
-  EXPECT_EQ(na::nalac::getMethodOfString("mAxImIsE pArAllElIsm"),
+  EXPECT_EQ(na::nalac::getMethodOfString("mAxImIzE pArAllElIsm"),
             na::nalac::NAMappingMethod::MaximizeParallelismHeuristic);
   EXPECT_THROW(std::ignore = na::nalac::getMethodOfString("unsupported"),
                std::invalid_argument);

@@ -97,7 +97,7 @@ TEST_F(TestTableau, InitialTableau) {
   const auto fullTFromStr = Tableau(fullRepresentation);
   EXPECT_EQ(fullTableau, fullTFromStr);
 
-  const std::string stabilizers = "[+ZI, +IS]";
+  const std::string stabilizers = "[+ZI, +IZ]";
   const auto tFromStabilizers = Tableau(stabilizers);
   EXPECT_EQ(tableau, tFromStabilizers);
 
@@ -113,7 +113,7 @@ TEST_F(TestTableau, H) {
   std::string expected = "1;0;0;0;0;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+XI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+XI, +IZ]"));
 
   tableau.applyH(1);
   expected = "1;0;0;0;0;\n"
@@ -125,13 +125,13 @@ TEST_F(TestTableau, H) {
   expected = "1;0;0;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+XI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+XI, +IZ]"));
 
   tableau.applyH(0);
   expected = "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+ZI, +IZ]"));
 }
 
 TEST_F(TestTableau, FullH) {
@@ -142,7 +142,7 @@ TEST_F(TestTableau, FullH) {
                          "1;0;0;0;0;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+XI, +IS]", "[+ZI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+XI, +IZ]", "[+ZI, +IX]"));
 
   fullTableau.applyH(1);
   expected = "0;0;1;0;0;\n"
@@ -150,7 +150,7 @@ TEST_F(TestTableau, FullH) {
              "1;0;0;0;0;\n"
              "0;1;0;0;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+XI, +IX]", "[+ZI, +IS]"));
+  EXPECT_EQ(fullTableau, Tableau("[+XI, +IX]", "[+ZI, +IZ]"));
 
   fullTableau.applyH(1);
   expected = "0;0;1;0;0;\n"
@@ -158,7 +158,7 @@ TEST_F(TestTableau, FullH) {
              "1;0;0;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+XI, +IS]", "[+ZI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+XI, +IZ]", "[+ZI, +IX]"));
 
   fullTableau.applyH(0);
   expected = "1;0;0;0;0;\n"
@@ -166,7 +166,7 @@ TEST_F(TestTableau, FullH) {
              "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IZ]", "[+XI, +IX]"));
 }
 
 TEST_F(TestTableau, X) {
@@ -175,25 +175,25 @@ TEST_F(TestTableau, X) {
   std::string expected = "0;0;1;0;1;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 
   tableau.applyX(1);
   expected = "0;0;1;0;1;\n"
              "0;0;0;1;1;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, -IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, -IZ]"));
 
   tableau.applyX(1);
   expected = "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 
   tableau.applyX(0);
   expected = "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+ZI, +IZ]"));
 }
 
 TEST_F(TestTableau, FullX) {
@@ -204,7 +204,7 @@ TEST_F(TestTableau, FullX) {
                          "0;0;1;0;1;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[+XI, +IX]"));
 
   fullTableau.applyX(1);
   expected = "1;0;0;0;0;\n"
@@ -212,7 +212,7 @@ TEST_F(TestTableau, FullX) {
              "0;0;1;0;1;\n"
              "0;0;0;1;1;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, -IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, -IZ]", "[+XI, +IX]"));
 
   fullTableau.applyX(1);
   expected = "1;0;0;0;0;\n"
@@ -220,7 +220,7 @@ TEST_F(TestTableau, FullX) {
              "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[+XI, +IX]"));
 
   fullTableau.applyX(0);
   expected = "1;0;0;0;0;\n"
@@ -228,7 +228,7 @@ TEST_F(TestTableau, FullX) {
              "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IZ]", "[+XI, +IX]"));
 }
 
 TEST_F(TestTableau, S) {
@@ -237,7 +237,7 @@ TEST_F(TestTableau, S) {
   std::string expected = "0;0;1;0;0;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+ZI, +IZ]"));
 
   // S on |1> is i|1>, which is stabilized by -Z
   tableau.applyX(0);
@@ -245,7 +245,7 @@ TEST_F(TestTableau, S) {
   expected = "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 
   // S on |+> is |R> = 1/sqrt(2) (|0> + i|1>), which is stabilized by Y
   tableau.applyH(1);
@@ -270,7 +270,7 @@ TEST_F(TestTableau, FullS) {
                          "0;0;1;0;0;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IS]", "[+YI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IZ]", "[+YI, +IX]"));
 
   // S on |1> is i|1>, which is stabilized by -Z
   fullTableau.applyX(0);
@@ -280,7 +280,7 @@ TEST_F(TestTableau, FullS) {
              "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[+XI, +IX]"));
 
   // S on |+> is |R> = 1/sqrt(2) (|0> + i|1>), which is stabilized by Y
   fullTableau.applyH(1);
@@ -290,7 +290,7 @@ TEST_F(TestTableau, FullS) {
              "0;0;1;0;1;\n"
              "0;1;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IY]", "[+XI, +IS]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IY]", "[+XI, +IZ]"));
 
   fullTableau.applySdag(1);
   expected = "1;0;0;0;0;\n"
@@ -298,7 +298,7 @@ TEST_F(TestTableau, FullS) {
              "0;0;1;0;1;\n"
              "0;1;0;0;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IX]", "[+XI, +IS]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IX]", "[+XI, +IZ]"));
 }
 
 TEST_F(TestTableau, Z) {
@@ -307,7 +307,7 @@ TEST_F(TestTableau, Z) {
   std::string expected = "0;0;1;0;0;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+ZI, +IZ]"));
 
   // Z on |1> is -|1>, which is stabilized by -Z
   tableau.applyX(0);
@@ -315,7 +315,7 @@ TEST_F(TestTableau, Z) {
   expected = "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 
   // Z on |+> is |->, which is stabilized by -X
   tableau.applyH(1);
@@ -334,7 +334,7 @@ TEST_F(TestTableau, FullZ) {
                          "0;0;1;0;0;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IS]", "[-XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IZ]", "[-XI, +IX]"));
 
   // Z on |1> is -|1>, which is stabilized by -Z
   fullTableau.applyX(0);
@@ -344,7 +344,7 @@ TEST_F(TestTableau, FullZ) {
              "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[+XI, +IX]"));
 
   // Z on |+> is |->, which is stabilized by -X
   fullTableau.applyH(1);
@@ -354,7 +354,7 @@ TEST_F(TestTableau, FullZ) {
              "0;0;1;0;1;\n"
              "0;1;0;0;1;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, -IX]", "[+XI, +IS]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, -IX]", "[+XI, +IZ]"));
 }
 
 TEST_F(TestTableau, Sx) {
@@ -365,14 +365,14 @@ TEST_F(TestTableau, Sx) {
   std::string expected = "0;0;1;0;1;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 
   tableau.applySxdag(0);
   tableau.applySxdag(0);
   expected = "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+ZI, +IZ]"));
 }
 
 TEST_F(TestTableau, FullSx) {
@@ -385,7 +385,7 @@ TEST_F(TestTableau, FullSx) {
                          "0;0;1;0;1;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[+XI, +IX]"));
 
   fullTableau.applySxdag(0);
   fullTableau.applySxdag(0);
@@ -394,7 +394,7 @@ TEST_F(TestTableau, FullSx) {
              "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IZ]", "[+XI, +IX]"));
 }
 
 TEST_F(TestTableau, Y) {
@@ -403,7 +403,7 @@ TEST_F(TestTableau, Y) {
   std::string expected = "0;0;1;0;1;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 
   // Y on |1> is -i|0>, which is stabilized by +Z
   tableau.applyX(1);
@@ -411,7 +411,7 @@ TEST_F(TestTableau, Y) {
   expected = "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +IZ]"));
 }
 
 TEST_F(TestTableau, FullY) {
@@ -422,7 +422,7 @@ TEST_F(TestTableau, FullY) {
                          "0;0;1;0;1;\n"
                          "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[-XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[-XI, +IX]"));
 
   // Y on |1> is -i|0>, which is stabilized by +Z
   fullTableau.applyX(1);
@@ -432,7 +432,7 @@ TEST_F(TestTableau, FullY) {
              "0;0;1;0;1;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IS]", "[-XI, -IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[-ZI, +IZ]", "[-XI, -IX]"));
 }
 
 TEST_F(TestTableau, CX) {
@@ -448,7 +448,7 @@ TEST_F(TestTableau, CX) {
   expected = "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[+ZI, +IS]"));
+  EXPECT_EQ(tableau, Tableau("[+ZI, +IZ]"));
 
   // CX on |10> is |11>, which is stabilized by -ZI, +ZZ
   tableau.applyX(0);
@@ -476,7 +476,7 @@ TEST_F(TestTableau, FullCX) {
              "0;0;1;0;0;\n"
              "0;0;0;1;0;\n";
   EXPECT_EQ(fullTableau, Tableau(expected));
-  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IS]", "[+XI, +IX]"));
+  EXPECT_EQ(fullTableau, Tableau("[+ZI, +IZ]", "[+XI, +IX]"));
 
   // CX on |10> is |11>, which is stabilized by -ZI, +ZZ
   fullTableau.applyX(0);
