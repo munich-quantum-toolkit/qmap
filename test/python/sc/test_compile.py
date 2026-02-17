@@ -171,7 +171,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         assert results.configuration.automatic_layer_splits is True
         assert results.configuration.automatic_layer_splits_node_limit == 5000
         assert results.configuration.lookaheads == 15
-        assert results.configuration.lookahead_factor == 0.5
+        assert results.configuration.lookahead_factor == pytest.approx(0.5)
         assert results.configuration.pre_mapping_optimizations is True
         assert results.configuration.post_mapping_optimizations is True
         assert results.configuration.verbose is True
