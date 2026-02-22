@@ -19,7 +19,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from random import shuffle
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
 import networkx as nx
 import plotly.basedatatypes
@@ -426,7 +426,11 @@ def _prepare_search_graph_scatter_data(
 
         ncolor: float | str | None = None
         if len(search_node_color) == 1:
-            ncolor = search_node_color[0](node_params) if callable(search_node_color[0]) else search_node_color[0]
+            if callable(search_node_color[0]):
+                factory = cast("Callable[[SearchNode], float]", search_node_color[0])
+                ncolor = factory(node_params)
+            else:
+                ncolor = search_node_color[0]
         for i in range(number_of_scatters):
             curr_color = search_node_color[i]
             prio_color = (
@@ -441,7 +445,8 @@ def _prepare_search_graph_scatter_data(
             elif ncolor is not None:
                 node_color[i].append(ncolor)
             elif callable(curr_color):
-                node_color[i].append(curr_color(node_params))
+                factory = cast("Callable[[SearchNode], float]", curr_color)
+                node_color[i].append(factory(node_params))
             else:
                 node_color[i].append(curr_color)
 

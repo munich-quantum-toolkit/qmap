@@ -287,7 +287,7 @@ def _child_worker(circuit_path: str, method: str, q: mp.Queue) -> None:
     try:
         runtime, gate_count = _compute_synthesis_for_method(Path(circuit_path), method)
         q.put(("ok", runtime, gate_count))
-    except Exception as e:  # pragma: no cover - robust safety
+    except Exception as e:  # noqa: BLE001
         q.put(("err", repr(e)))
 
 
@@ -311,7 +311,7 @@ def _run_with_timeout_in_subprocess(
         return False, None, None, "timeout"
     try:
         status, a, b = q.get_nowait()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return False, None, None, f"noresult:{e!r}"
     if status == "ok":
         return True, float(a), int(b), None
@@ -387,7 +387,7 @@ def _evaluate_single_circuit(circuit_file: Path, method: str, session: Session, 
         # Do not write results on timeout/failure; only persist timeout_tried
         try:
             session.commit()
-        except Exception:
+        except Exception:  # noqa: BLE001
             session.rollback()
         if err == "timeout":
             logger.info(f"Timeout after {timeout_sec:.3f}s for {method} on circuit {circuit_file.name}")
@@ -587,14 +587,14 @@ def prune_excess_benchmarks() -> None:
                 parts = cf.stem.split("_")
                 q = int(parts[1])
                 g = int(parts[2])
-            except Exception:  # noqa: S112
-                # Unexpected filename - ignore
+            except Exception:  # noqa: BLE001, S112
+                # Ignore files with invalid names
                 continue
             if g not in _allowed_num_gates(q):
                 try:
                     cf.unlink()
                     removed_files += 1
-                except Exception:
+                except Exception:  # noqa: BLE001
                     logger.warning(f"Failed to remove file {cf}")
         if removed_files:
             logger.info(f"Removed {removed_files} circuit files outside refined gate set")

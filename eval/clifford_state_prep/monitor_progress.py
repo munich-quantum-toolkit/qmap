@@ -201,10 +201,10 @@ def main() -> int:
             with Session(engine) as session:
                 try:
                     table = build_progress_table(session)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     table = f"Error while reading progress: {e!r}"
 
-            timestamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
             clear_screen()
             print("Clifford Synthesis Progress Monitor")
