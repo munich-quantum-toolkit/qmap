@@ -336,7 +336,7 @@ repair-wheel-command = [
 --exclude libmqt-core-circuit-optimizer.so.3.4 \
 --exclude libmqt-core-ds.so.3.4 \
 --exclude libmqt-core-na.so.3.4 \
---exclude libspdlog.so.1.15""",
+--exclude libspdlog.so.1.17""",
 ]
 
 [tool.cibuildwheel.macos]

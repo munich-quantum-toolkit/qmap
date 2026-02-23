@@ -17,6 +17,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
+- ⬆️ Update `spdlog` to version 1.17.0 ([#921]) ([**@denialhaag**])
 - ⬆️ Update `mqt-core` to version 3.4.1 ([#924]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.11.0 ([#924]) ([**@denialhaag**])
 - 🔧 Replace `mypy` with `ty` ([#912]) ([**@denialhaag**])
@@ -191,6 +192,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
+[#921]: https://github.com/munich-quantum-toolkit/qmap/pull/921
 [#916]: https://github.com/munich-quantum-toolkit/qmap/pull/916
 [#912]: https://github.com/munich-quantum-toolkit/qmap/pull/912
 [#911]: https://github.com/munich-quantum-toolkit/qmap/pull/911

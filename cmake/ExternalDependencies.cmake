@@ -80,7 +80,7 @@ FetchContent_Declare(
 list(APPEND FETCH_PACKAGES plog)
 
 set(SPDLOG_VERSION
-    1.15.3
+    1.17.0
     CACHE STRING "spdlog version")
 set(SPDLOG_URL https://github.com/gabime/spdlog/archive/refs/tags/v${SPDLOG_VERSION}.tar.gz)
 # Add position independent code for spdlog, this is required for python bindings on linux
