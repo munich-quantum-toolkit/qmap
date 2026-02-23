@@ -335,7 +335,8 @@ repair-wheel-command = [
 --exclude libmqt-core-qasm.so.3.4 \
 --exclude libmqt-core-circuit-optimizer.so.3.4 \
 --exclude libmqt-core-ds.so.3.4 \
---exclude libmqt-core-na.so.3.4""",
+--exclude libmqt-core-na.so.3.4 \
+--exclude libspdlog.so.1.15""",
 ]
 
 [tool.cibuildwheel.macos]
@@ -349,7 +350,8 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-qasm.dll \
 --exclude mqt-core-circuit-optimizer.dll \
 --exclude mqt-core-ds.dll \
---exclude mqt-core-na.dll"""
+--exclude mqt-core-na.dll \
+--exclude libspdlog.dll"""
 
 [[tool.cibuildwheel.overrides]]
 select = "cp312-*"
