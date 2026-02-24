@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
-## [3.6.0] - 2025-02-24
+## [3.6.0] - 2026-02-24
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#360)._
 
