@@ -4,6 +4,8 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+## [3.6.0]
+
 ### Renamings
 
 To comply with established guidelines for function and attribute names, this release includes the following renamings:
@@ -129,7 +131,8 @@ Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`]
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.5.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.6.0...HEAD
+[3.6.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.2.0...v3.3.0
