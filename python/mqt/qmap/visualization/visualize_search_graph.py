@@ -1643,11 +1643,11 @@ def visualize_search_graph(
             "architecture_yaxis": settings for plotly.graph_objects.layout.YAxis
         }
 
-    Raises:
-        TypeError: If any of the arguments are invalid.
-
     Returns:
         Widget: An interactive IPython widget to visualize the search graph.
+
+    Raises:
+        TypeError: If any of the arguments are invalid.
     """
     # TODO: show archticture edge labels (and make text adjustable)
     # TODO: make hover text of search (especially for multiple points per node!) and architecture nodes adjustable

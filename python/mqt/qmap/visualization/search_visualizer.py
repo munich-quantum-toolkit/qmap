@@ -165,11 +165,11 @@ class SearchVisualizer:
                 "architecture_yaxis": settings for plotly.graph_objects.layout.YAxis
             }
 
-        Raises:
-            TypeError: If any of the arguments are invalid.
-
         Returns:
             Widget: An interactive IPython widget to visualize the search graph.
+
+        Raises:
+            TypeError: If any of the arguments are invalid.
         """
         if plotly_settings is None:
             plotly_settings = {}
