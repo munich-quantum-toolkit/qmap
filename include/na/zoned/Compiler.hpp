@@ -80,13 +80,14 @@ public:
   struct Statistics {
     int64_t schedulingTime;    ///< Time taken for scheduling in us
     int64_t reuseAnalysisTime; ///< Time taken for reuse analysis in us
+    int64_t totalReuse; ///< Total number of qubits reused across all layers
     /// Statistics collected during layout synthesis.
     typename LayoutSynthesizer::Statistics layoutSynthesizerStatistics;
     int64_t layoutSynthesisTime; ///< Time taken for layout synthesis in us
     int64_t codeGenerationTime;  ///< Time taken for code generation in us
     int64_t totalTime;           ///< Total time taken for the compilation in us
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Statistics, schedulingTime,
-                                                  reuseAnalysisTime,
+                                                  reuseAnalysisTime, totalReuse,
                                                   layoutSynthesizerStatistics,
                                                   layoutSynthesisTime,
                                                   codeGenerationTime,
@@ -173,6 +174,13 @@ public:
                                                               schedulingStart)
             .count();
     SPDLOG_INFO("Time for scheduling: {}us", statistics_.schedulingTime);
+    // print gates in each layer
+    for (const auto& gate : twoQubitGateLayers) {
+      SPDLOG_INFO("Layer with {} two-qubit gates", gate.size());
+      for (const auto& op : gate) {
+        SPDLOG_INFO("  gate {}, {}", op[0], op[1]);
+      }
+    }
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
     SPDLOG_DEBUG("Number of single-qubit gate layers: {}",
                  singleQubitGateLayers.size());
@@ -205,6 +213,17 @@ public:
             reuseAnalysisEnd - reuseAnalysisStart)
             .count();
     SPDLOG_INFO("Time for reuse analysis: {}us", statistics_.reuseAnalysisTime);
+
+    // Calculate total number of reused qubits across all layers
+    statistics_.totalReuse = 0;
+    for (const auto& reuseSet : reuseQubits) {
+      SPDLOG_INFO("New layer");
+      for (const auto& qubit : reuseSet) {
+        SPDLOG_INFO("Reused qubit: {}", qubit);
+      }
+      statistics_.totalReuse += static_cast<int64_t>(reuseSet.size());
+    }
+    SPDLOG_INFO("Total reuse: {}", statistics_.totalReuse);
 
     SPDLOG_DEBUG("Synthesizing layout...");
     const auto layoutSynthesisStart = std::chrono::system_clock::now();

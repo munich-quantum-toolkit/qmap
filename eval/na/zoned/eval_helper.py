@@ -31,7 +31,11 @@ if TYPE_CHECKING:
     from mqt.bench import BenchmarkLevel
     from mqt.core.ir import QuantumComputation
 
-    from mqt.qmap.na.zoned import PlacementAndRoutingAwareCompiler, RoutingAwareCompiler
+    from mqt.qmap.na.zoned import (
+        PlacementAndRoutingAwareCompiler,
+        RoutingAgnosticCompiler,
+        RoutingAwareCompiler,
+    )
 
     P = ParamSpec("P")
     R = TypeVar("R")
@@ -117,7 +121,10 @@ def transpile_benchmark(benchmark: str, circuit: QuantumCircuit) -> QuantumCircu
     flattened = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
     flattened.compose(circuit, inplace=True)
     transpiled = transpile(
-        flattened, basis_gates=["cz", "id", "u2", "u1", "u3"], optimization_level=3, seed_transpiler=0
+        flattened,
+        basis_gates=["cz", "id", "u2", "u1", "u3"],
+        optimization_level=3,
+        seed_transpiler=0,
     )
     stripped = QuantumCircuit(*transpiled.qregs, *transpiled.cregs)
     for instr in transpiled.data:
@@ -140,8 +147,20 @@ def benchmarks(
             yield benchmark, qc
 
 
+def benchmarks_from_file_name(
+    benchmark_list: Iterable[str],
+) -> Iterator[tuple[str, QuantumComputation]]:
+    """Yields the benchmark names and their circuits."""
+    for benchmark in benchmark_list:
+        circuit = QuantumCircuit.from_qasm_file(benchmark)
+        transpiled = transpile_benchmark(benchmark, circuit)
+        qc = load(transpiled)
+        yield benchmark, qc
+
+
 def _compile_wrapper(
-    compiler: RoutingAwareCompiler | PlacementAndRoutingAwareCompiler, qc: QuantumComputation
+    compiler: RoutingAwareCompiler | PlacementAndRoutingAwareCompiler,
+    qc: QuantumComputation,
 ) -> tuple[str, Mapping[str, Any]]:
     """Compile and return the compiled code and stats.
 
@@ -156,7 +175,7 @@ def _compile_wrapper(
 
 
 def process_benchmark(
-    compiler: RoutingAwareCompiler | PlacementAndRoutingAwareCompiler,
+    compiler: (RoutingAwareCompiler | PlacementAndRoutingAwareCompiler | RoutingAgnosticCompiler),
     setting_name: str,
     qc: QuantumComputation,
     benchmark_name: str,
@@ -423,6 +442,7 @@ class Evaluator:
         Args:
             _: List of atoms to load.
         """
+        self.atom_transfer += len(_)
         self.rearrangement_duration += self.arch["operation_duration"]["atom_transfer"]
 
     def _apply_move(self, moves: list[tuple[str, tuple[int, int]]]) -> None:
@@ -461,6 +481,7 @@ class Evaluator:
         Args:
             _: List of atoms to store.
         """
+        self.atom_transfer += len(_)
         self.rearrangement_duration += self.arch["operation_duration"]["atom_transfer"]
 
     def _apply_cz(self, atoms: list[str]) -> None:
@@ -494,7 +515,14 @@ class Evaluator:
         """
         self._apply_u(atoms)
 
-    def evaluate(self, name: str, qc: QuantumComputation, setting: str, code: str, stats: Mapping[str, Any]) -> None:
+    def evaluate(
+        self,
+        name: str,
+        qc: QuantumComputation,
+        setting: str,
+        code: str,
+        stats: Mapping[str, Any],
+    ) -> None:
         """Evaluate a circuit.
 
         Args:
@@ -515,7 +543,8 @@ class Evaluator:
         self.routing_time = stats["layoutSynthesizerStatistics"]["routingTime"]
         self.code_generation_time = stats["codeGenerationTime"]
         self.total_time = stats["totalTime"]
-
+        self.total_reuse = stats["totalReuse"]
+        self.atom_transfer = 0
         it = iter(code.splitlines())
 
         for line in it:
@@ -550,7 +579,7 @@ class Evaluator:
         pathlib.Path(self.filename).write_text(
             "circuit_name,num_qubits,setting,status,two_qubit_gates,scheduling_time,reuse_analysis_time,"
             "placement_time,routing_time,code_generation_time,total_time,two_qubit_gate_layer,max_two_qubit_gates,"
-            "rearrangement_duration\n",
+            "qubit_reuse,rearrangement_duration,atom_transfer\n",
             encoding="utf-8",
         )
 
@@ -561,7 +590,7 @@ class Evaluator:
                 f"{self.circuit_name},{self.num_qubits},{self.setting},ok,{self.two_qubit_gates},"
                 f"{self.scheduling_time},{self.reuse_analysis_time},{self.placement_time},"
                 f"{self.routing_time},{self.code_generation_time},{self.total_time},{self.two_qubit_gate_layer},"
-                f"{self.max_two_qubit_gates},{self.rearrangement_duration}\n"
+                f"{self.max_two_qubit_gates},{self.total_reuse},{self.rearrangement_duration},{self.atom_transfer}\n"
             )
 
     def print_timeout(self, circuit_name: str, qc: QuantumComputation, setting: str) -> None:

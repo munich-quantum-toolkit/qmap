@@ -19,12 +19,18 @@ import json
 import os
 import pathlib
 
-from eval_helper import Evaluator, benchmarks, process_benchmark
+from eval_helper import (
+    Evaluator,
+    benchmarks,
+    benchmarks_from_file_name,
+    process_benchmark,
+)
 from mqt.bench import BenchmarkLevel
 
 from mqt.qmap.na.zoned import (
     PlacementAndRoutingAwareCompiler,
     PlacementMethod,
+    RoutingAgnosticCompiler,
     RoutingAwareCompiler,
     RoutingMethod,
     ZonedNeutralAtomArchitecture,
@@ -53,36 +59,54 @@ def main() -> None:
         "deepening_factor": 0.01,
         "deepening_value": 0.0,
         "lookahead_factor": 0.4,
-        "reuse_level": 5.0,
+        "reuse_level": 30.0,  # 5.0,
         "trials": 4,
         "queue_capacity": 100,
         "routing_method": RoutingMethod.relaxed,
         "prefer_split": 1.0,
         "warn_unsupported_gates": False,
     }
+    RoutingAgnosticCompiler(arch)
     asap_compiler = RoutingAwareCompiler(arch, **common_config)
     min_flow_compiler = PlacementAndRoutingAwareCompiler(arch, **common_config)
 
     evaluator = Evaluator(arch_dict, "results.csv")
     evaluator.print_header()
     pathlib.Path("in").mkdir(exist_ok=True)
+    use_mqt_bnech = False
 
-    benchmark_list = [
-        ("graphstate", (BenchmarkLevel.INDEP, [10])),
-    ]
-    # benchmark_list = [
-    #     ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
-    #     ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
-    #     ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
-    #     ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
-    #     ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-    #     ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-    # ]
+    if use_mqt_bnech:
+        benchmark_list = [
+            # ("graphstate", (BenchmarkLevel.INDEP, [10])),
+            ("qaoa", (BenchmarkLevel.INDEP, [40, 50, 60, 70, 80, 90, 100, 150, 200])),
+        ]
+        # benchmark_list = [
+        #     ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
+        #     ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
+        #     ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
+        #     ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
+        #     ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        #     ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        # ]
 
-    for benchmark, qc in benchmarks(benchmark_list):
-        qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
-        process_benchmark(asap_compiler, "asap", qc, benchmark, evaluator)
-        process_benchmark(min_flow_compiler, "min_flow", qc, benchmark, evaluator)
+        for benchmark, qc in benchmarks(benchmark_list):
+            qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
+            process_benchmark(asap_compiler, "asap", qc, benchmark, evaluator)
+            process_benchmark(min_flow_compiler, "min_flow", qc, benchmark, evaluator)
+    else:
+        benchmark_list = []
+        # folder_path: pathlib.Path = pathlib.Path("rand_tt")
+        folder_path: pathlib.Path = pathlib.Path("qlut-qasm")
+        # folder_path: pathlib.Path = pathlib.Path("test")
+        if pathlib.Path.is_dir(folder_path):
+            # Find all .qasm files in the folder
+            benchmark_list = sorted([str(f) for f in pathlib.Path.iterdir(folder_path) if f.suffix == ".qasm"])
+        for benchmark, qc in benchmarks_from_file_name(benchmark_list):
+            benchmark_str = benchmark.split("/")[-1].split(".")[0]
+            qc.qasm3(f"in/{benchmark_str}.qasm")
+            # process_benchmark(zac_compiler, "zac", qc, benchmark_str, evaluator)
+            process_benchmark(asap_compiler, "asap", qc, benchmark_str, evaluator)
+            process_benchmark(min_flow_compiler, "min_flow", qc, benchmark_str, evaluator)
 
     print(
         "\033[32m[INFO]\033[0m =============================================================\n"
