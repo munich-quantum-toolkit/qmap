@@ -70,10 +70,13 @@ auto VertexMatchingReuseAnalyzer::analyzeReuse(
         // and be reused.
         reuseQubitsInCurrentLayer.emplace(gate.front());
         reuseQubitsInCurrentLayer.emplace(gate.back());
-      } else if (firstReusable) {
-        matrix[gateIdx][itFirst->second] = true;
-      } else if (secondReusable) {
-        matrix[gateIdx][itSecond->second] = true;
+      } else {
+        if (firstReusable) {
+          matrix[gateIdx][itFirst->second] = true;
+        }
+        if (secondReusable) {
+          matrix[gateIdx][itSecond->second] = true;
+        }
       }
       usedQubitsInCurrentLayer[gate.front()] = gateIdx;
       usedQubitsInCurrentLayer[gate.back()] = gateIdx;
