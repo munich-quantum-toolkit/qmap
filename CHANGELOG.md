@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Fixed
+
+- 🐛 Fix condition to detect previously unrecognized reuse opportunities ([#953]) ([**@ystade**])
+
 ## [3.6.0] - 2026-02-24
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#360)._
@@ -196,6 +200,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
 [#921]: https://github.com/munich-quantum-toolkit/qmap/pull/921
 [#916]: https://github.com/munich-quantum-toolkit/qmap/pull/916
