@@ -19,7 +19,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from random import shuffle
-from typing import TYPE_CHECKING, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import networkx as nx
 import plotly.basedatatypes
@@ -1078,7 +1078,7 @@ def _visualize_search_graph_check_parameters(
     Sequence[Colorscale],  # search_node_color_scale
     Sequence[bool],  # search_node_invert_color_scale
     Sequence[bool],  # prioritize_search_node_color
-    Sequence[str],  # search_node_colorbar_title
+    list[str | None],  # search_node_colorbar_title
     _PlotlySettings,  # plotly_settings
 ]:
     if not isinstance(data_logging_path, str):
@@ -1336,47 +1336,48 @@ def _visualize_search_graph_check_parameters(
         msg = "search_node_colorbar_spacing must be a float between 0 and 1"
         raise TypeError(msg)
 
+    search_node_colorbar_title_: list[str | None] = []
     if search_node_colorbar_title is None:
-        search_node_colorbar_title = [None] * number_of_node_traces
+        search_node_colorbar_title_ = cast("list[str | None]", [None] * number_of_node_traces)
     if isinstance(search_node_colorbar_title, Sequence) and not isinstance(search_node_colorbar_title, str):
-        search_node_colorbar_title = list(search_node_colorbar_title)
-        if len(search_node_colorbar_title) > 1 and not use3d:
+        search_node_colorbar_title_ = list(search_node_colorbar_title)
+        if len(search_node_colorbar_title_) > 1 and not use3d:
             msg = "search_node_colorbar_title can only be a list in a 3D plot."
             raise TypeError(msg)
-        if len(search_node_colorbar_title) != number_of_node_traces:
-            msg = f"Length of search_node_colorbar_title ({len(search_node_colorbar_title)}) does not match length of search_node_height ({number_of_node_traces})."
+        if len(search_node_colorbar_title_) != number_of_node_traces:
+            msg = f"Length of search_node_colorbar_title ({len(search_node_colorbar_title_)}) does not match length of search_node_height ({number_of_node_traces})."
             raise TypeError(msg)
         untitled = 1
-        for i, title in enumerate(search_node_colorbar_title):
+        for i, title in enumerate(search_node_colorbar_title_):
             if title is None:
                 color = None
                 if isinstance(search_node_color, Sequence) and not isinstance(search_node_color, str):
-                    if len(search_node_color) == len(search_node_colorbar_title):
+                    if len(search_node_color) == len(search_node_colorbar_title_):
                         color = search_node_color[i]
                     else:
                         color = search_node_color[0]
                 else:
                     color = search_node_color
                 if not isinstance(color, str):
-                    search_node_colorbar_title[i] = f"Untitled{untitled}"
+                    search_node_colorbar_title_[i] = f"Untitled{untitled}"
                     untitled += 1
                 elif color == "total_cost":
-                    search_node_colorbar_title[i] = "Total cost"
+                    search_node_colorbar_title_[i] = "Total cost"
                 elif color == "total_fixed_cost":
-                    search_node_colorbar_title[i] = "Total fixed cost"
+                    search_node_colorbar_title_[i] = "Total fixed cost"
                 elif color == "fixed_cost":
-                    search_node_colorbar_title[i] = "Fixed cost"
+                    search_node_colorbar_title_[i] = "Fixed cost"
                 elif color == "heuristic_cost":
-                    search_node_colorbar_title[i] = "Heuristic cost"
+                    search_node_colorbar_title_[i] = "Heuristic cost"
                 elif color == "lookahead_penalty":
-                    search_node_colorbar_title[i] = "Lookahead penalty"
+                    search_node_colorbar_title_[i] = "Lookahead penalty"
                 else:
-                    search_node_colorbar_title[i] = color
+                    search_node_colorbar_title_[i] = color
             elif not isinstance(title, str):
                 msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
                 raise TypeError(msg)
     elif isinstance(search_node_colorbar_title, str):
-        search_node_colorbar_title = [search_node_colorbar_title] * number_of_node_traces
+        search_node_colorbar_title_ = cast("list[str | None]", [search_node_colorbar_title] * number_of_node_traces)
     else:
         msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
         raise TypeError(msg)
@@ -1467,7 +1468,7 @@ def _visualize_search_graph_check_parameters(
                     )
                     raise TypeError(msg)
                 else:  # static color
-                    search_node_colorbar_title[i] = None
+                    search_node_colorbar_title_[i] = None
     elif isinstance(search_node_color, str):
         cost_lambda = _cost_string_to_lambda(search_node_color)
         if cost_lambda is not None:
@@ -1481,7 +1482,7 @@ def _visualize_search_graph_check_parameters(
             raise TypeError(msg)
         else:  # static color
             search_node_color = [search_node_color]
-            search_node_colorbar_title = [None] * number_of_node_traces
+            search_node_colorbar_title_ = cast("list[str | None]", [None] * number_of_node_traces)
     else:
         msg = (
             'search_node_color must be a cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", "heuristic_cost", '
@@ -1533,7 +1534,7 @@ def _visualize_search_graph_check_parameters(
         search_node_color_scale,
         search_node_invert_color_scale,
         prioritize_search_node_color,
-        search_node_colorbar_title,
+        search_node_colorbar_title_,
         plotly_set,
     )
 
@@ -2128,7 +2129,7 @@ def visualize_search_graph(
         ),
     )
 
-    vbox_elems = [fig]
+    vbox_elems: list[Any] = [fig]
     if show_search_progression:
         vbox_elems.append(timestep)
     if layer == "interactive":
