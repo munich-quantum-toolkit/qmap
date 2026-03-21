@@ -1338,7 +1338,7 @@ def _visualize_search_graph_check_parameters(
 
     search_node_colorbar_title_out: list[str | None] = []
     if search_node_colorbar_title is None:
-        search_node_colorbar_title_out = [None] * number_of_node_traces  # ty: ignore[invalid-assignment]
+        search_node_colorbar_title_out = [None] * number_of_node_traces
     if isinstance(search_node_colorbar_title, Sequence) and not isinstance(search_node_colorbar_title, str):
         search_node_colorbar_title_out = list(search_node_colorbar_title)
         if len(search_node_colorbar_title_out) > 1 and not use3d:
@@ -1482,7 +1482,7 @@ def _visualize_search_graph_check_parameters(
             raise TypeError(msg)
         else:  # static color
             search_node_color = [search_node_color]
-            search_node_colorbar_title_out = [None] * number_of_node_traces  # ty: ignore[invalid-assignment]
+            search_node_colorbar_title_out = [None] * number_of_node_traces
     else:
         msg = (
             'search_node_color must be a cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", "heuristic_cost", '
