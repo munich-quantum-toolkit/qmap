@@ -24,9 +24,14 @@ public:
   virtual ~DecomposerBase() = default;
   /**
    * This function defines the interface of the decomposer.
+   *
+   * The decomposer may change the layering produced by the scheduler and,
+   * hence, it receives the single-qubit and two-qubit gate layers.
    * @param singleQubitGateLayers are the layers of single-qubit gates that are
    * meant to be first decomposed into the native gate set.
-   * @return the new single-qubit gate layers
+   * @param twoQubitGateLayers are the layers of two-qubit gates that the
+   * decomposer may change.
+   * @return the a new pair of single-qubit and two-qubit gate layers
    */
   [[nodiscard]] virtual auto
   decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
