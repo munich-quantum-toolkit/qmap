@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Changed
+
+- 🎨 Add two-qubit gate layer to decomposer interface in zoned neutral atom compiler ([#976]) ([**@ystade**])
+
 ### Fixed
 
 - 🐛 Fix condition to detect previously unrecognized reuse opportunities ([#953]) ([**@ystade**])
@@ -200,6 +204,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#976]: https://github.com/munich-quantum-toolkit/qmap/pull/976
 [#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
 [#921]: https://github.com/munich-quantum-toolkit/qmap/pull/921
