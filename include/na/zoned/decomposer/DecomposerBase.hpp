@@ -28,8 +28,10 @@ public:
    * meant to be first decomposed into the native gate set.
    * @return the new single-qubit gate layers
    */
-  [[nodiscard]] virtual auto decompose(
-      const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers) const
-      -> std::vector<SingleQubitGateLayer> = 0;
+  [[nodiscard]] virtual auto
+  decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+            const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
+      -> std::pair<std::vector<SingleQubitGateLayer>,
+                   std::vector<TwoQubitGateLayer>> = 0;
 };
 } // namespace na::zoned

@@ -202,8 +202,9 @@ public:
 
     SPDLOG_DEBUG("Decomposing...");
     const auto decomposingStart = std::chrono::system_clock::now();
-    const auto& decomposedSingleQubitGateLayers =
-        SELF.decompose(singleQubitGateLayers);
+    const auto& [decomposedSingleQubitGateLayers,
+                 decomposedTwoQubitGateLayers] =
+        SELF.decompose(singleQubitGateLayers, twoQubitGateLayers);
     const auto decomposingEnd = std::chrono::system_clock::now();
     statistics_.decomposingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
@@ -213,7 +214,7 @@ public:
 
     SPDLOG_DEBUG("Analyzing reuse...");
     const auto reuseAnalysisStart = std::chrono::system_clock::now();
-    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
+    const auto& reuseQubits = SELF.analyzeReuse(decomposedTwoQubitGateLayers);
     const auto reuseAnalysisEnd = std::chrono::system_clock::now();
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(

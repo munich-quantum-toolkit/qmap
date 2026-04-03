@@ -48,8 +48,10 @@ public:
   NoOpDecomposer(const Architecture& /* unused */, const Config& /* unused */) {
   }
 
-  [[nodiscard]] auto decompose(
-      const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers) const
-      -> std::vector<SingleQubitGateLayer> override;
+  [[nodiscard]] auto
+  decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+            const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
+      -> std::pair<std::vector<SingleQubitGateLayer>,
+                   std::vector<TwoQubitGateLayer>> override;
 };
 } // namespace na::zoned
