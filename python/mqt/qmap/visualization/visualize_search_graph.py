@@ -138,7 +138,7 @@ def _copy_to_dict(
             if key not in target or not isinstance(target[key], dict):
                 target[key] = value
             else:
-                _copy_to_dict(target[key], value)  # type: ignore[arg-type]
+                _copy_to_dict(target[key], value)  # ty: ignore[invalid-argument-type]
         else:
             target[key] = value
     return target
@@ -285,7 +285,7 @@ def _prepare_search_graph_scatters(
         ps = plotly_settings["search_nodes"]
         if search_node_colorbar_title[0] is None:
             ps = deepcopy(ps)
-            del ps["marker"]["colorbar"]  # type: ignore[attr-defined]
+            del ps["marker"]["colorbar"]  # ty: ignore[not-subscriptable]
         node_scatter = go.Scatter(**ps)
         node_scatter.x = []
         node_scatter.y = []
@@ -316,7 +316,7 @@ def _prepare_search_graph_scatters(
         ps = plotly_settings["search_nodes"]
         if search_node_colorbar_title[i] is None:
             ps = deepcopy(ps)
-            del ps["marker"]["colorbar"]  # type: ignore[attr-defined]
+            del ps["marker"]["colorbar"]  # ty: ignore[not-subscriptable]
         else:
             n_colorbars += 1
         scatter = go.Scatter3d(**ps)
@@ -908,7 +908,7 @@ def _load_layer_data(
     for q in considered_qubit_color_groups:
         considered_qubit_colors[q] = considered_qubits_color_codes[considered_qubit_color_groups[q]]
 
-    return (  # type: ignore[return-value]
+    return (  # ty: ignore[invalid-return-type]
         graph,
         initial_layout,
         initial_positions,
@@ -1320,7 +1320,7 @@ def _visualize_search_graph_check_parameters(
         plotly_set["arrows"]["yref"] = "y2"
         plotly_set["arrows"]["axref"] = "x2"
         plotly_set["arrows"]["ayref"] = "y2"
-    _copy_to_dict(plotly_set, plotly_settings)  # type: ignore[arg-type]
+    _copy_to_dict(plotly_set, plotly_settings)  # ty: ignore[invalid-argument-type]
 
     number_of_node_traces = (
         len(search_node_height)
@@ -1524,7 +1524,7 @@ def _visualize_search_graph_check_parameters(
     else:
         search_node_height = []
 
-    return (  # type: ignore[return-value]
+    return (  # ty: ignore[invalid-return-type]
         data_logging_path,
         hide_layout,
         draw_stems,
@@ -1869,26 +1869,26 @@ def visualize_search_graph(
         yaxis2 = sub_plots["layout"]["yaxis"] if use3d else sub_plots["layout"]["yaxis2"]
 
         full_plotly_settings["architecture_xaxis"]["range"] = [
-            arch_x_min - abs(arch_x_max - arch_x_min) * architecture_border,  # type: ignore[operator]
-            arch_x_max + abs(arch_x_max - arch_x_min) * architecture_border,  # type: ignore[operator]
+            arch_x_min - abs(arch_x_max - arch_x_min) * architecture_border,  # ty: ignore[unsupported-operator]
+            arch_x_max + abs(arch_x_max - arch_x_min) * architecture_border,  # ty: ignore[unsupported-operator]
         ]
         full_plotly_settings["architecture_yaxis"]["range"] = [
-            arch_y_min - abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
-            arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
+            arch_y_min - abs(arch_y_max - arch_y_min) * architecture_border,  # ty: ignore[unsupported-operator]
+            arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,  # ty: ignore[unsupported-operator]
         ]
         x_diff = (
-            full_plotly_settings["architecture_xaxis"]["range"][1]  # type: ignore[index]
-            - full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
+            full_plotly_settings["architecture_xaxis"]["range"][1]  # ty: ignore[not-subscriptable]
+            - full_plotly_settings["architecture_xaxis"]["range"][0]  # ty: ignore[not-subscriptable]
         )
         y_diff = (
-            full_plotly_settings["architecture_yaxis"]["range"][1]  # type: ignore[index]
-            - full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
+            full_plotly_settings["architecture_yaxis"]["range"][1]  # ty: ignore[not-subscriptable]
+            - full_plotly_settings["architecture_yaxis"]["range"][0]  # ty: ignore[not-subscriptable]
         )
         if x_diff == 0:
-            mid = full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
+            mid = full_plotly_settings["architecture_xaxis"]["range"][0]  # ty: ignore[not-subscriptable]
             full_plotly_settings["architecture_xaxis"]["range"] = [mid - y_diff / 2, mid + y_diff / 2]
         if y_diff == 0:
-            mid = full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
+            mid = full_plotly_settings["architecture_yaxis"]["range"][0]  # ty: ignore[not-subscriptable]
             full_plotly_settings["architecture_yaxis"]["range"] = [mid - x_diff / 2, mid + x_diff / 2]
 
         xaxis2.update(**full_plotly_settings["architecture_xaxis"])
@@ -1928,21 +1928,21 @@ def visualize_search_graph(
         if current_node_layout_visualized == point_inds[0]:
             return
         current_node_layout_visualized = point_inds[0]
-        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # type: ignore[union-attr]
+        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # ty: ignore[unresolved-attribute]
 
         # this function is only called if hide_layout==False, therefore all variables are defined
         assert arch_node_trace is not None
         _visualize_layout(
             fig,
-            search_graph.nodes[node_index]["data"],  # type: ignore[union-attr]
+            search_graph.nodes[node_index]["data"],  # ty: ignore[unresolved-attribute]
             arch_node_trace,
-            architecture_node_positions,  # type: ignore[arg-type]
+            architecture_node_positions,  # ty: ignore[invalid-argument-type]
             initial_layout,
             considered_qubit_colors,
             show_swaps,
             swap_arrow_offset,
-            arch_x_arrow_spacing,  # type: ignore[arg-type]
-            arch_y_arrow_spacing,  # type: ignore[arg-type]
+            arch_x_arrow_spacing,  # ty: ignore[invalid-argument-type]
+            arch_y_arrow_spacing,  # ty: ignore[invalid-argument-type]
             show_shared_swaps,
             current_node_layout_visualized,
             search_node_traces[0] if not use3d else None,
@@ -2094,7 +2094,7 @@ def visualize_search_graph(
                 assert arch_node_trace is not None
                 _draw_architecture_nodes(
                     arch_node_trace,
-                    architecture_node_positions,  # type: ignore[arg-type]
+                    architecture_node_positions,  # ty: ignore[invalid-argument-type]
                     considered_qubit_colors,
                     initial_qbit_positions[current_layer],
                     single_qbit_multiplicities[current_layer],
