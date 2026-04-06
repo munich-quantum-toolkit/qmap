@@ -80,11 +80,11 @@ def build_progress_table(session: Session) -> str:
     if not pairs:
         return "No circuits found in database. Waiting for data..."
 
-    qubits_to_gates: dict[int, list[int]] = {}
+    qubits_to_gates: dict[int, set[int]] = {}
     for q, g in pairs:
-        qubits_to_gates.setdefault(int(q), set()).add(int(g))  # type: ignore[arg-type]
+        qubits_to_gates.setdefault(int(q), set()).add(int(g))
     for q in list(qubits_to_gates.keys()):
-        qubits_to_gates[q] = sorted(qubits_to_gates[q])  # type: ignore[index]
+        qubits_to_gates[q] = sorted(qubits_to_gates[q])
 
     headers = ["Qubits", "Gates"] + [m[0] for m in METHODS]
     widths = [len(h) for h in headers]
