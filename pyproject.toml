@@ -314,7 +314,7 @@ skip = ["*-musllinux_*", "cp313t-*"]
 archs = "auto64"
 test-groups = ["test"]
 test-command = "pytest {project}/test/python"
-build-frontend = "build[uv]"
+build-frontend = "uv"
 enable = ["cpython-freethreading"]
 test-skip = [
   "cp3??t-*", # no freethreading qiskit wheels
