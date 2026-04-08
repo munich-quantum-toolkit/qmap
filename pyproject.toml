@@ -315,7 +315,6 @@ archs = "auto64"
 test-groups = ["test"]
 test-command = "pytest {project}/test/python"
 build-frontend = "uv"
-enable = ["cpython-freethreading"]
 test-skip = [
   "cp3??t-*", # no freethreading qiskit wheels
   "cp*-win_arm64", # no numpy, qiskit, ... wheels
