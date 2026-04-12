@@ -1377,7 +1377,7 @@ def _visualize_search_graph_check_parameters(
                 msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
                 raise TypeError(msg)
     elif isinstance(search_node_colorbar_title, str):
-        search_node_colorbar_title_out = [search_node_colorbar_title] * number_of_node_traces  # ty: ignore[invalid-assignment]
+        search_node_colorbar_title_out = [search_node_colorbar_title] * number_of_node_traces
     else:
         msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
         raise TypeError(msg)
