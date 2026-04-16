@@ -112,7 +112,7 @@ repos:
         types_or: [c++, c, cuda]
         priority: 1
 
-  ## CMake format and lint the CMakeLists.txt files
+  ## Format the CMakeLists.txt files
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
@@ -127,7 +127,7 @@ repos:
     rev: v3.8.1
     hooks:
       - id: prettier
-        types_or: [yaml, markdown, html, css, scss, javascript, json]
+        types_or: [yaml, markdown, html, css, scss, javascript, json, json5]
         priority: 1
 
   ## Python linting using ruff
