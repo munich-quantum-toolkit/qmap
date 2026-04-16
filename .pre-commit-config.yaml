@@ -135,21 +135,13 @@ repos:
     rev: v0.15.9
     hooks:
       - id: ruff-format
+        types_or: [python, pyi, jupyter, markdown]
         priority: 1
       - id: ruff-check
         require_serial: true
         priority: 2
 
   # Priority 2+: Final checks and fixers
-
-  ## Also run Black on examples in the documentation (needs to run after ruff format)
-  - repo: https://github.com/adamchainz/blacken-docs
-    rev: 1.20.0
-    hooks:
-      - id: blacken-docs
-        language: python
-        additional_dependencies: [black==26.*]
-        priority: 2
 
   ## Static type checking using ty (needs to run after lockfile update/ruff format, and ruff lint)
   - repo: local
