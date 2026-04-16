@@ -28,7 +28,7 @@ authors = [
 ]
 keywords = ["MQT", "quantum-computing", "design-automation", "compiler", "clifford-synthesis"]
 license = "MIT"
-license-files = ["LICENSE.md"]
+license-files = ["LICENSE"]
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
