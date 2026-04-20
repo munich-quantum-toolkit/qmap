@@ -94,10 +94,10 @@ build-dir = "build/{wheel_tag}/{build_type}"
 
 # Only build the Python bindings target
 build.targets = [
-  "mqt-qmap-clifford_synthesis-bindings",
-  "mqt-qmap-hybrid_mapper-bindings",
+#  "mqt-qmap-clifford_synthesis-bindings",
+#  "mqt-qmap-hybrid_mapper-bindings",
   "mqt-qmap-na-bindings",
-  "mqt-qmap-sc-bindings",
+#  "mqt-qmap-sc-bindings",
 ]
 
 # Only install the Python package component
