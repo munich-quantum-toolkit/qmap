@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-file(GLOB_RECURSE NA_SOURCES na.cpp, register_zoned.cpp)
+file(GLOB_RECURSE NA_SOURCES na.cpp register_zoned.cpp)
 
 add_mqt_python_binding_nanobind(
   QMAP
