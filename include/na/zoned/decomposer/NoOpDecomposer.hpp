@@ -27,17 +27,10 @@ class NoOpDecomposer : public DecomposerBase {
 public:
   /// The configuration of the NoOpDecomposer
   struct Config {
-    template <
-        typename BasicJsonType,
-        nlohmann::detail::enable_if_t<
-            nlohmann::detail::is_basic_json<BasicJsonType>::value, int> = 0>
+    template <typename BasicJsonType>
     friend void to_json(BasicJsonType& /* unused */,
                         const Config& /* unused */) {}
-
-    template <
-        typename BasicJsonType,
-        nlohmann::detail::enable_if_t<
-            nlohmann::detail::is_basic_json<BasicJsonType>::value, int> = 0>
+    template <typename BasicJsonType>
     friend void from_json(const BasicJsonType& /* unused */,
                           Config& /* unused */) {}
   };
@@ -48,8 +41,9 @@ public:
   NoOpDecomposer(const Architecture& /* unused */, const Config& /* unused */) {
   }
 
-  [[nodiscard]] auto decompose(
-      const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers) const
+  [[nodiscard]] auto
+  decompose(size_t nQubits,
+            const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers)
       -> std::vector<SingleQubitGateLayer> override;
 };
 } // namespace na::zoned

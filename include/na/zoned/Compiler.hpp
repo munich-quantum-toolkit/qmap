@@ -12,6 +12,7 @@
 
 #include "Architecture.hpp"
 #include "code_generator/CodeGenerator.hpp"
+#include "decomposer/NativeGateDecomposer.hpp"
 #include "decomposer/NoOpDecomposer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
@@ -203,7 +204,7 @@ public:
     SPDLOG_DEBUG("Decomposing...");
     const auto decomposingStart = std::chrono::system_clock::now();
     const auto& decomposedSingleQubitGateLayers =
-        SELF.decompose(singleQubitGateLayers);
+        SELF.decompose(qComp.getNqubits(), singleQubitGateLayers);
     const auto decomposingEnd = std::chrono::system_clock::now();
     statistics_.decomposingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
@@ -309,6 +310,19 @@ public:
       : Compiler(architecture, config) {}
 
   explicit RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+
+class RoutingAwareNativeGateCompiler final
+    : public Compiler<RoutingAwareNativeGateCompiler, ASAPScheduler,
+                      NativeGateDecomposer, VertexMatchingReuseAnalyzer,
+                      RoutingAwareSynthesizer, CodeGenerator> {
+public:
+  RoutingAwareNativeGateCompiler(const Architecture& architecture,
+                                 const Config& config)
+      : Compiler(architecture, config) {}
+
+  explicit RoutingAwareNativeGateCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned

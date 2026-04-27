@@ -24,12 +24,14 @@ public:
   virtual ~DecomposerBase() = default;
   /**
    * This function defines the interface of the decomposer.
+   * @param nQubits is the number of qubits in the quantum computation.
    * @param singleQubitGateLayers are the layers of single-qubit gates that are
    * meant to be first decomposed into the native gate set.
    * @return the new single-qubit gate layers
    */
-  [[nodiscard]] virtual auto decompose(
-      const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers) const
+  [[nodiscard]] virtual auto
+  decompose(size_t nQubits,
+            const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers)
       -> std::vector<SingleQubitGateLayer> = 0;
 };
 } // namespace na::zoned

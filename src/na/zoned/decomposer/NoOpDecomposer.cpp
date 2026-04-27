@@ -18,7 +18,8 @@
 
 namespace na::zoned {
 auto NoOpDecomposer::decompose(
-    const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers) const
+    size_t /* unused */,
+    const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers)
     -> std::vector<SingleQubitGateLayer> {
   std::vector<SingleQubitGateLayer> result;
   result.reserve(singleQubitGateLayers.size());

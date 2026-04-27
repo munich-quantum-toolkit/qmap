@@ -185,6 +185,9 @@ COMPILER_TEST(RelaxedRoutingAwareCompiler, RoutingAwareCompiler,
               relaxedRoutingAwareConfiguration);
 COMPILER_TEST(FastRelaxedRoutingAwareCompiler, RoutingAwareCompiler,
               fastRelaxedRoutingAwareConfiguration);
+COMPILER_TEST(FastRelaxedRoutingAwareNativeGateCompiler,
+              RoutingAwareNativeGateCompiler,
+              fastRelaxedRoutingAwareConfiguration);
 
 // Tests that the bug described in issue
 // https://github.com/munich-quantum-toolkit/qmap/issues/727 is fixed.
