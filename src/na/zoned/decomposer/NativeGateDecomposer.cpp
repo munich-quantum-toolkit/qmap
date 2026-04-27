@@ -113,7 +113,7 @@ auto NativeGateDecomposer::getU3AnglesFromQuaternion(const Quaternion& quat)
     qc::fp alpha_1 = std::atan2(quat[3], quat[0]); // (phi+ lambda) /2
     if (std::fabs(quat[1]) > epsilon || std::fabs(quat[2]) > epsilon) {
       qc::fp alpha_2 = -1 * std::atan2(quat[1], quat[2]); //(phi-lambda)/2
-      phi = alpha_1 + alpha_2; // phi
+      phi = alpha_1 + alpha_2;                            // phi
       lambda = alpha_1 - alpha_2;
     } else {
       phi = 0;
@@ -423,9 +423,10 @@ auto NativeGateDecomposer::get_possible_moments(
   auto this_theta = prev_theta;
   std::set<qc::Qubit> mk_qubits = {
       std::get<StructU3>(circuit.get_Node_Value(v_sort[0])).qubit};
-  for (auto i = 0; i < v_sort.size(); i++) {
-    this_theta =
-        std::get<StructU3>(circuit.get_Node_Value(v_sort[i])).angles[0];
+  for (auto i = 0; static_cast<size_t>(i) < v_sort.size(); i++) {
+    this_theta = std::get<StructU3>(
+                     circuit.get_Node_Value(v_sort[static_cast<size_t>(i)]))
+                     .angles[0];
     if (this_theta != prev_theta) {
       std::vector<std::size_t> discarded = {v_sort.begin(), v_sort.begin() + i};
       std::vector<std::size_t> kept = {v_sort.begin() + i, v_sort.end()};
@@ -436,8 +437,9 @@ auto NativeGateDecomposer::get_possible_moments(
       prev_theta = this_theta;
       mk_qubits.clear();
     }
-    mk_qubits.insert(
-        std::get<StructU3>(circuit.get_Node_Value(v_sort[i])).qubit);
+    mk_qubits.insert(std::get<StructU3>(
+                         circuit.get_Node_Value(v_sort[static_cast<size_t>(i)]))
+                         .qubit);
   }
   std::vector<std::size_t> push_back_nodes = {};
   std::set<qc::Qubit> p_square_qubits = {};
@@ -511,7 +513,7 @@ auto NativeGateDecomposer::convert_circ_to_dag(
       DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>();
   std::vector<std::vector<size_t>> qubit_paths(nQubits);
   // TODO:assert that One more sql exists than mql ??
-  for (auto i = 0; i < schedule.second.size(); ++i) {
+  for (size_t i = 0; i < schedule.second.size(); ++i) {
     for (const auto& s : schedule.first.at(i)) {
       size_t node = graph.add_Node(s);
       qubit_paths.at(s.qubit).push_back(node);
@@ -561,7 +563,7 @@ auto NativeGateDecomposer::sift(
 
   // We traverse the graph rather than v_rem to use the graph's topological
   // ordering
-  for (auto node = 0; node < circuit.size(); node++) {
+  for (size_t node = 0; node < circuit.size(); node++) {
     if (v_rem.contains(node)) {
       auto op = circuit.get_Node_Value(node);
       std::set<size_t> op_qubits = std::set<size_t>();
@@ -704,7 +706,9 @@ auto NativeGateDecomposer::schedule_remaining(
     auto new_node = add_node_to_sub_prob_graph(v[0], val.first[0], val.second,
                                                subproblem_graph, prev_node);
     temp_cost = schedule_remaining({val.first[1], val.first[2], val.first[3]},
-                                   circuit, subproblem_graph, new_node, nQubits, check_final_cond, memo) + val.second;
+                                   circuit, subproblem_graph, new_node, nQubits,
+                                   check_final_cond, memo) +
+                val.second;
     if (temp_cost < min_cost) {
       min_cost = temp_cost;
       min_node = new_node;
@@ -725,9 +729,10 @@ auto NativeGateDecomposer::schedule_theta_opt(
   // TODO: Convert Circuit to DAG: How to handle the unique Pointer situation???
   DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>> circuit =
       convert_circ_to_dag(schedule, nQubits);
-  // TODO: Get initial Moments( Nott does MQB THEN SQB!! SOl to get SQB MQB??)
-  std::vector<std::size_t> v_start = {};
-  for (auto i = 0; i < circuit.size(); ++i) {
+  // TODO: Get initial Moments( Not does MQB THEN SQB!! SOl to get SQB MQB??)
+  std::vector<std::size_t> v_start{};
+  v_start.reserve(circuit.size());
+  for (size_t i = 0; i < circuit.size(); ++i) {
     v_start.push_back(i);
   }
   // v=(v_p,v_c,v_r)

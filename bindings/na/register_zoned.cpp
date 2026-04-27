@@ -377,14 +377,14 @@ Returns:
   //===--------------------------------------------------------------------===//
   // Routing-aware Axial Compiler
   //===--------------------------------------------------------------------===//
-  nb::class_<na::zoned::routingAwareAxialCompiler> routingAwareAxialCompiler(
+  nb::class_<na::zoned::RoutingAwareAxialCompiler> routingAwareAxialCompiler(
       m, "routingAwareAxialCompiler",
       "Routing-aware axial zoned neutral atom compiler.");
   {
-    const na::zoned::routingAwareAxialCompiler::Config defaultConfig;
+    const na::zoned::RoutingAwareAxialCompiler::Config defaultConfig;
     routingAwareAxialCompiler.def(
         "__init__",
-        [](na::zoned::routingAwareAxialCompiler* self,
+        [](na::zoned::RoutingAwareAxialCompiler* self,
            const na::zoned::Architecture& arch, const std::string& logLevel,
            const double maxFillingFactor, const bool useWindow,
            const size_t windowMinWidth, const double windowRatio,
@@ -396,7 +396,7 @@ Returns:
            const size_t queueCapacity,
            const na::zoned::IndependentSetRouter::Config::Method routingMethod,
            const double preferSplit, const bool warnUnsupportedGates) {
-          na::zoned::RoutingAwareNativeGateCompiler::Config config;
+          na::zoned::RoutingAwareAxialCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
           config.schedulerConfig.maxFillingFactor = maxFillingFactor;
           config.decomposerConfig = {};
@@ -418,14 +418,11 @@ Returns:
               .method = routingMethod, .preferSplit = preferSplit};
           config.codeGeneratorConfig = {.warnUnsupportedGates =
                                             warnUnsupportedGates};
-          new (self) na::zoned::routingAwareAxialCompiler{arch, config};
+          new (self) na::zoned::RoutingAwareAxialCompiler{arch, config};
         },
         nb::keep_alive<1, 2>(), "arch"_a,
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
-        "theta_opt_schedule"_a =
-            defaultConfig.decomposerConfig.theta_opt_schedule,
-        "check_final_cond"_a = defaultConfig.decomposerConfig.check_final_cond,
         "use_window"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
         "window_min_width"_a =
@@ -483,7 +480,7 @@ Args:
   routingAwareAxialCompiler.def_static(
       "from_json_string",
       [](const na::zoned::Architecture& arch,
-         const std::string& json) -> na::zoned::routingAwareAxialCompiler {
+         const std::string& json) -> na::zoned::RoutingAwareAxialCompiler {
         // The correct header <nlohmann/json.hpp> is included, but clang-tidy
         // confuses it with the wrong forward header <nlohmann/json_fwd.hpp>
         // NOLINTNEXTLINE(misc-include-cleaner)
@@ -504,7 +501,7 @@ Raises:
 
   routingAwareAxialCompiler.def(
       "compile",
-      [](na::zoned::routingAwareAxialCompiler& self,
+      [](na::zoned::RoutingAwareAxialCompiler& self,
          const qc::QuantumComputation& qc) -> std::string {
         return self.compile(qc).toString();
       },
