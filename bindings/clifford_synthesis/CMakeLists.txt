@@ -15,7 +15,7 @@ add_mqt_python_binding_nanobind(
   INSTALL_DIR
   .
   LINK_LIBS
-  MQT::QMapCliffordSynthesis
+        #MQT::QMapCliffordSynthesis
   MQT::CoreQASM)
 
 # install the Python stub files in editable mode for better IDE support

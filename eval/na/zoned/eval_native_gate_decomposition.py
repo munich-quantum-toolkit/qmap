@@ -40,6 +40,7 @@ from qiskit import QuantumCircuit, transpile
 from mqt.qmap.na.zoned import (
     PlacementMethod,
     RoutingAwareCompiler,
+    RoutingAwareAxialCompiler,
     RoutingAwareNativeGateCompiler,
     RoutingMethod,
     ZonedNeutralAtomArchitecture,
@@ -196,7 +197,8 @@ def process_benchmark(
     compiler_name = type(compiler).__name__
     print(f"\033[32m[INFO]\033[0m Compiling {benchmark_name} with {qc.num_qubits} qubits with {compiler_name}...")
     try:
-        code, stats = run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
+        code, stats = _compile_wrapper(compiler,
+                                       qc)  # run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
     except TimeoutError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
         evaluator.print_timeout(benchmark_name, qc, setting_name)
@@ -436,6 +438,14 @@ class Evaluator:
                 atoms.append(match.group(1))
         self._apply_rz(atoms)
 
+    def _process_ry(self, line: str, it: Iterator[str]) -> None:
+        """Process a global ry operation.
+
+        Args:
+            line: The current line being processed.
+            it: An iterator over the remaining lines.
+        """
+        self._apply_global_ry()
     def _apply_load(self, _: list[str]) -> None:
         """Apply a load operation.
 
@@ -560,6 +570,8 @@ class Evaluator:
                 self._process_u(line, it)
             elif line.startswith("@+ rz"):
                 self._process_rz(line, it)
+            elif line.startswith("@+ ry"):
+                self._process_ry(line, it)
             else:
                 msg = f"Unrecognized operation: {line}"
                 raise ValueError(msg)
@@ -646,28 +658,36 @@ def main() -> None:
         "warn_unsupported_gates": False,
     }
     baseline = RoutingAwareCompiler(arch, **common_config)
-    setting1 = RoutingAwareNativeGateCompiler(arch, **common_config)
-    setting2 = RoutingAwareNativeGateCompiler(arch, **common_config, theta_opt_schedule=True)
+    setting1 = RoutingAwareAxialCompiler(arch, **common_config)
+    setting2 = RoutingAwareNativeGateCompiler(arch, **common_config)
+    setting3 = RoutingAwareNativeGateCompiler(arch, **common_config, theta_opt_schedule=True)
 
     evaluator = Evaluator(arch_dict, "results.csv")
     evaluator.print_header()
     pathlib.Path("in").mkdir(exist_ok=True)
 
     benchmark_list = [
-        ("graphstate", (BenchmarkLevel.INDEP, [60])),
+        ("graphstate", (BenchmarkLevel.INDEP, [60, 100])),
         # ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
+        ("qft", (BenchmarkLevel.INDEP, [100])),
         # ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
+        ("qpeexact", (BenchmarkLevel.INDEP, [100])),
         # ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
+        ("wstate", (BenchmarkLevel.INDEP, [100])),
         # ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
+        ("qaoa", (BenchmarkLevel.INDEP, [50, 100])),
         # ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100])),
         # ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
     ]
 
     for benchmark, qc in benchmarks(benchmark_list):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
         process_benchmark(baseline, "baseline", qc, benchmark, evaluator)
-        process_benchmark(setting1, "setting1", qc, benchmark, evaluator)
+        # process_benchmark(setting1, "setting1", qc, benchmark, evaluator)
         process_benchmark(setting2, "setting2", qc, benchmark, evaluator)
+        process_benchmark(setting2, "setting3", qc, benchmark, evaluator)
+
 
     print(
         "\033[32m[INFO]\033[0m =============================================================\n"

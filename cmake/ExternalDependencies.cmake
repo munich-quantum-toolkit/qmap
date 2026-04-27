@@ -12,12 +12,11 @@ include(CMakeDependentOption)
 include(FetchContent)
 set(FETCH_PACKAGES "")
 
-# search for Z3
-find_package(Z3 4.8.15)
-if(NOT Z3_FOUND)
-  message(
-    WARNING "Did not find Z3. Exact mapper and Clifford synthesis libraries will not be available")
-endif()
+#FetchContent_Declare(Z3
+#        GIT_REPOSITORY https://github.com/Z3Prover/z3
+#        GIT_TAG        z3-4.8.15
+#)
+#list(APPEND FETCH_PACKAGES Z3)
 
 if(BUILD_MQT_QMAP_BINDINGS)
   # Manually detect the installed mqt-core package.
@@ -50,6 +49,8 @@ set(MQT_CORE_REV "8747a89766dfb943d62ed100d383cd1823d2356c"
 set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
 # cmake-format: on
+
+
 FetchContent_Declare(
   mqt-core
   GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/core.git
@@ -102,6 +103,13 @@ endif()
 
 # Make all declared dependencies available.
 FetchContent_MakeAvailable(${FETCH_PACKAGES})
+
+# search for Z3
+find_package(Z3 4.8.15)
+if (NOT Z3_FOUND)
+    message(
+            WARNING "Did not find Z3. Exact mapper and Clifford synthesis libraries will not be available")
+endif ()
 
 # Mark the plog includes as SYSTEM includes to suppress warnings.
 get_target_property(PLOG_IID plog INTERFACE_INCLUDE_DIRECTORIES)

@@ -105,6 +105,7 @@ public:
    * gate.
    * @param layers is a std::vector of SingleQubitGateLayers of a scheduled
    * circuit.
+   * @param n_qubits the number of Qubits in the scheduled circuit
    * @returns a vector of vectors of StructU3 objects representing the single
    * qubit gate layers.
    */

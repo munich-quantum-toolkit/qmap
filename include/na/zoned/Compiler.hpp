@@ -15,6 +15,7 @@
 #include "na/NAComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/code_generator/CodeGenerator.hpp"
+#include "na/zoned/decomposer/AxialDecomposer.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
 #include "na/zoned/decomposer/NoOpDecomposer.hpp"
 #include "na/zoned/layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
@@ -311,6 +312,19 @@ public:
       : Compiler(architecture, config) {}
 
   explicit RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+
+class RoutingAwareAxialCompiler final
+    : public Compiler<RoutingAwareAxialCompiler, ASAPScheduler, AxialDecomposer,
+                      VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
+                      CodeGenerator> {
+public:
+  RoutingAwareAxialCompiler(const Architecture& architecture,
+                            const Config& config)
+      : Compiler(architecture, config) {}
+
+  explicit RoutingAwareAxialCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 
