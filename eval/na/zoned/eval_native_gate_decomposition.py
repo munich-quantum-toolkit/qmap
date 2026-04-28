@@ -40,7 +40,7 @@ from qiskit import QuantumCircuit, transpile
 from mqt.qmap.na.zoned import (
     PlacementMethod,
     RoutingAwareCompiler,
-    RoutingAwareAxialCompiler,
+    # RoutingAwareAxialCompiler,
     RoutingAwareNativeGateCompiler,
     RoutingMethod,
     ZonedNeutralAtomArchitecture,
@@ -658,7 +658,7 @@ def main() -> None:
         "warn_unsupported_gates": False,
     }
     baseline = RoutingAwareCompiler(arch, **common_config)
-    setting1 = RoutingAwareAxialCompiler(arch, **common_config)
+    #setting1 = RoutingAwareAxialCompiler(arch, **common_config)
     setting2 = RoutingAwareNativeGateCompiler(arch, **common_config)
     setting3 = RoutingAwareNativeGateCompiler(arch, **common_config, theta_opt_schedule=True)
 
@@ -667,17 +667,17 @@ def main() -> None:
     pathlib.Path("in").mkdir(exist_ok=True)
 
     benchmark_list = [
-        ("graphstate", (BenchmarkLevel.INDEP, [60, 100])),
+        ("graphstate", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
         # ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
-        ("qft", (BenchmarkLevel.INDEP, [100])),
+        ("qft", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
         # ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qpeexact", (BenchmarkLevel.INDEP, [100])),
+        ("qpeexact", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
         # ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("wstate", (BenchmarkLevel.INDEP, [100])),
+        ("wstate", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
         # ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qaoa", (BenchmarkLevel.INDEP, [50, 100])),
+        ("qaoa", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
         # ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-        ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100])),
+        ("vqe_two_local", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
         # ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
     ]
 
@@ -686,7 +686,7 @@ def main() -> None:
         process_benchmark(baseline, "baseline", qc, benchmark, evaluator)
         # process_benchmark(setting1, "setting1", qc, benchmark, evaluator)
         process_benchmark(setting2, "setting2", qc, benchmark, evaluator)
-        process_benchmark(setting2, "setting3", qc, benchmark, evaluator)
+        process_benchmark(setting3, "setting3", qc, benchmark, evaluator)
 
 
     print(

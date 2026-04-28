@@ -166,7 +166,7 @@ auto AxialDecomposer::decompose(
     SingleQubitGateLayer FrontLayer;
     SingleQubitGateLayer MidLayer;
     SingleQubitGateLayer BackLayer;
-    SingleQubitGateLayer NewLayer;
+    SingleQubitGateLayer NewLayer = {};
 
     for (auto gate : layer) {
 
@@ -180,32 +180,33 @@ auto AxialDecomposer::decompose(
       BackLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
           qc::StandardOperation(gate.qubit, qc::RZ, {gate.angles[2]})));
     } // gate::layer
+    if (!layer.empty()) {
+      std::vector<std::unique_ptr<qc::Operation>> GR_plus;
+      std::vector<std::unique_ptr<qc::Operation>> GR_minus;
 
-    std::vector<std::unique_ptr<qc::Operation>> GR_plus;
-    std::vector<std::unique_ptr<qc::Operation>> GR_minus;
+      for (size_t i = 0; i < nQubits; ++i) {
+        GR_plus.emplace_back(std::make_unique<qc::StandardOperation>(
+            i, qc::RX, std::initializer_list<qc::fp>{-qc::PI / 2}));
+        GR_minus.emplace_back(std::make_unique<qc::StandardOperation>(
+            i, qc::RX, std::initializer_list<qc::fp>{qc::PI / 2}));
+      }
 
-    for (size_t i = 0; i < nQubits; ++i) {
-      GR_plus.emplace_back(std::make_unique<qc::StandardOperation>(
-          i, qc::RX, std::initializer_list<qc::fp>{-qc::PI / 2}));
-      GR_minus.emplace_back(std::make_unique<qc::StandardOperation>(
-          i, qc::RX, std::initializer_list<qc::fp>{qc::PI / 2}));
-    }
+      for (auto&& gate : FrontLayer) {
+        NewLayer.push_back(std::move(gate));
+      }
 
-    for (auto&& gate : FrontLayer) {
-      NewLayer.push_back(std::move(gate));
-    }
+      NewLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
+          qc::CompoundOperation(std::move(GR_plus), true)));
 
-    NewLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
-        qc::CompoundOperation(std::move(GR_plus), true)));
+      for (auto&& gate : MidLayer) {
+        NewLayer.push_back(std::move(gate));
+      }
+      NewLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
+          qc::CompoundOperation(std::move(GR_minus), true)));
 
-    for (auto&& gate : MidLayer) {
-      NewLayer.push_back(std::move(gate));
-    }
-    NewLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
-        qc::CompoundOperation(std::move(GR_minus), true)));
-
-    for (auto&& gate : BackLayer) {
-      NewLayer.push_back(std::move(gate));
+      for (auto&& gate : BackLayer) {
+        NewLayer.push_back(std::move(gate));
+      }
     }
     NewSingleQubitLayers.push_back(std::move(NewLayer));
   } // layer::SingleQubitLayers
