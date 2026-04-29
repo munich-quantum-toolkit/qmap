@@ -378,7 +378,7 @@ Returns:
   // Routing-aware Axial Compiler
   //===--------------------------------------------------------------------===//
   nb::class_<na::zoned::RoutingAwareAxialCompiler> routingAwareAxialCompiler(
-      m, "routingAwareAxialCompiler",
+      m, "RoutingAwareAxialCompiler",
       "Routing-aware axial zoned neutral atom compiler.");
   {
     const na::zoned::RoutingAwareAxialCompiler::Config defaultConfig;
