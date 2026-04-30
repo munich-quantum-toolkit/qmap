@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+ * Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
 #include "na/zoned/scheduler/ASAPScheduler.hpp"
@@ -38,8 +48,8 @@ protected:
   Architecture architecture;
   ASAPScheduler::Config schedulerConfig{.maxFillingFactor = .8};
   ASAPScheduler scheduler;
-  NativeGateDecomposer::Config decomposerConfig{.theta_opt_schedule = true,
-                                                .check_final_cond = false};
+  NativeGateDecomposer::Config decomposerConfig{.thetaOptSchedule = true,
+                                                .checkFinalCond = false};
   NativeGateDecomposer decomposer;
   ThetaOptTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
@@ -99,7 +109,8 @@ TEST_F(ThetaOptTest, GraphTest) {
       ::testing::ElementsAre(
           ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(0),
                                 epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(1), epsilon),
+          ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(1),
+                                epsilon),
           ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(2),
                                 epsilon)));
   EXPECT_THAT(graph.get_adjacent(2), ::testing::IsEmpty());
@@ -110,10 +121,12 @@ TEST_F(ThetaOptTest, GraphTest) {
   EXPECT_THAT(
       std::get<NativeGateDecomposer::StructU3>(graph.get_Node_Value(3)).angles,
       ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(0), epsilon),
+          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(0),
+                                epsilon),
           ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(1),
                                 epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(2), epsilon)));
+          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(2),
+                                epsilon)));
   EXPECT_THAT(graph.get_adjacent(3), ::testing::IsEmpty());
 }
 
@@ -399,9 +412,8 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
   EXPECT_THAT(subproblem_graph.get_Node_Value(6).second,
               ::testing::UnorderedElementsAre(5, 6));
   EXPECT_THAT(subproblem_graph.get_adjacent(6),
-              ::testing::UnorderedElementsAre(::testing::Pair(3,qc::PI_2)));
+              ::testing::UnorderedElementsAre(::testing::Pair(3, qc::PI_2)));
 }
-
 
 TEST_F(ThetaOptTest, ShortestPathTest) {
   // Subproblem graph!
@@ -522,11 +534,12 @@ TEST_F(ThetaOptTest, BuildScheduleTest) {
                                      one_qubit_gates.at(2).at(1).angles[1],
                                      one_qubit_gates.at(2).at(1).angles[2]));
 
-  EXPECT_THAT(schedule.second.at(2).at(0),::testing::ElementsAre(0,2));
+  EXPECT_THAT(schedule.second.at(2).at(0), ::testing::ElementsAre(0, 2));
 
-  EXPECT_EQ(schedule.first.at(3).at(0).qubit,0);
-  EXPECT_THAT(schedule.first.at(3).at(0).angles,::testing::ElementsAre(one_qubit_gates.at(3).at(0).angles[0],
-    one_qubit_gates.at(3).at(0).angles[1],
+  EXPECT_EQ(schedule.first.at(3).at(0).qubit, 0);
+  EXPECT_THAT(schedule.first.at(3).at(0).angles,
+              ::testing::ElementsAre(one_qubit_gates.at(3).at(0).angles[0],
+                                     one_qubit_gates.at(3).at(0).angles[1],
                                      one_qubit_gates.at(3).at(0).angles[2]));
 }
 
@@ -626,19 +639,23 @@ TEST_F(ThetaOptTest, CompleteTestSmall) {
       ::testing::ElementsAre(
           ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[0], epsilon),
           ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[2], epsilon)));
+          ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[2],
+                                epsilon)));
 
-  EXPECT_THAT(theta_opt_schedule.second.at(2).front(),::testing::ElementsAre(0,2));
+  EXPECT_THAT(theta_opt_schedule.second.at(2).front(),
+              ::testing::ElementsAre(0, 2));
 
-  EXPECT_EQ(theta_opt_schedule.first.at(3).at(0).qubit,0);
-  EXPECT_THAT(theta_opt_schedule.first.at(3).at(0).angles,::testing::ElementsAre(
-    ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[0], epsilon),
-    ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[1], epsilon),
-    ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[2], epsilon)));
-
+  EXPECT_EQ(theta_opt_schedule.first.at(3).at(0).qubit, 0);
+  EXPECT_THAT(
+      theta_opt_schedule.first.at(3).at(0).angles,
+      ::testing::ElementsAre(
+          ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[0], epsilon),
+          ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[1], epsilon),
+          ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[2],
+                                epsilon)));
 }
 
 TEST_F(ThetaOptTest, CompleteTestBig) {
-  //Circuit BIG
+  // Circuit BIG
 }
 } // namespace na::zoned

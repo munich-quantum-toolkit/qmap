@@ -19,6 +19,10 @@
 
 namespace na::zoned {
 
+NativeGateDecomposer::NativeGateDecomposer(const Architecture&,
+                                           const Config& config) {
+  config_ = config;
+}
 auto NativeGateDecomposer::convertGateToQuaternion(
     std::reference_wrapper<const qc::Operation> op) -> Quaternion {
   assert(op.get().getNqubits() == 1);
@@ -212,7 +216,7 @@ auto NativeGateDecomposer::decompose(
   std::vector<std::vector<StructU3>> U3Layers =
       transformToU3(schedule.first, nQubits);
   std::vector<TwoQubitGateLayer> NewTwoQubitGateLayers = schedule.second;
-  if (config_.theta_opt_schedule) {
+  if (config_.thetaOptSchedule) {
     auto thetaOptSchedule =
         schedule_theta_opt(std::pair(U3Layers, NewTwoQubitGateLayers), nQubits);
     U3Layers = thetaOptSchedule.first;
@@ -748,7 +752,7 @@ auto NativeGateDecomposer::schedule_theta_opt(
   std::map<std::size_t, std::pair<std::size_t, std::array<double, 2>>> memo =
       {};
   auto cost = schedule_remaining(v, circuit, sub_prob_graph, base_node, nQubits,
-                                 config_.check_final_cond, memo);
+                                 config_.checkFinalCond, memo);
   // TODO: Create Schedule from Subproblem Graph
   std::pair<std::vector<std::vector<StructU3>>, std::vector<TwoQubitGateLayer>>
       final_circuit = build_schedule(circuit, sub_prob_graph);

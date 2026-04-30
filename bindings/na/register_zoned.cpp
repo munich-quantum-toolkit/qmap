@@ -378,7 +378,7 @@ Returns:
   // Routing-aware Axial Compiler
   //===--------------------------------------------------------------------===//
   nb::class_<na::zoned::RoutingAwareAxialCompiler> routingAwareAxialCompiler(
-      m, "routingAwareAxialCompiler",
+      m, "RoutingAwareAxialCompiler",
       "Routing-aware axial zoned neutral atom compiler.");
   {
     const na::zoned::RoutingAwareAxialCompiler::Config defaultConfig;
@@ -554,8 +554,8 @@ Returns:
           na::zoned::RoutingAwareNativeGateCompiler::Config config;
           config.logLevel = spdlog::level::from_str(logLevel);
           config.schedulerConfig.maxFillingFactor = maxFillingFactor;
-          config.decomposerConfig = {.theta_opt_schedule = thetaOptSchedule,
-                                     .check_final_cond = checkFinalCond};
+          config.decomposerConfig = {.thetaOptSchedule = thetaOptSchedule,
+                                     .checkFinalCond = checkFinalCond};
           config.layoutSynthesizerConfig.placerConfig = {
               .useWindow = useWindow,
               .windowMinWidth = windowMinWidth,
@@ -580,8 +580,8 @@ Returns:
         "log_level"_a = spdlog::level::to_short_c_str(defaultConfig.logLevel),
         "max_filling_factor"_a = defaultConfig.schedulerConfig.maxFillingFactor,
         "theta_opt_schedule"_a =
-            defaultConfig.decomposerConfig.theta_opt_schedule,
-        "check_final_cond"_a = defaultConfig.decomposerConfig.check_final_cond,
+            defaultConfig.decomposerConfig.thetaOptSchedule,
+        "check_final_cond"_a = defaultConfig.decomposerConfig.checkFinalCond,
         "use_window"_a =
             defaultConfig.layoutSynthesizerConfig.placerConfig.useWindow,
         "window_min_width"_a =
