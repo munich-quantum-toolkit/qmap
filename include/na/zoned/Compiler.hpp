@@ -226,7 +226,7 @@ public:
     SPDLOG_DEBUG("Synthesizing layout...");
     const auto layoutSynthesisStart = std::chrono::system_clock::now();
     const auto& [placement, routing] = LayoutSynthesizer::synthesize(
-        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
+        qComp.getNqubits(), decomposedSchedule.second, reuseQubits);
     const auto layoutSynthesisEnd = std::chrono::system_clock::now();
     statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
