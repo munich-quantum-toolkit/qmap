@@ -318,9 +318,7 @@ auto NativeGateDecomposer::shortest_path_to_start(
     -> std::pair<std::vector<std::size_t>, double> {
   std::vector<std::pair<std::vector<std::size_t>, double>> possible_paths = {};
   // Check if leaf nodes are reached
-
-  // TODO: Check if Path cost takes into account edge weight from current node
-  // to next node!!!
+  // Base Case:
   for (auto edge : subproblem_graph.get_adjacent(current_node)) {
     if (leaf_nodes.contains(edge.first)) {
       possible_paths.push_back({std::pair<std::vector<std::size_t>, double>(
@@ -337,7 +335,7 @@ auto NativeGateDecomposer::shortest_path_to_start(
       possible_paths.push_back(path);
     }
   }
-  // Base Case:
+
   // Choose shortest Paths
   auto min_length = possible_paths.at(0).first.size();
   std::vector<std::pair<std::vector<std::size_t>, double>> shortest_paths = {};
@@ -688,7 +686,11 @@ auto NativeGateDecomposer::schedule_remaining(
   // TODO: Base Case-> V_rem is empty
   if (v[2].empty()) {
     // TODO:DEcide if I need if to check for TWO QUBIT
-    cost = std::get<StructU3>(circuit.get_Node_Value(v[1].at(0))).angles[0];
+    if (v[1].empty()) {
+      cost = 0;
+    } else {
+      cost = std::get<StructU3>(circuit.get_Node_Value(v[1].at(0))).angles[0];
+    }
     for (std::size_t i : v[1]) {
       if (std::get<StructU3>(circuit.get_Node_Value(i)).angles[0] > cost) {
         cost = std::get<StructU3>(circuit.get_Node_Value(i)).angles[0];

@@ -655,7 +655,22 @@ TEST_F(ThetaOptTest, CompleteTestSmall) {
                                 epsilon)));
 }
 
-TEST_F(ThetaOptTest, CompleteTestBig) {
+TEST_F(ThetaOptTest, CompleteTest) {
+  qc::QuantumComputation qc(4);
+  qc.u(qc::PI, qc::PI_2, qc::PI_4, 0);
+  qc.u(qc::PI_4, qc::PI_2, qc::PI_2, 1);
+  qc.u(qc::PI_2, qc::PI_2, qc::PI_2, 2);
+  qc.cz(1, 2);
+  qc.cz(2, 3);
+  // qc.cz(0,1);
+  qc.u(qc::PI_2, qc::PI_4, qc::PI_2, 2);
+  qc.u(qc::PI_2, qc::PI_2, qc::PI_4, 3);
+  qc.cz(2, 3);
+  qc.u(qc::PI, qc::PI_2, qc::PI_4, 2);
+  auto schedule = scheduler.schedule(qc);
+  auto res = decomposer.decompose(4, schedule);
   // Circuit BIG
+  EXPECT_EQ(res.first.size(), 4);
+
 }
 } // namespace na::zoned

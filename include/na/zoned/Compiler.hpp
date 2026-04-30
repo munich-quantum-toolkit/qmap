@@ -204,9 +204,8 @@ public:
 
     SPDLOG_DEBUG("Decomposing...");
     const auto decomposingStart = std::chrono::system_clock::now();
-    const auto& decomposedSingleQubitGateLayers =
-        SELF.decompose(qComp.getNqubits(), schedule).first;
-    // TODO: How to deal with two Qubit layers
+    const auto& decomposedSchedule =
+        SELF.decompose(qComp.getNqubits(), schedule);
     const auto decomposingEnd = std::chrono::system_clock::now();
     statistics_.decomposingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
@@ -216,7 +215,7 @@ public:
 
     SPDLOG_DEBUG("Analyzing reuse...");
     const auto reuseAnalysisStart = std::chrono::system_clock::now();
-    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
+    const auto& reuseQubits = SELF.analyzeReuse(decomposedSchedule.second);
     const auto reuseAnalysisEnd = std::chrono::system_clock::now();
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -241,7 +240,7 @@ public:
     SPDLOG_DEBUG("Generating code...");
     const auto codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
-        SELF.generate(decomposedSingleQubitGateLayers, placement, routing);
+        SELF.generate(decomposedSchedule.first, placement, routing);
     const auto codeGenerationEnd = std::chrono::system_clock::now();
     assert(code.validate().first);
     statistics_.codeGenerationTime =
