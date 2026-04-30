@@ -34,10 +34,10 @@ class NativeGateDecomposer : public DecomposerBase {
 public:
   /// The configuration of the NativeGateDecomposer
   struct Config {
-    bool theta_opt_schedule = false;
-    bool check_final_cond = false;
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, theta_opt_schedule,
-                                                check_final_cond);
+    bool thetaOptSchedule = false;
+    bool checkFinalCond = false;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Config, thetaOptSchedule,
+                                                checkFinalCond);
   };
 
   /**
@@ -55,8 +55,7 @@ private:
 
 public:
   /// Create a new NativeGateDecomposer.
-  NativeGateDecomposer(const Architecture& /* unused */,
-                       const Config& /* unused */) {}
+  NativeGateDecomposer(const Architecture& /* unused */, const Config& config);
 
   /**
    * @brief Converts commonly used single qubit gates into their Quaternion
