@@ -279,14 +279,14 @@ auto NativeGateDecomposer::decompose(
   return {std::move(NewSingleQubitLayers), NewTwoQubitGateLayers};
 }
 
-auto NativeGateDecomposer::find_shortest_path(
+auto NativeGateDecomposer::find_cheapest_path(
     const DiGraph<std::pair<std::vector<std::size_t>,
                             std::vector<std::size_t>>>& subproblem_graph,
     const std::vector<std::size_t>& leaf_nodes) -> std::vector<size_t> {
   std::set<std::size_t> leaves =
       std::set<std::size_t>(leaf_nodes.begin(), leaf_nodes.end());
   std::pair<std::vector<std::size_t>, double> leaf_path =
-      shortest_path_to_start(subproblem_graph, 0, leaves);
+      cheapest_path_to_start(subproblem_graph, 0, leaves);
   std::ranges::reverse(leaf_path.first);
 
   return {leaf_path.first.begin() + 1, leaf_path.first.end()};
@@ -311,7 +311,7 @@ auto disjunct(const std::set<qc::Qubit>& set1, const std::set<qc::Qubit>& set2)
   return true;
 }
 
-auto NativeGateDecomposer::shortest_path_to_start(
+auto NativeGateDecomposer::cheapest_path_to_start(
     const DiGraph<std::pair<std::vector<std::size_t>,
                             std::vector<std::size_t>>>& subproblem_graph,
     std::size_t current_node, const std::set<std::size_t>& leaf_nodes)
@@ -329,33 +329,21 @@ auto NativeGateDecomposer::shortest_path_to_start(
   if (possible_paths.empty()) {
     for (auto edge : subproblem_graph.get_adjacent(current_node)) {
       auto path =
-          shortest_path_to_start(subproblem_graph, edge.first, leaf_nodes);
+          cheapest_path_to_start(subproblem_graph, edge.first, leaf_nodes);
       path.first.push_back(current_node);
       path.second += edge.second;
       possible_paths.push_back(path);
     }
   }
 
-  // Choose shortest Paths
-  auto min_length = possible_paths.at(0).first.size();
-  std::vector<std::pair<std::vector<std::size_t>, double>> shortest_paths = {};
-  for (const auto& key : possible_paths | std::views::keys) {
-    if (key.size() < min_length) {
-      min_length = key.size();
-    }
-  }
-  for (const auto& path : possible_paths) {
-    if (path.first.size() == min_length) {
-      shortest_paths.push_back(path);
-    }
-  }
-  if (shortest_paths.size() == 1) {
-    return shortest_paths.at(0);
+  // Choose cheapest Paths
+  if (possible_paths.size() == 1) {
+    return possible_paths.at(0);
   }
   // Find shortest path with minimal cost
-  auto min_cost = shortest_paths.at(0).second;
-  auto best_path = shortest_paths.at(0);
-  for (const auto& path : shortest_paths) {
+  auto min_cost = possible_paths.at(0).second;
+  auto best_path = possible_paths.at(0);
+  for (const auto& path : possible_paths) {
     if (path.second < min_cost) {
       min_cost = path.second;
       best_path = path;
@@ -412,24 +400,24 @@ auto NativeGateDecomposer::get_possible_moments(
   // Sort v_0C from highest to lowest theta
   std::vector<std::size_t> v_sort(v0_c);
   auto sort_by_theta = [&circuit](std::size_t a, std::size_t b) -> bool {
-    // TODO: IF CHECK???
-    return std::get<StructU3>(circuit.get_Node_Value(a)).angles[0] >
-           std::get<StructU3>(circuit.get_Node_Value(b)).angles[0];
+    return std::fabs(std::get<StructU3>(circuit.get_Node_Value(a)).angles[0]) >
+           std::fabs(std::get<StructU3>(circuit.get_Node_Value(b)).angles[0]);
   };
   std::ranges::sort(v_sort, sort_by_theta);
   // TODO: Check Condition 1
   std::vector<std::pair<std::array<std::vector<std::size_t>, 2>,
                         std::pair<std::set<qc::Qubit>, qc::fp>>>
       potential_arg = {};
-  auto prev_theta =
-      std::get<StructU3>(circuit.get_Node_Value(v_sort[0])).angles[0];
+  auto prev_theta = std::fabs(
+      std::get<StructU3>(circuit.get_Node_Value(v_sort[0])).angles[0]);
   auto this_theta = prev_theta;
   std::set<qc::Qubit> mk_qubits = {
       std::get<StructU3>(circuit.get_Node_Value(v_sort[0])).qubit};
   for (auto i = 0; static_cast<size_t>(i) < v_sort.size(); i++) {
-    this_theta = std::get<StructU3>(
-                     circuit.get_Node_Value(v_sort[static_cast<size_t>(i)]))
-                     .angles[0];
+    this_theta =
+        std::fabs(std::get<StructU3>(
+                      circuit.get_Node_Value(v_sort[static_cast<size_t>(i)]))
+                      .angles[0]);
     if (this_theta != prev_theta) {
       std::vector<std::size_t> discarded = {v_sort.begin(), v_sort.begin() + i};
       std::vector<std::size_t> kept = {v_sort.begin() + i, v_sort.end()};
@@ -546,9 +534,10 @@ auto NativeGateDecomposer::max_theta(
     const std::vector<std::size_t>& nodes) -> qc::fp {
   qc::fp max_cost = 0;
   for (const auto node : nodes) {
-    if (std::get<StructU3>(circuit.get_Node_Value(node)).angles[0] >=
+    if (std::fabs(std::get<StructU3>(circuit.get_Node_Value(node)).angles[0]) >=
         max_cost) {
-      max_cost = std::get<StructU3>(circuit.get_Node_Value(node)).angles[0];
+      max_cost =
+          std::fabs(std::get<StructU3>(circuit.get_Node_Value(node)).angles[0]);
     }
   }
   return max_cost;
@@ -603,12 +592,10 @@ auto NativeGateDecomposer::build_schedule(
 
   std::vector<std::size_t> leaf_nodes = find_leaf_nodes(subproblem_graph);
   std::vector<std::size_t> minimal_path =
-      find_shortest_path(subproblem_graph, leaf_nodes);
+      find_cheapest_path(subproblem_graph, leaf_nodes);
   std::pair<std::vector<std::vector<StructU3>>, std::vector<TwoQubitGateLayer>>
       schedule = std::pair<std::vector<std::vector<StructU3>>,
                            std::vector<TwoQubitGateLayer>>{};
-  // !!!!TODO:ADD in the check that makes sure SQGL's sandwich schedule: If 1st
-  // v_p empty skip adding it . If not add empty SQGL
 
   std::vector<StructU3> singleQubitGates;
   std::vector<std::array<qc::Qubit, 2>> twoQubitGates;
@@ -689,11 +676,13 @@ auto NativeGateDecomposer::schedule_remaining(
     if (v[1].empty()) {
       cost = 0;
     } else {
-      cost = std::get<StructU3>(circuit.get_Node_Value(v[1].at(0))).angles[0];
+      cost = std::fabs(
+          std::get<StructU3>(circuit.get_Node_Value(v[1].at(0))).angles[0]);
     }
     for (std::size_t i : v[1]) {
       if (std::get<StructU3>(circuit.get_Node_Value(i)).angles[0] > cost) {
-        cost = std::get<StructU3>(circuit.get_Node_Value(i)).angles[0];
+        cost =
+            std::fabs(std::get<StructU3>(circuit.get_Node_Value(i)).angles[0]);
       }
     }
     auto end_node = add_node_to_sub_prob_graph(v[0], v[1], cost,

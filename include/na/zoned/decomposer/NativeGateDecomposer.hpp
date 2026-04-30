@@ -266,32 +266,32 @@ public:
                       size_t nQubits)
       -> DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>;
   /**
-   * @brief Recursively finds the shortest path to the start node of the
+   * @brief Recursively finds the cheapest path to the start node of the
    *       subproblem graph from a set of leaf nodes.
    * @details
    * @param subproblem_graph the subproblem graph to find the path in
    * @param current_node the node of the current function call
    * @param leaf_nodes a set of nodes with no outgoing edges (aka. leaf nodes)
-   * @returns a pair made up of a vector of the indices making up the shortest
+   * @returns a pair made up of a vector of the indices making up the cheapest
    *         path and the path's total cost (the sum of the maximal theta angles
    *         of each moment)
    */
-  static auto shortest_path_to_start(
+  static auto cheapest_path_to_start(
       const DiGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblem_graph,
       std::size_t current_node, const std::set<size_t>& leaf_nodes)
       -> std::pair<std::vector<size_t>, double>;
 
   /**
-   * @brief Finds the shortest (fewest edges) and cheapest (lowest cost) path
+   * @brief Finds the cheapest (lowest cost) path
    * from the start node to a leaf node in a subproblem_graph
    * @details
    * @param subproblem_graph the subproblem graph
    * @param path a vector containing the indices of all leaf nodes of the graph
-   * @returns a vector containing the node inidces of the shortest path through
+   * @returns a vector containing the node inidces of the cheapest path through
    *         the graph
    */
-  static auto find_shortest_path(
+  static auto find_cheapest_path(
       const DiGraph<std::pair<std::vector<std::size_t>,
                               std::vector<std::size_t>>>& subproblem_graph,
       const std::vector<std::size_t>& path) -> std::vector<size_t>;

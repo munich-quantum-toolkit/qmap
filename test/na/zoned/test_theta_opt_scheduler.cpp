@@ -280,18 +280,18 @@ TEST_F(ThetaOptTest, NextMomentsCond2Test) {
 
 TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   // Circuit
-  //         ┌─────────────────┐             ┌───────┐
-  //  q_0: ──┤ U(PI,Pi/2,PI/4) ├─────────■───┤   X   ├─────■────
-  //         └─────────────────┘         │   └───────┘     │
-  //                                     │   ┌───────┐     │
-  //  q_1: ──────────────────────────■───■───┤   Y   ├─────│────
-  //                                 │       └───────┘     │
-  //         ┌───────────────────┐   │                     │
-  //  q_2: ──┤ U(PI/4,PI/4,PI/4) ├───■─────────────────────■────
+  //         ┌──────────────────┐             ┌───────┐
+  //  q_0: ──┤ U(-PI,Pi/2,PI/4) ├─────────■───┤   X   ├─────■────
+  //         └──────────────────┘         │   └───────┘     │
+  //                                      │   ┌───────┐     │
+  //  q_1: ──────────────────────────■────■───┤   Y   ├─────│────
+  //                                 │        └───────┘     │
+  //         ┌───────────────────┐   │                      │
+  //  q_2: ──┤ U(PI/4,PI/4,PI/4) ├───■──────────────────────■────
   //         └───────────────────┘
   size_t n = 3;
   qc::QuantumComputation qc(n);
-  qc.u(qc::PI, qc::PI_2, qc::PI_4, 0);
+  qc.u(-qc::PI, qc::PI_2, qc::PI_4, 0);
   qc.u(qc::PI_4, qc::PI_4, qc::PI_4, 2);
   qc.cz(1, 2);
   qc.cz(0, 1);
@@ -321,7 +321,6 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   EXPECT_THAT(moments[0].first[3], ::testing::UnorderedElementsAre(6));
 }
 
-// COND4 Test??
 
 TEST_F(ThetaOptTest, RecursionBaseTest) {
   // Circuit
@@ -415,7 +414,7 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
               ::testing::UnorderedElementsAre(::testing::Pair(3, qc::PI_2)));
 }
 
-TEST_F(ThetaOptTest, ShortestPathTest) {
+TEST_F(ThetaOptTest, CheapestPathTest) {
   // Subproblem graph!
   NativeGateDecomposer::DiGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
@@ -440,7 +439,7 @@ TEST_F(ThetaOptTest, ShortestPathTest) {
   subproblem_graph.add_Edge(11, 13);
   auto leaf_nodes = NativeGateDecomposer::find_leaf_nodes(subproblem_graph);
   auto path =
-      NativeGateDecomposer::find_shortest_path(subproblem_graph, leaf_nodes);
+      NativeGateDecomposer::find_cheapest_path(subproblem_graph, leaf_nodes);
   EXPECT_THAT(leaf_nodes, ::testing::ElementsAre(9, 10, 12, 13));
   EXPECT_THAT(path, ::testing::ElementsAre(3, 6, 10));
 }
@@ -662,15 +661,13 @@ TEST_F(ThetaOptTest, CompleteTest) {
   qc.u(qc::PI_2, qc::PI_2, qc::PI_2, 2);
   qc.cz(1, 2);
   qc.cz(2, 3);
-  // qc.cz(0,1);
+  qc.cz(0, 1);
   qc.u(qc::PI_2, qc::PI_4, qc::PI_2, 2);
   qc.u(qc::PI_2, qc::PI_2, qc::PI_4, 3);
   qc.cz(2, 3);
   qc.u(qc::PI, qc::PI_2, qc::PI_4, 2);
   auto schedule = scheduler.schedule(qc);
   auto res = decomposer.decompose(4, schedule);
-  // Circuit BIG
-  EXPECT_EQ(res.first.size(), 4);
-
+  EXPECT_EQ(res.first.size(), 5);
 }
 } // namespace na::zoned
