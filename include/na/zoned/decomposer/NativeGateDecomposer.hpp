@@ -272,6 +272,7 @@ public:
    * @param subproblem_graph the subproblem graph to find the path in
    * @param current_node the node of the current function call
    * @param leaf_nodes a set of nodes with no outgoing edges (aka. leaf nodes)
+   * @param memo
    * @returns a pair made up of a vector of the indices making up the cheapest
    *         path and the path's total cost (the sum of the maximal theta angles
    *         of each moment)
@@ -279,7 +280,8 @@ public:
   static auto cheapest_path_to_start(
       const DiGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblem_graph,
-      std::size_t current_node, const std::set<size_t>& leaf_nodes)
+      size_t current_node, const std::set<size_t>& leaf_nodes,
+      std::map<size_t, std::pair<std::vector<size_t>, qc::fp>>& memo)
       -> std::pair<std::vector<size_t>, double>;
 
   /**

@@ -13,6 +13,7 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "spdlog/spdlog.h"
 
 #include <variant>
 #include <vector>
@@ -216,6 +217,7 @@ auto NativeGateDecomposer::decompose(
   std::vector<std::vector<StructU3>> U3Layers =
       transformToU3(schedule.first, nQubits);
   std::vector<TwoQubitGateLayer> NewTwoQubitGateLayers = schedule.second;
+
   if (config_.thetaOptSchedule) {
     auto thetaOptSchedule =
         schedule_theta_opt(std::pair(U3Layers, NewTwoQubitGateLayers), nQubits);
@@ -285,8 +287,10 @@ auto NativeGateDecomposer::find_cheapest_path(
     const std::vector<std::size_t>& leaf_nodes) -> std::vector<size_t> {
   std::set<std::size_t> leaves =
       std::set<std::size_t>(leaf_nodes.begin(), leaf_nodes.end());
+  // Memory Map : Subprob NOdes as keys
+  std::map<size_t, std::pair<std::vector<size_t>, qc::fp>> memo = {};
   std::pair<std::vector<std::size_t>, double> leaf_path =
-      cheapest_path_to_start(subproblem_graph, 0, leaves);
+      cheapest_path_to_start(subproblem_graph, 0, leaves, memo);
   std::ranges::reverse(leaf_path.first);
 
   return {leaf_path.first.begin() + 1, leaf_path.first.end()};
@@ -314,10 +318,15 @@ auto disjunct(const std::set<qc::Qubit>& set1, const std::set<qc::Qubit>& set2)
 auto NativeGateDecomposer::cheapest_path_to_start(
     const DiGraph<std::pair<std::vector<std::size_t>,
                             std::vector<std::size_t>>>& subproblem_graph,
-    std::size_t current_node, const std::set<std::size_t>& leaf_nodes)
+    std::size_t current_node, const std::set<std::size_t>& leaf_nodes,
+    std::map<size_t, std::pair<std::vector<size_t>, qc::fp>>& memo)
     -> std::pair<std::vector<std::size_t>, double> {
   std::vector<std::pair<std::vector<std::size_t>, double>> possible_paths = {};
   // Check if leaf nodes are reached
+  if (memo.contains(current_node)) {
+    return memo.at(current_node);
+  }
+
   // Base Case:
   for (auto edge : subproblem_graph.get_adjacent(current_node)) {
     if (leaf_nodes.contains(edge.first)) {
@@ -328,11 +337,16 @@ auto NativeGateDecomposer::cheapest_path_to_start(
   // Recursive Case
   if (possible_paths.empty()) {
     for (auto edge : subproblem_graph.get_adjacent(current_node)) {
-      auto path =
-          cheapest_path_to_start(subproblem_graph, edge.first, leaf_nodes);
+      auto path = cheapest_path_to_start(subproblem_graph, edge.first,
+                                         leaf_nodes, memo);
+      // Check if current node is already in path. If so don't add
+      // std::set<std::size_t> path_nodes=std::set(path.first.begin(),
+      // path.first.end());
+      // if (!path_nodes.contains(current_node)) {
       path.first.push_back(current_node);
       path.second += edge.second;
       possible_paths.push_back(path);
+      // }
     }
   }
 
@@ -349,6 +363,7 @@ auto NativeGateDecomposer::cheapest_path_to_start(
       best_path = path;
     }
   }
+  memo[current_node] = best_path;
   return best_path;
 }
 
@@ -516,14 +531,16 @@ auto NativeGateDecomposer::convert_circ_to_dag(
       qubit_paths.at(gate[1]).push_back(node);
     }
   }
+  SPDLOG_DEBUG("Added Nodes");
   for (const auto& s : schedule.first.back()) {
     size_t node = graph.add_Node(s);
     qubit_paths.at(s.qubit).push_back(node);
   }
-
   for (std::size_t i = 0; i < qubit_paths.size(); ++i) {
-    for (std::size_t op = 0; op < qubit_paths.at(i).size() - 1; ++op) {
-      graph.add_Edge(qubit_paths.at(i).at(op), qubit_paths.at(i).at(op + 1));
+    if (qubit_paths.at(i).size() > 0) {
+      for (std::size_t op = 0; op < (qubit_paths.at(i).size() - 1); ++op) {
+        graph.add_Edge(qubit_paths.at(i).at(op), qubit_paths.at(i).at(op + 1));
+      }
     }
   }
   return graph;
