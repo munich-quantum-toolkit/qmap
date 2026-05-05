@@ -66,6 +66,12 @@ visualization = [
     "walkerlayout>=1.0.2",
     "ipywidgets>=8.1.7",
 ]
+photonics = [
+    "numpy>=1.26.0",
+    "perceval-quandela>=1.1.0",
+    "pandas>=2.0.0",
+    # torch must be installed separately: https://pytorch.org/get-started/locally/
+]
 
 [project.urls]
 Homepage = "https://github.com/munich-quantum-toolkit/qmap"
@@ -378,6 +384,12 @@ exclude = [
     "docs/**",
     "eval/**",
 ]
+
+[[tool.ty.overrides]]
+# torch, perceval-quandela, and pandas are optional photonics deps absent from the
+# lint environment; suppress only import resolution for ph/, all other checks apply.
+include = ["python/mqt/qmap/ph/**", "test/python/ph/**"]
+rules.unresolved-import = "ignore"
 
 
 [dependency-groups]
