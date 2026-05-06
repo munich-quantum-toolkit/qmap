@@ -1,5 +1,11 @@
 """Batch data collection and aggregation for the photonic compiler pipeline."""
 
+# ------------------------------------------------------------------------------
+# Setup used for QCE26 paper submission.
+# Future structure of the code will focus on the compilation,
+# not the simulation and data collection.
+# ------------------------------------------------------------------------------
+
 from __future__ import annotations
 
 import os
