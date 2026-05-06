@@ -132,3 +132,8 @@ class TestRunValueRanges:
 
     def test_baseline_loss_below_maximum(self, run_result):
         assert float(run_result.baseline_loss) <= self.LOSSES_MAX
+
+    def test_proposed_yield_exceeds_baseline(self, run_result):
+        assert float(run_result.performance["system_yield"]) >= float(
+            run_result.baseline_performance["system_yield"]
+        )
