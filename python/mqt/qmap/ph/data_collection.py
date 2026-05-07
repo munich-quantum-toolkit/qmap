@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Batch data collection and aggregation for the photonic compiler pipeline."""
 
 # ------------------------------------------------------------------------------
@@ -8,19 +16,22 @@
 
 from __future__ import annotations
 
-import os
+import pathlib
 from dataclasses import dataclass
 from itertools import product
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import torch
 
 from .baseline import embed_target_unitary_into_chip
-from .subcircuit_compilation import OptimizationConfig, compile_subcircuit
 from .graph import generate_beam_splitter_matrix
+from .subcircuit_compilation import OptimizationConfig, compile_subcircuit
 from .unitary_to_phase_compilation import get_haar_random_unitary
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @dataclass(frozen=True)
@@ -123,7 +134,8 @@ def collect_pipeline_results(
     phase_errors_list = list(phase_errors)
 
     if repeats_per_unitary < 1:
-        raise ValueError("repeats_per_unitary must be >= 1")
+        msg = "repeats_per_unitary must be >= 1"
+        raise ValueError(msg)
 
     # Precompute hardware parameters once per num_modes.
     hardware_cache: dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
@@ -158,15 +170,14 @@ def collect_pipeline_results(
 
         for phase_error in phase_errors_list:
             for unitary_index in range(num_unitaries_per_setup):
-
                 unitary_seed = target_dim + unitary_index
-                U_target = get_haar_random_unitary(
+                target_unitary = get_haar_random_unitary(
                     target_dim,
                     torch.Generator().manual_seed(unitary_seed),
                     dtype=torch.complex128,
                 )
-                U_target_embedded = embed_target_unitary_into_chip(
-                    U_target.cpu().numpy(),
+                target_unitary_embedded = embed_target_unitary_into_chip(
+                    target_unitary.cpu().numpy(),
                     chip_dim=num_modes,
                     target_dim=target_dim,
                 )
@@ -187,8 +198,8 @@ def collect_pipeline_results(
                         beam_splitter_reflectivities=beam_splitter_reflectivities,
                         input_transmissions=input_transmissions,
                         output_transmissions=output_transmissions,
-                        U_target=U_target,
-                        U_target_embedded=U_target_embedded,
+                        target_unitary=target_unitary,
+                        target_unitary_embedded=target_unitary_embedded,
                         phase_error=phase_error,
                         config=config,
                     )
@@ -211,29 +222,27 @@ def collect_pipeline_results(
                 mean_compute_time, _ = _mean_std(normal_compute_times)
                 mean_baseline_compute_time, _ = _mean_std(baseline_compute_times)
 
-                rows.append(
-                    {
-                        "Input Losses": input_losses,
-                        "Output Losses": output_losses,
-                        "Ideal Beam Splitters": ideal_beam_splitters,
-                        "num_modes": num_modes,
-                        "target_dim": target_dim,
-                        "unitary_index": unitary_index,
-                        "unitary_seed": unitary_seed,
-                        "phase_error": phase_error,
-                        "repeats_per_unitary": repeats_per_unitary,
-                        "avg_system_yield": mean_normal_yield,
-                        "avg_baseline_system_yield": mean_baseline_yield,
-                        "avg_baseline_tvd": mean_baseline_tvd,
-                        "avg_tvd": mean_normal_tvd,
-                        "tvd_difference": mean_normal_tvd - mean_baseline_tvd,
-                        "system_yield_difference": mean_normal_yield - mean_baseline_yield,
-                        "avg_loss": mean_loss,
-                        "avg_baseline_loss": mean_baseline_loss,
-                        "avg_compute_time": mean_compute_time,
-                        "avg_baseline_compute_time": mean_baseline_compute_time,
-                    }
-                )
+                rows.append({
+                    "Input Losses": input_losses,
+                    "Output Losses": output_losses,
+                    "Ideal Beam Splitters": ideal_beam_splitters,
+                    "num_modes": num_modes,
+                    "target_dim": target_dim,
+                    "unitary_index": unitary_index,
+                    "unitary_seed": unitary_seed,
+                    "phase_error": phase_error,
+                    "repeats_per_unitary": repeats_per_unitary,
+                    "avg_system_yield": mean_normal_yield,
+                    "avg_baseline_system_yield": mean_baseline_yield,
+                    "avg_baseline_tvd": mean_baseline_tvd,
+                    "avg_tvd": mean_normal_tvd,
+                    "tvd_difference": mean_normal_tvd - mean_baseline_tvd,
+                    "system_yield_difference": mean_normal_yield - mean_baseline_yield,
+                    "avg_loss": mean_loss,
+                    "avg_baseline_loss": mean_baseline_loss,
+                    "avg_compute_time": mean_compute_time,
+                    "avg_baseline_compute_time": mean_baseline_compute_time,
+                })
 
     df = pd.DataFrame(rows)
 
@@ -286,15 +295,13 @@ def export_results_table(
         ImportError: If ``excel_path`` is provided but ``openpyxl`` is not
             installed.
     """
-    os.makedirs(os.path.dirname(csv_path) or ".", exist_ok=True)
+    pathlib.Path(pathlib.Path(csv_path).parent or ".").mkdir(exist_ok=True, parents=True)
     df.to_csv(csv_path, index=False)
 
     if excel_path is not None:
-        os.makedirs(os.path.dirname(excel_path) or ".", exist_ok=True)
+        pathlib.Path(pathlib.Path(excel_path).parent or ".").mkdir(exist_ok=True, parents=True)
         try:
             df.to_excel(excel_path, index=False)
         except ImportError as exc:
-            raise ImportError(
-                "Excel export requires an engine such as openpyxl. "
-                "Install it via pip install openpyxl."
-            ) from exc
+            msg = "Excel export requires an engine such as openpyxl. Install it via pip install openpyxl."
+            raise ImportError(msg) from exc

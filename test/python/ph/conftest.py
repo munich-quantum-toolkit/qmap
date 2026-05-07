@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Pytest configuration for the mqt.qmap.ph test suite.
 
 Stubs the mqt and mqt.qmap parent packages so the photonics subpackage is
@@ -24,28 +32,28 @@ for _pkg, _path in [
 
 sys.path.insert(0, str(_PYTHON_SRC))
 
-import pytest  # noqa: E402
+import numpy as np
+import pytest
+import torch
+
+from mqt.qmap.ph.graph import generate_beam_splitter_matrix
+from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
 
 
 @pytest.fixture
 def ideal_bs_chip4():
-    from mqt.qmap.ph.graph import generate_beam_splitter_matrix
-
+    """Return ideal 50/50 beam-splitter reflectivities for a 4-mode chip."""
     return generate_beam_splitter_matrix(chip_size=4, ideal_bs=True)
 
 
 @pytest.fixture
 def ones_transmissions_chip4():
-    import numpy as np
-
+    """Return all-ones transmission vector for a 4-mode chip."""
     return np.ones(4)
 
 
 @pytest.fixture
 def haar_unitary_dim2():
-    import torch
-
-    from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
-
+    """Return a Haar-random 2x2 unitary with a fixed seed."""
     rng = torch.Generator().manual_seed(7)
     return get_haar_random_unitary(2, rng, dtype=torch.complex128)

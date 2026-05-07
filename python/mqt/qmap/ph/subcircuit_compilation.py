@@ -1,17 +1,24 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Photonic MZI-mesh subcircuit compiler."""
 
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import perceval as pcvl
 import torch
 from perceval import algorithm
 
-from .baseline import embed_target_unitary_into_chip, get_baseline_active_cols, get_baseline_input_ports
+from .baseline import get_baseline_active_cols, get_baseline_input_ports
 from .graph import construct_graph
 from .perceval_simulation import create_mzi_chip, evaluate_chip_performance, simulate_with_loss
 from .routing import (
@@ -24,6 +31,9 @@ from .routing import (
 )
 from .routing_to_phases import get_effective_params_and_mask, reshape_flattened_params_to_grid
 from .unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 @dataclass
@@ -82,15 +92,15 @@ def compile_subcircuit(
     beam_splitter_reflectivities: np.ndarray,
     input_transmissions: np.ndarray,
     output_transmissions: np.ndarray,
-    U_target: torch.Tensor,
-    U_target_embedded: torch.Tensor,
+    target_unitary: torch.Tensor,
+    target_unitary_embedded: torch.Tensor,
     phase_error: float,
     config: OptimizationConfig | None = None,
 ) -> RunResult:
     """Compile a target unitary onto the chip and evaluate against the baseline.
 
     ``chip_dim`` is derived from ``len(input_transmissions)`` and
-    ``target_dim`` from ``U_target.shape[0]``.
+    ``target_dim`` from ``target_unitary.shape[0]``.
 
     The proposed compiler searches for the optimal photon routing through the
     chip before optimising the phase-shifter parameters for the found
@@ -109,9 +119,9 @@ def compile_subcircuit(
             ``(chip_dim,)``.  Its length determines ``chip_dim``.
         output_transmissions: Per-mode output transmission coefficients, shape
             ``(chip_dim,)``.
-        U_target: Target unitary tensor of shape ``(target_dim, target_dim)``.
+        target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
             Its first dimension determines ``target_dim``.
-        U_target_embedded: ``U_target`` embedded into a ``(chip_dim, chip_dim)``
+        target_unitary_embedded: ``target_unitary`` embedded into a ``(chip_dim, chip_dim)``
             identity matrix (used by the baseline optimiser).
         phase_error: Standard deviation of Gaussian phase noise applied to
             each phase shifter during Perceval simulation.
@@ -126,7 +136,7 @@ def compile_subcircuit(
         config = OptimizationConfig()
 
     chip_dim = len(input_transmissions)
-    target_dim = int(U_target.shape[0])
+    target_dim = int(target_unitary.shape[0])
 
     proposed_compiler_start = time.time()
 
@@ -146,10 +156,8 @@ def compile_subcircuit(
         best_node_sequence, target_dim
     )
     converted_input_ports = convert_input_ports(input_ports, chip_dim)
-    converted_output_ports = convert_output_ports(output_ports, chip_dim)
-    input_ports_for_computation_zone = get_input_ports_for_computation_zone(
-        active_cols_computation_zone, target_dim
-    )
+    convert_output_ports(output_ports, chip_dim)
+    input_ports_for_computation_zone = get_input_ports_for_computation_zone(active_cols_computation_zone, target_dim)
 
     baseline_active_cols = get_baseline_active_cols(target_dim)
     baseline_input_ports = get_baseline_input_ports(baseline_active_cols, chip_dim)
@@ -163,12 +171,12 @@ def compile_subcircuit(
                 permutation_matrix[i, i + 1] = 1
             else:
                 permutation_matrix[i, i - 1] = 1
-        U_target_opt = U_target @ permutation_matrix
+        target_unitary_opt = target_unitary @ permutation_matrix
     else:
-        U_target_opt = U_target
+        target_unitary_opt = target_unitary
 
     result = optimize_unitary_subcircuit_parameters(
-        U_target=U_target_opt,
+        target_unitary=target_unitary_opt,
         beam_splitter_reflectivities=beam_splitter_reflectivities,
         phase_shifter_transmissions=None,
         movement_mask=movement_mask,
@@ -210,7 +218,7 @@ def compile_subcircuit(
     baseline_start_time = time.time()
 
     baseline_result = optimize_unitary_subcircuit_parameters(
-        U_target=U_target_embedded,
+        target_unitary=target_unitary_embedded,
         beam_splitter_reflectivities=beam_splitter_reflectivities,
         phase_shifter_transmissions=None,
         lr=config.lr,
@@ -240,7 +248,7 @@ def compile_subcircuit(
     # -------------------------------------------------------------------------
     # Ground-truth distributions via ideal Perceval simulation.
     # -------------------------------------------------------------------------
-    pcvl_u = pcvl.Unitary(pcvl.MatrixN(U_target))
+    pcvl_u = pcvl.Unitary(pcvl.MatrixN(target_unitary))
 
     ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
     ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
@@ -269,14 +277,14 @@ def compile_subcircuit(
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
     )
 
-    processor, probability_distribution = simulate_with_loss(
+    _processor, probability_distribution = simulate_with_loss(
         virtual_chip,
         chip_dim,
         input_state=converted_input_ports,
         input_transmissions=input_transmissions,
         output_transmissions=output_transmissions,
     )
-    baseline_processor, baseline_probability_distribution = simulate_with_loss(
+    _baseline_processor, baseline_probability_distribution = simulate_with_loss(
         baseline_virtual_chip,
         chip_dim,
         input_state=baseline_input_ports,

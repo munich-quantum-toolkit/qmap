@@ -1,17 +1,28 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Perceval-based chip simulation and performance evaluation."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import perceval as pcvl
 from perceval.components import BS, PS
 
+if TYPE_CHECKING:
+    import torch
+
 
 def create_mzi_chip(
     bs_list: np.ndarray,
-    ps_matrix: Any,
+    ps_matrix: torch.Tensor | np.ndarray,
     phase_error: float | None,
     chip_size: int,
     exclude_edge_phase_shifters: bool = False,
@@ -47,7 +58,7 @@ def create_mzi_chip(
     if phase_error is not None:
         ps_matrix = np.asarray(ps_matrix, dtype=np.float64)
         noise = np.random.default_rng().normal(loc=0.0, scale=phase_error, size=ps_matrix.shape)
-        ps_matrix = ps_matrix + noise
+        ps_matrix += noise
 
     for layer in range(mzi_layers):
         is_full_layer = layer % 2 == 0

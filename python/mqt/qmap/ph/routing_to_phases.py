@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Utilities for converting routing masks to phase-shifter parameter grids."""
 
 from __future__ import annotations
@@ -114,7 +122,7 @@ def get_effective_params_and_mask(
             single_edges = [0, num_modes - 1]
 
         for mode in single_edges:
-            if refined_mask[mode, layer].item() in (MaskState.CROSS, MaskState.BAR):
+            if refined_mask[mode, layer].item() in {MaskState.CROSS, MaskState.BAR}:
                 effective_params[mode, layer] = 0.0
                 grad_mask[mode, layer] = 0.0
 
@@ -198,10 +206,7 @@ def reshape_flattened_params_to_grid(
     expected_size = num_modes**2 - 2 if exclude_edge_phase_shifters else num_modes**2
 
     if params_1d.numel() != expected_size:
-        msg = (
-            f"Size mismatch: expected {expected_size} parameters for "
-            f"{num_modes} modes, but got {params_1d.numel()}."
-        )
+        msg = f"Size mismatch: expected {expected_size} parameters for {num_modes} modes, but got {params_1d.numel()}."
         raise ValueError(msg)
 
     grid_2d = torch.zeros((num_modes, num_modes), dtype=params_1d.dtype, device=params_1d.device)

@@ -1,11 +1,22 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Shortest-path routing and port inference for the photonic compiler."""
 
 from __future__ import annotations
 
 from enum import IntEnum
+from typing import TYPE_CHECKING
 
-import rustworkx as rx
 import torch
+
+if TYPE_CHECKING:
+    import rustworkx as rx
 
 
 class MaskState(IntEnum):
@@ -16,9 +27,9 @@ class MaskState(IntEnum):
     computation zone are free optimisation parameters.
     """
 
-    MZI      = 0  # Compute: both phases are learnable
-    BAR      = 1  # Routing: passes light straight through (0, π)
-    CROSS    = 2  # Routing: swaps ports (0, 0)
+    MZI = 0  # Compute: both phases are learnable
+    BAR = 1  # Routing: passes light straight through (0, π)
+    CROSS = 2  # Routing: swaps ports (0, 0)
     TOP_ONLY = 3  # Virtual PS: top is param, bottom is top + π
     BOT_ONLY = 4  # Virtual PS: bottom is param, top is bottom + π
 
@@ -150,7 +161,8 @@ def infer_input_computation_and_output_ports(
         ValueError: If ``route`` contains fewer than two nodes.
     """
     if len(route) < 2:
-        raise ValueError("Route must have at least 2 nodes (source and sink)")
+        msg = "Route must have at least 2 nodes (source and sink)"
+        raise ValueError(msg)
 
     input_index = route[1]
     computation_index = route[-2]
@@ -158,15 +170,9 @@ def infer_input_computation_and_output_ports(
     input_ports_cache = [(input_index * 2) + i for i in range(target_dim)]
     input_ports = input_ports_cache[::2]
 
-    if computation_index % 2 == 0:
-        active_cols = list(range(0, target_dim, 2))
-    else:
-        active_cols = list(range(1, target_dim, 2))
+    active_cols = list(range(0, target_dim, 2)) if computation_index % 2 == 0 else list(range(1, target_dim, 2))
 
-    if computation_index % 2 == 1:
-        output_index_cache = computation_index - 1
-    else:
-        output_index_cache = computation_index
+    output_index_cache = computation_index - 1 if computation_index % 2 == 1 else computation_index
 
     output_ports = [output_index_cache + i for i in range(target_dim)]
 
@@ -266,24 +272,28 @@ def route_to_movement_mask(
         if i == 2:
             if int(route[i - 1] * 2) == node:
                 continue
-            elif int(route[i - 1] * 2) + 1 == node:
+            if int(route[i - 1] * 2) + 1 == node:
                 movement_mask[int(route[i - 1] * 2) : int(route[i - 1] * 2 + target_dim), 0] = MaskState.CROSS
             else:
                 msg = (
-                    f"Invalid edge from input_node_{route[i-1]} to node_{node}. "
-                    f"Must be {2 * route[i-1]} (bar) or {2 * route[i-1] + 1} (cross)"
+                    f"Invalid edge from input_node_{route[i - 1]} to node_{node}. "
+                    f"Must be {2 * route[i - 1]} (bar) or {2 * route[i - 1] + 1} (cross)"
                 )
                 raise ValueError(msg)
         elif i % 2 == 0:
             if int(route[i - 1]) == node:
                 continue
-            elif route[i - 1] != route[i]:
-                movement_mask[int(route[i - 1] // 2 * 2) : int(route[i - 1] // 2 * 2 + target_dim), i - 2] = MaskState.CROSS
+            if route[i - 1] != node:
+                movement_mask[int(route[i - 1] // 2 * 2) : int(route[i - 1] // 2 * 2 + target_dim), i - 2] = (
+                    MaskState.CROSS
+                )
         elif i % 2 == 1:
             if int(route[i - 1]) == node:
                 continue
-            elif route[i - 1] != route[i]:
-                movement_mask[int((route[i - 1] - 1) // 2 * 2 + 1) : int((route[i - 1] - 1) // 2 * 2 + target_dim + 1), i - 2] = MaskState.CROSS
+            if route[i - 1] != node:
+                movement_mask[
+                    int((route[i - 1] - 1) // 2 * 2 + 1) : int((route[i - 1] - 1) // 2 * 2 + target_dim + 1), i - 2
+                ] = MaskState.CROSS
 
     output_index = route[-2]
     mode_start = int((output_index // 2) * 2)

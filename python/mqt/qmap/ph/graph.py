@@ -1,11 +1,22 @@
+# Copyright (c) 2023 - 2026 Chair for Design Automation, TUM
+# Copyright (c) 2025 - 2026 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Routing graph construction and fidelity scoring for the photonic compiler."""
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import rustworkx as rx
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def bar_fidelity(r: Sequence[float]) -> float:
@@ -266,14 +277,12 @@ def get_edge_fidelity_even_graph_layer(
     elif abs(source_node_idx - target_node_idx) == 1:
         edge_type = "cross"
     else:
-        msg = (
-            f"Invalid edge: nodes {source_node_idx} and {target_node_idx} "
-            "must be identical or adjacent"
-        )
+        msg = f"Invalid edge: nodes {source_node_idx} and {target_node_idx} must be identical or adjacent"
         raise ValueError(msg)
 
     if target_dim % 2 != 0:
-        raise ValueError(f"target_dim must be even, got {target_dim}")
+        msg_0 = f"target_dim must be even, got {target_dim}"
+        raise ValueError(msg_0)
 
     chip_layer = graph_layer + 1  # even graph layer → next odd chip layer
     mzis_per_even_chip_layer = chip_dim // 2
@@ -337,14 +346,12 @@ def get_edge_fidelity_odd_graph_layer(
     elif abs(source_node_idx - target_node_idx) == 1:
         edge_type = "cross"
     else:
-        msg = (
-            f"Invalid edge: nodes {source_node_idx} and {target_node_idx} "
-            "must be identical or adjacent"
-        )
+        msg = f"Invalid edge: nodes {source_node_idx} and {target_node_idx} must be identical or adjacent"
         raise ValueError(msg)
 
     if target_dim % 2 != 0:
-        raise ValueError(f"target_dim must be even, got {target_dim}")
+        msg_0 = f"target_dim must be even, got {target_dim}"
+        raise ValueError(msg_0)
 
     chip_layer = graph_layer - 1  # odd graph layer → preceding even chip layer
     mzis_per_even_chip_layer = chip_dim // 2
@@ -410,22 +417,18 @@ def construct_graph(
     number_nodes_first_layer = int((chip_dim - target_dim) / 2 + 1)
     number_nodes_intermediate_layers = int(chip_dim - target_dim + 2)
 
-    bar_fidelities, cross_fidelities = determine_routing_fidelitites(
-        beam_splitter_reflectivities, chip_dim
-    )
+    bar_fidelities, cross_fidelities = determine_routing_fidelitites(beam_splitter_reflectivities, chip_dim)
 
     # Photons enter on every other mode (dual-rail), so only even-indexed
     # transmissions are relevant for input cost.
     input_transmissions = input_transmission[::2]
     input_window = target_dim // 2
     input_transmissions_per_edge = [
-        -np.log(np.prod(input_transmissions[i : i + input_window]))
-        for i in range(number_nodes_first_layer)
+        -np.log(np.prod(input_transmissions[i : i + input_window])) for i in range(number_nodes_first_layer)
     ]
 
     output_transmissions_per_edge = [
-        -np.log(np.prod(output_transmission[i : i + target_dim]))
-        for i in range(0, int(chip_dim - target_dim + 1), 2)
+        -np.log(np.prod(output_transmission[i : i + target_dim])) for i in range(0, int(chip_dim - target_dim + 1), 2)
     ]
 
     layers: list = []
@@ -435,37 +438,28 @@ def construct_graph(
         if layer == 0:
             current_layer_nodes = graph.add_nodes_from(["source"])
         elif layer == 1:
-            current_layer_nodes = graph.add_nodes_from(
-                [f"input_node_{i}" for i in range(number_nodes_first_layer)]
-            )
+            current_layer_nodes = graph.add_nodes_from([f"input_node_{i}" for i in range(number_nodes_first_layer)])
         elif layer == number_of_layers - 1:
             current_layer_nodes = graph.add_nodes_from(["sink"])
         else:
-            current_layer_nodes = graph.add_nodes_from(
-                [f"node_{i}" for i in range(number_nodes_intermediate_layers)]
-            )
+            current_layer_nodes = graph.add_nodes_from([f"node_{i}" for i in range(number_nodes_intermediate_layers)])
         layers.append(current_layer_nodes)
 
     for layer in range(number_of_layers - 1):
         if layer == 0:
-            edges.append(
-                [
-                    (layers[layer][0], layers[layer + 1][i], input_transmissions_per_edge[i])
-                    for i in range(number_nodes_first_layer)
-                ]
-            )
+            edges.append([
+                (layers[layer][0], layers[layer + 1][i], input_transmissions_per_edge[i])
+                for i in range(number_nodes_first_layer)
+            ])
         elif layer == 1:
             bar_costs = [
-                -np.log(np.prod(bar_fidelities[i : i + target_dim // 2 - 1]))
-                for i in range(number_nodes_first_layer)
+                -np.log(np.prod(bar_fidelities[i : i + target_dim // 2 - 1])) for i in range(number_nodes_first_layer)
             ]
             cross_costs = [
-                -np.log(np.prod(cross_fidelities[i : i + target_dim // 2 - 1]))
-                for i in range(number_nodes_first_layer)
+                -np.log(np.prod(cross_fidelities[i : i + target_dim // 2 - 1])) for i in range(number_nodes_first_layer)
             ]
             current_edges = [
-                (layers[layer][i], layers[layer + 1][2 * i], bar_costs[i])
-                for i in range(number_nodes_first_layer)
+                (layers[layer][i], layers[layer + 1][2 * i], bar_costs[i]) for i in range(number_nodes_first_layer)
             ]
             current_edges += [
                 (layers[layer][i], layers[layer + 1][2 * i + 1], cross_costs[i])
@@ -473,19 +467,19 @@ def construct_graph(
             ]
             edges.append(current_edges)
         elif layer == number_of_layers - 2:
-            edges.append(
-                [
-                    (layers[layer][i], layers[layer + 1][0], output_transmissions_per_edge[i // 2])
-                    for i in range(number_nodes_intermediate_layers)
-                ]
-            )
+            edges.append([
+                (layers[layer][i], layers[layer + 1][0], output_transmissions_per_edge[i // 2])
+                for i in range(number_nodes_intermediate_layers)
+            ])
         elif layer % 2 == 1:
             n = number_nodes_intermediate_layers
             current_edges = [
                 (
                     layers[layer][i],
                     layers[layer + 1][i],
-                    get_edge_fidelity_odd_graph_layer(layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim),
+                    get_edge_fidelity_odd_graph_layer(
+                        layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim
+                    ),
                 )
                 for i in range(n)
             ]
@@ -493,7 +487,9 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i + 1],
-                    get_edge_fidelity_odd_graph_layer(layer, i, i + 1, bar_fidelities, cross_fidelities, chip_dim, target_dim),
+                    get_edge_fidelity_odd_graph_layer(
+                        layer, i, i + 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
+                    ),
                 )
                 for i in range(0, n, 2)
             ]
@@ -501,7 +497,9 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i - 1],
-                    get_edge_fidelity_odd_graph_layer(layer, i, i - 1, bar_fidelities, cross_fidelities, chip_dim, target_dim),
+                    get_edge_fidelity_odd_graph_layer(
+                        layer, i, i - 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
+                    ),
                 )
                 for i in range(1, n, 2)
             ]
@@ -512,7 +510,9 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i],
-                    get_edge_fidelity_even_graph_layer(layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim),
+                    get_edge_fidelity_even_graph_layer(
+                        layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim
+                    ),
                 )
                 for i in range(n)
             ]
@@ -520,7 +520,9 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i + 1],
-                    get_edge_fidelity_even_graph_layer(layer, i, i + 1, bar_fidelities, cross_fidelities, chip_dim, target_dim),
+                    get_edge_fidelity_even_graph_layer(
+                        layer, i, i + 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
+                    ),
                 )
                 for i in range(1, n - 1, 2)
             ]
@@ -528,7 +530,9 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i - 1],
-                    get_edge_fidelity_even_graph_layer(layer, i, i - 1, bar_fidelities, cross_fidelities, chip_dim, target_dim),
+                    get_edge_fidelity_even_graph_layer(
+                        layer, i, i - 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
+                    ),
                 )
                 for i in range(2, n, 2)
             ]
