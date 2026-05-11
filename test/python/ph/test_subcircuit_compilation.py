@@ -69,7 +69,7 @@ def run_result(request):
         target_unitary=target_unitary,
         target_unitary_embedded=embedded,
         phase_error=phase_error,
-        config=OptimizationConfig(num_restarts=1, max_iterations=300),
+        config=OptimizationConfig(max_iterations=300),
     )
 
 
@@ -171,4 +171,6 @@ class TestRunValueRanges:
     @staticmethod
     def test_proposed_coincidence_rate_exceeds_baseline(run_result):
         """Test that the compiled coincidence rate is at least as high as the baseline."""
-        assert float(run_result.performance["coincidence_rate"]) >= float(run_result.baseline_performance["coincidence_rate"])
+        assert float(run_result.performance["coincidence_rate"]) >= float(
+            run_result.baseline_performance["coincidence_rate"]
+        )

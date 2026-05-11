@@ -50,22 +50,20 @@ def unitary_individual_phase_shifter(
     num_modes: int,
     mode: int,
     phase: torch.Tensor,
-    transmission: torch.Tensor,
 ) -> torch.Tensor:
-    """Build a diagonal unitary for a single phase shifter with optional loss.
+    """Build a diagonal unitary for a single phase shifter.
 
     Args:
         num_modes: Total number of spatial modes.
         mode: Index of the mode carrying the phase shifter.
         phase: Phase value in radians.
-        transmission: Amplitude transmission factor (1.0 for lossless).
 
     Returns:
         Complex tensor of shape ``(num_modes, num_modes)`` representing the
         diagonal phase-shifter unitary.
     """
     d = torch.eye(num_modes, dtype=torch.complex128)
-    d[mode, mode] = torch.exp(1j * phase) * transmission
+    d[mode, mode] = torch.exp(1j * phase)
     return d
 
 
@@ -102,7 +100,6 @@ def build_unitary_from_components(
     num_modes: int,
     beam_splitter_params: torch.Tensor,
     phase_shifter_params: torch.Tensor,
-    phase_shifter_transmissions: torch.Tensor,
     exclude_edge_phase_shifters: bool = False,
     layer_range: tuple[int, int] | None = None,
 ) -> torch.Tensor:
@@ -118,8 +115,6 @@ def build_unitary_from_components(
             by :func:`graph.generate_beam_splitter_matrix`.
         phase_shifter_params: Phase-shifter parameter array.  Accepted shapes
             are ``(N, N)``, ``(N**2,)``, or ``(N**2 - 2,)`` (corner-excluded).
-        phase_shifter_transmissions: Transmission amplitudes with the same
-            shape convention as ``phase_shifter_params``.
         exclude_edge_phase_shifters: If ``True``, the top-right and bottom-
             right corner phase shifters are omitted.
         layer_range: Optional ``(start, end)`` tuple selecting a subset of
@@ -151,7 +146,6 @@ def build_unitary_from_components(
         raise ValueError(msg)
 
     ps_grid = to_grid(phase_shifter_params, fill_value=0.0)
-    t_grid = to_grid(phase_shifter_transmissions, fill_value=1.0)
 
     start_layer = 0 if layer_range is None else layer_range[0]
     end_layer = n if layer_range is None else layer_range[1]
@@ -168,12 +162,12 @@ def build_unitary_from_components(
             for i in range(0, num_modes - 1, 2):
                 theta_in = beam_splitter_params[bs_idx]
                 theta_out = beam_splitter_params[bs_idx + 1]
-                phi1, t1 = ps_grid[i, layer], t_grid[i, layer]
-                phi2, t2 = ps_grid[i + 1, layer], t_grid[i + 1, layer]
+                phi1 = ps_grid[i, layer]
+                phi2 = ps_grid[i + 1, layer]
                 u = (
                     unitary_individual_beam_splitter(num_modes, i, theta_out)
-                    @ unitary_individual_phase_shifter(num_modes, i + 1, phi2, t2)
-                    @ unitary_individual_phase_shifter(num_modes, i, phi1, t1)
+                    @ unitary_individual_phase_shifter(num_modes, i + 1, phi2)
+                    @ unitary_individual_phase_shifter(num_modes, i, phi1)
                     @ unitary_individual_beam_splitter(num_modes, i, theta_in)
                     @ u
                 )
@@ -182,26 +176,26 @@ def build_unitary_from_components(
             is_last_layer = exclude_edge_phase_shifters and layer == n - 1
 
             if not is_last_layer:
-                phi, t = ps_grid[0, layer], t_grid[0, layer]
-                u = unitary_individual_phase_shifter(num_modes, 0, phi, t) @ u
+                phi = ps_grid[0, layer]
+                u = unitary_individual_phase_shifter(num_modes, 0, phi) @ u
 
             for j in range(1, num_modes - 1, 2):
                 theta_in = beam_splitter_params[bs_idx]
                 theta_out = beam_splitter_params[bs_idx + 1]
-                phi1, t1 = ps_grid[j, layer], t_grid[j, layer]
-                phi2, t2 = ps_grid[j + 1, layer], t_grid[j + 1, layer]
+                phi1 = ps_grid[j, layer]
+                phi2 = ps_grid[j + 1, layer]
                 u = (
                     unitary_individual_beam_splitter(num_modes, j, theta_out)
-                    @ unitary_individual_phase_shifter(num_modes, j + 1, phi2, t2)
-                    @ unitary_individual_phase_shifter(num_modes, j, phi1, t1)
+                    @ unitary_individual_phase_shifter(num_modes, j + 1, phi2)
+                    @ unitary_individual_phase_shifter(num_modes, j, phi1)
                     @ unitary_individual_beam_splitter(num_modes, j, theta_in)
                     @ u
                 )
                 bs_idx += 2
 
             if not is_last_layer:
-                phi, t = ps_grid[num_modes - 1, layer], t_grid[num_modes - 1, layer]
-                u = unitary_individual_phase_shifter(num_modes, num_modes - 1, phi, t) @ u
+                phi = ps_grid[num_modes - 1, layer]
+                u = unitary_individual_phase_shifter(num_modes, num_modes - 1, phi) @ u
 
     return u
 
@@ -210,7 +204,6 @@ def build_unitary_selected_columns_from_components(
     num_modes: int,
     beam_splitter_params: torch.Tensor,
     phase_shifter_params: torch.Tensor,
-    phase_shifter_transmissions: torch.Tensor,
     column_indices: list[int] | torch.Tensor,
     exclude_edge_phase_shifters: bool = False,
     layer_range: tuple[int, int] | None = None,
@@ -227,8 +220,6 @@ def build_unitary_selected_columns_from_components(
         beam_splitter_params: 1D tensor of beam-splitter reflectivities.
         phase_shifter_params: Phase-shifter parameter array (see
             :func:`build_unitary_from_components`).
-        phase_shifter_transmissions: Transmission amplitudes (same shape
-            convention as ``phase_shifter_params``).
         column_indices: Indices of the columns to compute.
         exclude_edge_phase_shifters: If ``True``, corner phase shifters are
             omitted.
@@ -265,7 +256,6 @@ def build_unitary_selected_columns_from_components(
         raise ValueError(msg)
 
     ps_grid = to_grid(phase_shifter_params, fill_value=0.0)
-    t_grid = to_grid(phase_shifter_transmissions, fill_value=1.0)
 
     start_layer = 0 if layer_range is None else layer_range[0]
     end_layer = n if layer_range is None else layer_range[1]
@@ -277,8 +267,8 @@ def build_unitary_selected_columns_from_components(
 
     u = torch.eye(num_modes, dtype=torch.complex128)[:, col_idx]
 
-    def apply_ps_left(u_local: torch.Tensor, mode: int, phi: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        phase = torch.exp(1j * phi) * t
+    def apply_ps_left(u_local: torch.Tensor, mode: int, phi: torch.Tensor) -> torch.Tensor:
+        phase = torch.exp(1j * phi)
         scales = torch.ones((num_modes, 1), dtype=torch.complex128, device=u_local.device)
         scales[mode, 0] = phase
         return scales * u_local
@@ -300,34 +290,34 @@ def build_unitary_selected_columns_from_components(
             for i in range(0, num_modes - 1, 2):
                 theta_in = beam_splitter_params[bs_idx]
                 theta_out = beam_splitter_params[bs_idx + 1]
-                phi1, t1 = ps_grid[i, layer], t_grid[i, layer]
-                phi2, t2 = ps_grid[i + 1, layer], t_grid[i + 1, layer]
+                phi1 = ps_grid[i, layer]
+                phi2 = ps_grid[i + 1, layer]
                 u = apply_bs_left(u, i, theta_in)
-                u = apply_ps_left(u, i, phi1, t1)
-                u = apply_ps_left(u, i + 1, phi2, t2)
+                u = apply_ps_left(u, i, phi1)
+                u = apply_ps_left(u, i + 1, phi2)
                 u = apply_bs_left(u, i, theta_out)
                 bs_idx += 2
         else:
             is_last_layer = exclude_edge_phase_shifters and layer == n - 1
 
             if not is_last_layer:
-                phi, t = ps_grid[0, layer], t_grid[0, layer]
-                u = apply_ps_left(u, 0, phi, t)
+                phi = ps_grid[0, layer]
+                u = apply_ps_left(u, 0, phi)
 
             for j in range(1, num_modes - 1, 2):
                 theta_in = beam_splitter_params[bs_idx]
                 theta_out = beam_splitter_params[bs_idx + 1]
-                phi1, t1 = ps_grid[j, layer], t_grid[j, layer]
-                phi2, t2 = ps_grid[j + 1, layer], t_grid[j + 1, layer]
+                phi1 = ps_grid[j, layer]
+                phi2 = ps_grid[j + 1, layer]
                 u = apply_bs_left(u, j, theta_in)
-                u = apply_ps_left(u, j, phi1, t1)
-                u = apply_ps_left(u, j + 1, phi2, t2)
+                u = apply_ps_left(u, j, phi1)
+                u = apply_ps_left(u, j + 1, phi2)
                 u = apply_bs_left(u, j, theta_out)
                 bs_idx += 2
 
             if not is_last_layer:
-                phi, t = ps_grid[num_modes - 1, layer], t_grid[num_modes - 1, layer]
-                u = apply_ps_left(u, num_modes - 1, phi, t)
+                phi = ps_grid[num_modes - 1, layer]
+                u = apply_ps_left(u, num_modes - 1, phi)
 
     return u
 
@@ -426,16 +416,13 @@ def get_computation_zone(
 def optimize_unitary_subcircuit_parameters(
     target_unitary: torch.Tensor,
     beam_splitter_reflectivities: torch.Tensor | None = None,
-    phase_shifter_transmissions: torch.Tensor | None = None,
     movement_mask: torch.Tensor | None = None,
     lr: float = 0.05,
     threshold: float = 1e-5,
     active_cols: list[int] | None = None,
     active_cols_target: list[int] | None = None,
     verbose: bool = False,
-    num_restarts: int = 3,
     max_iterations: int = 10000,
-    restart_perturbation: float = 0.5,
     baseline: bool = False,
     output_rows: list[int] | None = None,
     exclude_edge_phase_shifters: bool = False,
@@ -445,16 +432,12 @@ def optimize_unitary_subcircuit_parameters(
 ) -> dict[str, Any]:
     """Optimise phase-shifter parameters to approximate a target unitary.
 
-    Runs an Adam optimiser with optional learning-rate scheduling and warm
-    restarts.  Each restart perturbs the best known parameters to escape
-    local minima.
+    Runs an Adam optimiser with optional learning-rate scheduling.
 
     Args:
         target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
         beam_splitter_reflectivities: 1D tensor of chip beam-splitter
             reflectivities.  Treated as fixed (no gradient).
-        phase_shifter_transmissions: Transmission amplitudes for the phase
-            shifters.  Defaults to all-ones (lossless).
         movement_mask: Integer tensor of shape ``(num_modes, num_modes)``
             encoding routing constraints.  When ``None``, the full chip is
             treated as a computation zone.
@@ -465,10 +448,7 @@ def optimize_unitary_subcircuit_parameters(
         active_cols_target: Column indices within the computation zone
             corresponding to ``active_cols``.
         verbose: If ``True``, print progress every 100 iterations.
-        num_restarts: Number of optimisation restarts (must be ≥ 1).
-        max_iterations: Maximum number of gradient steps per restart.
-        restart_perturbation: Standard deviation of Gaussian noise added when
-            warm-restarting from the best known parameters.
+        max_iterations: Maximum number of gradient steps.
         baseline: If ``True``, restrict comparison to the first
             ``target_dim`` output rows (baseline mode).
         output_rows: Explicit list of output rows to compare; overrides the
@@ -478,7 +458,7 @@ def optimize_unitary_subcircuit_parameters(
         optimize_routing_parameters: If ``True``, routing cells contribute a
             single trainable degree of freedom.
         early_stop_patience: Number of consecutive steps without improvement
-            before a restart is terminated early.
+            before optimisation is terminated early.
         min_improvement: Minimum absolute loss decrease required to reset the
             patience counter.
 
@@ -487,14 +467,9 @@ def optimize_unitary_subcircuit_parameters(
 
         * ``"phase_shifter_params"`` — best flat parameter tensor (mod 2π).
         * ``"beam_splitter_params"`` — ``beam_splitter_reflectivities``.
-        * ``"phase_shifter_transmissions"`` — transmission tensor used.
-        * ``"losses"`` — list of per-step loss values across all restarts.
-        * ``"lrs"`` — learning-rate history of the best restart.
-        * ``"iterations"`` — number of gradient steps in the best restart.
-        * ``"num_restarts"`` — number of restarts actually executed.
-
-    Raises:
-        ValueError: If ``num_restarts`` is less than 1.
+        * ``"losses"`` — list of per-step loss values.
+        * ``"lrs"`` — learning-rate history.
+        * ``"iterations"`` — number of gradient steps executed.
     """
     target_dim = target_unitary.shape[0]
 
@@ -508,13 +483,6 @@ def optimize_unitary_subcircuit_parameters(
         num_modes_opt = target_dim
 
     param_count = num_modes_opt**2 - 2 if exclude_edge_phase_shifters else num_modes_opt**2
-
-    if phase_shifter_transmissions is None:
-        phase_shifter_transmissions = torch.ones(param_count, dtype=torch.float64)
-    elif not isinstance(phase_shifter_transmissions, torch.Tensor):
-        phase_shifter_transmissions = torch.tensor(phase_shifter_transmissions, dtype=torch.float64)
-    else:
-        phase_shifter_transmissions = phase_shifter_transmissions.to(dtype=torch.float64)
 
     default_output_rows = list(range(target_dim)) if baseline else None
     compared_rows = output_rows if output_rows is not None else default_output_rows
@@ -531,164 +499,111 @@ def optimize_unitary_subcircuit_parameters(
         mask[n_modes - 1, -1] = False
         return grid_2d[mask]
 
-    if num_restarts < 1:
-        msg = "num_restarts must be an integer >= 1"
-        raise ValueError(msg)
+    phase_shifter_params = TWO_PI * torch.rand(param_count, dtype=torch.float64)
+    phase_shifter_params = torch.remainder(phase_shifter_params, TWO_PI)
+    phase_shifter_params.requires_grad_(True)
 
-    best_loss = float("inf")
-    best_params: torch.Tensor | None = None
-    best_lrs: list[float] = []
-    best_iterations = 0
-    restarts_used = 0
+    optimizer = torch.optim.Adam([phase_shifter_params], lr=lr)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=0.5,
+        patience=50,
+        min_lr=1e-7,
+    )
+
+    lrs: list[float] = []
     losses: list[float] = []
+    loop_loss = float("inf")
+    index = 0
+    best_loss = float("inf")
+    no_improve_steps = 0
 
-    for restart_idx in range(1, num_restarts + 1):
-        restarts_used = restart_idx
+    while loop_loss > threshold and index < max_iterations:
+        ps_for_build = phase_shifter_params
+        grad_mask_flat: torch.Tensor | None = None
 
-        if restart_idx == 1 or best_params is None:
-            phase_shifter_params = TWO_PI * torch.rand(param_count, dtype=torch.float64)
+        if movement_mask is not None:
+            phase_grid = reshape_flattened_params_to_grid(
+                phase_shifter_params,
+                num_modes_opt,
+                exclude_edge_phase_shifters=exclude_edge_phase_shifters,
+            )
+            effective_params, grad_mask_2d, _ = get_effective_params_and_mask(
+                num_modes_opt,
+                movement_mask,
+                phase_grid,
+                optimize_routing_parameters=optimize_routing_parameters,
+            )
+            ps_for_build = effective_params
+            grad_mask_flat = flatten_grid_with_corner_policy(
+                grad_mask_2d,
+                num_modes_opt,
+                exclude_edge_phase_shifters,
+            )
+
+        if active_cols is not None:
+            u_model = build_unitary_selected_columns_from_components(
+                num_modes_opt,
+                beam_splitter_reflectivities,
+                ps_for_build,
+                column_indices=active_cols,
+                exclude_edge_phase_shifters=exclude_edge_phase_shifters,
+            )
+            target_cols = active_cols_target if active_cols_target is not None else active_cols
+            target_unitary_for_loss = target_unitary[:, target_cols]
+            loss = fidelity_loss(
+                effective_unitary=u_model,
+                target_unitary=target_unitary_for_loss,
+                active_cols=None,
+                active_cols_target=None,
+                baseline_outputs=compared_rows,
+            )
         else:
-            phase_shifter_params = best_params.detach().clone()
-            if restart_perturbation > 0:
-                if movement_mask is not None:
-                    phase_grid = reshape_flattened_params_to_grid(
-                        phase_shifter_params,
-                        num_modes_opt,
-                        exclude_edge_phase_shifters=exclude_edge_phase_shifters,
-                    )
-                    _, restart_grad_mask_2d, _ = get_effective_params_and_mask(
-                        num_modes_opt,
-                        movement_mask,
-                        phase_grid,
-                        optimize_routing_parameters=optimize_routing_parameters,
-                    )
-                    restart_grad_mask_flat = flatten_grid_with_corner_policy(
-                        restart_grad_mask_2d,
-                        num_modes_opt,
-                        exclude_edge_phase_shifters,
-                    ).to(dtype=torch.float64)
-                else:
-                    restart_grad_mask_flat = torch.ones_like(phase_shifter_params, dtype=torch.float64)
+            u_model = build_unitary_from_components(
+                num_modes_opt,
+                beam_splitter_reflectivities,
+                ps_for_build,
+                exclude_edge_phase_shifters=exclude_edge_phase_shifters,
+            )
+            loss = fidelity_loss(
+                effective_unitary=u_model,
+                target_unitary=target_unitary,
+                active_cols=None,
+                active_cols_target=None,
+                baseline_outputs=compared_rows,
+            )
 
-                noise = restart_perturbation * torch.randn_like(phase_shifter_params)
-                phase_shifter_params += noise * restart_grad_mask_flat
+        loop_loss = loss.item()
+        losses.append(loop_loss)
 
-        phase_shifter_params = torch.remainder(phase_shifter_params, TWO_PI)
-        phase_shifter_params.requires_grad_(True)
-
-        optimizer = torch.optim.Adam([phase_shifter_params], lr=lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            mode="min",
-            factor=0.5,
-            patience=50,
-            min_lr=1e-7,
-        )
-
-        lrs: list[float] = []
-        loop_loss = float("inf")
-        index = 0
-        best_restart_loss = float("inf")
-        no_improve_steps = 0
-
-        while loop_loss > threshold and index < max_iterations:
-            ps_for_build = phase_shifter_params
-            grad_mask_flat: torch.Tensor | None = None
-
-            if movement_mask is not None:
-                phase_grid = reshape_flattened_params_to_grid(
-                    phase_shifter_params,
-                    num_modes_opt,
-                    exclude_edge_phase_shifters=exclude_edge_phase_shifters,
-                )
-                effective_params, grad_mask_2d, _ = get_effective_params_and_mask(
-                    num_modes_opt,
-                    movement_mask,
-                    phase_grid,
-                    optimize_routing_parameters=optimize_routing_parameters,
-                )
-                ps_for_build = effective_params
-                grad_mask_flat = flatten_grid_with_corner_policy(
-                    grad_mask_2d,
-                    num_modes_opt,
-                    exclude_edge_phase_shifters,
-                )
-
-            if active_cols is not None:
-                u_model = build_unitary_selected_columns_from_components(
-                    num_modes_opt,
-                    beam_splitter_reflectivities,
-                    ps_for_build,
-                    phase_shifter_transmissions,
-                    column_indices=active_cols,
-                    exclude_edge_phase_shifters=exclude_edge_phase_shifters,
-                )
-                target_cols = active_cols_target if active_cols_target is not None else active_cols
-                target_unitary_for_loss = target_unitary[:, target_cols]
-                loss = fidelity_loss(
-                    effective_unitary=u_model,
-                    target_unitary=target_unitary_for_loss,
-                    active_cols=None,
-                    active_cols_target=None,
-                    baseline_outputs=compared_rows,
-                )
-            else:
-                u_model = build_unitary_from_components(
-                    num_modes_opt,
-                    beam_splitter_reflectivities,
-                    ps_for_build,
-                    phase_shifter_transmissions,
-                    exclude_edge_phase_shifters=exclude_edge_phase_shifters,
-                )
-                loss = fidelity_loss(
-                    effective_unitary=u_model,
-                    target_unitary=target_unitary,
-                    active_cols=None,
-                    active_cols_target=None,
-                    baseline_outputs=compared_rows,
-                )
-
-            loop_loss = loss.item()
-            losses.append(loop_loss)
-
-            if loop_loss < best_restart_loss - min_improvement:
-                best_restart_loss = loop_loss
-                no_improve_steps = 0
-            else:
-                no_improve_steps += 1
-
-            index % 100 == 0 and verbose
-
-            lrs.append(optimizer.param_groups[0]["lr"])
-
-            optimizer.zero_grad()
-            loss.backward()
-
-            if grad_mask_flat is not None and phase_shifter_params.grad is not None:
-                phase_shifter_params.grad.mul_(grad_mask_flat.to(phase_shifter_params.grad.dtype))
-
-            optimizer.step()
-            scheduler.step(loop_loss)
-            index += 1
-
-            if early_stop_patience > 0 and no_improve_steps >= early_stop_patience:
-                break
-
-        if loop_loss < best_loss:
+        if loop_loss < best_loss - min_improvement:
             best_loss = loop_loss
-            best_params = phase_shifter_params.detach().clone()
-            best_lrs = lrs
-            best_iterations = index
+            no_improve_steps = 0
+        else:
+            no_improve_steps += 1
 
-        if best_loss <= threshold:
+        index % 100 == 0 and verbose
+
+        lrs.append(optimizer.param_groups[0]["lr"])
+
+        optimizer.zero_grad()
+        loss.backward()
+
+        if grad_mask_flat is not None and phase_shifter_params.grad is not None:
+            phase_shifter_params.grad.mul_(grad_mask_flat.to(phase_shifter_params.grad.dtype))
+
+        optimizer.step()
+        scheduler.step(loop_loss)
+        index += 1
+
+        if early_stop_patience > 0 and no_improve_steps >= early_stop_patience:
             break
 
     return {
-        "phase_shifter_params": torch.remainder(best_params, TWO_PI),
+        "phase_shifter_params": torch.remainder(phase_shifter_params.detach(), TWO_PI),
         "beam_splitter_params": beam_splitter_reflectivities,
-        "phase_shifter_transmissions": phase_shifter_transmissions,
         "losses": losses,
-        "lrs": best_lrs,
-        "iterations": best_iterations,
-        "num_restarts": restarts_used,
+        "lrs": lrs,
+        "iterations": index,
     }

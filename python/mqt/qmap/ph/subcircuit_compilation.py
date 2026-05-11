@@ -44,10 +44,7 @@ class OptimizationConfig:
         lr: Initial Adam learning rate.
         threshold: Fidelity-loss value below which optimisation terminates
             early.
-        num_restarts: Number of optimisation restarts (must be ≥ 1).
-        max_iterations: Maximum gradient steps per restart.
-        restart_perturbation: Standard deviation of Gaussian noise applied
-            when warm-restarting from the best known parameters.
+        max_iterations: Maximum gradient steps.
         exclude_edge_phase_shifters: If ``True``, the two corner phase
             shifters are excluded from the parameter set.
         optimize_routing_parameters: If ``True``, routing MZI cells
@@ -56,9 +53,7 @@ class OptimizationConfig:
 
     lr: float = 0.05
     threshold: float = 1e-6
-    num_restarts: int = 3
     max_iterations: int = 10000
-    restart_perturbation: float = 0.15
     exclude_edge_phase_shifters: bool = False
     optimize_routing_parameters: bool = True
 
@@ -178,16 +173,13 @@ def compile_subcircuit(
     result = optimize_unitary_subcircuit_parameters(
         target_unitary=target_unitary_opt,
         beam_splitter_reflectivities=beam_splitter_reflectivities,
-        phase_shifter_transmissions=None,
         movement_mask=movement_mask,
         lr=config.lr,
         threshold=config.threshold,
         active_cols=input_ports,
         active_cols_target=active_cols_computation_zone,
         output_rows=output_ports,
-        num_restarts=config.num_restarts,
         max_iterations=config.max_iterations,
-        restart_perturbation=config.restart_perturbation,
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
         optimize_routing_parameters=config.optimize_routing_parameters,
         early_stop_patience=50,
@@ -220,13 +212,10 @@ def compile_subcircuit(
     baseline_result = optimize_unitary_subcircuit_parameters(
         target_unitary=target_unitary_embedded,
         beam_splitter_reflectivities=beam_splitter_reflectivities,
-        phase_shifter_transmissions=None,
         lr=config.lr,
         threshold=config.threshold,
         active_cols=baseline_active_cols,
-        num_restarts=config.num_restarts,
         max_iterations=config.max_iterations,
-        restart_perturbation=config.restart_perturbation,
         baseline=True,
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
         early_stop_patience=50,

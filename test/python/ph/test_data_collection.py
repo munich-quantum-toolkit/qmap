@@ -80,7 +80,7 @@ class TestCollectPipelineResults:
         setups = build_setup_grid([4], [2])
         return collect_pipeline_results(
             setups=setups,
-            config=OptimizationConfig(num_restarts=1, max_iterations=50),
+            config=OptimizationConfig(max_iterations=50),
             num_unitaries_per_setup=1,
             repeats_per_unitary=1,
             phase_errors=[0.0],
