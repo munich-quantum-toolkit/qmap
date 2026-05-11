@@ -68,7 +68,7 @@ class RunResult:
     """Output of a single :func:`compile_subcircuit` call.
 
     Attributes:
-        performance: Metrics for the proposed compiler (system yield, TVD,
+        performance: Metrics for the proposed compiler (coincidence rate, TVD,
             etc.) as returned by
             :func:`perceval_simulation.evaluate_chip_performance`.
         baseline_performance: Same metrics for the baseline strategy.

@@ -106,19 +106,19 @@ class TestCollectPipelineResults:
             "target_dim",
             "phase_error",
             "avg_tvd",
-            "avg_system_yield",
+            "avg_coincidence_rate",
             "avg_baseline_tvd",
-            "avg_baseline_system_yield",
+            "avg_baseline_coincidence_rate",
             "tvd_difference",
-            "system_yield_difference",
+            "coincidence_rate_difference",
         }
         assert required.issubset(smoke_result.columns)
 
     @staticmethod
-    def test_system_yield_in_unit_interval(smoke_result):
-        """Test that system yield values lie in [0, 1]."""
-        assert (smoke_result["avg_system_yield"] >= 0.0).all()
-        assert (smoke_result["avg_system_yield"] <= 1.0).all()
+    def test_coincidence_rate_in_unit_interval(smoke_result):
+        """Test that coincidence rate values lie in [0, 1]."""
+        assert (smoke_result["avg_coincidence_rate"] >= 0.0).all()
+        assert (smoke_result["avg_coincidence_rate"] <= 1.0).all()
 
     @staticmethod
     def test_tvd_non_negative(smoke_result):

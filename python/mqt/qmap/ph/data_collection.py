@@ -86,7 +86,7 @@ def collect_pipeline_results(
     ideal_beam_splitters: bool = False,
     custom_bs_data: dict[int, np.ndarray] | None = None,
 ) -> pd.DataFrame:
-    """Collect and aggregate TVD and system-yield metrics over a parameter sweep.
+    """Collect and aggregate TVD and coincidence-rate metrics over a parameter sweep.
 
     For each ``(setup, phase_error)`` combination the function averages over:
 
@@ -121,7 +121,7 @@ def collect_pipeline_results(
     Returns:
         Aggregated :class:`pandas.DataFrame` with one row per
         ``(num_modes, target_dim, phase_error)`` group, containing mean TVD,
-        system yield, compute times, and signed differences between the
+        coincidence rate, compute times, and signed differences between the
         proposed compiler and the baseline.
 
     Raises:
@@ -182,9 +182,9 @@ def collect_pipeline_results(
                     target_dim=target_dim,
                 )
 
-                normal_yields: list[float] = []
+                normal_coincidence_rates: list[float] = []
                 normal_tvds: list[float] = []
-                baseline_yields: list[float] = []
+                baseline_coincidence_rates: list[float] = []
                 baseline_tvds: list[float] = []
                 normal_losses: list[float] = []
                 baseline_losses: list[float] = []
@@ -204,18 +204,18 @@ def collect_pipeline_results(
                         config=config,
                     )
 
-                    normal_yields.append(float(result.performance["system_yield"]))
+                    normal_coincidence_rates.append(float(result.performance["coincidence_rate"]))
                     normal_tvds.append(float(result.performance["tvd"]))
-                    baseline_yields.append(float(result.baseline_performance["system_yield"]))
+                    baseline_coincidence_rates.append(float(result.baseline_performance["coincidence_rate"]))
                     baseline_tvds.append(float(result.baseline_performance["tvd"]))
                     normal_losses.append(float(result.loss))
                     baseline_losses.append(float(result.baseline_loss))
                     normal_compute_times.append(float(result.compute_time))
                     baseline_compute_times.append(float(result.baseline_compute_time))
 
-                mean_normal_yield, _ = _mean_std(normal_yields)
+                mean_normal_coincidence_rate, _ = _mean_std(normal_coincidence_rates)
                 mean_normal_tvd, _ = _mean_std(normal_tvds)
-                mean_baseline_yield, _ = _mean_std(baseline_yields)
+                mean_baseline_coincidence_rate, _ = _mean_std(baseline_coincidence_rates)
                 mean_baseline_tvd, _ = _mean_std(baseline_tvds)
                 mean_loss, _ = _mean_std(normal_losses)
                 mean_baseline_loss, _ = _mean_std(baseline_losses)
@@ -232,12 +232,12 @@ def collect_pipeline_results(
                     "unitary_seed": unitary_seed,
                     "phase_error": phase_error,
                     "repeats_per_unitary": repeats_per_unitary,
-                    "avg_system_yield": mean_normal_yield,
-                    "avg_baseline_system_yield": mean_baseline_yield,
+                    "avg_coincidence_rate": mean_normal_coincidence_rate,
+                    "avg_baseline_coincidence_rate": mean_baseline_coincidence_rate,
                     "avg_baseline_tvd": mean_baseline_tvd,
                     "avg_tvd": mean_normal_tvd,
                     "tvd_difference": mean_normal_tvd - mean_baseline_tvd,
-                    "system_yield_difference": mean_normal_yield - mean_baseline_yield,
+                    "coincidence_rate_difference": mean_normal_coincidence_rate - mean_baseline_coincidence_rate,
                     "avg_loss": mean_loss,
                     "avg_baseline_loss": mean_baseline_loss,
                     "avg_compute_time": mean_compute_time,
@@ -258,16 +258,16 @@ def collect_pipeline_results(
 
     df_aggregated = df.groupby(groupby_cols, as_index=False).agg(
         avg_tvd=("avg_tvd", "mean"),
-        avg_system_yield=("avg_system_yield", "mean"),
+        avg_coincidence_rate=("avg_coincidence_rate", "mean"),
         avg_baseline_tvd=("avg_baseline_tvd", "mean"),
-        avg_baseline_system_yield=("avg_baseline_system_yield", "mean"),
+        avg_baseline_coincidence_rate=("avg_baseline_coincidence_rate", "mean"),
         avg_compute_time=("avg_compute_time", "mean"),
         avg_baseline_compute_time=("avg_baseline_compute_time", "mean"),
     )
 
     df_aggregated["tvd_difference"] = df_aggregated["avg_tvd"] - df_aggregated["avg_baseline_tvd"]
-    df_aggregated["system_yield_difference"] = (
-        df_aggregated["avg_system_yield"] - df_aggregated["avg_baseline_system_yield"]
+    df_aggregated["coincidence_rate_difference"] = (
+        df_aggregated["avg_coincidence_rate"] - df_aggregated["avg_baseline_coincidence_rate"]
     )
     df_aggregated["compute_time_difference"] = (
         df_aggregated["avg_compute_time"] - df_aggregated["avg_baseline_compute_time"]
@@ -276,32 +276,14 @@ def collect_pipeline_results(
     return df_aggregated
 
 
-def export_results_table(
-    df: pd.DataFrame,
-    csv_path: str,
-    excel_path: str | None = None,
-) -> None:
-    """Write a results DataFrame to CSV and optionally to Excel.
+def export_results_table(df: pd.DataFrame, csv_path: str) -> None:
+    """Write a results DataFrame to CSV.
 
     Args:
         df: DataFrame to export, typically produced by
             :func:`collect_pipeline_results`.
         csv_path: Destination path for the CSV file.  Parent directories are
             created automatically.
-        excel_path: Optional destination path for an Excel file.  Requires
-            ``openpyxl`` to be installed.
-
-    Raises:
-        ImportError: If ``excel_path`` is provided but ``openpyxl`` is not
-            installed.
     """
     pathlib.Path(pathlib.Path(csv_path).parent or ".").mkdir(exist_ok=True, parents=True)
     df.to_csv(csv_path, index=False)
-
-    if excel_path is not None:
-        pathlib.Path(pathlib.Path(excel_path).parent or ".").mkdir(exist_ok=True, parents=True)
-        try:
-            df.to_excel(excel_path, index=False)
-        except ImportError as exc:
-            msg = "Excel export requires an engine such as openpyxl. Install it via pip install openpyxl."
-            raise ImportError(msg) from exc

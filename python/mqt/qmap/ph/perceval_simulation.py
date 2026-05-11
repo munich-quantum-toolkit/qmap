@@ -143,11 +143,11 @@ def evaluate_chip_performance(
     output_transmissions: np.ndarray | list[float] | None = None,
     apply_output_transmission_correction: bool = True,
 ) -> dict[str, Any]:
-    """Evaluate system yield and TVD of a simulated chip against the ideal distribution.
+    """Evaluate coincidence rate and TVD of a simulated chip against the ideal distribution.
 
     Photon events are first filtered to those where all ``required_photons``
     land in the computation zone (``target_modes``).  The surviving
-    probability mass gives the system yield.  The conditional distribution
+    probability mass gives the coincidence rate.  The conditional distribution
     is then compared to the ideal distribution via Total Variation Distance
     (TVD).
 
@@ -174,7 +174,7 @@ def evaluate_chip_performance(
     Returns:
         A dictionary with the following keys:
 
-        * ``"system_yield"`` — fraction of events where all photons are in
+        * ``"coincidence_rate"`` — fraction of events where all photons are in
           the computation zone.
         * ``"tvd"`` — Total Variation Distance between the corrected
           conditional distribution and the ideal distribution (1.0 if no
@@ -184,7 +184,7 @@ def evaluate_chip_performance(
         * ``"compensated_weight_sum"`` — total corrected probability mass
           before normalisation.
     """
-    system_yield = 0.0
+    coincidence_rate = 0.0
     mapped_dist: dict = {}
     compensated_weight_sum = 0.0
 
@@ -194,7 +194,7 @@ def evaluate_chip_performance(
         if sum(target_photons) != required_photons:
             continue
 
-        system_yield += prob
+        coincidence_rate += prob
         corrected_prob = prob
 
         if apply_output_transmission_correction and isinstance(output_transmissions, (list, np.ndarray)):
@@ -222,7 +222,7 @@ def evaluate_chip_performance(
         tvd = 0.5 * sum(abs(norm_sim.get(s, 0.0) - norm_ideal.get(s, 0.0)) for s in all_states)
 
     return {
-        "system_yield": system_yield,
+        "coincidence_rate": coincidence_rate,
         "tvd": tvd,
         "mapped_distribution": mapped_dist,
         "compensated_weight_sum": compensated_weight_sum,

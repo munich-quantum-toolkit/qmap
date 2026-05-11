@@ -29,7 +29,7 @@ from mqt.qmap.ph.graph import generate_beam_splitter_matrix
 from mqt.qmap.ph.subcircuit_compilation import OptimizationConfig, RunResult, compile_subcircuit
 from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
 
-_PERF_KEYS = {"compensated_weight_sum", "mapped_distribution", "system_yield", "tvd"}
+_PERF_KEYS = {"compensated_weight_sum", "mapped_distribution", "coincidence_rate", "tvd"}
 
 _SCENARIOS = [
     pytest.param((8, 4, 0.000), id="chip8-target4-pe0.000"),
@@ -104,10 +104,10 @@ class TestRunReturnStructure:
         assert run_result.baseline_compute_time > 0
 
     @staticmethod
-    def test_system_yield_in_unit_interval(run_result):
-        """Test that system_yield values lie in [0, 1] for both compiled and baseline."""
-        assert 0.0 <= float(run_result.performance["system_yield"]) <= 1.0
-        assert 0.0 <= float(run_result.baseline_performance["system_yield"]) <= 1.0
+    def test_coincidence_rate_in_unit_interval(run_result):
+        """Test that coincidence_rate values lie in [0, 1] for both compiled and baseline."""
+        assert 0.0 <= float(run_result.performance["coincidence_rate"]) <= 1.0
+        assert 0.0 <= float(run_result.baseline_performance["coincidence_rate"]) <= 1.0
 
     @staticmethod
     def test_tvd_in_unit_interval(run_result):
@@ -131,22 +131,22 @@ class TestRunValueRanges:
     six scenarios, including phase_error=0.030 (the hardest case).
     """
 
-    # Minimum acceptable system yield (routing + optimization must be useful)
-    SYSTEM_YIELD_MIN = 0.5
+    # Minimum acceptable coincidence rate (routing + optimization must be useful)
+    COINCIDENCE_RATE_MIN = 0.5
     # Maximum acceptable TVD (distribution must be close to ideal)
     TVD_MAX = 0.2
     # Maximum acceptable final optimization loss (optimizer must converge)
     LOSSES_MAX = 1e-2
 
     @staticmethod
-    def test_system_yield_above_minimum(run_result):
-        """Test that the compiled system yield meets the minimum threshold."""
-        assert float(run_result.performance["system_yield"]) >= TestRunValueRanges.SYSTEM_YIELD_MIN
+    def test_coincidence_rate_above_minimum(run_result):
+        """Test that the compiled coincidence rate meets the minimum threshold."""
+        assert float(run_result.performance["coincidence_rate"]) >= TestRunValueRanges.COINCIDENCE_RATE_MIN
 
     @staticmethod
-    def test_baseline_yield_above_minimum(run_result):
-        """Test that the baseline system yield meets the minimum threshold."""
-        assert float(run_result.baseline_performance["system_yield"]) >= TestRunValueRanges.SYSTEM_YIELD_MIN
+    def test_baseline_coincidence_rate_above_minimum(run_result):
+        """Test that the baseline coincidence rate meets the minimum threshold."""
+        assert float(run_result.baseline_performance["coincidence_rate"]) >= TestRunValueRanges.COINCIDENCE_RATE_MIN
 
     @staticmethod
     def test_tvd_below_maximum(run_result):
@@ -169,6 +169,6 @@ class TestRunValueRanges:
         assert float(run_result.baseline_loss) <= TestRunValueRanges.LOSSES_MAX
 
     @staticmethod
-    def test_proposed_yield_exceeds_baseline(run_result):
-        """Test that the compiled system yield is at least as high as the baseline."""
-        assert float(run_result.performance["system_yield"]) >= float(run_result.baseline_performance["system_yield"])
+    def test_proposed_coincidence_rate_exceeds_baseline(run_result):
+        """Test that the compiled coincidence rate is at least as high as the baseline."""
+        assert float(run_result.performance["coincidence_rate"]) >= float(run_result.baseline_performance["coincidence_rate"])
