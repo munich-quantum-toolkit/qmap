@@ -4,6 +4,8 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 ## [Unreleased]
 
+This release also updates the minimum required `mqt-core` version to `v3.6.0` as well as the `nanobind` version to `v2.12.0`.
+
 ## [3.6.0]
 
 ### Renamings

@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Changed
+
+- ⬆️ Update `mqt-core` to version 3.6.0 ([#1011]) ([**@denialhaag**])
+- ⬆️ Update `nanobind` to version 2.12.0 ([#1011]) ([**@denialhaag**])
+
 ### Fixed
 
 - 🐛 Fix condition to detect previously unrecognized reuse opportunities ([#953]) ([**@ystade**])
@@ -200,6 +205,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1011]: https://github.com/munich-quantum-toolkit/qmap/pull/1011
 [#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
 [#921]: https://github.com/munich-quantum-toolkit/qmap/pull/921
