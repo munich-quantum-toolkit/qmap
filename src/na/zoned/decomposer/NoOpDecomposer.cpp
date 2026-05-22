@@ -13,15 +13,13 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 
-#include <utility>
 #include <vector>
 
 namespace na::zoned {
 auto NoOpDecomposer::decompose(
     const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
-    -> std::pair<std::vector<SingleQubitGateLayer>,
-                 std::vector<TwoQubitGateLayer>> {
+    -> DecompositionResult {
   std::vector<SingleQubitGateLayer> result;
   result.reserve(singleQubitGateLayers.size());
   for (const auto& layer : singleQubitGateLayers) {

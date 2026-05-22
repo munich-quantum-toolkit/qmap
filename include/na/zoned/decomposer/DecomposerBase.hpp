@@ -31,15 +31,15 @@ public:
    * meant to be first decomposed into the native gate set.
    * @param twoQubitGateLayers are the layers of two-qubit gates that the
    * decomposer may change.
-   * @return a new pair of single-qubit and two-qubit gate layers. This pair
-   * replaces the pair of single-qubit and two-qubit gate layers returned from
-   * the scheduler. There is always one single-qubit gate layer more than
-   * two-qubit gate layers.
+   * @return a DecompositionResult whose @p singleQubitLayers replaces the
+   * scheduler's single-qubit layers (consumed by generate()) and whose @p
+   * twoQubitLayers replaces the scheduler's two-qubit layers (consumed by
+   * analyzeReuse() and synthesize()). There is always one single-qubit gate
+   * layer more than two-qubit gate layers.
    */
   [[nodiscard]] virtual auto
   decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
-      -> std::pair<std::vector<SingleQubitGateLayer>,
-                   std::vector<TwoQubitGateLayer>> = 0;
+      -> DecompositionResult = 0;
 };
 } // namespace na::zoned

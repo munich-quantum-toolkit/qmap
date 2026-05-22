@@ -51,7 +51,6 @@ public:
   [[nodiscard]] auto
   decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
-      -> std::pair<std::vector<SingleQubitGateLayer>,
-                   std::vector<TwoQubitGateLayer>> override;
+      -> DecompositionResult override;
 };
 } // namespace na::zoned
