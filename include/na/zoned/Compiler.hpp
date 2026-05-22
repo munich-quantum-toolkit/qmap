@@ -168,10 +168,9 @@ public:
     // removed it.
     SPDLOG_DEBUG("Scheduling...");
     const auto schedulingStart = std::chrono::system_clock::now();
-    const auto& schedule = SELF.schedule(qComp);
+    const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+        SELF.schedule(qComp);
     const auto schedulingEnd = std::chrono::system_clock::now();
-    const auto& singleQubitGateLayers = schedule.first;
-    const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
                                                               schedulingStart)
