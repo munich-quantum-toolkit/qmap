@@ -13,7 +13,6 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Types.hpp"
 
-#include <utility>
 #include <vector>
 
 namespace na::zoned {
@@ -27,12 +26,11 @@ public:
   /**
    * This function defines the interface of the scheduler.
    * @param qc is the quantum computation
-   * @return a pair of two vectors. The first vector contains the layers of
-   * single-qubit operations. The second vector contains the layers of two-qubit
-   * operations. A pair of qubits represents every two-qubit operation.
+   * @return a SchedulerResult whose @p singleQubitLayers contains the layers of
+   * single-qubit operations and whose @p twoQubitLayers contains the layers of
+   * two-qubit operations.
    */
   [[nodiscard]] virtual auto schedule(const qc::QuantumComputation& qc) const
-      -> std::pair<std::vector<SingleQubitGateRefLayer>,
-                   std::vector<TwoQubitGateLayer>> = 0;
+      -> SchedulerResult = 0;
 };
 } // namespace na::zoned

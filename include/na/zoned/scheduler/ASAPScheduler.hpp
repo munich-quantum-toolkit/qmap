@@ -16,7 +16,6 @@
 #include "na/zoned/scheduler/SchedulerBase.hpp"
 
 #include <functional>
-#include <utility>
 #include <vector>
 
 namespace na::zoned {
@@ -62,12 +61,11 @@ public:
    * every qubit is involved in at most one two-qubit operation. The last layer
    * contains only the remaining single-qubit operations.
    * @param qc is the quantum computation
-   * @return a pair of two vectors. The first vector contains the layers of
-   * single-qubit operations. The second vector contains the layers of two-qubit
-   * operations. A pair of qubits represents every two-qubit operation.
+   * @return a SchedulerResult whose @p singleQubitLayers contains the layers of
+   * single-qubit operations and whose @p twoQubitLayers contains the layers of
+   * two-qubit operations.
    */
   [[nodiscard]] auto schedule(const qc::QuantumComputation& qc) const
-      -> std::pair<std::vector<SingleQubitGateRefLayer>,
-                   std::vector<TwoQubitGateLayer>>;
+      -> SchedulerResult override;
 };
 } // namespace na::zoned

@@ -44,4 +44,28 @@ using Routing = std::vector<std::vector<qc::Qubit>>;
 template <class T> using SiteMap = std::unordered_map<Site, T>;
 /// An unordered set of sites
 using SiteSet = std::unordered_set<Site>;
+
+/**
+ * Gate layers produced by the scheduler. Contains non-owning references to the
+ * operations of the original quantum computation. There is always one
+ * single-qubit gate layer more than two-qubit gate layers.
+ */
+struct SchedulerResult {
+  /// Non-owning layers of single-qubit gates (refs into the original circuit).
+  std::vector<SingleQubitGateRefLayer> singleQubitLayers;
+  /// Layers of two-qubit gates.
+  std::vector<TwoQubitGateLayer> twoQubitLayers;
+};
+
+/**
+ * Gate layers produced by the decomposer. Contains owning copies of the
+ * (potentially rewritten) operations. There is always one single-qubit gate
+ * layer more than two-qubit gate layers.
+ */
+struct DecompositionResult {
+  /// Owning layers of single-qubit gates (consumed by generate()).
+  std::vector<SingleQubitGateLayer> singleQubitLayers;
+  /// Layers of two-qubit gates (consumed by analyzeReuse() and synthesize()).
+  std::vector<TwoQubitGateLayer> twoQubitLayers;
+};
 } // namespace na::zoned

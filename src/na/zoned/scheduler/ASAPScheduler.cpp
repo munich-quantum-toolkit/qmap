@@ -53,12 +53,10 @@ ASAPScheduler::ASAPScheduler(const Architecture& architecture,
   }
 }
 auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
-    -> std::pair<std::vector<SingleQubitGateRefLayer>,
-                 std::vector<TwoQubitGateLayer>> {
+    -> SchedulerResult {
   if (qc.empty()) {
     // early exit if there are no operations to schedule
-    return std::pair{std::vector<SingleQubitGateRefLayer>{},
-                     std::vector<TwoQubitGateLayer>{}};
+    return SchedulerResult{};
   }
   std::vector<SingleQubitGateRefLayer> singleQubitGateLayers(1);
   std::vector<TwoQubitGateLayer> twoQubitGateLayers(0);
@@ -126,6 +124,6 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
       throw std::invalid_argument(ss.str());
     }
   }
-  return std::pair{singleQubitGateLayers, twoQubitGateLayers};
+  return SchedulerResult{singleQubitGateLayers, twoQubitGateLayers};
 }
 } // namespace na::zoned
