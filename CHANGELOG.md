@@ -14,6 +14,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 ### Changed
 
 - 🎨 Add two-qubit gate layer to decomposer interface in zoned neutral atom compiler ([#976]) ([**@ystade**])
+- ⬆️ Update `mqt-core` to version 3.6.0 ([#1011]) ([**@denialhaag**])
+- ⬆️ Update `nanobind` to version 2.12.0 ([#1011]) ([**@denialhaag**])
 
 ### Fixed
 
@@ -204,7 +206,6 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#976]: https://github.com/munich-quantum-toolkit/qmap/pull/976
 [#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
 [#921]: https://github.com/munich-quantum-toolkit/qmap/pull/921
