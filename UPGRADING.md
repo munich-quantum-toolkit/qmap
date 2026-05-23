@@ -6,6 +6,23 @@ This document describes breaking changes and how to upgrade. For a complete list
 
 This release also updates the minimum required `mqt-core` version to `v3.6.0` as well as the `nanobind` version to `v2.12.0`.
 
+### CMake presets
+
+[CMake presets] have been added to provide a standardized and reproducible way to configure builds across different platforms.
+These presets are also used in our CI.
+
+On Unix systems, the `debug`, `release`, and `coverage` presets can be used to configure, build, and test MQT QMAP.
+
+```console
+cmake --preset release
+cmake --build --preset release
+ctest --preset release
+```
+
+Additionally, the `lint` preset can be used to configure and build MQT QMAP in preparation for a `clang-tidy` run.
+
+If you are on Windows, use the `debug-windows` and `release-windows` presets.
+
 ## [3.6.0]
 
 ### Renamings
@@ -145,3 +162,4 @@ Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`]
 <!-- Other links -->
 
 [MQT SyReC]: https://github.com/munich-quantum-toolkit/syrec
+[CMake presets]: https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html

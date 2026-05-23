@@ -11,8 +11,13 @@ This project adheres to [Semantic Versioning], with the exception that minor rel
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- 🚸 Add [CMake presets] to provide a standardized and reproducible way to configure builds ([#1020]) ([**@denialhaag**])
+
 ### Changed
 
+- ⬆️ Update [munich-quantum-toolkit/workflows] to version `v2.0.1` ([#1020]) ([**@denialhaag**])
 - 🎨 Add two-qubit gate layer to decomposer interface in zoned neutral atom compiler ([#976]) ([**@ystade**])
 - ⬆️ Update `mqt-core` to version 3.6.0 ([#1011]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.12.0 ([#1011]) ([**@denialhaag**])
@@ -206,6 +211,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
 [#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
 [#921]: https://github.com/munich-quantum-toolkit/qmap/pull/921
@@ -260,3 +266,5 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 [GitHub Release Notes]: https://github.com/munich-quantum-toolkit/qmap/releases
 [munich-quantum-toolkit]: https://github.com/munich-quantum-toolkit
+[CMake presets]: https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html
+[munich-quantum-toolkit/workflows]: https://github.com/munich-quantum-toolkit/workflows
