@@ -185,10 +185,11 @@ auto AxialDecomposer::decompose(
       std::vector<std::unique_ptr<qc::Operation>> GR_minus;
 
       for (size_t i = 0; i < nQubits; ++i) {
+        // Should be X_Rotations
         GR_plus.emplace_back(std::make_unique<qc::StandardOperation>(
-            i, qc::RX, std::initializer_list<qc::fp>{-qc::PI / 2}));
+            i, qc::RY, std::initializer_list<qc::fp>{-qc::PI / 2}));
         GR_minus.emplace_back(std::make_unique<qc::StandardOperation>(
-            i, qc::RX, std::initializer_list<qc::fp>{qc::PI / 2}));
+            i, qc::RY, std::initializer_list<qc::fp>{qc::PI / 2}));
       }
 
       for (auto&& gate : FrontLayer) {

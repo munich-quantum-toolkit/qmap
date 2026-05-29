@@ -28,7 +28,7 @@ class AxialDecomposer : public DecomposerBase {
       std::numeric_limits<qc::fp>::epsilon() * 1024;
 
 public:
-  /// The configuration of the NativeGateDecomposer
+  /// The configuration of the AxialDecomposer
   struct Config {
     template <typename BasicJsonType>
     friend void to_json(BasicJsonType& /* unused */,

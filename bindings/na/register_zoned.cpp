@@ -516,7 +516,7 @@ Returns:
 
   routingAwareAxialCompiler.def(
       "stats",
-      [](const na::zoned::RoutingAwareNativeGateCompiler& self) {
+      [](const na::zoned::RoutingAwareAxialCompiler& self) {
         const auto json = nb::module_::import_("json");
         const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
