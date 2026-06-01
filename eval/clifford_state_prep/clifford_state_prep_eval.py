@@ -447,7 +447,7 @@ def evaluate_circuits(method: str, **kwargs: dict[str, Any]) -> None:
         return
 
     logger.info(f"Running evaluations in parallel with {workers} worker threads")
-    try:
+    try:  # noqa: PLW0717
         args_iter = [(str(cf), method, kwargs) for cf in circuit_files]
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = [executor.submit(_parallel_worker_packed, args) for args in args_iter]

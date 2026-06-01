@@ -185,7 +185,7 @@ def main() -> int:
         print(f"Database not found: {db_path}")
         return 1
 
-    try:
+    try:  # noqa: PLW0717
         while True:
             if not db_path.exists():
                 clear_screen()
