@@ -419,9 +419,13 @@ test = [
   "pytest-xdist>=3.8.0",
   "mqt.qcec>=3.6.0",
 ]
+lint = [
+  "qiskit[qasm3-import]>=1.0.0",
+  "rustworkx[all]>=0.16.0",
+]
 dev = [
   {include-group = "build"},
   {include-group = "test"},
+  {include-group = "lint"},
   "nox>=2025.11.12",
-  "ty==0.0.40",
 ]
