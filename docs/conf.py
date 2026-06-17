@@ -68,10 +68,7 @@ extensions = [
     "sphinxext.opengraph",
 ]
 
-source_suffix = {
-    ".rst": "restructuredtext",
-    ".md": "markdown",
-}
+source_suffix = [".rst", ".md"]
 
 exclude_patterns = [
     "_build",
