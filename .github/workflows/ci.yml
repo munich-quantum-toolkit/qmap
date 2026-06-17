@@ -266,11 +266,11 @@ jobs:
         with:
           allowed-skips: >-
             ${{
-              !fromJSON(needs.change-detection.outputs.run-cpp-tests) && contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci')
+              (!fromJSON(needs.change-detection.outputs.run-cpp-tests) || contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci'))
               && 'cpp-tests-ubuntu,cpp-tests-macos,cpp-tests-windows,' || ''
             }}
             ${{
-              !fromJSON(needs.change-detection.outputs.run-cpp-tests) && !contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci') && github.event_name != 'pull_request'
+              (!fromJSON(needs.change-detection.outputs.run-cpp-tests) || !contains(github.event.pull_request.labels.*.name, 'extensive-cpp-ci') || github.event_name != 'pull_request')
               && 'cpp-tests-extensive-ubuntu,cpp-tests-extensive-macos,cpp-tests-extensive-windows,' || ''
             }}
             ${{
@@ -286,7 +286,7 @@ jobs:
               && 'python-tests,python-coverage,python-linter,' || ''
             }}
             ${{
-              !fromJSON(needs.change-detection.outputs.run-python-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-python-ci')
+              (!fromJSON(needs.change-detection.outputs.run-python-tests) || !contains(github.event.pull_request.labels.*.name, 'extensive-python-ci') || github.event_name != 'pull_request')
               && 'python-tests-extensive,' || ''
             }}
             ${{
