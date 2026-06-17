@@ -12,6 +12,10 @@ with the exception that minor releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+## [3.7.0] - 2026-06-17
+
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#370)._
+
 ### Added
 
 - 🚸 Add [CMake presets] to provide a standardized
@@ -240,7 +244,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.6.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.7.0...HEAD
+[3.7.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.7.0
 [3.6.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.6.0
 [3.5.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.5.0
 [3.4.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.4.0

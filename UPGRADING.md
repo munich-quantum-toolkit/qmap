@@ -6,6 +6,8 @@ please refer to the [changelog](CHANGELOG.md).
 
 ## [Unreleased]
 
+## [3.7.0]
+
 This release also updates the minimum required `mqt-core` version to `v3.6.0`
 as well as the `nanobind` version to `v2.12.0`.
 
@@ -220,7 +222,8 @@ Alternatively, CMake can be conveniently installed from PyPI using the
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.6.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.7.0...HEAD
+[3.7.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.3.0...v3.4.0
