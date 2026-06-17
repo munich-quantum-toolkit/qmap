@@ -66,11 +66,13 @@ particular stabilizer state.
 The stabilizer representation of a quantum state is conveniently described by a
 _tableau_:
 
-$$ \begin{bmatrix} x_{0,0} & \cdots & x_{0,n-1} & z_{0,0} & \cdots & z_{0,n-1} &
-r_0 \\
-        \vdots    & \ddots & \vdots & \vdots & \ddots &    \vdots & \vdots \\
-x_{n-1,0} & \cdots & x_{n-1,n-1} & z_{n-1,0} & \cdots & z_{n-1,n-1} & r_{n-1} \\
-\end{bmatrix} $$
+```{math}
+\begin{bmatrix}
+    x_{0,0}   & \cdots & x_{0,n-1}   & z_{0,0}    & \cdots & z_{0,n-1}   & r_0     \\
+    \vdots    & \ddots &  \vdots     & \vdots     & \ddots & \vdots      & \vdots  \\
+    x_{n-1,0} & \cdots & x_{n-1,n-1} & z_{n-1,0}  & \cdots & z_{n-1,n-1} & r_{n-1} \\
+\end{bmatrix}
+```
 
 Here, the binary variables $x_{ij}$ and $z_{ij}$ specify
 whether the Pauli term $P_{i,j}$ is $X$ or $Z$, respectively.
@@ -124,11 +126,15 @@ qc_alt.draw(output="mpl")
 
 But the first circuit has the unitary
 
-$$ \frac{1}{\sqrt{2}}\begin{bmatrix}1&0&1&0\\0&1&0&1\\0&1&0&-1\\1&0&-1&0\end{bmatrix} $$
+```{math}
+\frac{1}{\sqrt{2}}\begin{bmatrix}1&0&1&0\\0&1&0&1\\0&1&0&-1\\1&0&-1&0\end{bmatrix}
+```
 
 whereas the second circuit has the unitary
 
-$$ \frac{1}{\sqrt{2}}\begin{bmatrix}1&0&1&0\\0&-1&0&-1\\0&-1&0&1\\1&0&-1&0\end{bmatrix} $$
+```{math}
+\frac{1}{\sqrt{2}}\begin{bmatrix}1&0&1&0\\0&-1&0&-1\\0&-1&0&1\\1&0&-1&0\end{bmatrix}
+```
 
 To fix the unitary one needs to also take the _destabilizers_ into account.
 The destabilizers are also Pauli strings
