@@ -152,6 +152,10 @@ _version.py
 # ruff
 .ruff_cache/
 
+# Claude
+CLAUDE.md
+.claude/
+
 # OS specific stuff
 .DS_Store
 .DS_Store?
