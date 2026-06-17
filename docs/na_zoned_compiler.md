@@ -13,32 +13,43 @@ mystnb:
 
 # Zoned Neutral Atom Compiler
 
-Successful quantum computation requires advanced software, especially compilers that optimize quantum algorithms for
-hardware execution.
-Zoned neutral atom architectures execute operations in designated spatially separated zones.
-The zones facilitate higher coherence times and overall fidelity of the quantum computation.
-However, the zones also require the rearrangement of atoms during the quantum computation.
-MQT QMAP provides two tools to compile a quantum circuit to target-specific instructions for zoned quantum computing architectures based on neutral atoms:
+Successful quantum computation requires advanced software,
+especially compilers that optimize quantum algorithms for hardware execution.
+Zoned neutral atom architectures execute operations in designated spatially
+separated zones.
+The zones facilitate higher coherence times
+and overall fidelity of the quantum computation.
+However, the zones also require the rearrangement of atoms during the quantum
+computation.
+MQT QMAP provides two tools to compile a quantum circuit to target-specific
+instructions for zoned quantum computing architectures based on neutral atoms:
 
-- a reuse-aware compiler based on {cite:p}`linReuseAwareCompilationZoned2025`, and
+- a reuse-aware compiler based on {cite:p}`linReuseAwareCompilationZoned2025`,
+  and
 - a routing-aware compiler based on {cite:p}`stadeRoutingAwarePlacement2025`.
 
 :::{note}
-The second, i.e., routing-aware compiler also implements the reuse-aware compilation approach.
-Specifically, it exchanges the placement component of the reuse-aware compiler with a routing-aware placer.
-Hence, in the following, the first compiler is referred to as the _routing-agnostic compiler_ and the second one as the _routing-aware compiler_.
+The second, i.e., routing-aware compiler also implements the reuse-aware
+compilation approach.
+Specifically, it exchanges the placement component of the reuse-aware compiler
+with a routing-aware placer.
+Hence, in the following,
+the first compiler is referred to as the _routing-agnostic compiler_
+and the second one as the _routing-aware compiler_.
 :::
 
 ## Example: GHZ State on Neutral Atom Architecture
 
-In this example, we will demonstrate how to use the zoned neutral atom compiler to generate a sequence of
-target-specific instructions for a quantum circuit.
-For this purpose, we employ a circuit that prepares a Greenberger-Horne-Zeilinger (GHZ) state of 8 qubits.
-Compared to the usual GHZ circuit that applies the CX-gates in a chain, this circuit applies the CX-gates in a tree-like
-manner.
-First, it brings one qubit into maximal superposition and then applies the first CX-gate as usual.
-Afterward, it applies two CX-gates in parallel controlled on the qubits already in superposition instead of applying them
-serially.
+In this example, we will demonstrate how to use the zoned neutral atom compiler
+to generate a sequence of target-specific instructions for a quantum circuit.
+For this purpose, we employ a circuit
+that prepares a Greenberger-Horne-Zeilinger (GHZ) state of 8 qubits.
+Compared to the usual GHZ circuit that applies the CX-gates in a chain,
+this circuit applies the CX-gates in a tree-like manner.
+First, it brings one qubit into maximal superposition
+and then applies the first CX-gate as usual.
+Afterward, it applies two CX-gates in parallel controlled on the qubits already
+in superposition instead of applying them serially.
 
 ```{code-cell} ipython3
 from qiskit import QuantumCircuit
@@ -57,14 +68,17 @@ qc.cx(6, 7)
 qc.draw(output="mpl")
 ```
 
-This circuit is not compatible with the native gate set of the zoned neutral atom architecture that consists of global
-ry-gates, local rz-gates, and controlled z-gates.
-The following circuit is equivalent to the previous one but decomposes the circuit into the native gate set of the
-zoned neutral atom architecture.
+This circuit is not compatible with the native gate set of the zoned neutral
+atom architecture that consists of global ry-gates, local rz-gates, and
+controlled z-gates.
+The following circuit is equivalent to the previous one
+but decomposes the circuit into the native gate set of the zoned neutral atom
+architecture.
 
 ```{note}
-Even though other single-qubit gates may not be supported by the hardware, the compiler can handle arbitrary
-single-qubit gates. It will translate them to generic u3 gates and include them in the output.
+Even though other single-qubit gates may not be supported by the hardware,
+the compiler can handle arbitrary single-qubit gates.
+It will translate them to generic u3 gates and include them in the output.
 ```
 
 ```{code-cell} ipython3
@@ -102,10 +116,12 @@ qc.append(global_ry(pi/4, 8), range(8))
 qc.draw(output="mpl")
 ```
 
-On the considered architecture, the single-qubit gates, i.e., the global ry and local rz-gates can be executed everywhere.
-However, the controlled z-gates can only be executed between nearby atoms in the so-called entanglement zone.
-This entanglement zone is spatially separated from the storage zone, where all atoms not involved in a cz-gate are
-stored.
+On the considered architecture, the single-qubit gates, i.e.,
+the global ry and local rz-gates can be executed everywhere.
+However, the controlled z-gates can only be executed between nearby atoms in the
+so-called entanglement zone.
+This entanglement zone is spatially separated from the storage zone,
+where all atoms not involved in a cz-gate are stored.
 
 ```{image} images/zones.pdf
 :alt: Zoned Neutral Atom Architecture
@@ -113,7 +129,8 @@ stored.
 :align: center
 ```
 
-To find an optimized sequence of target-specific instructions, we use one of the zoned neutral atom compilers.
+To find an optimized sequence of target-specific instructions,
+we use one of the zoned neutral atom compilers.
 Each compiler requires first a specification of the architecture.
 
 ```{code-cell} ipython3
@@ -156,10 +173,15 @@ compiler = RoutingAwareCompiler(arch)
 ```
 
 Now, the created compiler can be used to compile the circuit from above.
-The output is in the `.naviz` format that can be read by the `MQT NAViz` tool
-at [github.com/cda-tum/mqt-naviz](https://github.com/cda-tum/mqt-naviz).
+The output is in the `.naviz` format
+that can be read by the `MQT NAViz` tool at
+[github.com/cda-tum/mqt-naviz](https://github.com/cda-tum/mqt-naviz).
 This tool allows visualizing the resulting quantum computation.
-To import the architecture used for the compilation into MQT NAViz, you can use the [`to_namachine_file`](#mqt.qmap.na.zoned.ZonedNeutralAtomArchitecture.to_namachine_file) method to export the architecture to the `.namachine` format accepted by MQT NAViz.
+To import the architecture used for the compilation into MQT NAViz,
+you can use the
+{py:meth}`~mqt.qmap.na.zoned.ZonedNeutralAtomArchitecture.to_namachine_file`
+method to export the architecture to the `.namachine` format accepted by MQT
+NAViz.
 
 ```{code-cell} ipython3
 from mqt.core import load
@@ -170,14 +192,18 @@ print(code)
 ```
 
 ```{note}
-The A* search in the placer of the routing-aware compiler is quite memory intensive.
-Right now, the maximum number of nodes considered in the A* search is limited to 50M.
-If this limit is hit, you will get an error message. You can freely adapt this limit
-by setting the argument `max_nodes` in the constructor of the `RoutingAwareCompiler`, see below.
+The A* search in the placer of the routing-aware compiler is quite memory
+intensive.
+Right now, the maximum number of nodes considered in the A* search is limited to
+50M.
+If this limit is hit, you will get an error message.
+You can freely adapt this limit by setting the argument `max_nodes` in the
+constructor of the `RoutingAwareCompiler`, see below.
 ```
 
 Above, we have used the default settings for the compiler.
-However, the different stages of the compiler can also be configured, e.g., the deepening factor of the A\*-placer:
+However, the different stages of the compiler can also be configured, e.g.,
+the deepening factor of the A\*-placer:
 
 ```{code-cell} ipython3
 compiler = RoutingAwareCompiler(arch, deepening_factor = 0.6)

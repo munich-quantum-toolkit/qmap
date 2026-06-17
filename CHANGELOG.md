@@ -5,7 +5,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on a mixture of [Keep a Changelog] and [Common Changelog].
-This project adheres to [Semantic Versioning], with the exception that minor releases may include breaking changes.
+This project adheres to [Semantic Versioning],
+with the exception that minor releases may include breaking changes.
 
 ## [Unreleased]
 
@@ -13,18 +14,22 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
-- 🚸 Add [CMake presets] to provide a standardized and reproducible way to configure builds ([#1020]) ([**@denialhaag**])
+- 🚸 Add [CMake presets] to provide a standardized
+  and reproducible way to configure builds ([#1020]) ([**@denialhaag**])
 
 ### Changed
 
-- ⬆️ Update [munich-quantum-toolkit/workflows] to version `v2.0.1` ([#1020]) ([**@denialhaag**])
-- 🎨 Add two-qubit gate layer to decomposer interface in zoned neutral atom compiler ([#976]) ([**@ystade**])
+- ⬆️ Update [munich-quantum-toolkit/workflows] to version `v2.0.1` ([#1020])
+  ([**@denialhaag**])
+- 🎨 Add two-qubit gate layer to decomposer interface in zoned neutral atom
+  compiler ([#976]) ([**@ystade**])
 - ⬆️ Update `mqt-core` to version 3.6.0 ([#1011]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.12.0 ([#1011]) ([**@denialhaag**])
 
 ### Fixed
 
-- 🐛 Fix condition to detect previously unrecognized reuse opportunities ([#953]) ([**@ystade**])
+- 🐛 Fix condition to detect previously unrecognized reuse opportunities
+  ([#953]) ([**@ystade**])
 
 ## [3.6.0] - 2026-02-24
 
@@ -32,7 +37,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#360)._
 
 ### Added
 
-- ✨ Add a (no-op) decomposer component to the zoned neutral atom compiler ([#902]) ([**@ystade**])
+- ✨ Add a (no-op) decomposer component to the zoned neutral atom compiler
+  ([#902]) ([**@ystade**])
 
 ### Changed
 
@@ -40,7 +46,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#360)._
 - ⬆️ Update `mqt-core` to version 3.4.1 ([#924]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.11.0 ([#924]) ([**@denialhaag**])
 - 🔧 Replace `mypy` with `ty` ([#912]) ([**@denialhaag**])
-- ♻️ Migrate Python bindings from `pybind11` to `nanobind` ([#911], [#916]) ([**@denialhaag**])
+- ♻️ Migrate Python bindings from `pybind11` to `nanobind`
+  ([#911], [#916]) ([**@denialhaag**])
 - 📦️ Provide Stable ABI wheels for Python 3.12+ ([#911]) ([**@denialhaag**])
 
 ## [3.5.0] - 2025-12-16
@@ -49,19 +56,29 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#350)._
 
 ### Added
 
-- ✨ Add iterative diving search as a more efficient placement heuristic method ([#862]) ([**@ystade**])
-- ✨ Add relaxed routing method to the zoned neutral atom compiler ([#859]) ([**@ystade**])
+- ✨ Add iterative diving search
+  as a more efficient placement heuristic method ([#862]) ([**@ystade**])
+- ✨ Add relaxed routing method to the zoned neutral atom compiler ([#859])
+  ([**@ystade**])
 
 ### Changed
 
-- 👷 Stop testing on `ubuntu-22.04` and `ubuntu-22.04-arm` runners ([#874]) ([**@denialhaag**])
-- 👷 Stop testing with `clang-19` and start testing with `clang-21` ([#874]) ([**@denialhaag**])
-- 👷 Fix macOS tests with Homebrew Clang via new `munich-quantum-toolkit/workflows` version ([#874]) ([**@denialhaag**])
-- 👷 Re-enable macOS tests with GCC by disabling module scanning ([#874]) ([**@denialhaag**])
-- ✨ Enable code generation for relaxed routing constraints ([#848]) ([**@ystade**])
-- ✨ Add `max_filling_factor` to scheduler in Zoned Neutral Atom Compiler ([#847]) ([**@ystade**])
-- ✨ Added extension to the hybrid routing mapper to also support Bridge gates, Passby moves and Flying ancillas ([#832]) ([**@lsschmid**])
-- ✨ Added hybrid synthesis routing for iterative circuit constructions ([#832]) ([**@lsschmid**])
+- 👷 Stop testing on `ubuntu-22.04`
+  and `ubuntu-22.04-arm` runners ([#874]) ([**@denialhaag**])
+- 👷 Stop testing with `clang-19`
+  and start testing with `clang-21` ([#874]) ([**@denialhaag**])
+- 👷 Fix macOS tests with Homebrew Clang via new
+  `munich-quantum-toolkit/workflows` version ([#874]) ([**@denialhaag**])
+- 👷 Re-enable macOS tests with GCC by disabling module scanning ([#874])
+  ([**@denialhaag**])
+- ✨ Enable code generation
+  for relaxed routing constraints ([#848]) ([**@ystade**])
+- ✨ Add `max_filling_factor` to scheduler in Zoned Neutral Atom Compiler
+  ([#847]) ([**@ystade**])
+- ✨ Added extension to the hybrid routing mapper to also support Bridge gates,
+  Passby moves and Flying ancillas ([#832]) ([**@lsschmid**])
+- ✨ Added hybrid synthesis routing
+  for iterative circuit constructions ([#832]) ([**@lsschmid**])
 
 ### Removed
 
@@ -78,11 +95,13 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
 ### Changed
 
 - 📝 Improve error message in the NA compiler ([#804]) ([**@ystade**])
-- ⬆️ Bump minimum required `mqt-core` version to `3.3.1` ([#803]) ([**@denialhaag**], [**@ystade**])
+- ⬆️ Bump minimum required `mqt-core` version to `3.3.1` ([#803])
+  ([**@denialhaag**], [**@ystade**])
 
 ### Fixed
 
-- 🐛 Fix logging level parameter values and error/warning messages ([#793]) ([**@ystade**])
+- 🐛 Fix logging level parameter values
+  and error/warning messages ([#793]) ([**@ystade**])
 
 ### Removed
 
@@ -92,7 +111,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#340)._
 
 ### Fixed
 
-- 🐛 Fix lookup of discrete columns in routing-aware compiler ([#728]) ([**@ystade**])
+- 🐛 Fix lookup of discrete columns in routing-aware compiler ([#728])
+  ([**@ystade**])
 
 ## [3.3.0] - 2025-08-04
 
@@ -104,15 +124,21 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#330)._
 
 ### Changed
 
-- ⬆️ Bump minimum required `mqt-core` version to `3.2.1` ([#720]) ([**@denialhaag**])
+- ⬆️ Bump minimum required `mqt-core` version to `3.2.1` ([#720])
+  ([**@denialhaag**])
 - ⬆️ Require C++20 ([#720]) ([**@denialhaag**])
-- ♻️ Neutral Atom Compiler: Merge Placement and Routing stage into a Layout Synthesis stage ([#713]) ([**@ystade**])
-- ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible) `py::native_enum` ([#715]) ([**@denialhaag**])
+- ♻️ Neutral Atom Compiler:
+  Merge Placement and Routing stage into a Layout Synthesis stage ([#713])
+  ([**@ystade**])
+- ✨ Expose enums to Python via `pybind11`'s new (`enum.Enum`-compatible)
+  `py::native_enum` ([#715]) ([**@denialhaag**])
 
 ### Fixed
 
-- 🚸 Make function to export architecture in `.namachine` format available from Python ([#719]) ([**@ystade**])
-- 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`, and `mqt-qcec` ([#714]) ([**@denialhaag**])
+- 🚸 Make function to export architecture in `.namachine` format available from
+  Python ([#719]) ([**@ystade**])
+- 🚸 Increase binary compatibility between `mqt-qmap`, `mqt-core`,
+  and `mqt-qcec` ([#714]) ([**@denialhaag**])
 
 ## [3.2.0] - 2025-07-16
 
@@ -120,14 +146,20 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Changed
 
-- ♻️ Restructure the Python code to introduce modules ([#665]) ([**@denialhaag**])
-- ♻️ Restructure the C++ code for the Python bindings to mirror the introduced Python modules ([#665]) ([**@denialhaag**])
-- ⬆️ Bump minimum required `mqt-core` version to `3.1.0` ([#694]) ([**@denialhaag**])
-- ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694]) ([**@denialhaag**])
+- ♻️ Restructure the Python code to introduce modules ([#665])
+  ([**@denialhaag**])
+- ♻️ Restructure the C++ code
+  for the Python bindings to mirror the introduced Python modules ([#665])
+  ([**@denialhaag**])
+- ⬆️ Bump minimum required `mqt-core` version to `3.1.0` ([#694])
+  ([**@denialhaag**])
+- ⬆️ Bump minimum required `pybind11` version to `3.0.0` ([#694])
+  ([**@denialhaag**])
 
 ### Fixed
 
-- 🐛 Fix out-of-bounds access to the vector of reuse qubits ([#712]) ([**@ystade**])
+- 🐛 Fix out-of-bounds access to the vector of reuse qubits ([#712])
+  ([**@ystade**])
 
 ### Removed
 
@@ -137,14 +169,18 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Fixed
 
-- 🐛 Fix the CD pipeline by changing the statistics struct in the zoned neutral atom compiler ([#661]) ([**@ystade**])
+- 🐛 Fix the CD pipeline by changing the statistics struct in the zoned neutral
+  atom compiler ([#661]) ([**@ystade**])
 
 ## [3.1.2] - 2025-05-27
 
 ### Fixed
 
-- 🐛 Entirely deactivate PDF export in documentation build ([#660]) ([**@ystade**])
-- 📝 Append the docstring for the `__init__` method to the class docstring in the documentation ([#660]) ([**@ystade**])
+- 🐛 Entirely deactivate PDF export in documentation build ([#660])
+  ([**@ystade**])
+- 📝 Append the docstring
+  for the `__init__` method to the class docstring in the documentation ([#660])
+  ([**@ystade**])
 
 ## [3.1.1] - 2025-05-27
 
@@ -156,14 +192,19 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#320)._
 
 ### Added
 
-- ✨ Add new compilers for zoned neutral atom architectures (a routing-agnostic and routing-aware compiler) ([#624]) ([**@ystade**])
-- ✨ Add a new CMake function `add_mqt_qmap_binding` to add a Python binding library ([#624]) ([**@ystade**])
+- ✨ Add new compilers for zoned neutral atom architectures
+  (a routing-agnostic and routing-aware compiler) ([#624]) ([**@ystade**])
+- ✨ Add a new CMake function `add_mqt_qmap_binding` to add a Python binding
+  library ([#624]) ([**@ystade**])
 
 ### Changed
 
-- ♻️ Move the C++ code for the Python bindings to the top-level `bindings` directory ([#624]) ([**@ystade**])
-- ♻️ Move all Python code (no tests) to the top-level `python` directory ([#624]) ([**@ystade**])
-- ♻️ Restructure the Python bindings for neutral atom tools into separate modules ([#624]) ([**@ystade**])
+- ♻️ Move the C++ code for the Python bindings to the top-level `bindings`
+  directory ([#624]) ([**@ystade**])
+- ♻️ Move all Python code
+  (no tests) to the top-level `python` directory ([#624]) ([**@ystade**])
+- ♻️ Restructure the Python bindings
+  for neutral atom tools into separate modules ([#624]) ([**@ystade**])
 
 ## [3.0.0] - 2025-05-08
 
@@ -176,17 +217,21 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#300)._
 ### Changed
 
 - 🚚 Move MQT QMAP to the [munich-quantum-toolkit] GitHub organization
-- ♻️ Use the `mqt-core` Python package for handling circuits ([#418]) ([**@burgholzer**])
-- ⬆️ Bump minimum required CMake version to `3.24.0` ([#621]) ([**@burgholzer**])
+- ♻️ Use the `mqt-core` Python package
+  for handling circuits ([#418]) ([**@burgholzer**])
+- ⬆️ Bump minimum required CMake version to `3.24.0` ([#621])
+  ([**@burgholzer**])
 - ♻️ Adopt new `NAComputation` in NASP tool ([#608]) ([**@ystade**])
 - ♻️ Isolate NALAC from the main library ([#608], [#609]) ([**@ystade**])
 - 📝 Rework existing project documentation ([#614]) ([**@burgholzer**])
 
 ### Removed
 
-- 🔥 Remove teleportation support for the heuristic mapping ([#621]) ([**@burgholzer**])
+- 🔥 Remove teleportation support
+  for the heuristic mapping ([#621]) ([**@burgholzer**])
 - 🔥 Remove support for `BackendV1` Qiskit backends ([#610]) ([**@burgholzer**])
-- 🔥 Remove support for `.real`, `.qc`, `.tfc`, and `GRCS` files ([#621]) ([**@burgholzer**])
+- 🔥 Remove support for `.real`, `.qc`, `.tfc`,
+  and `GRCS` files ([#621]) ([**@burgholzer**])
 - 🔥 Remove `yaml-cpp` dependency ([#608]) ([**@ystade**])
 
 ## [2.8.0] - 2024-11-18
@@ -230,7 +275,6 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [#796]: https://github.com/munich-quantum-toolkit/qmap/pull/796
 [#793]: https://github.com/munich-quantum-toolkit/qmap/pull/793
 [#767]: https://github.com/munich-quantum-toolkit/qmap/pull/767
-[#760]: https://github.com/munich-quantum-toolkit/qmap/pull/760
 [#728]: https://github.com/munich-quantum-toolkit/qmap/pull/728
 [#720]: https://github.com/munich-quantum-toolkit/qmap/pull/720
 [#719]: https://github.com/munich-quantum-toolkit/qmap/pull/719

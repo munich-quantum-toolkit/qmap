@@ -1,0 +1,18 @@
+[per-file-ignores]
+# The PR template is not a Markdown document in that sense
+"**/pull_request_template.md" = ["MD013", "MD041"]
+# The docs files do not necessarily need to start with a top-level heading
+"docs/**" = ["MD041"]
+# The README starts with an image and may include HTML tags
+"README.md" = ["MD033", "MD041"]
+
+[per-file-flavor]
+"docs/**" = "myst"
+
+[MD013]
+line-length = 80
+reflow = true
+reflow-mode = "semantic-line-breaks"
+
+[MD060]
+enabled = true

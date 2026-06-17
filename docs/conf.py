@@ -55,20 +55,23 @@ master_doc = "index"
 templates_path = ["_templates"]
 
 extensions = [
-    "myst_nb",
     "autoapi.extension",
+    "myst_nb",
+    "sphinx_copybutton",
+    "sphinx_design",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    "sphinx_copybutton",
-    "sphinx_design",
-    "sphinxext.opengraph",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.inkscapeconverter",
     "sphinxcontrib.bibtex",
+    "sphinxcontrib.inkscapeconverter",
+    "sphinxext.opengraph",
 ]
 
-source_suffix = [".rst", ".md"]
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
 
 exclude_patterns = [
     "_build",
@@ -162,6 +165,7 @@ napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
 # -- Options for HTML output -------------------------------------------------
+
 html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = [

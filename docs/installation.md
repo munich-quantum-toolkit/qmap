@@ -4,9 +4,8 @@
 # Installation
 
 MQT QMAP is primarily developed as a C++20 library with Python bindings.
-The Python package is available on
-[PyPI](https://pypi.org/project/mqt.qmap/) and can be installed on all
-major operating systems with all
+The Python package is available on [PyPI](https://pypi.org/project/mqt.qmap/)
+and can be installed on all major operating systems with all
 [officially supported Python versions](https://devguide.python.org/versions/).
 
 :::::{tip}
@@ -68,6 +67,7 @@ python -m pip install mqt.qmap
 :::
 
 ::::
+
 In most cases, no compilation is required;
 a platform-specific prebuilt wheel is downloaded and installed.
 
