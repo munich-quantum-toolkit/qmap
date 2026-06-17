@@ -1,17 +1,22 @@
 # Upgrade Guide
 
-This document describes breaking changes and how to upgrade. For a complete list of changes including minor and patch releases, please refer to the [changelog](CHANGELOG.md).
+This document describes breaking changes and how to upgrade.
+For a complete list of changes including minor and patch releases,
+please refer to the [changelog](CHANGELOG.md).
 
 ## [Unreleased]
 
-This release also updates the minimum required `mqt-core` version to `v3.6.0` as well as the `nanobind` version to `v2.12.0`.
+This release also updates the minimum required `mqt-core` version to `v3.6.0`
+as well as the `nanobind` version to `v2.12.0`.
 
 ### CMake presets
 
-[CMake presets] have been added to provide a standardized and reproducible way to configure builds across different platforms.
+[CMake presets] have been added to provide a standardized
+and reproducible way to configure builds across different platforms.
 These presets are also used in our CI.
 
-On Unix systems, the `debug`, `release`, and `coverage` presets can be used to configure, build, and test MQT QMAP.
+On Unix systems, the `debug`, `release`,
+and `coverage` presets can be used to configure, build, and test MQT QMAP.
 
 ```console
 cmake --preset release
@@ -19,7 +24,8 @@ cmake --build --preset release
 ctest --preset release
 ```
 
-Additionally, the `lint` preset can be used to configure and build MQT QMAP in preparation for a `clang-tidy` run.
+Additionally, the `lint` preset can be used to configure
+and build MQT QMAP in preparation for a `clang-tidy` run.
 
 If you are on Windows, use the `debug-windows` and `release-windows` presets.
 
@@ -27,7 +33,8 @@ If you are on Windows, use the `debug-windows` and `release-windows` presets.
 
 ### Renamings
 
-To comply with established guidelines for function and attribute names, this release includes the following renamings:
+To comply with established guidelines for function and attribute names,
+this release includes the following renamings:
 
 - `mqt.qmap.plugins.qiskit.sc.compile` has been renamed to `compile_`.
 - `mqt.qmap.sc.map` has been renamed to `map_`.
@@ -36,7 +43,8 @@ To comply with established guidelines for function and attribute names, this rel
 
 ### Stable ABI wheels
 
-We are now providing Stable ABI wheels instead of separate version-specific wheels for Python 3.12+.
+We are now providing Stable ABI wheels instead of separate version-specific
+wheels for Python 3.12+.
 This was enabled by migrating our Python bindings from `pybind11` to `nanobind`.
 
 The full list of wheels now reads:
@@ -48,28 +56,44 @@ The full list of wheels now reads:
 
 ## [3.5.0]
 
-As part of this release, the scheduler of the zoned neutral atom compiler now features a new parameter `max_filling_factor`.
-It allows limiting the maximum number of parallel entangling gates relative to the maximum capacity of the entangling zone.
+As part of this release,
+the scheduler of the zoned neutral atom compiler now features a new parameter
+`max_filling_factor`.
+It allows limiting the maximum number of parallel entangling gates relative to
+the maximum capacity of the entangling zone.
 Note, the default is set to `0.9`.
 
-The code generator of the zoned neutral atom compiler is updated to also handle routings that only satisfy relaxed routing constraints.
-In contrast to the strict routing, a relaxed routing can change the relative order of atoms.
-The constraint that remains is that atoms previously in one row (column) must remain in the same row (column) after the routing.
+The code generator of the zoned neutral atom compiler is updated to also handle
+routings that only satisfy relaxed routing constraints.
+In contrast to the strict routing,
+a relaxed routing can change the relative order of atoms.
+The constraint that remains is
+that atoms previously in one row (column) must remain in the same row (column)
+after the routing.
 
-Additionally, we also introduce an extension to the Hybrid Neutral Atom Mapper (HyRoNA), which unifies gate-based routing (SWAP/BRIDGE) with atom shuttling, pass-by, and an optional flying ancilla to find the most suitable routing.
+Additionally, we also introduce an extension to the Hybrid Neutral Atom Mapper
+(HyRoNA), which unifies gate-based routing (SWAP/BRIDGE) with atom shuttling,
+pass-by, and an optional flying ancilla to find the most suitable routing.
 
 Existing workflows should continue to function.
-The optionally new parameters are `usePassBy=False`, `numFlyingAncillas=0`, and `maxBridgeDistance=0` which can all be disabled with the above values to recover the previous behavior.
-Enabling/increasing the corresponding parameters allows enabling individually single routing strategies.
+The optionally new parameters are `usePassBy=False`, `numFlyingAncillas=0`,
+and `maxBridgeDistance=0`
+which can all be disabled with the above values to recover the previous
+behavior.
+Enabling/increasing the corresponding parameters allows enabling individually
+single routing strategies.
 
-The hybrid mapper now also optionally yields a `.naviz` output which can be handled similarly to the zoned architecture compiler.
+The hybrid mapper now also optionally yields a `.naviz` output
+which can be handled similarly to the zoned architecture compiler.
 
 ### Removal of Python 3.13t wheels
 
 Free-threading Python was introduced as an experimental feature in Python 3.13.
 It became stable in Python 3.14.
-To conserve space on PyPI and to reduce the CI/CD build times, we have removed all wheels for Python 3.13t.
-We continue to provide wheels for the regular Python versions 3.10 to 3.14, as well as 3.14t.
+To conserve space on PyPI and to reduce the CI/CD build times,
+we have removed all wheels for Python 3.13t.
+We continue to provide wheels for the regular Python versions 3.10 to 3.14,
+as well as 3.14t.
 
 ## [3.4.0]
 
@@ -77,76 +101,122 @@ We continue to provide wheels for the regular Python versions 3.10 to 3.14, as w
 
 Starting with this release, MQT QMAP no longer supports Python 3.9.
 This is in line with the scheduled end of life of the version.
-As a result, MQT QMAP is no longer tested under Python 3.9 and no longer ships Python 3.9 wheels.
+As a result, MQT QMAP is no longer tested under Python 3.9
+and no longer ships Python 3.9 wheels.
 
 ## [3.3.0]
 
-Testing previous versions of the `mqt-qmap` package built via `uv sync` or simple `(uv) pip install .` generally failed due to binary incompatibility of the `mqt-core` compiled extension packages and the `mqt-qmap` one.
-This required building `mqt-core` from source and without build isolation to get a working local setup.
-By using the latest `pybind11` release (`v3`), the binary compatibility between extension modules compiled under different circumstances (such as different compilers) has been greatly increased.
-As such, it is no longer necessary to build `mqt-core` (and `mqt-qcec` for testing) from source and without build isolation when locally working on `mqt-qmap`.
+Testing previous versions of the `mqt-qmap` package built via `uv sync`
+or simple `(uv) pip install .` generally failed due to binary incompatibility of
+the `mqt-core` compiled extension packages and the `mqt-qmap` one.
+This required building `mqt-core` from source
+and without build isolation to get a working local setup.
+By using the latest `pybind11` release (`v3`),
+the binary compatibility between extension modules compiled under different
+circumstances (such as different compilers) has been greatly increased.
+As such, it is no longer necessary to build `mqt-core`
+(and `mqt-qcec` for testing)
+from source and without build isolation when locally working on `mqt-qmap`.
 A simple `uv sync` is enough to successfully run `pytest`.
 
-All Python enums (e.g., `sc.Method`) are now exposed via `pybind11`'s new `py::native_enum`, which makes them compatible with Python's `enum.Enum` class (PEP 435).
+All Python enums (e.g., `sc.Method`) are now exposed via `pybind11`'s new
+`py::native_enum`, which makes them compatible with Python's `enum.Enum` class
+(PEP 435).
 As a result, the enums can no longer be initialized using a string.
 Instead of `Method("exact")` or `"exact"`, use `Method.exact`.
 
-This release restructures the neutral atom compiler which has consequences for its configuration and the reporting of statistics.
-The placement and routing stages have been merged into a single layout synthesis stage.
-There is a new `PlaceAndRouteSynthesizer` that combines the previously separate placement and routing stages.
-Consequently, the configuration for the placement and routing stages must now be wrapped in a configuration for the layout synthesis stage when using the C++ API.
+This release restructures the neutral atom compiler which has consequences
+for its configuration and the reporting of statistics.
+The placement and routing stages have been merged into a single layout synthesis
+stage.
+There is a new `PlaceAndRouteSynthesizer`
+that combines the previously separate placement and routing stages.
+Consequently, the configuration for the placement
+and routing stages must now be wrapped in a configuration
+for the layout synthesis stage when using the C++ API.
 The Python API did not change in this regard.
-Furthermore, when reporting the statistics of the neutral atom compiler, the statistics for placement and routing are now reported as part of the layout synthesis statistics.
+Furthermore, when reporting the statistics of the neutral atom compiler,
+the statistics for placement and routing are now reported
+as part of the layout synthesis statistics.
 The latter affects both the C++ and Python APIs.
 
 Finally, the minimum required C++ version has been raised from C++17 to C++20.
-The default compilers of our test systems support all relevant features of the standard.
+The default compilers of our test systems support all relevant features of the
+standard.
 
 ## [3.2.0]
 
 With this release, the Python package has been restructured.
 In particular, the `mqt.qmap.pyqmap` module has been discontinued.
-Classes and functions can now be imported from the more descriptive `mqt.qmap.clifford_synthesis`, `mqt.qmap.hybrid_mapper`, `mqt.qmap.na`, and `mqt.qmap.sc` modules.
-The superconducting module's `compile()` function has been moved to `mqt.qmap.plugins.qiskit.sc`.
-The entrypoints `synthesize_clifford()` and `optimize_clifford()` of the Clifford synthesis module have been moved to `mqt.qmap.plugins.qiskit.clifford_synthesis`.
+Classes and functions can now be imported from the more descriptive
+`mqt.qmap.clifford_synthesis`, `mqt.qmap.hybrid_mapper`, `mqt.qmap.na`, and
+`mqt.qmap.sc` modules.
+The superconducting module's `compile()` function has been moved to
+`mqt.qmap.plugins.qiskit.sc`.
+The entrypoints `synthesize_clifford()`
+and `optimize_clifford()` of the Clifford synthesis module have been moved to
+`mqt.qmap.plugins.qiskit.clifford_synthesis`.
 
 ## [3.1.0]
 
-This minor release initiates the efforts to re-structure the Python bindings and make them more modular.
-Even tough this is not a breaking change, it is worth mentioning to developers of MQT QMAP that all Python code (except tests) has been moved to the top-level `python` directory.
-Furthermore, the C++ code for the Python bindings has been moved to the top-level `bindings` directory.
+This minor release initiates the efforts to re-structure the Python bindings
+and make them more modular.
+Even tough this is not a breaking change,
+it is worth mentioning to developers of MQT QMAP that all Python code
+(except tests) has been moved to the top-level `python` directory.
+Furthermore, the C++ code
+for the Python bindings has been moved to the top-level `bindings` directory.
 
 ## [3.0.0]
 
-This major release introduces several breaking changes, including the removal of deprecated features.
-The following paragraphs describe the most important changes and how to adapt your code accordingly.
+This major release introduces several breaking changes,
+including the removal of deprecated features.
+The following paragraphs describe the most important changes
+and how to adapt your code accordingly.
 We intend to provide a more comprehensive migration guide for future releases.
 
-The major change in this major release is the move to the MQT Core Python package.
-This move allows us to make `qiskit` a fully optional dependency and entirely rely on the MQT Core IR for representing circuits.
-Additionally, the `mqt-core` Python package now ships all its C++ libraries as shared libraries so that these need not be fetched or built as part of the build process.
-This was tricky to achieve cross-platform, and you can find some more backstory in the corresponding [PR](https://github.com/munich-quantum-toolkit/qmap/pulls/418).
+The major change in this major release is the move to the MQT Core Python
+package.
+This move allows us to make `qiskit` a fully optional dependency
+and entirely rely on the MQT Core IR for representing circuits.
+Additionally, the `mqt-core` Python package now ships all its C++ libraries
+as shared libraries so that these need not be fetched or built
+as part of the build process.
+This was tricky to achieve cross-platform,
+and you can find some more backstory in the corresponding
+[PR](https://github.com/munich-quantum-toolkit/qmap/pulls/418).
 We expect this integration to mature over the next few releases.
 If you encounter any issues, please let us know.
 
-Support for `BackendV1` Qiskit backends has been removed in accordance with Qiskit's 2.0 release dropping support for these backends.
-If you still require support for these backends, please use the last version of MQT QMAP that supports them, which is `2.8.0`.
-However, we strongly recommend that you upgrade to Qiskit 2.0 or higher and use the new `BackendV2` interface.
+Support for `BackendV1` Qiskit backends has been removed in accordance with
+Qiskit's 2.0 release dropping support for these backends.
+If you still require support for these backends,
+please use the last version of MQT QMAP that supports them, which is `2.8.0`.
+However, we strongly recommend that you upgrade to Qiskit 2.0 or higher
+and use the new `BackendV2` interface.
 
 Teleportation support for the heuristic mapping has been removed.
-If you still require this feature, please use the last version of MQT QMAP that supports it, which is `2.8.0`.
+If you still require this feature,
+please use the last version of MQT QMAP that supports it, which is `2.8.0`.
 
-MQT Core itself dropped support for several parsers in `v3.0.0`, including the `.real`, `.qc`, `.tfc`, and `GRCS` parsers.
-The `.real` parser lives on as part of the [MQT SyReC] project. All others have been removed without replacement.
+MQT Core itself dropped support for several parsers in `v3.0.0`,
+including the `.real`, `.qc`, `.tfc`, and `GRCS` parsers.
+The `.real` parser lives on as part of the [MQT SyReC] project.
+All others have been removed without replacement.
 Consequently, these input formats are no longer supported in MQT QMAP.
 
-MQT QMAP has moved to the [munich-quantum-toolkit](https://github.com/munich-quantum-toolkit) GitHub organization under https://github.com/munich-quantum-toolkit/qmap.
-While most links should be automatically redirected, please update any links in your code to point to the new location.
+MQT QMAP has moved to the
+[munich-quantum-toolkit](https://github.com/munich-quantum-toolkit) GitHub
+organization under <https://github.com/munich-quantum-toolkit/qmap>.
+While most links should be automatically redirected,
+please update any links in your code to point to the new location.
 All links in the documentation have been updated accordingly.
 
 MQT QMAP now requires CMake 3.24 or higher.
-Most modern operating systems should have this version available in their package manager.
-Alternatively, CMake can be conveniently installed from PyPI using the [`cmake`](https://pypi.org/project/cmake/) package.
+Most modern operating systems should have this version available in their
+package manager.
+Alternatively, CMake can be conveniently installed from PyPI using the
+[`cmake`](https://pypi.org/project/cmake/) package.
 
 <!-- Version links -->
 

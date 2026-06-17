@@ -3,8 +3,7 @@
 
 # Tooling
 
-This page summarizes the main tools, software,
-and standards used in MQT QMAP.
+This page summarizes the main tools, software, and standards used in MQT QMAP.
 It serves as a quick reference for new contributors
 and users who want to understand the project's ecosystem.
 
