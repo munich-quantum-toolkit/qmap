@@ -405,6 +405,7 @@ docs = [
   "sphinxext-opengraph>=0.13.0",
   "walkerlayout>=1.0.2",
   "qiskit[qasm3-import,visualization]>=1.0.0",
+  "z3-solver>=4.16.0"
 ]
 test = [
   "pytest>=9.0.1",
