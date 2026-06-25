@@ -15,7 +15,7 @@ add_mqt_python_binding_nanobind(
   INSTALL_DIR
   .
   LINK_LIBS
-        #MQT::QMapSCExact
+  MQT::QMapSCExact
   MQT::QMapSCHeuristic
   MQT::CoreQASM)
 

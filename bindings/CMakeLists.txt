@@ -26,7 +26,7 @@ list(
   ${BASEPOINT}/../../core/lib64)
 
 # add all modules
-#add_subdirectory(clifford_synthesis)
-#add_subdirectory(hybrid_mapper)
+add_subdirectory(clifford_synthesis)
+add_subdirectory(hybrid_mapper)
 add_subdirectory(na)
-# add_subdirectory(sc)
+add_subdirectory(sc)

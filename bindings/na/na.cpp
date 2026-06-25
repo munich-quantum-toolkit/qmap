@@ -13,12 +13,12 @@
 namespace nb = nanobind;
 
 // forward declarations
-// void registerStatePreparation(nb::module_& m);
+void registerStatePreparation(nb::module_& m);
 void registerZoned(nb::module_& m);
 
 NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
-  // auto statePreparation = m.def_submodule("state_preparation");
-  // registerStatePreparation(statePreparation);
+  auto statePreparation = m.def_submodule("state_preparation");
+  registerStatePreparation(statePreparation);
 
   auto zoned = m.def_submodule("zoned");
   registerZoned(zoned);
