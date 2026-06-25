@@ -227,9 +227,9 @@ class RoutingAwareNativeGateCompiler:
         self,
         arch: ZonedNeutralAtomArchitecture,
         log_level: str = "I",
+        max_filling_factor: float = 0.9,
         theta_opt_schedule: bool = False,
         check_final_cond: bool = False,
-        max_filling_factor: float = 0.9,
         use_window: bool = True,
         window_min_width: int = 16,
         window_ratio: float = 1.0,
@@ -251,9 +251,9 @@ class RoutingAwareNativeGateCompiler:
         Args:
             arch: The zoned neutral atom architecture
             log_level: The log level for the compiler, possible values are "debug"/"D", "info"/"I", "warning"/"W", "error"/"E", and "critical"/"C"
+            max_filling_factor: The maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
             theta_opt_schedule: If this setting is turned on, a re-scheduling pass is executed immediately after translating the gates into their U3 representation. The theta optimization tries to minimize the maximum theta per layer by possibly scheduling single-qubit gates in later layers.
             check_final_cond: If enabled the theta optimization checks if the sum of the resulting layer's maximum theta and the next layer's maximum theta is strictly less than the sum of previous maximum thetas. This does not guarantee that the total schedule is the one with minimal cost but reduces the recursive calls by excluding some subsets.
-            max_filling_factor: The maximum filling factor for the entanglement zone, i.e., it sets the limit for the maximum number of entangling gates that are scheduled in parallel
             use_window: Whether to use a window for the placer
             window_min_width: The minimum width of the window for the placer
             window_ratio: The ratio between the height and the width of the window
