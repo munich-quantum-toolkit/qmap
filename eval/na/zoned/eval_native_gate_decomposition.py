@@ -10,15 +10,17 @@
 # /// script
 # dependencies = [
 #   "mqt.bench==2.1.0",
-#   "mqt.qmap==3.5.0",
+#   "mqt.qmap==3.7.1",
 # ]
 # [tool.uv]
-# exclude-newer = "2026-05-01T12:59:59Z"
+# exclude-newer = "2026-06-30T12:59:59Z"
 # ///
 
 """Script for evaluating the routing-aware native gate zoned neutral atom compiler.
 
-In particular, TODO
+In particular, it runs the native gate compiler to produce hardware compliant output.
+It records central metrics of the compilation runs and the generated code. It compares
+two different settings to evaluate the effectiveness of the theta optimization.
 """
 
 from __future__ import annotations
@@ -72,7 +74,7 @@ def _proc_target(q: Queue, func: Callable[P, R], args: P.args, kwargs: P.kwargs)
     """
     try:
         q.put(("ok", func(*args, **kwargs)))
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         q.put(("err", e))
 
 
@@ -439,7 +441,7 @@ class Evaluator:
                 atoms.append(match.group(1))
         self._apply_rz(atoms)
 
-    def _process_ry(self, line: str, it: Iterator[str]) -> None:
+    def _process_ry(self, line: str, it: Iterator[str]) -> None:  # noqa: ARG002
         """Process a global ry operation.
 
         Args:
@@ -632,7 +634,7 @@ class Evaluator:
 
 
 def main() -> None:
-    """Main function for evaluating the fast relaxed compiler."""
+    """Main function for evaluating the native gate compiler."""
     # set working directory to script location
     os.chdir(pathlib.Path(pathlib.Path(__file__).resolve()).parent)
     print("\033[32m[INFO]\033[0m Reading in architecture...")
@@ -660,35 +662,27 @@ def main() -> None:
         "warn_unsupported_gates": False,
     }
     baseline = RoutingAwareCompiler(arch, **common_config)
-    # setting1 = RoutingAwareAxialCompiler(arch, **common_config)
-    setting2 = RoutingAwareNativeGateCompiler(arch, **common_config)
-    setting3 = RoutingAwareNativeGateCompiler(arch, **common_config, theta_opt_schedule=True)
+    setting1 = RoutingAwareNativeGateCompiler(arch, **common_config)
+    setting2 = RoutingAwareNativeGateCompiler(arch, **common_config, theta_opt_schedule=True)
 
     evaluator = Evaluator(arch_dict, "results.csv")
     evaluator.print_header()
     pathlib.Path("in").mkdir(exist_ok=True)
 
     benchmark_list = [
-        ("graphstate", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
-        # ("graphstate", (BenchmarkLevel.INDEP, [60, 80, 100, 120, 140, 160, 180, 200, 500, 1000, 2000, 5000])),
-        ("qft", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
-        # ("qft", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qpeexact", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
-        # ("qpeexact", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("wstate", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
-        # ("wstate", (BenchmarkLevel.INDEP, [500, 1000])),
-        ("qaoa", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
-        # ("qaoa", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
-        ("vqe_two_local", (BenchmarkLevel.INDEP, [20, 40, 60, 80, 100])),
-        # ("vqe_two_local", (BenchmarkLevel.INDEP, [50, 100, 150, 200])),
+        ("graphstate", (BenchmarkLevel.INDEP, [20, 100])),
+        ("qft", (BenchmarkLevel.INDEP, [20, 100])),
+        ("qpeexact", (BenchmarkLevel.INDEP, [20, 100])),
+        ("wstate", (BenchmarkLevel.INDEP, [20, 100])),
+        ("qaoa", (BenchmarkLevel.INDEP, [20, 100])),
+        ("vqe_two_local", (BenchmarkLevel.INDEP, [20, 100])),
     ]
 
     for benchmark, qc in benchmarks(benchmark_list):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
         process_benchmark(baseline, "baseline", qc, benchmark, evaluator)
-        # process_benchmark(setting1, "setting1", qc, benchmark, evaluator)
+        process_benchmark(setting1, "setting1", qc, benchmark, evaluator)
         process_benchmark(setting2, "setting2", qc, benchmark, evaluator)
-        process_benchmark(setting3, "setting3", qc, benchmark, evaluator)
 
     print(
         "\033[32m[INFO]\033[0m =============================================================\n"
