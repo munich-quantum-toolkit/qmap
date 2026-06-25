@@ -208,10 +208,10 @@ auto NativeGateDecomposer::getDecompositionAngles(
 }
 
 auto NativeGateDecomposer::decompose(
-    size_t nQubits, const std::pair<std::vector<SingleQubitGateRefLayer>,
-                                    std::vector<TwoQubitGateLayer>>& schedule)
-    -> std::pair<std::vector<SingleQubitGateLayer>,
-                 std::vector<TwoQubitGateLayer>> {
+    const size_t nQubits,
+    const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+    const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
+    -> DecompositionResult {
   nQubits_ = nQubits;
 
   std::vector<std::vector<StructU3>> U3Layers =

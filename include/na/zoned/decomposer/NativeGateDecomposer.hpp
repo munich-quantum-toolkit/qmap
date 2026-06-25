@@ -18,6 +18,11 @@
 
 namespace na::zoned {
 
+/**
+ * Decomposes a given schedule of operations into the native gate set and, if
+ * `theta_opt_scheduling` is enabled, re-schedules them to minimize the total
+ * global rotation angle theta across the circuit
+ */
 class NativeGateDecomposer : public DecomposerBase {
 
   /**
@@ -126,28 +131,16 @@ public:
   auto static getDecompositionAngles(const std::array<qc::fp, 3>& angles,
                                      qc::fp theta_max) -> std::array<qc::fp, 3>;
 
-  /**
-   * @brief Decomposes a given schedule of operations into the native gate set
-   *       and, if theta_opt_scheduling is selected re-schedules them to
-   * minimize the total global rotation angle theta across the circuit
-   * @details
-   * @param nQubits the number of Qubits in the scheduled circuit
-   * @param schedule a pair of vectors containing SingleQubitGateRefLayers
-   *       and TwoQubitGateLayers
-   * @returns a pair of vectors containing SingleQubitLayers and TwoQubitLayers
-   *         representing the decomposed (and rescheduled) circuit
-   */
   [[nodiscard]] auto
   decompose(size_t nQubits,
-            const std::pair<std::vector<SingleQubitGateRefLayer>,
-                            std::vector<TwoQubitGateLayer>>& schedule)
-      -> std::pair<std::vector<SingleQubitGateLayer>,
-                   std::vector<TwoQubitGateLayer>> override;
+            const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+            const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
+      -> DecompositionResult override;
 
   /**
-   * @class A class implementing a simple DiGraph for use in the scheduling
+   * A class implementing a simple DiGraph for use in the scheduling
    *        component of the native gate decomposer.
-   * @tparam T , the type of object associated with each node
+   * @tparam T is the type of object associated with each node
    */
   template <class T> class DiGraph {
     /// number of nodes in the graph

@@ -49,7 +49,8 @@ public:
   }
 
   [[nodiscard]] auto
-  decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+  decompose(size_t nQubits,
+            const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
       -> DecompositionResult override;
 };

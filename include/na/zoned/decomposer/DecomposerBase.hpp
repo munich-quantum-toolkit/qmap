@@ -27,6 +27,7 @@ public:
    *
    * The decomposer may change the layering produced by the scheduler and,
    * hence, it receives the single-qubit and two-qubit gate layers.
+   * @param nQubits is the number of qubits in the scheduled circuit.
    * @param singleQubitGateLayers are the layers of single-qubit gates that are
    * meant to be first decomposed into the native gate set.
    * @param twoQubitGateLayers are the layers of two-qubit gates that the
@@ -38,7 +39,8 @@ public:
    * layer more than two-qubit gate layers.
    */
   [[nodiscard]] virtual auto
-  decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+  decompose(size_t nQubits,
+            const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
       -> DecompositionResult = 0;
 };
