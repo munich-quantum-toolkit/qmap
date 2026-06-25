@@ -35,7 +35,7 @@ try:
     import scienceplots  # noqa: F401
 
     HAVE_SCIENCEPLOTS = True
-except Exception:
+except ImportError:
     HAVE_SCIENCEPLOTS = False
 
 EVAL_DIR = Path(__file__).resolve().parent
@@ -156,7 +156,7 @@ def _savefig(fig: mpl.figure.Figure, name: str) -> None:
     try:
         if mpl.rcParams.get("text.usetex", False):
             exts.append("pgf")  # convenient for direct LaTeX inclusion via \input{}
-    except Exception:  # noqa: S110
+    except Exception:  # noqa: BLE001, S110
         pass
     for ext in exts:
         fig.savefig(FIG_DIR / f"{name}.{ext}")  # , bbox_inches="tight")
@@ -195,12 +195,12 @@ def fig_runtime_vs_gates(rt_long: pd.DataFrame) -> None:
         g.figure.set_layout_engine("constrained")
     try:
         g.figure.set_constrained_layout_pads(w_pad=mm_in, wspace=0.02)
-    except Exception:
+    except Exception:  # noqa: BLE001
         try:
             le = g.figure.get_layout_engine()
             if le and hasattr(le, "set"):
                 le.set(w_pad=mm_in, wspace=0.02)
-        except Exception:  # noqa: S110
+        except Exception:  # noqa: BLE001, S110
             pass
 
     # Axis labels close to axes (no figure-level labels)
@@ -208,7 +208,7 @@ def fig_runtime_vs_gates(rt_long: pd.DataFrame) -> None:
     g.set_xlabels("")  # remove per-facet x labels
     try:
         g.figure.supxlabel(r"$|G|$ in target Clifford")
-    except Exception:
+    except Exception:  # noqa: BLE001
         g.figure.supxlabel("|G| in target Clifford")
 
     g.set_titles("{col_name} qubits")
@@ -279,12 +279,12 @@ def fig_gates_vs_gates(gc_long: pd.DataFrame) -> None:
         g.figure.set_layout_engine("constrained")
     try:
         g.figure.set_constrained_layout_pads(w_pad=mm_in, wspace=0.02)
-    except Exception:
+    except Exception:  # noqa: BLE001
         try:
             le = g.figure.get_layout_engine()
             if le and hasattr(le, "set"):
                 le.set(w_pad=mm_in, wspace=0.02)
-        except Exception:  # noqa: S110
+        except Exception:  # noqa: BLE001, S110
             pass
 
     g.set_ylabels("")
@@ -293,7 +293,7 @@ def fig_gates_vs_gates(gc_long: pd.DataFrame) -> None:
     g.set_xlabels("")  # remove per-facet x labels
     try:
         g.figure.supxlabel(r"$|G|$ in target Clifford")
-    except Exception:
+    except Exception:  # noqa: BLE001
         g.figure.supxlabel("|G| in target Clifford")
     g.set_titles("{col_name} qubits")
 
@@ -357,7 +357,7 @@ def fig_relative_reduction(gc_long: pd.DataFrame) -> None:
     try:
         p99 = float(merged["rel_reduction_plot"].quantile(0.99))
         y_max = max(5.0, p99 * 1.05)
-    except Exception:
+    except Exception:  # noqa: BLE001
         y_max = None
 
     plt.figure(figsize=(3.3, 2.5))  # single-column friendly

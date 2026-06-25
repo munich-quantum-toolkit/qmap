@@ -80,11 +80,11 @@ def build_progress_table(session: Session) -> str:
     if not pairs:
         return "No circuits found in database. Waiting for data..."
 
-    qubits_to_gates: dict[int, list[int]] = {}
+    qubits_to_gates: dict[int, set[int]] = {}
     for q, g in pairs:
-        qubits_to_gates.setdefault(int(q), set()).add(int(g))  # type: ignore[arg-type]
+        qubits_to_gates.setdefault(int(q), set()).add(int(g))
     for q in list(qubits_to_gates.keys()):
-        qubits_to_gates[q] = sorted(qubits_to_gates[q])  # type: ignore[index]
+        qubits_to_gates[q] = sorted(qubits_to_gates[q])
 
     headers = ["Qubits", "Gates"] + [m[0] for m in METHODS]
     widths = [len(h) for h in headers]
@@ -185,7 +185,7 @@ def main() -> int:
         print(f"Database not found: {db_path}")
         return 1
 
-    try:
+    try:  # noqa: PLW0717
         while True:
             if not db_path.exists():
                 clear_screen()
@@ -201,10 +201,10 @@ def main() -> int:
             with Session(engine) as session:
                 try:
                     table = build_progress_table(session)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     table = f"Error while reading progress: {e!r}"
 
-            timestamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
             clear_screen()
             print("Clifford Synthesis Progress Monitor")

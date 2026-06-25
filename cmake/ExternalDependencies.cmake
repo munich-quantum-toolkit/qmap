@@ -12,11 +12,8 @@ include(CMakeDependentOption)
 include(FetchContent)
 set(FETCH_PACKAGES "")
 
-#FetchContent_Declare(Z3
-#        GIT_REPOSITORY https://github.com/Z3Prover/z3
-#        GIT_TAG        z3-4.8.15
-#)
-#list(APPEND FETCH_PACKAGES Z3)
+# FetchContent_Declare(Z3 GIT_REPOSITORY https://github.com/Z3Prover/z3 GIT_TAG        z3-4.8.15 )
+# list(APPEND FETCH_PACKAGES Z3)
 
 if(BUILD_MQT_QMAP_BINDINGS)
   # Manually detect the installed mqt-core package.
@@ -40,16 +37,15 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_MINIMUM_VERSION 3.4.1
+set(MQT_CORE_MINIMUM_VERSION 3.6.0
     CACHE STRING "MQT Core minimum version")
-set(MQT_CORE_VERSION 3.4.1
+set(MQT_CORE_VERSION 3.6.1
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "8747a89766dfb943d62ed100d383cd1823d2356c"
+set(MQT_CORE_REV "8224856776df527ff2e9911fb1751572fefaf80a"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
 # cmake-format: on
-
 
 FetchContent_Declare(
   mqt-core
@@ -81,7 +77,7 @@ FetchContent_Declare(
 list(APPEND FETCH_PACKAGES plog)
 
 set(SPDLOG_VERSION
-    1.15.3
+    1.17.0
     CACHE STRING "spdlog version")
 set(SPDLOG_URL https://github.com/gabime/spdlog/archive/refs/tags/v${SPDLOG_VERSION}.tar.gz)
 # Add position independent code for spdlog, this is required for python bindings on linux
@@ -106,10 +102,10 @@ FetchContent_MakeAvailable(${FETCH_PACKAGES})
 
 # search for Z3
 find_package(Z3 4.8.15)
-if (NOT Z3_FOUND)
-    message(
-            WARNING "Did not find Z3. Exact mapper and Clifford synthesis libraries will not be available")
-endif ()
+if(NOT Z3_FOUND)
+  message(
+    WARNING "Did not find Z3. Exact mapper and Clifford synthesis libraries will not be available")
+endif()
 
 # Mark the plog includes as SYSTEM includes to suppress warnings.
 get_target_property(PLOG_IID plog INTERFACE_INCLUDE_DIRECTORIES)

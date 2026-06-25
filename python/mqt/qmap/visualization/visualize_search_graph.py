@@ -19,7 +19,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from random import shuffle
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import networkx as nx
 import plotly.basedatatypes
@@ -138,7 +138,7 @@ def _copy_to_dict(
             if key not in target or not isinstance(target[key], dict):
                 target[key] = value
             else:
-                _copy_to_dict(target[key], value)  # type: ignore[arg-type]
+                _copy_to_dict(target[key], value)  # ty: ignore[invalid-argument-type]
         else:
             target[key] = value
     return target
@@ -285,7 +285,7 @@ def _prepare_search_graph_scatters(
         ps = plotly_settings["search_nodes"]
         if search_node_colorbar_title[0] is None:
             ps = deepcopy(ps)
-            del ps["marker"]["colorbar"]  # type: ignore[attr-defined]
+            del ps["marker"]["colorbar"]  # ty: ignore[not-subscriptable]
         node_scatter = go.Scatter(**ps)
         node_scatter.x = []
         node_scatter.y = []
@@ -316,7 +316,7 @@ def _prepare_search_graph_scatters(
         ps = plotly_settings["search_nodes"]
         if search_node_colorbar_title[i] is None:
             ps = deepcopy(ps)
-            del ps["marker"]["colorbar"]  # type: ignore[attr-defined]
+            del ps["marker"]["colorbar"]  # ty: ignore[not-subscriptable]
         else:
             n_colorbars += 1
         scatter = go.Scatter3d(**ps)
@@ -426,7 +426,11 @@ def _prepare_search_graph_scatter_data(
 
         ncolor: float | str | None = None
         if len(search_node_color) == 1:
-            ncolor = search_node_color[0](node_params) if callable(search_node_color[0]) else search_node_color[0]
+            if callable(search_node_color[0]):
+                factory = cast("Callable[[SearchNode], float]", search_node_color[0])
+                ncolor = factory(node_params)
+            else:
+                ncolor = search_node_color[0]
         for i in range(number_of_scatters):
             curr_color = search_node_color[i]
             prio_color = (
@@ -441,7 +445,8 @@ def _prepare_search_graph_scatter_data(
             elif ncolor is not None:
                 node_color[i].append(ncolor)
             elif callable(curr_color):
-                node_color[i].append(curr_color(node_params))
+                factory = cast("Callable[[SearchNode], float]", curr_color)
+                node_color[i].append(factory(node_params))
             else:
                 node_color[i].append(curr_color)
 
@@ -903,7 +908,7 @@ def _load_layer_data(
     for q in considered_qubit_color_groups:
         considered_qubit_colors[q] = considered_qubits_color_codes[considered_qubit_color_groups[q]]
 
-    return (  # type: ignore[return-value]
+    return (  # ty: ignore[invalid-return-type]
         graph,
         initial_layout,
         initial_positions,
@@ -1048,13 +1053,13 @@ def _visualize_search_graph_check_parameters(
     show_only_solution_path: bool,
     color_valid_mapping: str | None,
     color_final_node: str | None,
-    search_node_color: str | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]),
+    search_node_color: str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]],
     prioritize_search_node_color: bool | Sequence[bool],
     search_node_color_scale: Colorscale | Sequence[Colorscale],
     search_node_invert_color_scale: bool | Sequence[bool],
     search_node_colorbar_title: str | Sequence[str | None] | None,
     search_node_colorbar_spacing: float,
-    search_node_height: str | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]),
+    search_node_height: str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]],
     draw_stems: bool,
     stems_width: float,
     stems_color: str,
@@ -1068,12 +1073,12 @@ def _visualize_search_graph_check_parameters(
     bool,  # hide_layout
     bool,  # draw_stems
     int,  # number_of_node_traces
-    Sequence[Callable[[SearchNode], float]],  # search_node_height
-    Sequence[str | Callable[[SearchNode], float]],  # search_node_color
+    list[Callable[[SearchNode], float]],  # search_node_height_out
+    list[str | Callable[[SearchNode], float]],  # search_node_color_out
     Sequence[Colorscale],  # search_node_color_scale
     Sequence[bool],  # search_node_invert_color_scale
     Sequence[bool],  # prioritize_search_node_color
-    Sequence[str],  # search_node_colorbar_title
+    list[str | None],  # search_node_colorbar_title
     _PlotlySettings,  # plotly_settings
 ]:
     if not isinstance(data_logging_path, str):
@@ -1315,7 +1320,7 @@ def _visualize_search_graph_check_parameters(
         plotly_set["arrows"]["yref"] = "y2"
         plotly_set["arrows"]["axref"] = "x2"
         plotly_set["arrows"]["ayref"] = "y2"
-    _copy_to_dict(plotly_set, plotly_settings)  # type: ignore[arg-type]
+    _copy_to_dict(plotly_set, plotly_settings)  # ty: ignore[invalid-argument-type]
 
     number_of_node_traces = (
         len(search_node_height)
@@ -1331,47 +1336,48 @@ def _visualize_search_graph_check_parameters(
         msg = "search_node_colorbar_spacing must be a float between 0 and 1"
         raise TypeError(msg)
 
+    search_node_colorbar_title_out: list[str | None] = []
     if search_node_colorbar_title is None:
-        search_node_colorbar_title = [None] * number_of_node_traces
+        search_node_colorbar_title_out = [None] * number_of_node_traces
     if isinstance(search_node_colorbar_title, Sequence) and not isinstance(search_node_colorbar_title, str):
-        search_node_colorbar_title = list(search_node_colorbar_title)
-        if len(search_node_colorbar_title) > 1 and not use3d:
+        search_node_colorbar_title_out = list(search_node_colorbar_title)
+        if len(search_node_colorbar_title_out) > 1 and not use3d:
             msg = "search_node_colorbar_title can only be a list in a 3D plot."
             raise TypeError(msg)
-        if len(search_node_colorbar_title) != number_of_node_traces:
-            msg = f"Length of search_node_colorbar_title ({len(search_node_colorbar_title)}) does not match length of search_node_height ({number_of_node_traces})."
+        if len(search_node_colorbar_title_out) != number_of_node_traces:
+            msg = f"Length of search_node_colorbar_title ({len(search_node_colorbar_title_out)}) does not match length of search_node_height ({number_of_node_traces})."
             raise TypeError(msg)
         untitled = 1
-        for i, title in enumerate(search_node_colorbar_title):
+        for i, title in enumerate(search_node_colorbar_title_out):
             if title is None:
                 color = None
                 if isinstance(search_node_color, Sequence) and not isinstance(search_node_color, str):
-                    if len(search_node_color) == len(search_node_colorbar_title):
+                    if len(search_node_color) == len(search_node_colorbar_title_out):
                         color = search_node_color[i]
                     else:
                         color = search_node_color[0]
                 else:
                     color = search_node_color
                 if not isinstance(color, str):
-                    search_node_colorbar_title[i] = f"Untitled{untitled}"
+                    search_node_colorbar_title_out[i] = f"Untitled{untitled}"
                     untitled += 1
                 elif color == "total_cost":
-                    search_node_colorbar_title[i] = "Total cost"
+                    search_node_colorbar_title_out[i] = "Total cost"
                 elif color == "total_fixed_cost":
-                    search_node_colorbar_title[i] = "Total fixed cost"
+                    search_node_colorbar_title_out[i] = "Total fixed cost"
                 elif color == "fixed_cost":
-                    search_node_colorbar_title[i] = "Fixed cost"
+                    search_node_colorbar_title_out[i] = "Fixed cost"
                 elif color == "heuristic_cost":
-                    search_node_colorbar_title[i] = "Heuristic cost"
+                    search_node_colorbar_title_out[i] = "Heuristic cost"
                 elif color == "lookahead_penalty":
-                    search_node_colorbar_title[i] = "Lookahead penalty"
+                    search_node_colorbar_title_out[i] = "Lookahead penalty"
                 else:
-                    search_node_colorbar_title[i] = color
+                    search_node_colorbar_title_out[i] = color
             elif not isinstance(title, str):
                 msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
                 raise TypeError(msg)
     elif isinstance(search_node_colorbar_title, str):
-        search_node_colorbar_title = [search_node_colorbar_title] * number_of_node_traces
+        search_node_colorbar_title_out = [search_node_colorbar_title] * number_of_node_traces
     else:
         msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
         raise TypeError(msg)
@@ -1439,8 +1445,8 @@ def _visualize_search_graph_check_parameters(
     else:
         prioritize_search_node_color = [prioritize_search_node_color] * number_of_node_traces
 
+    search_node_color_out: list[str | Callable[[SearchNode], float]] = []
     if isinstance(search_node_color, Sequence) and not isinstance(search_node_color, str):
-        search_node_color = list(search_node_color)
         if len(search_node_color) > 1 and not use3d:
             msg = "search_node_color can only be a list in a 3D plot."
             raise TypeError(msg)
@@ -1451,7 +1457,7 @@ def _visualize_search_graph_check_parameters(
             if isinstance(c, str):
                 cost_lambda = _cost_string_to_lambda(c)
                 if cost_lambda is not None:
-                    search_node_color[i] = cost_lambda
+                    search_node_color_out[i] = cost_lambda
                 elif ColorValidator.perform_validate_coerce(c, allow_number=False) is None:
                     msg = (
                         f'search_node_color[{i}] is neither a valid cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", '
@@ -1462,11 +1468,16 @@ def _visualize_search_graph_check_parameters(
                     )
                     raise TypeError(msg)
                 else:  # static color
-                    search_node_colorbar_title[i] = None
+                    search_node_colorbar_title_out[i] = None
+            elif not callable(c):
+                msg = f'search_node_color[{i}] must be a cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", "heuristic_cost", "lookahead_penalty") or a respective callable, or a valid color string.'
+                raise TypeError(msg)
+            else:
+                search_node_color_out[i] = cast("Callable[[SearchNode], float]", c)
     elif isinstance(search_node_color, str):
         cost_lambda = _cost_string_to_lambda(search_node_color)
         if cost_lambda is not None:
-            search_node_color = [cost_lambda]
+            search_node_color_out = [cost_lambda]
         elif ColorValidator.perform_validate_coerce(search_node_color, allow_number=False) is None:
             msg = (
                 'search_node_color is neither a list nor a valid cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", '
@@ -1475,8 +1486,8 @@ def _visualize_search_graph_check_parameters(
             )
             raise TypeError(msg)
         else:  # static color
-            search_node_color = [search_node_color]
-            search_node_colorbar_title = [None] * number_of_node_traces
+            search_node_color_out = [search_node_color]
+            search_node_colorbar_title_out = [None] * number_of_node_traces
     else:
         msg = (
             'search_node_color must be a cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", "heuristic_cost", '
@@ -1484,9 +1495,9 @@ def _visualize_search_graph_check_parameters(
         )
         raise TypeError(msg)
 
+    search_node_height_out: list[Callable[[SearchNode], float]] = []
     if use3d:
         if isinstance(search_node_height, Sequence) and not isinstance(search_node_height, str):
-            search_node_height = list(search_node_height)
             lambdas = set()
             for i, c in enumerate(search_node_height):
                 if isinstance(c, str):
@@ -1497,38 +1508,35 @@ def _visualize_search_graph_check_parameters(
                     if cost_lambda in lambdas:
                         msg = f"search_node_height must not contain the same cost function multiple times: {c}"
                         raise TypeError(msg)
-                    search_node_height[i] = cost_lambda
+                    search_node_height_out[i] = cost_lambda
                     lambdas.add(cost_lambda)
                 elif not callable(c):
-                    msg = (
-                        "search_node_height must be a cost function preset ('total_cost', 'total_fixed_cost', 'fixed_cost', 'heuristic_cost', "
-                        "'lookahead_penalty') or a respective callable, or a list of the above."
-                    )
+                    msg = 'search_node_height must be a cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", "heuristic_cost", "lookahead_penalty") or a respective callable, or a list of the above.'
                     raise TypeError(msg)
+                else:
+                    search_node_height_out[i] = cast("Callable[[SearchNode], float]", c)
         elif isinstance(search_node_height, str):
             cost_lambda = _cost_string_to_lambda(search_node_height)
             if cost_lambda is not None:
-                search_node_height = [cost_lambda]
+                search_node_height_out = [cost_lambda]
             else:
                 msg = f"Unknown cost function preset search_node_height: {search_node_height}"
                 raise TypeError(msg)
         else:
             msg = "search_node_height must be a list of cost functions or a single cost function."
             raise TypeError(msg)
-    else:
-        search_node_height = []
 
-    return (  # type: ignore[return-value]
+    return (  # ty: ignore[invalid-return-type]
         data_logging_path,
         hide_layout,
         draw_stems,
         number_of_node_traces,
-        search_node_height,
-        search_node_color,
+        search_node_height_out,
+        search_node_color_out,
         search_node_color_scale,
         search_node_invert_color_scale,
         prioritize_search_node_color,
-        search_node_colorbar_title,
+        search_node_colorbar_title_out,
         plotly_set,
     )
 
@@ -1561,14 +1569,16 @@ def visualize_search_graph(
     color_valid_mapping: str | None = "green",
     color_final_node: str | None = "red",
     search_node_color: str
-    | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
+    | Callable[[SearchNode], float]
+    | Sequence[str | Callable[[SearchNode], float]] = "total_cost",
     prioritize_search_node_color: bool | Sequence[bool] = False,
     search_node_color_scale: Colorscale | Sequence[Colorscale] = "YlGnBu",
     search_node_invert_color_scale: bool | Sequence[bool] = True,
     search_node_colorbar_title: str | Sequence[str | None] | None = None,
     search_node_colorbar_spacing: float = 0.06,
     search_node_height: str
-    | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
+    | Callable[[SearchNode], float]
+    | Sequence[str | Callable[[SearchNode], float]] = "total_cost",
     draw_stems: bool = False,
     stems_width: float = 0.7,
     stems_color: str = "#444",
@@ -1581,45 +1591,45 @@ def visualize_search_graph(
     """Creates a widget to visualize a search graph.
 
     Args:
-        data_logging_path (str): Path to the data logging directory of the search process to be visualized.
-        layer (int | Literal['interactive']): Index of the circuit layer, of which the mapping should be visualized. Defaults to "interactive", in which case a slider menu will be created.
-        architecture_node_positions (MutableMapping[int, tuple[float, float]] | None): MutableMapping from physical qubits to (x, y) coordinates. Defaults to None, in which case architecture_layout will be used to generate a layout.
-        architecture_layout (Literal[ 'dot', 'neato', 'fdp', 'sfdp', 'circo', 'twopi', 'osage', 'patchwork' ]): The method to use when layouting the qubit connectivity graph. Defaults to "sfdp".
-        search_node_layout (Literal[ 'walker', 'dot', 'neato', 'fdp', 'sfdp', 'circo', 'twopi', 'osage', 'patchwork' ]): The method to use when layouting the search graph. Defaults to "walker".
-        search_graph_border (float): Size of the border around the search graph. Defaults to 0.05.
-        architecture_border (float): Size of the border around the qubit connectivity graph. Defaults to 0.05.
-        swap_arrow_spacing (float): Lateral spacing between arrows indicating swaps on the qubit connectivity graph. Defaults to 0.05.
-        swap_arrow_offset (float): Offset of heads and shaft of swap arrows from qubits they are pointing to/from. Defaults to 0.05.
-        use3d (bool): If a 3D graph should be used for the search graph using the z-axis to plot data features. Defaults to True.
-        projection (Literal['orthographic', 'perspective']): Projection type to use in 3D graphs. Defaults to "perspective".
-        width (int): Pixel width of the widget. Defaults to 1400.
-        height (int): Pixel height of the widget. Defaults to 700.
-        draw_search_edges (bool): If edges between search nodes should be drawn. Defaults to True.
-        search_edges_width (float): Width of edges between search nodes. Defaults to 0.5.
-        search_edges_color (str): Color of edges between search nodes (in CSS format, i.e. '#rrggbb', '#rgb', 'colorname', etc.). Defaults to "#888".
-        search_edges_dash (str): Dashing of search edges (in CSS format, i.e. 'solid', 'dot', 'dash', 'longdash', etc.). Defaults to "solid".
-        tapered_search_layer_heights (bool): If search graph tree should progressively reduce the height of each layer. Defaults to True.
-        show_layout (Literal['hover', 'click'] | None): If the current qubit layout should be shown on the qubit connectivity graph, when clicking or hovering on a search node or not at all. Defaults to "hover".
-        show_swaps (bool): Showing swaps on the connectivity graph. Defaults to True.
-        show_shared_swaps (bool): Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
-        show_only_solution_path (bool): If only the final solution path should be shown. Defaults to False.
-        color_valid_mapping (str | None): Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
-        color_final_node (str | None): Color to use for the final solution search node (in CSS format). Defaults to "red".
-        search_node_color (str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by `search_node_color_scale`, or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple points per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
-        prioritize_search_node_color (bool | Sequence[ bool ]): If search_node_color should be prioritized over color_valid_mapping and color_final_node. Defaults to False.
-        search_node_color_scale (str | Sequence[str]): Color scale to be used for converting float data features to search node colors. (See https://plotly.com/python/builtin-colorscales/ for valid values). Defaults to "YlGnBu".
-        search_node_invert_color_scale (bool | Sequence[bool]): If the color scale should be inverted. Defaults to True.
-        search_node_colorbar_title (str | Sequence[str  |  None] | None): Title(s) to be shown next to the colorbar(s). Defaults to None.
-        search_node_colorbar_spacing (float): Spacing between multiple colorbars. Defaults to 0.06.
-        search_node_height (str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]): Function mapping a mqt.qmap.visualization.SearchNode to a float value to be used as z-value in 3D search graphs or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). Or a list any of such functions/data features, to draw multiple points per search node. Defaults to "total_cost".
-        draw_stems (bool): If a vertical stem should be drawn in 3D search graphs to each search node. Defaults to False.
-        stems_width (float): Width of stems in 3D search graphs. Defaults to 0.7.
-        stems_color (str): Color of stems in 3D search graphs (in CSS format). Defaults to "#444".
-        stems_dash (str): Dashing of stems in 3D search graphs (in CSS format). Defaults to "solid".
-        show_search_progression (bool): If the search progression should be animated. Defaults to True.
-        search_progression_step (int): Step size (in number of nodes added) of search progression animation. Defaults to 10.
-        search_progression_speed (float): Speed of the search progression animation in steps per second. Defaults to 2.
-        plotly_settings (MutableMapping[str, MutableMapping[str, any]] | None): Plotly configuration dictionaries to be passed through. Defaults to None.
+        data_logging_path: Path to the data logging directory of the search process to be visualized.
+        layer: Index of the circuit layer, of which the mapping should be visualized. Defaults to "interactive", in which case a slider menu will be created.
+        architecture_node_positions: MutableMapping from physical qubits to (x, y) coordinates. Defaults to None, in which case architecture_layout will be used to generate a layout.
+        architecture_layout: The method to use when layouting the qubit connectivity graph. Defaults to "sfdp".
+        search_node_layout: The method to use when layouting the search graph. Defaults to "walker".
+        search_graph_border: Size of the border around the search graph. Defaults to 0.05.
+        architecture_border: Size of the border around the qubit connectivity graph. Defaults to 0.05.
+        swap_arrow_spacing: Lateral spacing between arrows indicating swaps on the qubit connectivity graph. Defaults to 0.05.
+        swap_arrow_offset: Offset of heads and shaft of swap arrows from qubits they are pointing to/from. Defaults to 0.05.
+        use3d: If a 3D graph should be used for the search graph using the z-axis to plot data features. Defaults to True.
+        projection: Projection type to use in 3D graphs. Defaults to "perspective".
+        width: Pixel width of the widget. Defaults to 1400.
+        height: Pixel height of the widget. Defaults to 700.
+        draw_search_edges: If edges between search nodes should be drawn. Defaults to True.
+        search_edges_width: Width of edges between search nodes. Defaults to 0.5.
+        search_edges_color: Color of edges between search nodes (in CSS format, i.e. '#rrggbb', '#rgb', 'colorname', etc.). Defaults to "#888".
+        search_edges_dash: Dashing of search edges (in CSS format, i.e. 'solid', 'dot', 'dash', 'longdash', etc.). Defaults to "solid".
+        tapered_search_layer_heights: If search graph tree should progressively reduce the height of each layer. Defaults to True.
+        show_layout: If the current qubit layout should be shown on the qubit connectivity graph, when clicking or hovering on a search node or not at all. Defaults to "hover".
+        show_swaps: Showing swaps on the connectivity graph. Defaults to True.
+        show_shared_swaps: Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
+        show_only_solution_path: If only the final solution path should be shown. Defaults to False.
+        color_valid_mapping: Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
+        color_final_node: Color to use for the final solution search node (in CSS format). Defaults to "red".
+        search_node_color: Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by `search_node_color_scale`, or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple points per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
+        prioritize_search_node_color: If search_node_color should be prioritized over color_valid_mapping and color_final_node. Defaults to False.
+        search_node_color_scale: Color scale to be used for converting float data features to search node colors. (See https://plotly.com/python/builtin-colorscales/ for valid values). Defaults to "YlGnBu".
+        search_node_invert_color_scale: If the color scale should be inverted. Defaults to True.
+        search_node_colorbar_title: Title(s) to be shown next to the colorbar(s). Defaults to None.
+        search_node_colorbar_spacing: Spacing between multiple colorbars. Defaults to 0.06.
+        search_node_height: Function mapping a mqt.qmap.visualization.SearchNode to a float value to be used as z-value in 3D search graphs or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). Or a list any of such functions/data features, to draw multiple points per search node. Defaults to "total_cost".
+        draw_stems: If a vertical stem should be drawn in 3D search graphs to each search node. Defaults to False.
+        stems_width: Width of stems in 3D search graphs. Defaults to 0.7.
+        stems_color: Color of stems in 3D search graphs (in CSS format). Defaults to "#444".
+        stems_dash: Dashing of stems in 3D search graphs (in CSS format). Defaults to "solid".
+        show_search_progression: If the search progression should be animated. Defaults to True.
+        search_progression_step: Step size (in number of nodes added) of search progression animation. Defaults to 10.
+        search_progression_speed: Speed of the search progression animation in steps per second. Defaults to 2.
+        plotly_settings: Plotly configuration dictionaries to be passed through. Defaults to None.
     .. code-block:: text
 
         {
@@ -1638,11 +1648,11 @@ def visualize_search_graph(
             "architecture_yaxis": settings for plotly.graph_objects.layout.YAxis
         }
 
+    Returns:
+        An interactive IPython widget to visualize the search graph.
+
     Raises:
         TypeError: If any of the arguments are invalid.
-
-    Returns:
-        Widget: An interactive IPython widget to visualize the search graph.
     """
     # TODO: show archticture edge labels (and make text adjustable)
     # TODO: make hover text of search (especially for multiple points per node!) and architecture nodes adjustable
@@ -1654,8 +1664,8 @@ def visualize_search_graph(
         hide_layout,
         draw_stems,
         number_of_node_traces,
-        search_node_height,
-        search_node_color,
+        search_node_height_out,
+        search_node_color_out,
         search_node_color_scale,
         search_node_invert_color_scale,
         prioritize_search_node_color,
@@ -1863,26 +1873,26 @@ def visualize_search_graph(
         yaxis2 = sub_plots["layout"]["yaxis"] if use3d else sub_plots["layout"]["yaxis2"]
 
         full_plotly_settings["architecture_xaxis"]["range"] = [
-            arch_x_min - abs(arch_x_max - arch_x_min) * architecture_border,  # type: ignore[operator]
-            arch_x_max + abs(arch_x_max - arch_x_min) * architecture_border,  # type: ignore[operator]
+            arch_x_min - abs(arch_x_max - arch_x_min) * architecture_border,  # ty: ignore[unsupported-operator]
+            arch_x_max + abs(arch_x_max - arch_x_min) * architecture_border,  # ty: ignore[unsupported-operator]
         ]
         full_plotly_settings["architecture_yaxis"]["range"] = [
-            arch_y_min - abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
-            arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
+            arch_y_min - abs(arch_y_max - arch_y_min) * architecture_border,  # ty: ignore[unsupported-operator]
+            arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,  # ty: ignore[unsupported-operator]
         ]
         x_diff = (
-            full_plotly_settings["architecture_xaxis"]["range"][1]  # type: ignore[index]
-            - full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
+            full_plotly_settings["architecture_xaxis"]["range"][1]  # ty: ignore[not-subscriptable]
+            - full_plotly_settings["architecture_xaxis"]["range"][0]  # ty: ignore[not-subscriptable]
         )
         y_diff = (
-            full_plotly_settings["architecture_yaxis"]["range"][1]  # type: ignore[index]
-            - full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
+            full_plotly_settings["architecture_yaxis"]["range"][1]  # ty: ignore[not-subscriptable]
+            - full_plotly_settings["architecture_yaxis"]["range"][0]  # ty: ignore[not-subscriptable]
         )
         if x_diff == 0:
-            mid = full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
+            mid = full_plotly_settings["architecture_xaxis"]["range"][0]  # ty: ignore[not-subscriptable]
             full_plotly_settings["architecture_xaxis"]["range"] = [mid - y_diff / 2, mid + y_diff / 2]
         if y_diff == 0:
-            mid = full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
+            mid = full_plotly_settings["architecture_yaxis"]["range"][0]  # ty: ignore[not-subscriptable]
             full_plotly_settings["architecture_yaxis"]["range"] = [mid - x_diff / 2, mid + x_diff / 2]
 
         xaxis2.update(**full_plotly_settings["architecture_xaxis"])
@@ -1922,21 +1932,21 @@ def visualize_search_graph(
         if current_node_layout_visualized == point_inds[0]:
             return
         current_node_layout_visualized = point_inds[0]
-        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # type: ignore[union-attr]
+        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # ty: ignore[unresolved-attribute]
 
         # this function is only called if hide_layout==False, therefore all variables are defined
         assert arch_node_trace is not None
         _visualize_layout(
             fig,
-            search_graph.nodes[node_index]["data"],  # type: ignore[union-attr]
+            search_graph.nodes[node_index]["data"],  # ty: ignore[unresolved-attribute]
             arch_node_trace,
-            architecture_node_positions,  # type: ignore[arg-type]
+            architecture_node_positions,  # ty: ignore[invalid-argument-type]
             initial_layout,
             considered_qubit_colors,
             show_swaps,
             swap_arrow_offset,
-            arch_x_arrow_spacing,  # type: ignore[arg-type]
-            arch_y_arrow_spacing,  # type: ignore[arg-type]
+            arch_x_arrow_spacing,  # ty: ignore[invalid-argument-type]
+            arch_y_arrow_spacing,  # ty: ignore[invalid-argument-type]
             show_shared_swaps,
             current_node_layout_visualized,
             search_node_traces[0] if not use3d else None,
@@ -2024,9 +2034,9 @@ def visualize_search_graph(
                 tapered_search_layer_heights,
                 number_of_node_traces,
                 use3d,
-                search_node_color,
+                search_node_color_out,
                 prioritize_search_node_color,
-                search_node_height,
+                search_node_height_out,
                 color_valid_mapping,
                 color_final_node,
                 draw_stems,
@@ -2088,7 +2098,7 @@ def visualize_search_graph(
                 assert arch_node_trace is not None
                 _draw_architecture_nodes(
                     arch_node_trace,
-                    architecture_node_positions,  # type: ignore[arg-type]
+                    architecture_node_positions,  # ty: ignore[invalid-argument-type]
                     considered_qubit_colors,
                     initial_qbit_positions[current_layer],
                     single_qbit_multiplicities[current_layer],
@@ -2123,7 +2133,7 @@ def visualize_search_graph(
         ),
     )
 
-    vbox_elems = [fig]
+    vbox_elems: list[Any] = [fig]
     if show_search_progression:
         vbox_elems.append(timestep)
     if layer == "interactive":

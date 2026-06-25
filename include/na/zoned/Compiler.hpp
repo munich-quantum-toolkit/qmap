@@ -170,10 +170,9 @@ public:
     // removed it.
     SPDLOG_DEBUG("Scheduling...");
     const auto schedulingStart = std::chrono::system_clock::now();
-    const auto& schedule = SELF.schedule(qComp);
+    const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+        SELF.schedule(qComp);
     const auto schedulingEnd = std::chrono::system_clock::now();
-    const auto& singleQubitGateLayers = schedule.first;
-    const auto& twoQubitGateLayers = schedule.second;
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(schedulingEnd -
                                                               schedulingStart)
@@ -204,8 +203,9 @@ public:
 
     SPDLOG_DEBUG("Decomposing...");
     const auto decomposingStart = std::chrono::system_clock::now();
-    const auto& decomposedSchedule =
-        SELF.decompose(qComp.getNqubits(), schedule);
+    const auto& [decomposedSingleQubitGateLayers,
+                 decomposedTwoQubitGateLayers] =
+        SELF.decompose(singleQubitGateLayers, twoQubitGateLayers);
     const auto decomposingEnd = std::chrono::system_clock::now();
     statistics_.decomposingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
@@ -215,7 +215,7 @@ public:
 
     SPDLOG_DEBUG("Analyzing reuse...");
     const auto reuseAnalysisStart = std::chrono::system_clock::now();
-    const auto& reuseQubits = SELF.analyzeReuse(decomposedSchedule.second);
+    const auto& reuseQubits = SELF.analyzeReuse(decomposedTwoQubitGateLayers);
     const auto reuseAnalysisEnd = std::chrono::system_clock::now();
     statistics_.reuseAnalysisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -226,7 +226,7 @@ public:
     SPDLOG_DEBUG("Synthesizing layout...");
     const auto layoutSynthesisStart = std::chrono::system_clock::now();
     const auto& [placement, routing] = LayoutSynthesizer::synthesize(
-        qComp.getNqubits(), decomposedSchedule.second, reuseQubits);
+        qComp.getNqubits(), decomposedTwoQubitGateLayers, reuseQubits);
     const auto layoutSynthesisEnd = std::chrono::system_clock::now();
     statistics_.layoutSynthesisTime =
         std::chrono::duration_cast<std::chrono::microseconds>(

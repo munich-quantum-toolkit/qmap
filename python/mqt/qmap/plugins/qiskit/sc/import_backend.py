@@ -55,10 +55,10 @@ def import_target(target: Target) -> Architecture.Properties:
 def import_backend(backend: BackendV2) -> Architecture:
     """Import a backend from qiskit.providers.BackendV2."""
     arch = Architecture()
-    arch.name = backend.name
+    arch.name = str(backend.name)
     arch.num_qubits = backend.num_qubits
     arch.coupling_map = set(backend.coupling_map.get_edges())
     arch.properties = import_target(backend.target)
-    arch.properties.name = backend.name
+    arch.properties.name = str(backend.name)
 
     return arch

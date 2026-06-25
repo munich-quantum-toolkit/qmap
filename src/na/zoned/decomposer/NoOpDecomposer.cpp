@@ -13,19 +13,16 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 
-#include <utility>
 #include <vector>
 
 namespace na::zoned {
 auto NoOpDecomposer::decompose(
-    size_t /* unused */,
-    const std::pair<std::vector<SingleQubitGateRefLayer>,
-                    std::vector<TwoQubitGateLayer>>& asap_schedule)
-    -> std::pair<std::vector<SingleQubitGateLayer>,
-                 std::vector<TwoQubitGateLayer>> {
+    const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+    const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
+    -> DecompositionResult {
   std::vector<SingleQubitGateLayer> result;
-  result.reserve(asap_schedule.first.size());
-  for (const auto& layer : asap_schedule.first) {
+  result.reserve(singleQubitGateLayers.size());
+  for (const auto& layer : singleQubitGateLayers) {
     SingleQubitGateLayer newLayer;
     newLayer.reserve(layer.size());
     for (const auto& opRef : layer) {
@@ -33,6 +30,6 @@ auto NoOpDecomposer::decompose(
     }
     result.emplace_back(std::move(newLayer));
   }
-  return {std::move(result), asap_schedule.second};
+  return {std::move(result), twoQubitGateLayers};
 }
 } // namespace na::zoned

@@ -46,26 +46,26 @@ except ModuleNotFoundError:
 release = version.split("+")[0]
 
 project = "MQT QMAP"
-author = "Chair for Design Automation, TUM & Munich Quantum Software Company"
+author = "Chair for Design Automation, TUM & Munich Quantum Software Company GmbH"
 language = "en"
-project_copyright = "2023 - 2026 Chair for Design Automation, TUM & 2025 - 2026 Munich Quantum Software Company"
+project_copyright = "2023 - 2026 Chair for Design Automation, TUM & 2025 - 2026 Munich Quantum Software Company GmbH"
 
 master_doc = "index"
 
 templates_path = ["_templates"]
 
 extensions = [
-    "myst_nb",
     "autoapi.extension",
+    "myst_nb",
+    "sphinx_copybutton",
+    "sphinx_design",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    "sphinx_copybutton",
-    "sphinx_design",
-    "sphinxext.opengraph",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.inkscapeconverter",
     "sphinxcontrib.bibtex",
+    "sphinxcontrib.inkscapeconverter",
+    "sphinxext.opengraph",
 ]
 
 source_suffix = [".rst", ".md"]
@@ -162,6 +162,7 @@ napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
 # -- Options for HTML output -------------------------------------------------
+
 html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = [
