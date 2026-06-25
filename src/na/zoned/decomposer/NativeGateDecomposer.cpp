@@ -25,186 +25,184 @@ NativeGateDecomposer::NativeGateDecomposer(const Architecture&,
   config_ = config;
 }
 auto NativeGateDecomposer::convertGateToQuaternion(
-    std::reference_wrapper<const qc::Operation> op) -> Quaternion {
-  assert(op.get().getNqubits() == 1);
-  Quaternion quat{};
-  if (op.get().getType() == qc::RZ || op.get().getType() == qc::P) {
-    quat = {cos(op.get().getParameter().front() / 2), 0, 0,
+    const std::reference_wrapper<const qc::Operation> op) -> Quaternion {
+  assert(op.get().getNqubits() == 1 && "Works only for single-qubit gates.");
+  switch (op.get().getType()) {
+  case qc::RZ:
+  case qc::P:
+    return {cos(op.get().getParameter().front() / 2), 0, 0,
             sin(op.get().getParameter().front() / 2)};
-  } else if (op.get().getType() == qc::Z) {
-    quat = {0, 0, 0, 1};
-  } else if (op.get().getType() == qc::S) {
-    quat = {cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
-  } else if (op.get().getType() == qc::Sdg) {
-    quat = {cos(-qc::PI_4), 0, 0, sin(-qc::PI_4)};
-  } else if (op.get().getType() == qc::T) {
-    quat = {cos(qc::PI_4 / 2), 0, 0, sin(qc::PI_4 / 2)};
-  } else if (op.get().getType() == qc::Tdg) {
-    quat = {cos(-qc::PI_4 / 2), 0, 0, sin(-qc::PI_4 / 2)};
-  } else if (op.get().getType() == qc::U) {
-    quat = combineQuaternions(
+  case qc::Z:
+    return {0, 0, 0, 1};
+  case qc::S:
+    return {cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
+  case qc::Sdg:
+    return {cos(-qc::PI_4), 0, 0, sin(-qc::PI_4)};
+  case qc::T:
+    return {cos(qc::PI_4 / 2), 0, 0, sin(qc::PI_4 / 2)};
+  case qc::Tdg:
+    return {cos(-qc::PI_4 / 2), 0, 0, sin(-qc::PI_4 / 2)};
+  case qc::U:
+    return combineQuaternions(
         combineQuaternions({cos(op.get().getParameter().at(1) / 2), 0, 0,
                             sin(op.get().getParameter().at(1) / 2)},
                            {cos(op.get().getParameter().front() / 2), 0,
                             sin(op.get().getParameter().front() / 2), 0}),
         {cos(op.get().getParameter().at(2) / 2), 0, 0,
          sin(op.get().getParameter().at(2) / 2)});
-  } else if (op.get().getType() == qc::U2) {
-    quat = combineQuaternions(
+  case qc::U2:
+    return combineQuaternions(
         combineQuaternions({cos(op.get().getParameter().front() / 2), 0, 0,
                             sin(op.get().getParameter().front() / 2)},
                            {cos(qc::PI_4), 0, sin(qc::PI_4), 0}),
         {cos(op.get().getParameter().at(1) / 2), 0, 0,
          sin(op.get().getParameter().at(1) / 2)});
-  } else if (op.get().getType() == qc::RX) {
-    quat = {cos(op.get().getParameter().front() / 2),
+  case qc::RX:
+    return {cos(op.get().getParameter().front() / 2),
             sin(op.get().getParameter().front() / 2), 0, 0};
-  } else if (op.get().getType() == qc::RY) {
-    quat = {cos(op.get().getParameter().front() / 2), 0,
+  case qc::RY:
+    return {cos(op.get().getParameter().front() / 2), 0,
             sin(op.get().getParameter().front() / 2), 0};
-  } else if (op.get().getType() == qc::H) {
-    quat = combineQuaternions(
+  case qc::H:
+    return combineQuaternions(
         combineQuaternions({1, 0, 0, 0}, {cos(qc::PI_4), 0, sin(qc::PI_4), 0}),
         {cos(qc::PI_2), 0, 0, sin(qc::PI_2)});
-  } else if (op.get().getType() == qc::X) {
-    quat = {0, 1, 0, 0};
-  } else if (op.get().getType() == qc::Y) {
-    quat = {0, 0, 1, 0};
-  } else if (op.get().getType() == qc::Vdg) {
-    quat = combineQuaternions(
+  case qc::X:
+    return {0, 1, 0, 0};
+  case qc::Y:
+    return {0, 0, 1, 0};
+  case qc::Vdg:
+    return combineQuaternions(
         combineQuaternions({cos(qc::PI_4), 0, 0, sin(qc::PI_4)},
                            {cos(-qc::PI_4), 0, sin(-qc::PI_4), 0}),
         {cos(-qc::PI_4), 0, 0, sin(-qc::PI_4)});
-  } else if (op.get().getType() == qc::SX) {
-    quat = combineQuaternions(
+  case qc::SX:
+    return combineQuaternions(
         combineQuaternions({cos(-qc::PI_4), 0, 0, sin(-qc::PI_4)},
                            {cos(qc::PI_4), 0, sin(qc::PI_4), 0}),
         {cos(qc::PI_4), 0, 0, sin(qc::PI_4)});
-  } else if (op.get().getType() == qc::SXdg || op.get().getType() == qc::V) {
-    quat = combineQuaternions(
+  case qc::SXdg:
+  case qc::V:
+    return combineQuaternions(
         combineQuaternions({cos(-qc::PI_4), 0, 0, sin(-qc::PI_4)},
                            {cos(-qc::PI_4), 0, sin(-qc::PI_4), 0}),
         {cos(qc::PI_4), 0, 0, sin(qc::PI_4)});
-  } else {
-    // if the gate type is not recognized, an error is printed and the
-    // gate is not included in the output.
+  default:
     std::ostringstream oss;
-    oss << "ERROR: Unsupported single-qubit gate: " << op.get().getType()
-        << "\n";
+    oss << "Unsupported single-qubit gate: " << op.get().getType();
     throw std::invalid_argument(oss.str());
   }
-  return quat;
 }
 
 auto NativeGateDecomposer::combineQuaternions(const Quaternion& q1,
                                               const Quaternion& q2)
     -> Quaternion {
-  Quaternion new_quat{};
-  new_quat[0] = q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2] - q1[3] * q2[3];
-  new_quat[1] = q1[0] * q2[1] + q1[1] * q2[0] + q1[2] * q2[3] - q1[3] * q2[2];
-  new_quat[2] = q1[0] * q2[2] - q1[1] * q2[3] + q1[2] * q2[0] + q1[3] * q2[1];
-  new_quat[3] = q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1] + q1[3] * q2[0];
-  return new_quat;
+  return {q1.a * q2.a - q1.b * q2.b - q1.c * q2.c - q1.d * q2.d,
+          q1.a * q2.b + q1.b * q2.a + q1.c * q2.d - q1.d * q2.c,
+          q1.a * q2.c - q1.b * q2.d + q1.c * q2.a + q1.d * q2.b,
+          q1.a * q2.d + q1.b * q2.c - q1.c * q2.b + q1.d * q2.a};
 }
 
 auto NativeGateDecomposer::getU3AnglesFromQuaternion(const Quaternion& quat)
-    -> std::array<qc::fp, 3> {
-  qc::fp theta;
-  qc::fp phi;
-  qc::fp lambda;
-  if (std::fabs(quat[0]) > epsilon || std::fabs(quat[3]) > epsilon) {
-    theta = 2. * std::atan2(std::sqrt(quat[2] * quat[2] + quat[1] * quat[1]),
-                            std::sqrt(quat[0] * quat[0] + quat[3] * quat[3]));
-    qc::fp alpha_1 = std::atan2(quat[3], quat[0]); // (phi+ lambda) /2
-    if (std::fabs(quat[1]) > epsilon || std::fabs(quat[2]) > epsilon) {
-      qc::fp alpha_2 = -1 * std::atan2(quat[1], quat[2]); //(phi-lambda)/2
-      phi = alpha_1 + alpha_2;                            // phi
-      lambda = alpha_1 - alpha_2;
+    -> Angles {
+  Angles angles;
+  if (std::fabs(quat.a) > epsilon || std::fabs(quat.d) > epsilon) {
+    angles.theta =
+        2. * std::atan2(std::sqrt(quat.c * quat.c + quat.b * quat.b),
+                        std::sqrt(quat.a * quat.a + quat.d * quat.d));
+    const qc::fp alpha1 = std::atan2(quat.d, quat.a); // (phi+ lambda) /2
+    if (std::fabs(quat.b) > epsilon || std::fabs(quat.c) > epsilon) {
+      const qc::fp alpha2 = -1 * std::atan2(quat.b, quat.c); //(phi-lambda)/2
+      angles.phi = alpha1 + alpha2;                          // phi
+      angles.lambda = alpha1 - alpha2;
     } else {
-      phi = 0;
-      lambda = 2 * alpha_1;
+      angles.phi = 0;
+      angles.lambda = 2 * alpha1;
     }
   } else {
-    theta = qc::PI;
-    if (std::fabs(quat[1]) > epsilon || std::fabs(quat[2]) > epsilon) {
-      phi = 0;
-      lambda = 2 * std::atan2(quat[1], quat[2]);
+    angles.theta = qc::PI;
+    if (std::fabs(quat.b) > epsilon || std::fabs(quat.c) > epsilon) {
+      angles.phi = 0;
+      angles.lambda = 2 * std::atan2(quat.b, quat.c);
     } else {
-      // This should never happen! Exception??
-      phi = 0.;
-      lambda = 0.;
+      throw std::invalid_argument("Invalid quaternion");
     }
   }
-  return {theta, phi, lambda};
+  return angles;
 }
 
-auto NativeGateDecomposer::calcThetaMax(const std::vector<StructU3>& layer)
+auto NativeGateDecomposer::calcThetaMax(const std::vector<StructU3>& layers)
     -> qc::fp {
-  qc::fp theta_max = 0;
-  for (auto gate : layer) {
-    if (std::fabs(gate.angles[0]) > theta_max) {
-      theta_max = std::fabs(gate.angles[0]);
+  qc::fp thetaMax = 0;
+  for (auto [angles, qubit] : layers) {
+    if (std::fabs(angles.theta) > thetaMax) {
+      thetaMax = std::fabs(angles.theta);
     }
   }
-  return theta_max;
+  return thetaMax;
 }
 auto NativeGateDecomposer::transformToU3(
-    const std::vector<SingleQubitGateRefLayer>& layers, size_t n_qubits)
+    const std::vector<SingleQubitGateRefLayer>& layers, const size_t nQubits)
     -> std::vector<std::vector<StructU3>> {
-  std::vector<std::vector<StructU3>> new_layers;
+  std::vector<std::vector<StructU3>> newLayers;
   for (const auto& layer : layers) {
-    std::vector<std::vector<std::reference_wrapper<const qc::Operation>>> gates(
-        n_qubits);
-    std::vector<StructU3> new_layer;
-    for (auto gate : layer) {
-      // WHat are operations with empty targets doing??
-      if (!gate.get().getTargets().empty()) {
-        gates[gate.get().getTargets().front()].push_back(gate);
-      }
-    }
-
-    for (auto qubit_gates : gates) {
-      if (!qubit_gates.empty()) {
-        std::array<qc::fp, 4> quat = convertGateToQuaternion(qubit_gates[0]);
-        for (size_t i = 1; i < qubit_gates.size(); i++) {
-          quat =
-              combineQuaternions(quat, convertGateToQuaternion(qubit_gates[i]));
-        }
-        std::array<qc::fp, 3> angles = getU3AnglesFromQuaternion(quat);
-        new_layer.emplace_back(
-            StructU3{angles, qubit_gates[0].get().getTargets().front()});
-      }
-    }
-    new_layers.push_back(new_layer);
+    std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
+        gatesPerQubit(nQubits);
+    std::ranges::for_each(layer, [&gatesPerQubit](const auto& gate) -> void {
+      assert(gate.get().getNqubits() != 1 &&
+             "Gate has to be a single qubit gate.");
+      gatesPerQubit[gate.get().getTargets().front()].emplace_back(gate);
+    });
+    std::vector<StructU3> newLayer;
+    std::ranges::transform(
+        std::views::iota(gatesPerQubit.size()) |
+            std::views::filter([&gatesPerQubit](const auto i) -> bool {
+              return !gatesPerQubit[i].empty();
+            }),
+        std::back_inserter(newLayer),
+        [&gatesPerQubit](const auto i) -> StructU3 {
+          const auto& gates = gatesPerQubit[i];
+          const auto& quat = std::accumulate(
+              gates.begin(), gates.end(), Quaternion{},
+              [](Quaternion q, const auto& gate) -> Quaternion {
+                return combineQuaternions(std::move(q),
+                                          convertGateToQuaternion(gate));
+              });
+          const auto& angles = getU3AnglesFromQuaternion(quat);
+          return StructU3{.angles = angles,
+                          .qubit = gates.front().get().getTargets().front()};
+        });
+    newLayers.emplace_back(newLayer);
   }
-  return new_layers;
+  return newLayers;
 }
-auto NativeGateDecomposer::getDecompositionAngles(
-    const std::array<qc::fp, 3>& angles, qc::fp theta_max)
-    -> std::array<qc::fp, 3> {
-  qc::fp alpha, chi;
-  // U3(theta,phi_min(phi),phi_plus(lambda)->Rz(gamma_minus)GR(theta_max/2,
+auto NativeGateDecomposer::getDecompositionAngles(const Angles& angles,
+                                                  const qc::fp thetaMax)
+    -> Angles {
+  qc::fp alpha;
+  qc::fp chi;
+  // U3(theta,phi_min(phi),phi_plus(lambda))->Rz(gamma_minus)GR(theta_max/2,
   // PI_2)Rz(chi)GR(-theta_max/2,PI_2)RZ(gamma_plus)
-  qc::fp sin_sq_diff = (sin(theta_max / 2) * sin(theta_max / 2) -
-                        (sin(angles[0] / 2) * sin(angles[0] / 2)));
-  if (std::fabs(sin_sq_diff) < epsilon) {
+  const auto sinSqDiff = sin(thetaMax / 2) * sin(thetaMax / 2) -
+                         sin(angles.theta / 2) * sin(angles.theta / 2);
+  if (std::fabs(sinSqDiff) < epsilon) {
     chi = qc::PI;
-    if (std::fabs(cos(theta_max / 2)) < epsilon) { // Periodicity covered?
+    if (std::fabs(cos(thetaMax / 2)) < epsilon) { // Periodicity covered?
       alpha = 0;
     } else {
       alpha = qc::PI_2;
     }
   } else {
-    qc::fp kappa =
-        std::sqrt((sin(angles[0] / 2) * sin(angles[0] / 2)) / sin_sq_diff);
-    alpha = atan(cos(theta_max / 2) * kappa);
+    const auto kappa =
+        std::sqrt((sin(angles.theta / 2) * sin(angles.theta / 2)) / sinSqDiff);
+    alpha = atan(cos(thetaMax / 2) * kappa);
     chi = fmod(2 * atan(kappa), qc::TAU);
   }
-  qc::fp beta = angles[0] < 0 ? -1 * qc::PI_2 : qc::PI_2;
-  qc::fp gamma_plus = fmod(angles[2] - (alpha + beta), qc::TAU);
-  qc::fp gamma_minus = fmod(angles[1] - (alpha - beta), qc::TAU);
+  const auto beta = angles.theta < 0 ? -1 * qc::PI_2 : qc::PI_2;
 
-  return {chi, gamma_minus, gamma_plus};
+  return {.theta = beta,
+          .phi = fmod(angles.phi - (alpha - beta), qc::TAU),
+          .lambda = fmod(angles.lambda - (alpha + beta), qc::TAU)};
 }
 
 auto NativeGateDecomposer::decompose(
@@ -212,303 +210,258 @@ auto NativeGateDecomposer::decompose(
     const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
     -> DecompositionResult {
-  nQubits_ = nQubits;
-
-  std::vector<std::vector<StructU3>> U3Layers =
-      transformToU3(schedule.first, nQubits);
-  std::vector<TwoQubitGateLayer> NewTwoQubitGateLayers = schedule.second;
-
+  auto u3Layers = transformToU3(singleQubitGateLayers, nQubits);
+  std::vector<TwoQubitGateLayer> newTwoQubitLayers;
   if (config_.thetaOptSchedule) {
-    auto thetaOptSchedule =
-        schedule_theta_opt(std::pair(U3Layers, NewTwoQubitGateLayers), nQubits);
-    U3Layers = thetaOptSchedule.first;
-    NewTwoQubitGateLayers = thetaOptSchedule.second;
+    auto schedule =
+        scheduleThetaOpt(std::pair(u3Layers, twoQubitGateLayers), nQubits);
+    u3Layers = schedule.first;
+    newTwoQubitLayers = schedule.second;
+  } else {
+    newTwoQubitLayers = twoQubitGateLayers;
   }
-  std::vector<SingleQubitGateLayer> NewSingleQubitLayers =
-      std::vector<SingleQubitGateLayer>{};
-
-  for (const auto& layer : U3Layers) {
-    qc::fp theta_max = calcThetaMax(layer);
-    SingleQubitGateLayer FrontLayer;
-    SingleQubitGateLayer MidLayer;
-    SingleQubitGateLayer BackLayer;
-    SingleQubitGateLayer NewLayer = {};
+  std::vector<SingleQubitGateLayer> newSingleQubitLayers;
+  for (const auto& layer : u3Layers) {
+    const auto thetaMax = calcThetaMax(layer);
+    SingleQubitGateLayer frontLayer;
+    SingleQubitGateLayer midLayer;
+    SingleQubitGateLayer backLayer;
+    auto& newLayer = newSingleQubitLayers.emplace_back();
 
     for (auto gate : layer) {
-      std::array<qc::fp, 3> decomp_angles =
-          getDecompositionAngles(gate.angles, theta_max);
-
-      // GR(theta_max/2, PI_2)==Global Y due to PI_2
-      FrontLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
-          qc::StandardOperation(gate.qubit, qc::RZ, {decomp_angles[1]})));
-
-      MidLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
-          qc::StandardOperation(gate.qubit, qc::RZ, {decomp_angles[0]})));
-
-      BackLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
-          qc::StandardOperation(gate.qubit, qc::RZ, {decomp_angles[2]})));
-    } // gate::layer
-    if (!layer.empty()) {
-      std::vector<std::unique_ptr<qc::Operation>> GR_plus;
-      std::vector<std::unique_ptr<qc::Operation>> GR_minus;
-
-      for (size_t i = 0; i < this->nQubits_; ++i) {
-        GR_plus.emplace_back(std::make_unique<qc::StandardOperation>(
-            i, qc::RY, std::initializer_list<qc::fp>{theta_max / 2}));
-        GR_minus.emplace_back(std::make_unique<qc::StandardOperation>(
-            i, qc::RY, std::initializer_list<qc::fp>{-1 * theta_max / 2}));
-      }
-
-      for (auto&& gate : FrontLayer) {
-        NewLayer.push_back(std::move(gate));
-      }
-
-      NewLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
-          qc::CompoundOperation(std::move(GR_plus), true)));
-
-      for (auto&& gate : MidLayer) {
-        NewLayer.push_back(std::move(gate));
-      }
-      NewLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
-          qc::CompoundOperation(std::move(GR_minus), true)));
-
-      for (auto&& gate : BackLayer) {
-        NewLayer.push_back(std::move(gate));
-      }
+      const auto& [theta, phi, lambda] =
+          getDecompositionAngles(gate.angles, thetaMax);
+      frontLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
+          gate.qubit, qc::RZ, std::vector{phi}));
+      midLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
+          gate.qubit, qc::RZ, std::vector{theta}));
+      backLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
+          gate.qubit, qc::RZ, std::vector{lambda}));
     }
-    NewSingleQubitLayers.push_back(std::move(NewLayer));
-  } // layer::SingleQubitLayers
-  return {std::move(NewSingleQubitLayers), NewTwoQubitGateLayers};
+    if (!layer.empty()) {
+      std::vector<std::unique_ptr<qc::Operation>> globalRotation;
+      std::vector<std::unique_ptr<qc::Operation>> globalReversRotation;
+      for (size_t i = 0; i < nQubits; ++i) {
+        globalRotation.emplace_back(std::make_unique<qc::StandardOperation>(
+            i, qc::RY, std::vector{thetaMax / 2}));
+        globalReversRotation.emplace_back(
+            std::make_unique<qc::StandardOperation>(
+                i, qc::RY, std::vector{-thetaMax / 2}));
+      }
+      // combine all lists into a flat list
+      std::ranges::move(frontLayer, std::back_inserter(newLayer));
+      newLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
+          std::move(globalRotation), true));
+      std::ranges::move(midLayer, std::back_inserter(newLayer));
+      newLayer.emplace_back(std::make_unique<const qc::CompoundOperation>(
+          std::move(globalReversRotation), true));
+      std::ranges::move(backLayer, std::back_inserter(newLayer));
+    }
+  }
+  return {.singleQubitLayers = std::move(newSingleQubitLayers),
+          .twoQubitLayers = std::move(newTwoQubitLayers)};
 }
 
-auto NativeGateDecomposer::find_cheapest_path(
+auto NativeGateDecomposer::findCheapestPath(
     const DiGraph<std::pair<std::vector<std::size_t>,
-                            std::vector<std::size_t>>>& subproblem_graph,
-    const std::vector<std::size_t>& leaf_nodes) -> std::vector<size_t> {
-  std::set<std::size_t> leaves =
-      std::set<std::size_t>(leaf_nodes.begin(), leaf_nodes.end());
-  // Memory Map : Subprob NOdes as keys
-  std::map<size_t, std::pair<std::vector<size_t>, qc::fp>> memo = {};
-  std::pair<std::vector<std::size_t>, double> leaf_path =
-      cheapest_path_to_start(subproblem_graph, 0, leaves, memo);
-  std::ranges::reverse(leaf_path.first);
-
-  return {leaf_path.first.begin() + 1, leaf_path.first.end()};
+                            std::vector<std::size_t>>>& subproblemGraph,
+    const std::vector<std::size_t>& leafNodes) -> std::vector<size_t> {
+  const std::set leaves(leafNodes.begin(), leafNodes.end());
+  // Memory Map : Sub-problem nodes as keys
+  std::map<size_t, std::pair<std::vector<size_t>, qc::fp>> memo;
+  auto [path, cost] = cheapestPathToStart(subproblemGraph, 0, leaves, memo);
+  path.resize(path.size() - 1);
+  std::ranges::reverse(path);
+  return path;
 }
 auto disjunct(const std::set<size_t>& set1, const std::set<size_t>& set2)
     -> bool {
-  for (auto elem : set1) {
-    if (set2.contains(elem)) {
-      return false;
-    }
-  }
-  return true;
+  return std::ranges::all_of(set1,
+                             [&](auto elem) { return !set2.contains(elem); });
 }
 
 auto disjunct(const std::set<qc::Qubit>& set1, const std::set<qc::Qubit>& set2)
     -> bool {
-  for (auto elem : set1) {
-    if (set2.contains(elem)) {
-      return false;
-    }
-  }
-  return true;
+  return std::ranges::all_of(set1,
+                             [&](auto elem) { return !set2.contains(elem); });
 }
 
-auto NativeGateDecomposer::cheapest_path_to_start(
+auto NativeGateDecomposer::cheapestPathToStart(
     const DiGraph<std::pair<std::vector<std::size_t>,
-                            std::vector<std::size_t>>>& subproblem_graph,
-    std::size_t current_node, const std::set<std::size_t>& leaf_nodes,
+                            std::vector<std::size_t>>>& subproblemGraph,
+    std::size_t currentNode, const std::set<std::size_t>& leafNodes,
     std::map<size_t, std::pair<std::vector<size_t>, qc::fp>>& memo)
     -> std::pair<std::vector<std::size_t>, double> {
-  std::vector<std::pair<std::vector<std::size_t>, double>> possible_paths = {};
+  std::vector<std::pair<std::vector<std::size_t>, double>> possiblePaths;
   // Check if leaf nodes are reached
-  if (memo.contains(current_node)) {
-    return memo.at(current_node);
+  if (memo.contains(currentNode)) {
+    return memo.at(currentNode);
   }
-
   // Base Case:
-  for (auto edge : subproblem_graph.get_adjacent(current_node)) {
-    if (leaf_nodes.contains(edge.first)) {
-      possible_paths.push_back({std::pair<std::vector<std::size_t>, double>(
-          {edge.first, current_node}, edge.second)});
+  for (auto [source, target] : subproblemGraph.getAdjacent(currentNode)) {
+    if (leafNodes.contains(source)) {
+      possiblePaths.emplace_back(std::vector{source, currentNode}, target);
     }
   }
   // Recursive Case
-  if (possible_paths.empty()) {
-    for (auto edge : subproblem_graph.get_adjacent(current_node)) {
-      auto path = cheapest_path_to_start(subproblem_graph, edge.first,
-                                         leaf_nodes, memo);
-      // Check if current node is already in path. If so don't add
-      // std::set<std::size_t> path_nodes=std::set(path.first.begin(),
-      // path.first.end());
-      // if (!path_nodes.contains(current_node)) {
-      path.first.push_back(current_node);
-      path.second += edge.second;
-      possible_paths.push_back(path);
-      // }
+  if (possiblePaths.empty()) {
+    for (auto [source, target] : subproblemGraph.getAdjacent(currentNode)) {
+      auto path = cheapestPathToStart(subproblemGraph, source, leafNodes, memo);
+      path.first.emplace_back(currentNode);
+      path.second += target;
+      possiblePaths.emplace_back(path);
     }
   }
-
-  // Choose cheapest Paths
-  if (possible_paths.size() == 1) {
-    return possible_paths.at(0);
-  }
-  // Find shortest path with minimal cost
-  auto min_cost = possible_paths.at(0).second;
-  auto best_path = possible_paths.at(0);
-  for (const auto& path : possible_paths) {
-    if (path.second < min_cost) {
-      min_cost = path.second;
-      best_path = path;
-    }
-  }
-  memo[current_node] = best_path;
-  return best_path;
+  // Choose the cheapest path
+  assert(!possiblePaths.empty() && "No path found to leaf nodes.");
+  const auto& bestPathWithCost = *std::ranges::min_element(
+      possiblePaths,
+      [](const auto& a, const auto& b) { return a.second < b.second; });
+  memo[currentNode] = bestPathWithCost;
+  return bestPathWithCost;
 }
 
-auto NativeGateDecomposer::find_leaf_nodes(
+auto NativeGateDecomposer::findLeafNodes(
     const DiGraph<std::pair<std::vector<std::size_t>,
-                            std::vector<std::size_t>>>& subproblem_graph)
+                            std::vector<std::size_t>>>& subproblemGraph)
     -> std::vector<std::size_t> {
-  std::vector<std::size_t> end_nodes = std::vector<std::size_t>{};
-  for (size_t i = 0; i < subproblem_graph.size(); i++) {
-    if (subproblem_graph.get_adjacent(i).empty()) {
-      end_nodes.push_back(i);
-    }
-  }
-  return end_nodes;
+  std::vector<std::size_t> leafNodes;
+  std::ranges::copy(std::views::iota(subproblemGraph.size()) |
+                        std::views::filter([&subproblemGraph](auto i) -> bool {
+                          return subproblemGraph.getAdjacent(i).empty();
+                        }),
+                    std::back_inserter(leafNodes));
+  return leafNodes;
 }
 
-auto NativeGateDecomposer::remove_element(
-    const std::vector<std::size_t>& vector, std::size_t elem)
+auto NativeGateDecomposer::removeElement(const std::vector<std::size_t>& vector,
+                                         const std::size_t elem)
     -> std::vector<std::size_t> {
-  std::vector<std::size_t> new_vector = {};
+  std::vector<std::size_t> newVector;
   for (auto element : vector) {
     if (element != elem) {
-      new_vector.push_back(element);
+      newVector.emplace_back(element);
     }
   }
-  return new_vector;
+  return newVector;
 }
 
-auto NativeGateDecomposer::get_possible_moments(
+auto NativeGateDecomposer::getPossibleMoments(
     DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
-    const std::vector<size_t>& v0_c,
-    const std::array<std::vector<size_t>, 3>& v_new, bool check_final_cond)
+    const std::vector<size_t>& v0Current,
+    const std::array<std::vector<size_t>, 3>& vNew, bool checkFinalCond)
     -> std::vector<std::pair<std::array<std::vector<std::size_t>, 4>, qc::fp>> {
 
-  std::vector<size_t> v_p1_star = v_new[0];
-  std::vector<size_t> v_p1_square = {};
-  std::vector<size_t> v_c1_star = v_new[1];
-  std::vector<size_t> v_c1_square = {};
+  std::vector<size_t> vP1Star = vNew[0];
+  std::vector<size_t> vP1Square = {};
+  std::vector<size_t> vc1Star = vNew[1];
+  std::vector<size_t> vc1Square = {};
 
-  qc::fp v_c0_cost = max_theta(circuit, v0_c);
-  qc::fp v_c1_cost = max_theta(circuit, v_new[1]);
-  qc::fp orig_comb_cost = v_c0_cost + v_c1_cost;
-  qc::fp new_v_c1_cost = std::max(v_c0_cost, v_c1_cost);
+  qc::fp vc0Cost = maxTheta(circuit, v0Current);
+  qc::fp vc1Cost = maxTheta(circuit, vNew[1]);
+  qc::fp origCombCost = vc0Cost + vc1Cost;
+  qc::fp newVc1Cost = std::max(vc0Cost, vc1Cost);
 
-  std::array<std::vector<std::size_t>, 4> v_arg = {v0_c, v_new[0], v_new[1],
-                                                   v_new[2]};
+  std::array<std::vector<std::size_t>, 4> vArg = {v0Current, vNew[0], vNew[1],
+                                                  vNew[2]};
   std::vector<std::pair<std::array<std::vector<std::size_t>, 4>, qc::fp>> args =
-      {std::pair(v_arg, v_c0_cost)};
+      {std::pair(vArg, vc0Cost)};
   // Sort v_0C from highest to lowest theta
-  std::vector<std::size_t> v_sort(v0_c);
-  auto sort_by_theta = [&circuit](std::size_t a, std::size_t b) -> bool {
-    return std::fabs(std::get<StructU3>(circuit.get_Node_Value(a)).angles[0]) >
-           std::fabs(std::get<StructU3>(circuit.get_Node_Value(b)).angles[0]);
+  std::vector<std::size_t> vSort(v0Current);
+  auto sortByTheta = [&circuit](std::size_t a, std::size_t b) -> bool {
+    return std::fabs(std::get<StructU3>(circuit.getNodeValue(a)).angles.theta) >
+           std::fabs(std::get<StructU3>(circuit.getNodeValue(b)).angles.theta);
   };
-  std::ranges::sort(v_sort, sort_by_theta);
+  std::ranges::sort(vSort, sortByTheta);
   // TODO: Check Condition 1
   std::vector<std::pair<std::array<std::vector<std::size_t>, 2>,
                         std::pair<std::set<qc::Qubit>, qc::fp>>>
-      potential_arg = {};
-  auto prev_theta = std::fabs(
-      std::get<StructU3>(circuit.get_Node_Value(v_sort[0])).angles[0]);
-  auto this_theta = prev_theta;
-  std::set<qc::Qubit> mk_qubits = {
-      std::get<StructU3>(circuit.get_Node_Value(v_sort[0])).qubit};
-  for (auto i = 0; static_cast<size_t>(i) < v_sort.size(); i++) {
-    this_theta =
-        std::fabs(std::get<StructU3>(
-                      circuit.get_Node_Value(v_sort[static_cast<size_t>(i)]))
-                      .angles[0]);
-    if (this_theta != prev_theta) {
-      std::vector<std::size_t> discarded = {v_sort.begin(), v_sort.begin() + i};
-      std::vector<std::size_t> kept = {v_sort.begin() + i, v_sort.end()};
-      potential_arg.push_back(std::pair<std::array<std::vector<std::size_t>, 2>,
-                                        std::pair<std::set<qc::Qubit>, qc::fp>>(
-          {kept, discarded},
-          std::pair<std::set<qc::Qubit>, qc::fp>(mk_qubits, this_theta)));
-      prev_theta = this_theta;
-      mk_qubits.clear();
+      potentialArg = {};
+  auto prevTheta = std::fabs(
+      std::get<StructU3>(circuit.getNodeValue(vSort[0])).angles.theta);
+  auto thisTheta = prevTheta;
+  std::set<qc::Qubit> mkQubits = {
+      std::get<StructU3>(circuit.getNodeValue(vSort[0])).qubit};
+  for (auto i = 0; static_cast<size_t>(i) < vSort.size(); i++) {
+    thisTheta = std::fabs(
+        std::get<StructU3>(circuit.getNodeValue(vSort[static_cast<size_t>(i)]))
+            .angles.theta);
+    if (thisTheta != prevTheta) {
+      std::vector<std::size_t> discarded = {vSort.begin(), vSort.begin() + i};
+      std::vector<std::size_t> kept = {vSort.begin() + i, vSort.end()};
+      potentialArg.emplace_back(
+          std::pair<std::array<std::vector<std::size_t>, 2>,
+                    std::pair<std::set<qc::Qubit>, qc::fp>>(
+              {kept, discarded},
+              std::pair<std::set<qc::Qubit>, qc::fp>(mkQubits, thisTheta)));
+      prevTheta = thisTheta;
+      mkQubits.clear();
     }
-    mk_qubits.insert(std::get<StructU3>(
-                         circuit.get_Node_Value(v_sort[static_cast<size_t>(i)]))
-                         .qubit);
+    mkQubits.insert(
+        std::get<StructU3>(circuit.getNodeValue(vSort[static_cast<size_t>(i)]))
+            .qubit);
   }
-  std::vector<std::size_t> push_back_nodes = {};
-  std::set<qc::Qubit> p_square_qubits = {};
+  std::vector<std::size_t> emplaceBackNodes = {};
+  std::set<qc::Qubit> pSquareQubits = {};
 
-  for (auto pot : potential_arg) {
+  for (auto pot : potentialArg) {
     // TODO: Check Condition 2
-    for (auto node : v_p1_star) {
+    for (auto node : vP1Star) {
       std::set<qc::Qubit> qubits = {
-          std::get<std::array<qc::Qubit, 2>>(circuit.get_Node_Value(node))[0],
-          std::get<std::array<qc::Qubit, 2>>(circuit.get_Node_Value(node))[1]};
+          std::get<std::array<qc::Qubit, 2>>(circuit.getNodeValue(node))[0],
+          std::get<std::array<qc::Qubit, 2>>(circuit.getNodeValue(node))[1]};
       if (!disjunct(qubits, pot.second.first)) {
-        push_back_nodes.emplace_back(node);
-        p_square_qubits.merge(qubits);
+        emplaceBackNodes.emplace_back(node);
+        pSquareQubits.merge(qubits);
       }
     }
-    for (auto node : push_back_nodes) {
-      v_p1_star = remove_element(v_p1_star, node);
-      v_p1_square.emplace_back(node);
+    for (auto node : emplaceBackNodes) {
+      const auto ret = std::ranges::remove(vP1Star, node);
+      vP1Star.erase(ret.begin(), ret.end());
+      vP1Square.emplace_back(node);
     }
 
-    if (v_p1_star.empty()) {
+    if (vP1Star.empty()) {
       break;
     }
     //  TODO: Check Condition 3
-    std::set<qc::Qubit> push_qubits = pot.second.first;
-    push_qubits.merge(p_square_qubits);
-    push_back_nodes.clear();
+    std::set<qc::Qubit> pushQubits = pot.second.first;
+    pushQubits.merge(pSquareQubits);
+    emplaceBackNodes.clear();
 
-    for (auto node : v_c1_star) {
-      std::set<qc::Qubit> qubits = {
-          std::get<StructU3>(circuit.get_Node_Value(node)).qubit};
-      if (!disjunct(qubits, push_qubits)) {
-        push_back_nodes.emplace_back(node);
+    for (auto node : vc1Star) {
+      std::set qubits = {std::get<StructU3>(circuit.getNodeValue(node)).qubit};
+      if (!disjunct(qubits, pushQubits)) {
+        emplaceBackNodes.emplace_back(node);
       }
     }
-    for (auto node : push_back_nodes) {
-      v_c1_star = remove_element(v_c1_star, node);
-      v_c1_square.emplace_back(node);
+    for (auto node : emplaceBackNodes) {
+      vc1Star = removeElement(vc1Star, node);
+      vc1Square.emplace_back(node);
     }
 
-    if (v_c1_star.empty()) {
+    if (vc1Star.empty()) {
       break;
     }
     // TODO Check Condition 4
-    if (!check_final_cond ||
-        pot.second.second + new_v_c1_cost < orig_comb_cost) {
-      v_arg = {pot.first[0], v_p1_star, pot.first[1], v_new[2]};
-      for (auto node : v_c1_star) {
-        v_arg[2].push_back(node);
+    if (!checkFinalCond || pot.second.second + newVc1Cost < origCombCost) {
+      vArg = {pot.first[0], vP1Star, pot.first[1], vNew[2]};
+      for (auto node : vc1Star) {
+        vArg[2].emplace_back(node);
       }
-      for (auto node : v_c1_square) {
-        v_arg[3].push_back(node);
+      for (auto node : vc1Square) {
+        vArg[3].emplace_back(node);
       }
-      for (auto node : v_p1_square) {
-        v_arg[3].push_back(node);
+      for (auto node : vP1Square) {
+        vArg[3].emplace_back(node);
       }
-      args.emplace_back(v_arg, pot.second.second);
+      args.emplace_back(vArg, pot.second.second);
     }
   }
   return args;
 }
 
-auto NativeGateDecomposer::convert_circ_to_dag(
+auto NativeGateDecomposer::convertCircuitToDAG(
     const std::pair<std::vector<std::vector<StructU3>>,
                     std::vector<TwoQubitGateLayer>>& schedule,
     std::size_t nQubits)
@@ -517,44 +470,45 @@ auto NativeGateDecomposer::convert_circ_to_dag(
   // For Readout:
   DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>> graph =
       DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>();
-  std::vector<std::vector<size_t>> qubit_paths(nQubits);
+  std::vector<std::vector<size_t>> qubitPaths(nQubits);
   // TODO:assert that One more sql exists than mql ??
   for (size_t i = 0; i < schedule.second.size(); ++i) {
     for (const auto& s : schedule.first.at(i)) {
       size_t node = graph.add_Node(s);
-      qubit_paths.at(s.qubit).push_back(node);
+      qubitPaths.at(s.qubit).emplace_back(node);
     }
 
     for (const auto& gate : schedule.second.at(i)) {
       size_t node = graph.add_Node(gate);
-      qubit_paths.at(gate[0]).push_back(node);
-      qubit_paths.at(gate[1]).push_back(node);
+      qubitPaths.at(gate[0]).emplace_back(node);
+      qubitPaths.at(gate[1]).emplace_back(node);
     }
   }
   SPDLOG_DEBUG("Added Nodes");
   for (const auto& s : schedule.first.back()) {
     size_t node = graph.add_Node(s);
-    qubit_paths.at(s.qubit).push_back(node);
+    qubitPaths.at(s.qubit).emplace_back(node);
   }
-  for (std::size_t i = 0; i < qubit_paths.size(); ++i) {
-    if (qubit_paths.at(i).size() > 0) {
-      for (std::size_t op = 0; op < (qubit_paths.at(i).size() - 1); ++op) {
-        graph.add_Edge(qubit_paths.at(i).at(op), qubit_paths.at(i).at(op + 1));
+  for (std::size_t i = 0; i < qubitPaths.size(); ++i) {
+    if (qubitPaths.at(i).size() > 0) {
+      for (std::size_t op = 0; op < (qubitPaths.at(i).size() - 1); ++op) {
+        graph.addEdge(qubitPaths.at(i).at(op), qubitPaths.at(i).at(op + 1));
       }
     }
   }
   return graph;
 }
 
-auto NativeGateDecomposer::max_theta(
+auto NativeGateDecomposer::maxTheta(
     DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
     const std::vector<std::size_t>& nodes) -> qc::fp {
   qc::fp max_cost = 0;
   for (const auto node : nodes) {
-    if (std::fabs(std::get<StructU3>(circuit.get_Node_Value(node)).angles[0]) >=
+    if (std::fabs(
+            std::get<StructU3>(circuit.getNodeValue(node)).angles.theta) >=
         max_cost) {
-      max_cost =
-          std::fabs(std::get<StructU3>(circuit.get_Node_Value(node)).angles[0]);
+      max_cost = std::fabs(
+          std::get<StructU3>(circuit.getNodeValue(node)).angles.theta);
     }
   }
   return max_cost;
@@ -563,53 +517,53 @@ auto NativeGateDecomposer::sift(
     DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
     std::vector<std::size_t> v, size_t nQubits)
     -> std::array<std::vector<size_t>, 3> {
-  std::vector<size_t> v_p = std::vector<size_t>();
+  std::vector<size_t> vp = std::vector<size_t>();
   std::vector<size_t> v_c = std::vector<size_t>();
-  std::vector<size_t> v_r = std::vector<size_t>();
+  std::vector<size_t> vr = std::vector<size_t>();
 
-  std::set<std::size_t> v_rem = std::set(v.begin(), v.end());
+  std::set<std::size_t> vRemaining = std::set(v.begin(), v.end());
   std::set<size_t> removed = std::set<size_t>();
 
   // We traverse the graph rather than v_rem to use the graph's topological
   // ordering
   for (size_t node = 0; node < circuit.size(); node++) {
-    if (v_rem.contains(node)) {
-      auto op = circuit.get_Node_Value(node);
-      std::set<size_t> op_qubits = std::set<size_t>();
+    if (vRemaining.contains(node)) {
+      auto op = circuit.getNodeValue(node);
+      std::set<size_t> opQubits = std::set<size_t>();
 
       if (std::holds_alternative<StructU3>(op)) {
-        op_qubits = {std::get<StructU3>(op).qubit};
+        opQubits = {std::get<StructU3>(op).qubit};
       } else {
-        op_qubits = {std::get<std::array<qc::Qubit, 2>>(op)[0],
-                     std::get<std::array<qc::Qubit, 2>>(op)[1]};
+        opQubits = {std::get<std::array<qc::Qubit, 2>>(op)[0],
+                    std::get<std::array<qc::Qubit, 2>>(op)[1]};
       }
-      if (removed.size() < nQubits && disjunct(removed, op_qubits)) {
+      if (removed.size() < nQubits && disjunct(removed, opQubits)) {
         if (std::holds_alternative<StructU3>(op)) {
-          v_c.push_back(node);
+          v_c.emplace_back(node);
           removed.insert(std::get<StructU3>(op).qubit);
         } else {
-          v_p.push_back(node);
+          vp.emplace_back(node);
         }
       } else {
-        v_r.push_back(node);
-        for (auto qubit : op_qubits) {
+        vr.emplace_back(node);
+        for (auto qubit : opQubits) {
           removed.insert(qubit);
         }
       }
     }
   }
-  return std::array<std::vector<size_t>, 3>({v_p, v_c, v_r});
+  return std::array<std::vector<size_t>, 3>{{vp, v_c, vr}};
 }
 
-auto NativeGateDecomposer::build_schedule(
+auto NativeGateDecomposer::buildSchedule(
     DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
     DiGraph<std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>&
-        subproblem_graph) -> std::pair<std::vector<std::vector<StructU3>>,
-                                       std::vector<TwoQubitGateLayer>> {
+        subproblemGraph) -> std::pair<std::vector<std::vector<StructU3>>,
+                                      std::vector<TwoQubitGateLayer>> {
 
-  std::vector<std::size_t> leaf_nodes = find_leaf_nodes(subproblem_graph);
-  std::vector<std::size_t> minimal_path =
-      find_cheapest_path(subproblem_graph, leaf_nodes);
+  std::vector<std::size_t> leafNodes = findLeafNodes(subproblemGraph);
+  std::vector<std::size_t> minimalPath =
+      findCheapestPath(subproblemGraph, leafNodes);
   std::pair<std::vector<std::vector<StructU3>>, std::vector<TwoQubitGateLayer>>
       schedule = std::pair<std::vector<std::vector<StructU3>>,
                            std::vector<TwoQubitGateLayer>>{};
@@ -617,123 +571,122 @@ auto NativeGateDecomposer::build_schedule(
   std::vector<StructU3> singleQubitGates;
   std::vector<std::array<qc::Qubit, 2>> twoQubitGates;
 
-  if (!subproblem_graph.get_Node_Value(minimal_path[0]).first.empty()) {
-    schedule.first.push_back({});
+  if (!subproblemGraph.getNodeValue(minimalPath[0]).first.empty()) {
+    schedule.first.emplace_back();
   }
-  std::set<qc::Qubit> used_qubits{};
+  std::set<qc::Qubit> usedQubits{};
 
-  for (std::size_t i = 0; i < minimal_path.size(); i++) {
+  for (std::size_t i = 0; i < minimalPath.size(); i++) {
     singleQubitGates.clear();
     twoQubitGates.clear();
-    used_qubits.clear();
+    usedQubits.clear();
 
-    for (auto j : subproblem_graph.get_Node_Value(minimal_path[i]).first) {
-      auto op = circuit.get_Node_Value(j);
+    for (auto j : subproblemGraph.getNodeValue(minimalPath[i]).first) {
+      auto op = circuit.getNodeValue(j);
       if (std::holds_alternative<std::array<qc::Qubit, 2>>(op)) {
         // TODO: Check if TWOQUBIT GATES Can be executed in parallel!!
         auto gate = std::get<std::array<qc::Qubit, 2>>(op);
-        if (used_qubits.contains(gate[0]) || used_qubits.contains(gate[1])) {
-          schedule.second.push_back(twoQubitGates);
-          schedule.first.push_back({});
+        if (usedQubits.contains(gate[0]) || usedQubits.contains(gate[1])) {
+          schedule.second.emplace_back(twoQubitGates);
+          schedule.first.emplace_back();
           twoQubitGates.clear();
-          used_qubits.clear();
+          usedQubits.clear();
         }
-        used_qubits.insert(gate[0]);
-        used_qubits.insert(gate[1]);
+        usedQubits.insert(gate[0]);
+        usedQubits.insert(gate[1]);
         twoQubitGates.emplace_back(gate);
       }
     }
 
-    for (auto j : subproblem_graph.get_Node_Value(minimal_path[i]).second) {
-      auto op = circuit.get_Node_Value(j);
+    for (auto j : subproblemGraph.getNodeValue(minimalPath[i]).second) {
+      auto op = circuit.getNodeValue(j);
       if (std::holds_alternative<StructU3>(op)) {
         singleQubitGates.emplace_back(std::get<StructU3>(op));
       }
     }
-    schedule.first.push_back(singleQubitGates);
-    if (i != 0 ||
-        !subproblem_graph.get_Node_Value(minimal_path[0]).first.empty()) {
-      schedule.second.push_back(twoQubitGates);
+    schedule.first.emplace_back(singleQubitGates);
+    if (i != 0 || !subproblemGraph.getNodeValue(minimalPath[0]).first.empty()) {
+      schedule.second.emplace_back(twoQubitGates);
     }
   }
   return schedule;
 }
 
-auto NativeGateDecomposer::add_node_to_sub_prob_graph(
-    const std::vector<size_t>& v_p, const std::vector<size_t>& v_c, qc::fp cost,
+auto NativeGateDecomposer::addNodeToSubproblemGraph(
+    const std::vector<size_t>& vp, const std::vector<size_t>& vc, qc::fp cost,
     DiGraph<std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>&
-        subproblem_graph,
-    std::size_t prev_node) -> size_t {
-  std::size_t new_node = subproblem_graph.add_Node(std::pair(v_p, v_c));
-  subproblem_graph.add_Edge(prev_node, new_node, cost);
-  return new_node;
+        subproblemGraph,
+    std::size_t prevNode) -> size_t {
+  std::size_t newNode = subproblemGraph.add_Node(std::pair(vp, vc));
+  subproblemGraph.addEdge(prevNode, newNode, cost);
+  return newNode;
 }
 
-auto NativeGateDecomposer::schedule_remaining(
+auto NativeGateDecomposer::scheduleRemaining(
     const std::array<std::vector<size_t>, 3>& v,
     DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
     DiGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
-        subproblem_graph,
-    size_t prev_node, size_t nQubits, bool check_final_cond,
+        subproblemGraph,
+    size_t prevNode, size_t nQubits, bool checkFinalCond,
     std::map<size_t, std::pair<size_t, std::array<double, 2>>>& memo)
     -> double {
   double cost;
   // TODO: Check if subproblem has been computed
   std::size_t id = std::hash<std::array<std::vector<size_t>, 3>>{}(v);
   if (memo.contains(id)) {
-    std::size_t sub_node = memo.at(id).first;
-    double edge_weight = memo.at(id).second[1];
+    std::size_t subNode = memo.at(id).first;
+    double edgeWeight = memo.at(id).second[1];
     cost = memo.at(id).second[0];
-    subproblem_graph.add_Edge(prev_node, sub_node, edge_weight);
+    subproblemGraph.addEdge(prevNode, subNode, edgeWeight);
     return cost;
   }
   // TODO: Base Case-> V_rem is empty
   if (v[2].empty()) {
-    // TODO:DEcide if I need if to check for TWO QUBIT
+    // TODO:Decide if I need if to check for TWO QUBIT
     if (v[1].empty()) {
       cost = 0;
     } else {
       cost = std::fabs(
-          std::get<StructU3>(circuit.get_Node_Value(v[1].at(0))).angles[0]);
+          std::get<StructU3>(circuit.getNodeValue(v[1].at(0))).angles.theta);
     }
     for (std::size_t i : v[1]) {
-      if (std::get<StructU3>(circuit.get_Node_Value(i)).angles[0] > cost) {
+      if (std::get<StructU3>(circuit.getNodeValue(i)).angles.theta > cost) {
         cost =
-            std::fabs(std::get<StructU3>(circuit.get_Node_Value(i)).angles[0]);
+            std::fabs(std::get<StructU3>(circuit.getNodeValue(i)).angles.theta);
       }
     }
-    auto end_node = add_node_to_sub_prob_graph(v[0], v[1], cost,
-                                               subproblem_graph, prev_node);
+    auto end_node =
+        addNodeToSubproblemGraph(v[0], v[1], cost, subproblemGraph, prevNode);
     memo[id] = std::pair<std::size_t, std::array<double, 2>>(
         end_node, {cost, cost}); // TODO: Correct to put cost for both???
     return cost;
   }
   // TODO: Recursive Call: Only
-  auto v_new = sift(circuit, v[2], nQubits);
-  auto args = get_possible_moments(circuit, v[1], v_new, check_final_cond);
-  qc::fp temp_cost = 0;
-  double min_cost = std::numeric_limits<double>::max();
-  double min_weight = std::numeric_limits<double>::max();
-  std::size_t min_node;
+  auto vNew = sift(circuit, v[2], nQubits);
+  auto args = getPossibleMoments(circuit, v[1], vNew, checkFinalCond);
+  qc::fp tempCost = 0;
+  double minCost = std::numeric_limits<double>::max();
+  double minWeight = std::numeric_limits<double>::max();
+  std::size_t minNode;
   for (const auto& val : args) {
-    auto new_node = add_node_to_sub_prob_graph(v[0], val.first[0], val.second,
-                                               subproblem_graph, prev_node);
-    temp_cost = schedule_remaining({val.first[1], val.first[2], val.first[3]},
-                                   circuit, subproblem_graph, new_node, nQubits,
-                                   check_final_cond, memo) +
-                val.second;
-    if (temp_cost < min_cost) {
-      min_cost = temp_cost;
-      min_node = new_node;
-      min_weight = val.second;
+    auto newNode = addNodeToSubproblemGraph(v[0], val.first[0], val.second,
+                                            subproblemGraph, prevNode);
+    tempCost = scheduleRemaining({val.first[1], val.first[2], val.first[3]},
+                                 circuit, subproblemGraph, newNode, nQubits,
+                                 checkFinalCond, memo) +
+               val.second;
+    if (tempCost < minCost) {
+      minCost = tempCost;
+      minNode = newNode;
+      minWeight = val.second;
     }
   }
   memo[id] = std::pair<std::size_t, std::array<double, 2>>(
-      min_node, {min_cost, min_weight});
-  return min_cost;
+      minNode, {minCost, minWeight});
+  return minCost;
 }
 
-auto NativeGateDecomposer::schedule_theta_opt(
+auto NativeGateDecomposer::scheduleThetaOpt(
     const std::pair<std::vector<std::vector<StructU3>>,
                     std::vector<TwoQubitGateLayer>>& schedule,
     std::size_t nQubits) const -> std::pair<std::vector<std::vector<StructU3>>,
@@ -741,29 +694,29 @@ auto NativeGateDecomposer::schedule_theta_opt(
 
   // TODO: Convert Circuit to DAG: How to handle the unique Pointer situation???
   DiGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>> circuit =
-      convert_circ_to_dag(schedule, nQubits);
+      convertCircuitToDAG(schedule, nQubits);
   // TODO: Get initial Moments( Not does MQB THEN SQB!! SOl to get SQB MQB??)
   std::vector<std::size_t> v_start{};
   v_start.reserve(circuit.size());
   for (size_t i = 0; i < circuit.size(); ++i) {
-    v_start.push_back(i);
+    v_start.emplace_back(i);
   }
   // v=(v_p,v_c,v_r)
   std::array<std::vector<size_t>, 3> v = sift(circuit, v_start, nQubits);
   // TODO: Create Subproblem Graph
   DiGraph<std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
-      sub_prob_graph = DiGraph<
+      subproblemGraph = DiGraph<
           std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>();
   // TODO: First Call of Recursive Function to create Schedule
-  auto base_node = sub_prob_graph.add_Node(
+  auto baseNode = subproblemGraph.add_Node(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   std::map<std::size_t, std::pair<std::size_t, std::array<double, 2>>> memo =
       {};
-  auto cost = schedule_remaining(v, circuit, sub_prob_graph, base_node, nQubits,
-                                 config_.checkFinalCond, memo);
+  auto cost = scheduleRemaining(v, circuit, subproblemGraph, baseNode, nQubits,
+                                config_.checkFinalCond, memo);
   // TODO: Create Schedule from Subproblem Graph
   std::pair<std::vector<std::vector<StructU3>>, std::vector<TwoQubitGateLayer>>
-      final_circuit = build_schedule(circuit, sub_prob_graph);
-  return final_circuit;
+      finalCircuit = buildSchedule(circuit, subproblemGraph);
+  return finalCircuit;
 }
 } // namespace na::zoned
