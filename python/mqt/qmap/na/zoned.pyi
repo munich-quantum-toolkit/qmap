@@ -220,30 +220,29 @@ class RoutingAwareCompiler:
             The statistics as a dictionary
         """
 
-
 class RoutingAwareAxialCompiler:
     """Routing-aware native gate zoned neutral atom compiler."""
 
     def __init__(
-            self,
-            arch: ZonedNeutralAtomArchitecture,
-            log_level: str = "I",
-            max_filling_factor: float = 0.9,
-            use_window: bool = True,
-            window_min_width: int = 16,
-            window_ratio: float = 1.0,
-            window_share: float = 0.8,
-            placement_method: PlacementMethod = ...,
-            deepening_factor: float = ...,
-            deepening_value: float = 0.0,
-            lookahead_factor: float = ...,
-            reuse_level: float = 5.0,
-            max_nodes: int = 10000000,
-            trials: int = 4,
-            queue_capacity: int = 100,
-            routing_method: RoutingMethod = ...,
-            prefer_split: float = 1.0,
-            warn_unsupported_gates: bool = True,
+        self,
+        arch: ZonedNeutralAtomArchitecture,
+        log_level: str = "I",
+        max_filling_factor: float = 0.9,
+        use_window: bool = True,
+        window_min_width: int = 16,
+        window_ratio: float = 1.0,
+        window_share: float = 0.8,
+        placement_method: PlacementMethod = ...,
+        deepening_factor: float = ...,
+        deepening_value: float = 0.0,
+        lookahead_factor: float = ...,
+        reuse_level: float = 5.0,
+        max_nodes: int = 10000000,
+        trials: int = 4,
+        queue_capacity: int = 100,
+        routing_method: RoutingMethod = ...,
+        prefer_split: float = 1.0,
+        warn_unsupported_gates: bool = True,
     ) -> None:
         """Create a routing-aware compiler for the given architecture and configurations.
 
@@ -302,6 +301,7 @@ class RoutingAwareAxialCompiler:
         Returns:
             The statistics as a dictionary
         """
+
 class RoutingAwareNativeGateCompiler:
     """Routing-aware native gate zoned neutral atom compiler."""
 

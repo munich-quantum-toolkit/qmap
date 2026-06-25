@@ -197,8 +197,9 @@ def process_benchmark(
     compiler_name = type(compiler).__name__
     print(f"\033[32m[INFO]\033[0m Compiling {benchmark_name} with {qc.num_qubits} qubits with {compiler_name}...")
     try:
-        code, stats = _compile_wrapper(compiler,
-                                       qc)  # run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
+        code, stats = _compile_wrapper(
+            compiler, qc
+        )  # run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
     except TimeoutError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
         evaluator.print_timeout(benchmark_name, qc, setting_name)
@@ -446,6 +447,7 @@ class Evaluator:
             it: An iterator over the remaining lines.
         """
         self._apply_global_ry()
+
     def _apply_load(self, _: list[str]) -> None:
         """Apply a load operation.
 
@@ -658,7 +660,7 @@ def main() -> None:
         "warn_unsupported_gates": False,
     }
     baseline = RoutingAwareCompiler(arch, **common_config)
-    #setting1 = RoutingAwareAxialCompiler(arch, **common_config)
+    # setting1 = RoutingAwareAxialCompiler(arch, **common_config)
     setting2 = RoutingAwareNativeGateCompiler(arch, **common_config)
     setting3 = RoutingAwareNativeGateCompiler(arch, **common_config, theta_opt_schedule=True)
 
@@ -687,7 +689,6 @@ def main() -> None:
         # process_benchmark(setting1, "setting1", qc, benchmark, evaluator)
         process_benchmark(setting2, "setting2", qc, benchmark, evaluator)
         process_benchmark(setting3, "setting3", qc, benchmark, evaluator)
-
 
     print(
         "\033[32m[INFO]\033[0m =============================================================\n"

@@ -321,7 +321,6 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   EXPECT_THAT(moments[0].first[3], ::testing::UnorderedElementsAre(6));
 }
 
-
 TEST_F(ThetaOptTest, RecursionBaseTest) {
   // Circuit
   //         ┌─────────────────┐             ┌───────┐
