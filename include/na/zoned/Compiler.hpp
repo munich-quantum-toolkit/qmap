@@ -15,15 +15,14 @@
 #include "na/NAComputation.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/code_generator/CodeGenerator.hpp"
-#include "na/zoned/decomposer/AxialDecomposer.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
 #include "na/zoned/decomposer/NoOpDecomposer.hpp"
 #include "na/zoned/layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
 #include "na/zoned/layout_synthesizer/placer/HeuristicPlacer.hpp"
 #include "na/zoned/layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "na/zoned/layout_synthesizer/router/IndependentSetRouter.hpp"
-#include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
-#include "scheduler/ASAPScheduler.hpp"
+#include "na/zoned/reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
+#include "na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -240,7 +239,7 @@ public:
     SPDLOG_DEBUG("Generating code...");
     const auto codeGenerationStart = std::chrono::system_clock::now();
     NAComputation code =
-        SELF.generate(decomposedSchedule.first, placement, routing);
+        SELF.generate(decomposedSingleQubitGateLayers, placement, routing);
     const auto codeGenerationEnd = std::chrono::system_clock::now();
     assert(code.validate().first);
     statistics_.codeGenerationTime =
@@ -311,19 +310,6 @@ public:
       : Compiler(architecture, config) {}
 
   explicit RoutingAwareCompiler(const Architecture& architecture)
-      : Compiler(architecture) {}
-};
-
-class RoutingAwareAxialCompiler final
-    : public Compiler<RoutingAwareAxialCompiler, ASAPScheduler, AxialDecomposer,
-                      VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
-                      CodeGenerator> {
-public:
-  RoutingAwareAxialCompiler(const Architecture& architecture,
-                            const Config& config)
-      : Compiler(architecture, config) {}
-
-  explicit RoutingAwareAxialCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 
