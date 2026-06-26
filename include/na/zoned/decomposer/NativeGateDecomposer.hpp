@@ -13,6 +13,8 @@
 #include "na/zoned/Types.hpp"
 #include "na/zoned/decomposer/DecomposerBase.hpp"
 
+#include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -283,8 +285,8 @@ public:
   static auto cheapestPathToStart(
       const DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblemGraph,
-      size_t currentNode, const std::set<size_t>& leafNodes,
-      std::map<size_t, std::pair<std::vector<size_t>, qc::fp>>& memo)
+      size_t currentNode, const std::unordered_set<size_t>& leafNodes,
+      std::unordered_map<size_t, std::pair<std::vector<size_t>, qc::fp>>& memo)
       -> std::pair<std::vector<size_t>, double>;
 
   /**
@@ -426,8 +428,8 @@ public:
       DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblemGraph,
       size_t prevNode, size_t nQubits, bool checkFinalCond,
-      std::map<size_t, std::pair<size_t, std::array<double, 2>>>& memo)
-      -> double;
+      std::unordered_map<size_t, std::pair<size_t, std::array<double, 2>>>&
+          memo) -> double;
 
   /**
    * @brief Creates a schedule minimizing the total sum of the global rotation

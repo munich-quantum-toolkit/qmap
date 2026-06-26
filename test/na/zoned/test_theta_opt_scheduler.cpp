@@ -207,14 +207,14 @@ TEST_F(ThetaOptTest, NextMomentsPushTest) {
   auto graph = NativeGateDecomposer::convertCircuitToDAG(
       {one_qubit_gates, schedule.second}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
-  NativeGateDecomposer::DiGraph<
+  NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   subproblem_graph.add_Node(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   auto v_new = NativeGateDecomposer::sift(graph, v[2], n);
   auto moments =
-      NativeGateDecomposer::getPossibleMoments(graph, v[1], v_new, false);
+      NativeGateDecomposer::getPossibleLayers(graph, v[1], v_new, false);
 
   EXPECT_EQ(moments.size(), 2);
 
@@ -257,14 +257,14 @@ TEST_F(ThetaOptTest, NextMomentsCond2Test) {
   auto graph = NativeGateDecomposer::convertCircuitToDAG(
       {one_qubit_gates, schedule.second}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
-  NativeGateDecomposer::DiGraph<
+  NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   subproblem_graph.add_Node(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   auto v_new = NativeGateDecomposer::sift(graph, v[2], n);
   auto moments =
-      NativeGateDecomposer::getPossibleMoments(graph, v[1], v_new, false);
+      NativeGateDecomposer::getPossibleLayers(graph, v[1], v_new, false);
 
   EXPECT_EQ(moments.size(), 1);
 
@@ -300,14 +300,14 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   auto graph = NativeGateDecomposer::convertCircuitToDAG(
       {one_qubit_gates, schedule.second}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
-  NativeGateDecomposer::DiGraph<
+  NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   subproblem_graph.add_Node(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   auto v_new = NativeGateDecomposer::sift(graph, v[2], n);
   auto moments =
-      NativeGateDecomposer::getPossibleMoments(graph, v[1], v_new, false);
+      NativeGateDecomposer::getPossibleLayers(graph, v[1], v_new, false);
 
   EXPECT_EQ(moments.size(), 1);
 
@@ -356,7 +356,7 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
   auto graph = NativeGateDecomposer::convertCircuitToDAG(
       {one_qubit_gates, schedule.second}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
-  NativeGateDecomposer::DiGraph<
+  NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   subproblem_graph.add_Node(
@@ -412,7 +412,7 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
 
 TEST_F(ThetaOptTest, CheapestPathTest) {
   // Subproblem graph!
-  NativeGateDecomposer::DiGraph<
+  NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   for (int i = 0; i < 14; i++) {
@@ -471,7 +471,7 @@ TEST_F(ThetaOptTest, BuildScheduleTest) {
       {one_qubit_gates, asap_schedule.second}, n);
 
   // Create Basic Subproblem graph from purely sifted schedule
-  NativeGateDecomposer::DiGraph<
+  NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   subproblem_graph.add_Node(
