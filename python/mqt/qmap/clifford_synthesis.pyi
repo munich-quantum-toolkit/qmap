@@ -159,35 +159,35 @@ class SynthesisResults:
     def __init__(self) -> None: ...
     @property
     def gates(self) -> int:
-        """Returns the number of gates in the circuit."""
+        """The number of gates in the circuit."""
 
     @property
     def single_qubit_gates(self) -> int:
-        """Returns the number of single-qubit gates in the synthesized circuit."""
+        """The number of single-qubit gates in the synthesized circuit."""
 
     @property
     def two_qubit_gates(self) -> int:
-        """Returns the number of two-qubit gates in the synthesized circuit."""
+        """The number of two-qubit gates in the synthesized circuit."""
 
     @property
     def depth(self) -> int:
-        """Returns the depth of the synthesized circuit."""
+        """The depth of the synthesized circuit."""
 
     @property
     def runtime(self) -> float:
-        """Returns the runtime of the synthesis in seconds."""
+        """The runtime of the synthesis in seconds."""
 
     @property
     def solver_calls(self) -> int:
-        """Returns the number of calls to the SAT solver."""
+        """The number of calls to the SAT solver."""
 
     @property
     def circuit(self) -> str:
-        """Returns the synthesized circuit as a qasm string."""
+        """The synthesized circuit as a qasm string."""
 
     @property
     def tableau(self) -> str:
-        """Returns a string representation of the synthesized circuit's tableau."""
+        """A string representation of the synthesized circuit's tableau."""
 
     def sat(self) -> bool:
         """Returns `True` if the synthesis was successful."""
@@ -234,8 +234,8 @@ class CliffordSynthesizer:
 
     @property
     def results(self) -> SynthesisResults:
-        """Returns the results of the synthesis."""
+        """The results of the synthesis."""
 
     @property
     def result_circuit(self) -> mqt.core.ir.QuantumComputation:
-        """Returns the synthesized circuit as a :class:`~mqt.core.ir.QuantumComputation` object."""
+        """The synthesized circuit as a :class:`~mqt.core.ir.QuantumComputation` object."""

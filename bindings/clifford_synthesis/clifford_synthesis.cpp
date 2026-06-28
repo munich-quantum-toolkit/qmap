@@ -149,24 +149,24 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
       "Class representing the results of the Clifford synthesis techniques.")
       .def(nb::init<>())
       .def_prop_ro("gates", &cs::Results::getGates,
-                   "Returns the number of gates in the circuit.")
+                   "The number of gates in the circuit.")
       .def_prop_ro("single_qubit_gates", &cs::Results::getSingleQubitGates,
-                   "Returns the number of single-qubit gates in the "
+                   "The number of single-qubit gates in the "
                    "synthesized circuit.")
       .def_prop_ro("two_qubit_gates", &cs::Results::getTwoQubitGates,
-                   "Returns the number of two-qubit gates in the "
+                   "The number of two-qubit gates in the "
                    "synthesized circuit.")
       .def_prop_ro("depth", &cs::Results::getDepth,
-                   "Returns the depth of the synthesized circuit.")
+                   "The depth of the synthesized circuit.")
       .def_prop_ro("runtime", &cs::Results::getRuntime,
-                   "Returns the runtime of the synthesis in seconds.")
+                   "The runtime of the synthesis in seconds.")
       .def_prop_ro("solver_calls", &cs::Results::getSolverCalls,
-                   "Returns the number of calls to the SAT solver.")
+                   "The number of calls to the SAT solver.")
       .def_prop_ro("circuit", &cs::Results::getResultCircuit,
-                   "Returns the synthesized circuit as a qasm string.")
-      .def_prop_ro("tableau", &cs::Results::getResultTableau,
-                   "Returns a string representation of the "
-                   "synthesized circuit's tableau.")
+                   "The synthesized circuit as a qasm string.")
+      .def_prop_ro(
+          "tableau", &cs::Results::getResultTableau,
+          "A string representation of the synthesized circuit's tableau.")
       .def("sat", &cs::Results::sat,
            "Returns `True` if the synthesis was successful.")
       .def("unsat", &cs::Results::unsat,
@@ -212,12 +212,12 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
                   "Runs the synthesis with the given configuration.");
   synthesizer.def_prop_ro("results", &cs::CliffordSynthesizer::getResults,
                           nb::rv_policy::reference_internal,
-                          "Returns the results of the synthesis.");
+                          "The results of the synthesis.");
   synthesizer.def_prop_ro(
       "result_circuit",
       [](cs::CliffordSynthesizer& self) {
         return qasm3::Importer::imports(self.getResults().getResultCircuit());
       },
-      "Returns the synthesized circuit as a "
-      ":class:`~mqt.core.ir.QuantumComputation` object.");
+      "The synthesized circuit as a :class:`~mqt.core.ir.QuantumComputation` "
+      "object.");
 }
