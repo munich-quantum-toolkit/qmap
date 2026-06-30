@@ -10,8 +10,8 @@ We'd love to help.
 You can save time by following this procedure when reporting a problem:
 
 - Do try to solve the problem on your own first.
-- Search through past [Issues] and [Discussions] to see
-  if someone else already had the same problem.
+- Search through past [Issues] and [Discussions] to see if someone else already
+  had the same problem.
 - Before filing a bug report,
   try to create a minimal reproducible example (MRE)
   that reproduces the problem.

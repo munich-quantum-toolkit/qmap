@@ -158,10 +158,10 @@ setup(
 If you want to integrate the C++ library directly into your project,
 you can either
 
-- add it as a [{code}`git` submodule][git-submodule] and build it
-  as part of your project, or
-- install MQT QMAP on your system
-  and use CMake's {code}`find_package()` command to locate it, or
+- add it as a [{code}`git` submodule][git-submodule] and build it as part of
+  your project, or
+- install MQT QMAP on your system and use CMake's {code}`find_package()`
+  command to locate it, or
 - use CMake's [{code}`FetchContent`][FetchContent] module to combine both
   approaches.
 

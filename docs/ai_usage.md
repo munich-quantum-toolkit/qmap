@@ -24,8 +24,8 @@ you are the author and are fully accountable for the contribution.
 You must:
 
 - Fully understand the code you are submitting.
-- Be able to explain the reasoning behind the code
-  and how it interacts with the rest of the codebase.
+- Be able to explain the reasoning behind the code and how it interacts with the
+  rest of the codebase.
 - Verify that the code is correct, efficient, and follows our coding standards.
 
 **Do not blindly copy-paste AI-generated code.**
@@ -38,12 +38,12 @@ If you cannot explain it, do not submit it.
 When using AI tools, you must be the driver.
 The AI is the assistant.
 
-- **Review:** You must read and review all AI-generated code or text
-  before submitting it.
+- **Review:** You must read and review all AI-generated code or text before
+  submitting it.
 - **Edit:** AI-generated code often requires significant editing to meet project
   standards and correctness.
-- **Verify:** Ensure the code actually solves the problem
-  and doesn't introduce subtle bugs or security vulnerabilities.
+- **Verify:** Ensure the code actually solves the problem and doesn't introduce
+  subtle bugs or security vulnerabilities.
 
 ### 3. Communication
 
@@ -70,16 +70,15 @@ You can disclose this information in the following ways:
 - **Commit Messages**: Add a trailer to your commit message in the form
   `Assisted-by: [Model Name] via [Tool Name]` (example:
   `Assisted-by: Claude Sonnet 4.6 via GitHub Copilot`)
-- **PR Description**: Mention the tool
-  (name and version) and how it was used in the PR description.
+- **PR Description**: Mention the tool (name and version) and how it was used in
+  the PR description.
 
 ### 5. Licensing and Copyright
 
 You are responsible for ensuring
 that your contribution does not violate any third-party licenses or copyrights.
 
-- **Originality**:
-  Your submission must be your own original work of authorship.
+- **Originality**: Your submission must be your own original work of authorship.
 - **Training Data**: Be aware that some AI tools may generate code
   that is substantially similar to their training data.
   You must ensure that you have the right to contribute the generated code under
@@ -145,8 +144,8 @@ and its contributors can thrive.
   Automating them defeats the purpose.
 - **Spam**: Do not use AI to generate low-quality or repetitive comments/reviews
   ("AI Slop").
-- **Unreviewed Code**: Submitting code that you, as a human,
-  have not reviewed and tested yourself.
+- **Unreviewed Code**: Submitting code that you, as a human, have not reviewed
+  and tested yourself.
 
 ## Summary
 
@@ -165,7 +164,7 @@ or adapted from the contribution guidelines of
 - [Astral],
 - [Qiskit], and
 - [LLVM], including the sources therein, such as
-  [Fedora Council Policy Proposal: Policy on AI-Assisted Contributions (fetched 2026-03-12)][fedora],
+  [Fedora Council Policy Proposal: Policy on AI-Assisted Contributions (fetched 2026-03-12)][fedora], <!-- rumdl-disable-line MD013 -->
   which is licensed under the
   [Creative Commons Attribution 4.0 International License][cca],
 
