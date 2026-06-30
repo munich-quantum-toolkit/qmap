@@ -25,7 +25,7 @@ and users who want to understand the project's ecosystem.
 | **scikit-build-core** | Build backend for Python package.                              | [Documentation](https://scikit-build-core.readthedocs.io/en/latest/).                                                                     |
 | **cibuildwheel**      | Builds wheels for all supported platforms and Python versions. | [Documentation](https://cibuildwheel.pypa.io/en/stable/). Configured in {code}`pyproject.toml`.                                           |
 
-By using nanobind, we can take advantage of the
+By using `nanobind`, we can take advantage of the
 [Stable ABI](https://docs.python.org/3/c-api/stable.html) for Python 3.12+.
 This means that, starting from Python 3.12,
 we only need to build one wheel per platform,
