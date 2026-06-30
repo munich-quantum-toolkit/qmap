@@ -219,23 +219,23 @@ auto NativeGateDecomposer::decompose(
   }
   std::vector<SingleQubitGateLayer> newSingleQubitLayers;
   for (const auto& layer : u3Layers) {
-    const auto thetaMax = calcThetaMax(layer);
-    SingleQubitGateLayer frontLayer;
-    SingleQubitGateLayer midLayer;
-    SingleQubitGateLayer backLayer;
-
-    for (auto gate : layer) {
-      const auto& [theta, phi, lambda] =
-          getDecompositionAngles(gate.angles, thetaMax);
-      frontLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
-          gate.qubit, qc::RZ, std::vector{phi}));
-      midLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
-          gate.qubit, qc::RZ, std::vector{theta}));
-      backLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
-          gate.qubit, qc::RZ, std::vector{lambda}));
-    }
     auto& newLayer = newSingleQubitLayers.emplace_back();
     if (!layer.empty()) {
+      const auto thetaMax = calcThetaMax(layer);
+      SingleQubitGateLayer frontLayer;
+      SingleQubitGateLayer midLayer;
+      SingleQubitGateLayer backLayer;
+
+      for (auto gate : layer) {
+        const auto& [theta, phi, lambda] =
+            getDecompositionAngles(gate.angles, thetaMax);
+        frontLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
+            gate.qubit, qc::RZ, std::vector{phi}));
+        midLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
+            gate.qubit, qc::RZ, std::vector{theta}));
+        backLayer.emplace_back(std::make_unique<const qc::StandardOperation>(
+            gate.qubit, qc::RZ, std::vector{lambda}));
+      }
       std::vector<std::unique_ptr<qc::Operation>> globalRotation;
       std::vector<std::unique_ptr<qc::Operation>> globalReversRotation;
       for (size_t i = 0; i < nQubits; ++i) {
