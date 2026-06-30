@@ -55,8 +55,7 @@ protected:
 // Unrecognized, H
 
 TEST(Test, ZRotGateTranslationTest) {
-
-  qc::StandardOperation op = qc::StandardOperation(0, qc::Z);
+  qc::StandardOperation op(0, qc::Z);
   EXPECT_THAT(
       NativeGateDecomposer::convertGateToQuaternion(
           std::reference_wrapper<const qc::Operation>(op)),
@@ -108,7 +107,7 @@ TEST(Test, ZRotGateTranslationTest) {
           std::reference_wrapper<const qc::Operation>(op)),
       ::testing::QuaternionNear(
           NativeGateDecomposer::Quaternion{std::sqrt(2 + std::sqrt(2)) / 2, 0,
-                                           0, std::sqrt(2 - std::sqrt(2)) / 2},
+                                           0, -std::sqrt(2 - std::sqrt(2)) / 2},
           NativeGateDecomposer::epsilon));
 }
 
@@ -185,7 +184,7 @@ TEST(Test, UGateTranslationTest) {
 
   t = qc::PI_2;
   const qc::StandardOperation op2(0, qc::U2, {p, l});
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op1),
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op2),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{
                       std::cos(p / 2) * std::cos(t / 2) * std::cos(l / 2) -
