@@ -1,9 +1,5 @@
 # MQT QMAP - A Tool for Mapping Quantum Circuits onto various Hardware Technologies
 
-```{raw} latex
-\begin{abstract}
-```
-
 MQT QMAP is an open-source C++20 and Python library for mapping quantum circuits
 onto various hardware technologies developed as part of the
 _{doc}`Munich Quantum Toolkit (MQT) <mqt:index>`_.
@@ -35,18 +31,6 @@ installation or the usage of MQT QMAP, please let us know at our
 {doc}`Support <support>` page or by reaching out to us at
 [quantum.cda@xcit.tum.de](mailto:quantum.cda@xcit.tum.de).
 
-````{only} latex
-```{note}
-A live version of this document is available at [mqt.readthedocs.io/projects/qmap](https://mqt.readthedocs.io/projects/qmap).
-```
-````
-
-```{raw} latex
-\end{abstract}
-
-\sphinxtableofcontents
-```
-
 ```{toctree}
 :hidden:
 
@@ -68,7 +52,6 @@ CHANGELOG
 UPGRADING
 ```
 
-````{only} not latex
 ```{toctree}
 :maxdepth: 2
 :titlesonly:
@@ -80,7 +63,6 @@ ai_usage
 tooling
 support
 ```
-````
 
 ```{toctree}
 :hidden:
@@ -90,11 +72,15 @@ support
 api/mqt/qmap/index
 ```
 
-```{only} html
 ## Contributors and Supporters
 
-The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) and supported by [MQSC](https://mq.sc).
-Among others, it is part of the [Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss) ecosystem, which is being developed as part of the [Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
+The _[Munich Quantum Toolkit (MQT)](https://mqt.readthedocs.io)_ is developed by
+the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the
+[Technical University of Munich](https://www.tum.de/) and supported by
+[MQSC](https://mq.sc). Among others, it is part of the
+[Munich Quantum Software Stack (MQSS)](https://www.munich-quantum-valley.de/research/research-areas/mqss)
+ecosystem, which is being developed as part of the
+[Munich Quantum Valley (MQV)](https://www.munich-quantum-valley.de) initiative.
 
 <div style="margin-top: 0.5em">
 <div class="only-light" align="center">
@@ -113,18 +99,21 @@ Thank you to all the contributors who have helped make MQT QMAP a reality!
 </a>
 </p>
 
-The MQT will remain free, open-source, and permissively licensed — now and in the future.
-We are firmly committed to keeping it open and actively maintained for the quantum computing community.
+The MQT will remain free, open-source, and permissively licensed — now and in
+the future. We are firmly committed to keeping it open and actively maintained
+for the quantum computing community.
 
 To support this endeavor, please consider:
 
-- Starring and sharing our repositories: [https://github.com/munich-quantum-toolkit](https://github.com/munich-quantum-toolkit)
-- Contributing code, documentation, tests, or examples via issues and pull requests
+- Starring and sharing our repositories:
+  [https://github.com/munich-quantum-toolkit](https://github.com/munich-quantum-toolkit)
+- Contributing code, documentation, tests, or examples via issues and pull
+  requests
 - Citing the MQT in your publications (see {doc}`References <references>`)
 - Using the MQT in research and teaching, and sharing feedback and use cases
-- Sponsoring us on GitHub: [https://github.com/sponsors/munich-quantum-toolkit](https://github.com/sponsors/munich-quantum-toolkit)
+- Sponsoring us on GitHub:
+  [https://github.com/sponsors/munich-quantum-toolkit](https://github.com/sponsors/munich-quantum-toolkit)
 
 <p align="center">
 <iframe src="https://github.com/sponsors/munich-quantum-toolkit/button" title="Sponsor munich-quantum-toolkit" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
 </p>
-```

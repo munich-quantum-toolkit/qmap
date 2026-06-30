@@ -10,10 +10,8 @@ kernelspec:
 %config InlineBackend.figure_formats = ['svg']
 ```
 
-```{only} html
 <!-- Hide widgets as they do not work with Sphinx -->
 <style>.widget-subarea{display:none;}</style>
-```
 
 # Hybrid Neutral Atom Routing and Mapping
 

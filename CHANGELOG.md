@@ -12,6 +12,11 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Removed
+
+- 📝 Remove support for generating LaTeX documentation ([#1057])
+  ([**@denialhaag**])
+
 ## [3.7.0] - 2026-06-17
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#370)._
@@ -258,6 +263,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
 [#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
 [#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
