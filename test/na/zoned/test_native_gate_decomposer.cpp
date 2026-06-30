@@ -223,8 +223,8 @@ TEST(NativeGateDecomposerTest, UGateTranslationTest) {
 }
 
 TEST(NativeGateDecomposerTest, ThreeQuaternionCombiTest) {
-  NativeGateDecomposer::Quaternion q1{cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
-  NativeGateDecomposer::Quaternion q2{cos(qc::PI_2), 0, sin(qc::PI_2), 0};
+  const NativeGateDecomposer::Quaternion q1{cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
+  const NativeGateDecomposer::Quaternion q2{cos(qc::PI_2), 0, sin(qc::PI_2), 0};
   const auto& q12 = NativeGateDecomposer::combineQuaternions(q1, q2);
   EXPECT_THAT(q12, ::testing::QuaternionNear(
                        NativeGateDecomposer::Quaternion{0, -cos(qc::PI_4),

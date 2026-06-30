@@ -355,21 +355,33 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
 
   EXPECT_EQ(subproblem_graph.size(), 1 + 6);
   auto t = subproblem_graph.getAdjacent(0);
-  EXPECT_THAT(subproblem_graph.getAdjacent(0),
-              ::testing::UnorderedElementsAre(::testing::Pair(1, qc::PI),
-                                              ::testing::Pair(4, qc::PI_4)));
+  EXPECT_THAT(
+      subproblem_graph.getAdjacent(0),
+      ::testing::UnorderedElementsAre(
+          ::testing::Pair(
+              ::testing::Eq(1),
+              ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon)),
+          ::testing::Pair(
+              ::testing::Eq(4),
+              ::testing::DoubleNear(qc::PI_4, NativeGateDecomposer::epsilon))));
 
   EXPECT_THAT(subproblem_graph.getNodeValue(1).first, ::testing::IsEmpty());
   EXPECT_THAT(subproblem_graph.getNodeValue(1).second,
               ::testing::UnorderedElementsAre(0, 1));
-  EXPECT_THAT(subproblem_graph.getAdjacent(1),
-              ::testing::UnorderedElementsAre(::testing::Pair(2, qc::PI)));
+  EXPECT_THAT(
+      subproblem_graph.getAdjacent(1),
+      ::testing::UnorderedElementsAre(::testing::Pair(
+          ::testing::Eq(2),
+          ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon))));
   EXPECT_THAT(subproblem_graph.getNodeValue(2).first,
               ::testing::UnorderedElementsAre(2, 4));
   EXPECT_THAT(subproblem_graph.getNodeValue(2).second,
               ::testing::UnorderedElementsAre(3, 5, 6));
-  EXPECT_THAT(subproblem_graph.getAdjacent(2),
-              ::testing::UnorderedElementsAre(::testing::Pair(3, qc::PI_2)));
+  EXPECT_THAT(
+      subproblem_graph.getAdjacent(2),
+      ::testing::UnorderedElementsAre(::testing::Pair(
+          ::testing::Eq(3),
+          ::testing::DoubleNear(qc::PI_2, NativeGateDecomposer::epsilon))));
   EXPECT_THAT(subproblem_graph.getNodeValue(3).first,
               ::testing::UnorderedElementsAre(7));
   EXPECT_THAT(subproblem_graph.getNodeValue(3).second,
@@ -379,20 +391,29 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
   EXPECT_THAT(subproblem_graph.getNodeValue(4).first, ::testing::IsEmpty());
   EXPECT_THAT(subproblem_graph.getNodeValue(4).second,
               ::testing::UnorderedElementsAre(1));
-  EXPECT_THAT(subproblem_graph.getAdjacent(4),
-              ::testing::UnorderedElementsAre(::testing::Pair(5, qc::PI)));
+  EXPECT_THAT(
+      subproblem_graph.getAdjacent(4),
+      ::testing::UnorderedElementsAre(::testing::Pair(
+          ::testing::Eq(5),
+          ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon))));
   EXPECT_THAT(subproblem_graph.getNodeValue(5).first,
               ::testing::UnorderedElementsAre(2));
   EXPECT_THAT(subproblem_graph.getNodeValue(5).second,
               ::testing::UnorderedElementsAre(0, 3));
-  EXPECT_THAT(subproblem_graph.getAdjacent(5),
-              ::testing::UnorderedElementsAre(::testing::Pair(6, qc::PI)));
+  EXPECT_THAT(
+      subproblem_graph.getAdjacent(5),
+      ::testing::UnorderedElementsAre(::testing::Pair(
+          ::testing::Eq(6),
+          ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon))));
   EXPECT_THAT(subproblem_graph.getNodeValue(6).first,
               ::testing::UnorderedElementsAre(4));
   EXPECT_THAT(subproblem_graph.getNodeValue(6).second,
               ::testing::UnorderedElementsAre(5, 6));
-  EXPECT_THAT(subproblem_graph.getAdjacent(6),
-              ::testing::UnorderedElementsAre(::testing::Pair(3, qc::PI_2)));
+  EXPECT_THAT(
+      subproblem_graph.getAdjacent(6),
+      ::testing::UnorderedElementsAre(::testing::Pair(
+          ::testing::Eq(3),
+          ::testing::DoubleNear(qc::PI_2, NativeGateDecomposer::epsilon))));
 }
 
 TEST_F(ThetaOptTest, CheapestPathTest) {
@@ -612,8 +633,8 @@ TEST_F(ThetaOptTest, CompleteTest) {
   qc.u(qc::PI_2, qc::PI_2, qc::PI_4, 3);
   qc.cz(2, 3);
   qc.u(qc::PI, qc::PI_2, qc::PI_4, 2);
-  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
-  auto [decompSingleQubitLayers, decompTwoQubitLayers] =
+  const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  const auto& [decompSingleQubitLayers, decompTwoQubitLayers] =
       decomposer.decompose(4, singleQubitLayers, twoQubitLayers);
   EXPECT_EQ(decompSingleQubitLayers.size(), 5);
 }

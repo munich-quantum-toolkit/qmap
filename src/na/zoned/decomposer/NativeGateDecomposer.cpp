@@ -148,13 +148,13 @@ auto NativeGateDecomposer::transformToU3(
     std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
         gatesPerQubit(nQubits);
     std::ranges::for_each(layer, [&gatesPerQubit](const auto& gate) -> void {
-      assert(gate.get().getNqubits() != 1 &&
+      assert(gate.get().getNqubits() == 1 &&
              "Gate has to be a single qubit gate.");
       gatesPerQubit[gate.get().getTargets().front()].emplace_back(gate);
     });
     auto& newLayer = newLayers.emplace_back();
     std::ranges::transform(
-        std::views::iota(gatesPerQubit.size()) |
+        std::views::iota(0UL, gatesPerQubit.size()) |
             std::views::filter([&gatesPerQubit](const auto i) -> bool {
               return !gatesPerQubit[i].empty();
             }),
@@ -162,9 +162,8 @@ auto NativeGateDecomposer::transformToU3(
           const auto& gates = gatesPerQubit[i];
           const auto& quat = std::accumulate(
               gates.begin(), gates.end(), Quaternion{},
-              [](Quaternion q, const auto& gate) -> Quaternion {
-                return combineQuaternions(std::move(q),
-                                          convertGateToQuaternion(gate));
+              [](const Quaternion& q, const auto& gate) -> Quaternion {
+                return combineQuaternions(q, convertGateToQuaternion(gate));
               });
           const auto& angles = getU3AnglesFromQuaternion(quat);
           return U3Gate{.angles = angles,
@@ -324,7 +323,7 @@ auto NativeGateDecomposer::findLeafNodes(
                                   std::vector<std::size_t>>>& subproblemGraph)
     -> std::vector<std::size_t> {
   std::vector<std::size_t> leafNodes;
-  std::ranges::copy(std::views::iota(subproblemGraph.size()) |
+  std::ranges::copy(std::views::iota(0UL, subproblemGraph.size()) |
                         std::views::filter([&subproblemGraph](auto i) -> bool {
                           return subproblemGraph.getAdjacent(i).empty();
                         }),
