@@ -12,6 +12,7 @@
 [MD013]
 line-length = 80
 code-blocks = false
+headings = false
 reflow = true
 reflow-mode = "normalize"
 
