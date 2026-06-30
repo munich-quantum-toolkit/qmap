@@ -1,16 +1,10 @@
-```{raw} latex
-\begingroup
-\renewcommand\section[1]{\endgroup}
-\phantomsection
-```
-
-````{only} html
 # References
 
-*MQT QMAP* has a strong foundation in peer‑reviewed research.
-Many of its built‑in algorithms are based on methods published in scientific journals and conferences.
-For an overview of *MQT QMAP* and its features, see {cite:p}`wille2023qmap`.
-If you want to cite this article, please use the following BibTeX entry:
+*MQT QMAP* has a strong foundation in peer‑reviewed research. Many of its
+built‑in algorithms are based on methods published in scientific journals and
+conferences. For an overview of *MQT QMAP* and its features, see
+{cite:p}`wille2023qmap`. If you want to cite this article, please use the
+following BibTeX entry:
 
 ```bibtex
 @inproceedings{wille2023qmap,
@@ -22,8 +16,9 @@ If you want to cite this article, please use the following BibTeX entry:
 }
 ```
 
-*MQT QMAP* is part of the Munich Quantum Toolkit, which is described in {cite:p}`mqt`.
-If you want to cite the Munich Quantum Toolkit, please use the following BibTeX entry:
+*MQT QMAP* is part of the Munich Quantum Toolkit, which is described in
+{cite:p}`mqt`. If you want to cite the Munich Quantum Toolkit, please use the
+following BibTeX entry:
 
 ```bibtex
 @inproceedings{mqt,
@@ -41,24 +36,32 @@ If you want to cite the Munich Quantum Toolkit, please use the following BibTeX 
 
 If you use *MQT QMAP* in your work, we would appreciate if you cited
 
-- {cite:p}`zulehnerEfficientMethodologyMapping2019` when using the heuristic mapper,
+- {cite:p}`zulehnerEfficientMethodologyMapping2019` when using the heuristic
+  mapper,
 - {cite:p}`willeMappingQuantumCircuits2019` when using the exact mapper,
-- {cite:p}`peham2023DepthOptimalSynthesis` when using the Clifford circuit synthesis approach,
-- {cite:p}`schmid2024HybridCircuitMapping` when using the hybrid mapper for neutral atom quantum computers,
-- {cite:p}`stadeAbstractModelEfficient2024` when using the neutral atom logical array compiler (NALAC),
-- {cite:p}`stadeOptimalStatePreparation2024` when using the optimal state preparation for neutral atoms (NASP), and
-- {cite:p}`stadeRoutingAwarePlacement2025` when using the routing-aware placement for zoned neutral atom devices.
+- {cite:p}`peham2023DepthOptimalSynthesis` when using the Clifford circuit
+  synthesis approach,
+- {cite:p}`schmid2024HybridCircuitMapping` when using the hybrid mapper for
+  neutral atom quantum computers,
+- {cite:p}`stadeAbstractModelEfficient2024` when using the neutral atom logical
+  array compiler (NALAC),
+- {cite:p}`stadeOptimalStatePreparation2024` when using the optimal state
+  preparation for neutral atoms (NASP), and
+- {cite:p}`stadeRoutingAwarePlacement2025` when using the routing-aware
+  placement for zoned neutral atom devices.
 
 Furthermore, if you use any of the particular algorithms such as
 
-- the heuristic mapping scheme using teleportation {cite:p}`hillmichExlpoitingQuantumTeleportation2021`
-- the search space limitation techniques of the exact mapper (some of which are enabled per default) {cite:p}`burgholzer2022limitingSearchSpace`
-- the method for finding (near-)optimal subarchitectures {cite:p}`peham2023OptimalSubarchitectures`
+- the heuristic mapping scheme using teleportation
+  {cite:p}`hillmichExlpoitingQuantumTeleportation2021`
+- the search space limitation techniques of the exact mapper (some of which are
+  enabled per default) {cite:p}`burgholzer2022limitingSearchSpace`
+- the method for finding (near-)optimal subarchitectures
+  {cite:p}`peham2023OptimalSubarchitectures`
 
 please consider citing their respective papers as well.
 
 A full list of references is given below.
-````
 
 ```{bibliography}
 

@@ -69,10 +69,9 @@
 
 ### General
 
-- MUST run `uvx nox -s lint` after every batch of changes.
-  This runs the full `prek` hook set from `.pre-commit-config.yaml`
-  (including `ruff`, `typos`, `ty`, formatting, and metadata checks).
-  All hooks must pass before submitting.
+- MUST run `uvx nox -s lint` after every batch of changes. This runs the full
+  `prek` hook set from `.pre-commit-config.yaml` (including `ruff`, `typos`,
+  `ty`, formatting, and metadata checks). All hooks must pass before submitting.
 - MUST add or update tests for every code change, even if not explicitly
   requested.
 - MUST follow existing code style by checking neighboring files for patterns.
@@ -83,9 +82,8 @@
   `Assisted-by: Claude Sonnet 4.6 via GitHub Copilot`) if AI tools are used to
   prepare a commit.
 - NEVER modify files that start with "This file has been generated from an
-  external template.
-  Please do not modify it directly."
-  These files are managed by
+  external template. Please do not modify it directly." These files are managed
+  by
   [the MQT templates action](https://github.com/munich-quantum-toolkit/templates)
   and changes will be overwritten.
 - PREFER running targeted tests over the full test suite during development.
