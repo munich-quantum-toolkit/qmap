@@ -12,6 +12,8 @@
 
 #include <gmock/gmock-matchers.h>
 
+// NOLINTBEGIN(modernize-use-trailing-return-type)
+
 namespace testing {
 MATCHER_P2(AnglesNear, expected, tolerance, "angles near expected") {
   return std::fabs(arg.theta - expected.theta) <= tolerance &&
@@ -31,3 +33,5 @@ MATCHER_P2(QuaternionNear, expected, tolerance, "quaternion near expected") {
          std::fabs(arg.d - expected.d) <= tolerance;
 }
 } // namespace testing
+
+// NOLINTEND(modernize-use-trailing-return-type)
