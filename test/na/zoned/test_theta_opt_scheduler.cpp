@@ -9,6 +9,7 @@
  */
 
 #include "ir/QuantumComputation.hpp"
+#include "matcher.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
 #include "na/zoned/scheduler/ASAPScheduler.hpp"
 
@@ -18,9 +19,6 @@
 #include <utility>
 #include <vector>
 
-//
-// Created by cpsch on 08.04.2026.
-//
 namespace na::zoned {
 constexpr std::string_view architectureJson = R"({
   "name": "asap_scheduler_architecture",
@@ -57,8 +55,6 @@ protected:
         decomposer(architecture, decomposerConfig) {}
 };
 
-constexpr static qc::fp epsilon = std::numeric_limits<qc::fp>::epsilon() * 1024;
-
 TEST_F(ThetaOptTest, GraphTest) {
   // Circuit
   //        ┌───────┐       ┌───────┐
@@ -76,20 +72,16 @@ TEST_F(ThetaOptTest, GraphTest) {
   qc.x(1);
 
   auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
+  auto one_qubit_gates =
+      NativeGateDecomposer::transformToU3(schedule.singleQubitLayers, n);
   auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.second}, n);
-  EXPECT_EQ(
-      std::get<NativeGateDecomposer::StructU3>(graph.getNodeValue(0)).qubit, 0);
+      {one_qubit_gates, schedule.twoQubitLayers}, n);
+  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(0)).qubit,
+            0);
   EXPECT_THAT(
-      std::get<NativeGateDecomposer::StructU3>(graph.getNodeValue(0)).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.front().front().angles.at(0),
-                                epsilon),
-          ::testing::DoubleNear(one_qubit_gates.front().front().angles.at(1),
-                                epsilon),
-          ::testing::DoubleNear(one_qubit_gates.front().front().angles.at(2),
-                                epsilon)));
+      std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(0)).angles,
+      ::testing::AnglesNear(one_qubit_gates.front().front().angles,
+                            NativeGateDecomposer::epsilon));
   EXPECT_THAT(graph.getAdjacent(0),
               ::testing::ElementsAre(std::pair<std::size_t, double>(1, 1.0)));
 
@@ -100,30 +92,20 @@ TEST_F(ThetaOptTest, GraphTest) {
               ::testing::ElementsAre(std::pair<std::size_t, double>(2, 1.0),
                                      std::pair<std::size_t, double>(3, 1.0)));
 
-  EXPECT_EQ(
-      std::get<NativeGateDecomposer::StructU3>(graph.getNodeValue(2)).qubit, 0);
+  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(2)).qubit,
+            0);
   EXPECT_THAT(
-      std::get<NativeGateDecomposer::StructU3>(graph.getNodeValue(2)).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(0),
-                                epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(1),
-                                epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).front().angles.at(2),
-                                epsilon)));
+      std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(2)).angles,
+      ::testing::AnglesNear(one_qubit_gates.at(1).front().angles,
+                            NativeGateDecomposer::epsilon));
   EXPECT_THAT(graph.getAdjacent(2), ::testing::IsEmpty());
 
-  EXPECT_EQ(
-      std::get<NativeGateDecomposer::StructU3>(graph.getNodeValue(3)).qubit, 1);
+  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(3)).qubit,
+            1);
   EXPECT_THAT(
-      std::get<NativeGateDecomposer::StructU3>(graph.getNodeValue(3)).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(0),
-                                epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(1),
-                                epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(1).angles.at(2),
-                                epsilon)));
+      std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(3)).angles,
+      ::testing::AnglesNear(one_qubit_gates.at(1).at(1).angles,
+                            NativeGateDecomposer::epsilon));
   EXPECT_THAT(graph.getAdjacent(3), ::testing::IsEmpty());
 }
 
@@ -151,10 +133,10 @@ TEST_F(ThetaOptTest, SiftTest) {
   qc.cz(0, 2);
   qc.y(0);
 
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto graph =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, n);
 
   // Perform Sift (multiple times???)
   std::vector<std::size_t> v_start = {0};
@@ -202,10 +184,10 @@ TEST_F(ThetaOptTest, NextMomentsPushTest) {
   qc.y(1);
   qc.u(qc::PI_2, 0.0, qc::PI_2, 2);
   qc.cz(0, 2);
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto graph =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
@@ -218,13 +200,15 @@ TEST_F(ThetaOptTest, NextMomentsPushTest) {
 
   EXPECT_EQ(moments.size(), 2);
 
-  EXPECT_THAT(moments[0].second, ::testing::DoubleNear(qc::PI, epsilon));
+  EXPECT_THAT(moments[0].second,
+              ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon));
   EXPECT_THAT(moments[0].first[0], ::testing::UnorderedElementsAre(0, 1));
   EXPECT_THAT(moments[0].first[1], ::testing::UnorderedElementsAre(2, 4));
   EXPECT_THAT(moments[0].first[2], ::testing::UnorderedElementsAre(3, 5, 6));
   EXPECT_THAT(moments[0].first[3], ::testing::UnorderedElementsAre(7));
 
-  EXPECT_THAT(moments[1].second, ::testing::DoubleNear(qc::PI_4, epsilon));
+  EXPECT_THAT(moments[1].second,
+              ::testing::DoubleNear(qc::PI_4, NativeGateDecomposer::epsilon));
   EXPECT_THAT(moments[1].first[0], ::testing::UnorderedElementsAre(1));
   EXPECT_THAT(moments[1].first[1], ::testing::UnorderedElementsAre(2));
   EXPECT_THAT(moments[1].first[2], ::testing::UnorderedElementsAre(3, 0));
@@ -252,10 +236,10 @@ TEST_F(ThetaOptTest, NextMomentsCond2Test) {
   qc.y(1);
   qc.u(qc::PI_2, 0.0, qc::PI_2, 2);
   qc.cz(0, 2);
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto graph =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
@@ -268,7 +252,8 @@ TEST_F(ThetaOptTest, NextMomentsCond2Test) {
 
   EXPECT_EQ(moments.size(), 1);
 
-  EXPECT_THAT(moments[0].second, ::testing::DoubleNear(qc::PI, epsilon));
+  EXPECT_THAT(moments[0].second,
+              ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon));
   EXPECT_THAT(moments[0].first[0], ::testing::UnorderedElementsAre(0, 1));
   EXPECT_THAT(moments[0].first[1], ::testing::UnorderedElementsAre(2, 4));
   EXPECT_THAT(moments[0].first[2], ::testing::UnorderedElementsAre(3, 5, 6));
@@ -295,10 +280,10 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   qc.x(0);
   qc.y(1);
   qc.cz(0, 2);
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto graph =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
@@ -311,7 +296,8 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
 
   EXPECT_EQ(moments.size(), 1);
 
-  EXPECT_THAT(moments[0].second, ::testing::DoubleNear(qc::PI, epsilon));
+  EXPECT_THAT(moments[0].second,
+              ::testing::DoubleNear(qc::PI, NativeGateDecomposer::epsilon));
   EXPECT_THAT(moments[0].first[0], ::testing::UnorderedElementsAre(0, 1));
   EXPECT_THAT(moments[0].first[1], ::testing::UnorderedElementsAre(2, 3));
   EXPECT_THAT(moments[0].first[2], ::testing::UnorderedElementsAre(4, 5));
@@ -351,18 +337,17 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
   qc.y(0);
   qc.u(qc::PI_2, qc::PI_2, qc::PI, 0);
 
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto graph =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, n);
   auto v = NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, n);
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   subproblem_graph.add_Node(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
-  std::map<size_t, std::pair<size_t, std::array<double, 2>>> memo =
-      std::map<size_t, std::pair<size_t, std::array<double, 2>>>();
+  std::unordered_map<size_t, std::pair<size_t, std::array<double, 2>>> memo;
   auto result = NativeGateDecomposer::scheduleRemaining(
       v, graph, subproblem_graph, 0, n, false, memo);
 
@@ -464,13 +449,12 @@ TEST_F(ThetaOptTest, BuildScheduleTest) {
   qc.cz(0, 2);
   qc.y(0);
 
-  auto asap_schedule = scheduler.schedule(qc);
-  auto one_qubit_gates =
-      NativeGateDecomposer::transformToU3(asap_schedule.first, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, asap_schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto graph =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, n);
 
-  // Create Basic Subproblem graph from purely sifted schedule
+  // Create a basic subproblem graph from a purely sifted schedule
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
@@ -496,14 +480,12 @@ TEST_F(ThetaOptTest, BuildScheduleTest) {
 
   EXPECT_EQ(schedule.first.front().at(0).qubit, 0);
   EXPECT_THAT(schedule.first.front().at(0).angles,
-              ::testing::ElementsAre(one_qubit_gates.at(0).at(0).angles[0],
-                                     one_qubit_gates.at(0).at(0).angles[1],
-                                     one_qubit_gates.at(0).at(0).angles[2]));
+              ::testing::AnglesNear(u3Layers.at(0).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
   EXPECT_EQ(schedule.first.at(0).at(1).qubit, 2);
   EXPECT_THAT(schedule.first.at(0).at(1).angles,
-              ::testing::ElementsAre(one_qubit_gates.at(0).at(0).angles[0],
-                                     one_qubit_gates.at(0).at(0).angles[1],
-                                     one_qubit_gates.at(0).at(0).angles[2]));
+              ::testing::AnglesNear(u3Layers.at(0).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
 
   EXPECT_THAT(schedule.second.at(0).at(0), ::testing::ElementsAre(0, 1));
 
@@ -513,28 +495,24 @@ TEST_F(ThetaOptTest, BuildScheduleTest) {
 
   EXPECT_EQ(schedule.first.at(2).at(0).qubit, 0);
   EXPECT_THAT(schedule.first.at(2).at(0).angles,
-              ::testing::ElementsAre(one_qubit_gates.at(1).at(0).angles[0],
-                                     one_qubit_gates.at(1).at(0).angles[1],
-                                     one_qubit_gates.at(1).at(0).angles[2]));
+              ::testing::AnglesNear(u3Layers.at(1).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
   // Two gates flipped??
   EXPECT_EQ(schedule.first.at(2).at(1).qubit, 1);
   EXPECT_THAT(schedule.first.at(2).at(1).angles,
-              ::testing::ElementsAre(one_qubit_gates.at(2).at(0).angles[0],
-                                     one_qubit_gates.at(2).at(0).angles[1],
-                                     one_qubit_gates.at(2).at(0).angles[2]));
+              ::testing::AnglesNear(u3Layers.at(2).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
   EXPECT_EQ(schedule.first.at(2).at(2).qubit, 2);
   EXPECT_THAT(schedule.first.at(2).at(2).angles,
-              ::testing::ElementsAre(one_qubit_gates.at(2).at(1).angles[0],
-                                     one_qubit_gates.at(2).at(1).angles[1],
-                                     one_qubit_gates.at(2).at(1).angles[2]));
+              ::testing::AnglesNear(u3Layers.at(2).at(1).angles,
+                                    NativeGateDecomposer::epsilon));
 
   EXPECT_THAT(schedule.second.at(2).at(0), ::testing::ElementsAre(0, 2));
 
   EXPECT_EQ(schedule.first.at(3).at(0).qubit, 0);
   EXPECT_THAT(schedule.first.at(3).at(0).angles,
-              ::testing::ElementsAre(one_qubit_gates.at(3).at(0).angles[0],
-                                     one_qubit_gates.at(3).at(0).angles[1],
-                                     one_qubit_gates.at(3).at(0).angles[2]));
+              ::testing::AnglesNear(u3Layers.at(3).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
 }
 
 TEST_F(ThetaOptTest, CompleteTestSmall) {
@@ -570,83 +548,56 @@ TEST_F(ThetaOptTest, CompleteTestSmall) {
   qc.y(0);
   qc.u(qc::PI_2, qc::PI_2, qc::PI, 0);
 
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates = NativeGateDecomposer::transformToU3(schedule.first, n);
-  auto theta_opt_schedule =
-      decomposer.scheduleThetaOpt({one_qubit_gates, schedule.second}, n);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto u3Layers = NativeGateDecomposer::transformToU3(singleQubitLayers, n);
+  auto [optU3Layers, optTwoQubitLayers] =
+      decomposer.scheduleThetaOpt({u3Layers, twoQubitLayers}, n);
 
-  EXPECT_EQ(theta_opt_schedule.first.size(), 4);
-  EXPECT_EQ(theta_opt_schedule.second.size(), 3);
+  EXPECT_EQ(optU3Layers.size(), 4);
+  EXPECT_EQ(optTwoQubitLayers.size(), 3);
 
-  EXPECT_EQ(theta_opt_schedule.first.at(0).size(), 2);
-  EXPECT_EQ(theta_opt_schedule.first.at(1).size(), 0);
-  EXPECT_EQ(theta_opt_schedule.first.at(2).size(), 3);
-  EXPECT_EQ(theta_opt_schedule.first.at(3).size(), 1);
+  EXPECT_EQ(optU3Layers.at(0).size(), 2);
+  EXPECT_EQ(optU3Layers.at(1).size(), 0);
+  EXPECT_EQ(optU3Layers.at(2).size(), 3);
+  EXPECT_EQ(optU3Layers.at(3).size(), 1);
 
-  EXPECT_EQ(theta_opt_schedule.second.at(0).size(), 1);
-  EXPECT_EQ(theta_opt_schedule.second.at(1).size(), 1);
-  EXPECT_EQ(theta_opt_schedule.second.at(2).size(), 1);
+  EXPECT_EQ(optTwoQubitLayers.at(0).size(), 1);
+  EXPECT_EQ(optTwoQubitLayers.at(1).size(), 1);
+  EXPECT_EQ(optTwoQubitLayers.at(2).size(), 1);
 
-  EXPECT_EQ(theta_opt_schedule.first.at(0).at(0).qubit, 0);
+  EXPECT_EQ(optU3Layers.at(0).at(0).qubit, 0);
   // TODO: DOUBLE Nears!!!
-  EXPECT_THAT(
-      theta_opt_schedule.first.at(0).at(0).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(0).at(0).angles[0], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(0).at(0).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(0).at(0).angles[2],
-                                epsilon)));
-  EXPECT_EQ(theta_opt_schedule.first.at(0).at(1).qubit, 2);
-  EXPECT_THAT(
-      theta_opt_schedule.first.at(0).at(1).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(0).at(1).angles[0], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(0).at(1).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(0).at(1).angles[2],
-                                epsilon)));
+  EXPECT_THAT(optU3Layers.at(0).at(0).angles,
+              ::testing::AnglesNear(u3Layers.at(0).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
+  EXPECT_EQ(optU3Layers.at(0).at(1).qubit, 2);
+  EXPECT_THAT(optU3Layers.at(0).at(1).angles,
+              ::testing::AnglesNear(u3Layers.at(0).at(1).angles,
+                                    NativeGateDecomposer::epsilon));
 
-  EXPECT_THAT(theta_opt_schedule.second.at(0).front(),
-              ::testing::ElementsAre(1, 2));
+  EXPECT_THAT(optTwoQubitLayers.at(0).front(), ::testing::ElementsAre(1, 2));
 
-  EXPECT_THAT(theta_opt_schedule.second.at(1).front(),
-              ::testing::ElementsAre(0, 1));
+  EXPECT_THAT(optTwoQubitLayers.at(1).front(), ::testing::ElementsAre(0, 1));
   // QUAT
-  EXPECT_EQ(theta_opt_schedule.first.at(2).at(0).qubit, 2);
-  EXPECT_THAT(
-      theta_opt_schedule.first.at(2).at(0).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(0).angles[0], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(0).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(1).at(0).angles[2],
-                                epsilon)));
-  EXPECT_EQ(theta_opt_schedule.first.at(2).at(1).qubit, 0);
-  EXPECT_THAT(
-      theta_opt_schedule.first.at(2).at(1).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(0).angles[0], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(0).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(0).angles[2],
-                                epsilon)));
-  EXPECT_EQ(theta_opt_schedule.first.at(2).at(2).qubit, 1);
-  EXPECT_THAT(
-      theta_opt_schedule.first.at(2).at(2).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[0], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(2).at(1).angles[2],
-                                epsilon)));
+  EXPECT_EQ(optU3Layers.at(2).at(0).qubit, 2);
+  EXPECT_THAT(optU3Layers.at(2).at(0).angles,
+              ::testing::AnglesNear(u3Layers.at(1).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
+  EXPECT_EQ(optU3Layers.at(2).at(1).qubit, 0);
+  EXPECT_THAT(optU3Layers.at(2).at(1).angles,
+              ::testing::AnglesNear(u3Layers.at(2).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
+  EXPECT_EQ(optU3Layers.at(2).at(2).qubit, 1);
+  EXPECT_THAT(optU3Layers.at(2).at(2).angles,
+              ::testing::AnglesNear(u3Layers.at(2).at(1).angles,
+                                    NativeGateDecomposer::epsilon));
 
-  EXPECT_THAT(theta_opt_schedule.second.at(2).front(),
-              ::testing::ElementsAre(0, 2));
+  EXPECT_THAT(optTwoQubitLayers.at(2).front(), ::testing::ElementsAre(0, 2));
 
-  EXPECT_EQ(theta_opt_schedule.first.at(3).at(0).qubit, 0);
-  EXPECT_THAT(
-      theta_opt_schedule.first.at(3).at(0).angles,
-      ::testing::ElementsAre(
-          ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[0], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[1], epsilon),
-          ::testing::DoubleNear(one_qubit_gates.at(3).at(0).angles[2],
-                                epsilon)));
+  EXPECT_EQ(optU3Layers.at(3).at(0).qubit, 0);
+  EXPECT_THAT(optU3Layers.at(3).at(0).angles,
+              ::testing::AnglesNear(u3Layers.at(3).at(0).angles,
+                                    NativeGateDecomposer::epsilon));
 }
 
 TEST_F(ThetaOptTest, CompleteTest) {
@@ -661,8 +612,9 @@ TEST_F(ThetaOptTest, CompleteTest) {
   qc.u(qc::PI_2, qc::PI_2, qc::PI_4, 3);
   qc.cz(2, 3);
   qc.u(qc::PI, qc::PI_2, qc::PI_4, 2);
-  auto schedule = scheduler.schedule(qc);
-  auto res = decomposer.decompose(4, schedule);
-  EXPECT_EQ(res.first.size(), 5);
+  auto [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  auto [decompSingleQubitLayers, decompTwoQubitLayers] =
+      decomposer.decompose(4, singleQubitLayers, twoQubitLayers);
+  EXPECT_EQ(decompSingleQubitLayers.size(), 5);
 }
 } // namespace na::zoned

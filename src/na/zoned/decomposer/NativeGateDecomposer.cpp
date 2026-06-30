@@ -131,7 +131,7 @@ auto NativeGateDecomposer::getU3AnglesFromQuaternion(const Quaternion& quat)
   return angles;
 }
 
-auto NativeGateDecomposer::calcThetaMax(const std::vector<StructU3>& layers)
+auto NativeGateDecomposer::calcThetaMax(const std::vector<U3Gate>& layers)
     -> qc::fp {
   assert(!layers.empty() && "Empty layer.");
   const auto thetas =
@@ -142,8 +142,8 @@ auto NativeGateDecomposer::calcThetaMax(const std::vector<StructU3>& layers)
 }
 auto NativeGateDecomposer::transformToU3(
     const std::vector<SingleQubitGateRefLayer>& layers, const size_t nQubits)
-    -> std::vector<std::vector<StructU3>> {
-  std::vector<std::vector<StructU3>> newLayers;
+    -> std::vector<std::vector<U3Gate>> {
+  std::vector<std::vector<U3Gate>> newLayers;
   for (const auto& layer : layers) {
     std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
         gatesPerQubit(nQubits);
@@ -158,8 +158,7 @@ auto NativeGateDecomposer::transformToU3(
             std::views::filter([&gatesPerQubit](const auto i) -> bool {
               return !gatesPerQubit[i].empty();
             }),
-        std::back_inserter(newLayer),
-        [&gatesPerQubit](const auto i) -> StructU3 {
+        std::back_inserter(newLayer), [&gatesPerQubit](const auto i) -> U3Gate {
           const auto& gates = gatesPerQubit[i];
           const auto& quat = std::accumulate(
               gates.begin(), gates.end(), Quaternion{},
@@ -168,8 +167,8 @@ auto NativeGateDecomposer::transformToU3(
                                           convertGateToQuaternion(gate));
               });
           const auto& angles = getU3AnglesFromQuaternion(quat);
-          return StructU3{.angles = angles,
-                          .qubit = gates.front().get().getTargets().front()};
+          return U3Gate{.angles = angles,
+                        .qubit = gates.front().get().getTargets().front()};
         });
   }
   return newLayers;
@@ -346,7 +345,7 @@ auto NativeGateDecomposer::removeElement(const std::vector<std::size_t>& vector,
 }
 
 auto NativeGateDecomposer::getPossibleLayers(
-    DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+    DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
     const std::vector<size_t>& currentSingleQubitGates,
     const std::array<std::vector<size_t>, 3>& nextSubproblem,
     bool checkFinalCond)
@@ -370,45 +369,46 @@ auto NativeGateDecomposer::getPossibleLayers(
   // Sort v_0C from highest to lowest theta
   std::vector<std::size_t> vSort(currentSingleQubitGates);
   auto sortByTheta = [&circuit](std::size_t a, std::size_t b) -> bool {
-    return std::fabs(std::get<StructU3>(circuit.getNodeValue(a)).angles.theta) >
-           std::fabs(std::get<StructU3>(circuit.getNodeValue(b)).angles.theta);
+    return std::fabs(std::get<U3Gate>(circuit.getNodeValue(a)).angles.theta) >
+           std::fabs(std::get<U3Gate>(circuit.getNodeValue(b)).angles.theta);
   };
   std::ranges::sort(vSort, sortByTheta);
   // TODO: Check Condition 1
   std::vector<std::pair<std::array<std::vector<std::size_t>, 2>,
-                        std::pair<std::set<qc::Qubit>, qc::fp>>>
+                        std::pair<std::unordered_set<qc::Qubit>, qc::fp>>>
       potentialArg = {};
-  auto prevTheta = std::fabs(
-      std::get<StructU3>(circuit.getNodeValue(vSort[0])).angles.theta);
+  auto prevTheta =
+      std::fabs(std::get<U3Gate>(circuit.getNodeValue(vSort[0])).angles.theta);
   auto thisTheta = prevTheta;
-  std::set<qc::Qubit> mkQubits = {
-      std::get<StructU3>(circuit.getNodeValue(vSort[0])).qubit};
+  std::unordered_set<qc::Qubit> mkQubits = {
+      std::get<U3Gate>(circuit.getNodeValue(vSort[0])).qubit};
   for (auto i = 0; static_cast<size_t>(i) < vSort.size(); i++) {
     thisTheta = std::fabs(
-        std::get<StructU3>(circuit.getNodeValue(vSort[static_cast<size_t>(i)]))
+        std::get<U3Gate>(circuit.getNodeValue(vSort[static_cast<size_t>(i)]))
             .angles.theta);
     if (thisTheta != prevTheta) {
       std::vector<std::size_t> discarded = {vSort.begin(), vSort.begin() + i};
       std::vector<std::size_t> kept = {vSort.begin() + i, vSort.end()};
       potentialArg.emplace_back(
           std::pair<std::array<std::vector<std::size_t>, 2>,
-                    std::pair<std::set<qc::Qubit>, qc::fp>>(
+                    std::pair<std::unordered_set<qc::Qubit>, qc::fp>>(
               {kept, discarded},
-              std::pair<std::set<qc::Qubit>, qc::fp>(mkQubits, thisTheta)));
+              std::pair<std::unordered_set<qc::Qubit>, qc::fp>(mkQubits,
+                                                               thisTheta)));
       prevTheta = thisTheta;
       mkQubits.clear();
     }
     mkQubits.insert(
-        std::get<StructU3>(circuit.getNodeValue(vSort[static_cast<size_t>(i)]))
+        std::get<U3Gate>(circuit.getNodeValue(vSort[static_cast<size_t>(i)]))
             .qubit);
   }
   std::vector<std::size_t> emplaceBackNodes = {};
-  std::set<qc::Qubit> pSquareQubits = {};
+  std::unordered_set<qc::Qubit> pSquareQubits = {};
 
   for (auto pot : potentialArg) {
     // TODO: Check Condition 2
     for (auto node : vP1Star) {
-      std::set<qc::Qubit> qubits = {
+      std::unordered_set qubits = {
           std::get<std::array<qc::Qubit, 2>>(circuit.getNodeValue(node))[0],
           std::get<std::array<qc::Qubit, 2>>(circuit.getNodeValue(node))[1]};
       if (!disjunct(qubits, pot.second.first)) {
@@ -426,12 +426,13 @@ auto NativeGateDecomposer::getPossibleLayers(
       break;
     }
     //  TODO: Check Condition 3
-    std::set<qc::Qubit> pushQubits = pot.second.first;
+    std::unordered_set<qc::Qubit> pushQubits = pot.second.first;
     pushQubits.merge(pSquareQubits);
     emplaceBackNodes.clear();
 
     for (auto node : vc1Star) {
-      std::set qubits = {std::get<StructU3>(circuit.getNodeValue(node)).qubit};
+      std::unordered_set qubits = {
+          std::get<U3Gate>(circuit.getNodeValue(node)).qubit};
       if (!disjunct(qubits, pushQubits)) {
         emplaceBackNodes.emplace_back(node);
       }
@@ -463,14 +464,14 @@ auto NativeGateDecomposer::getPossibleLayers(
 }
 
 auto NativeGateDecomposer::convertCircuitToDAG(
-    const std::pair<std::vector<std::vector<StructU3>>,
+    const std::pair<std::vector<std::vector<U3Gate>>,
                     std::vector<TwoQubitGateLayer>>& schedule,
     std::size_t nQubits)
-    -> DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>> {
+    -> DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> {
   // std::variant<StructU3, std::array<qc::Qubit, 2>> instead of Unique_pointer
   // For Readout:
-  DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>> graph =
-      DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>();
+  DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> graph =
+      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>();
   std::vector<std::vector<size_t>> qubitPaths(nQubits);
   // TODO:assert that One more sql exists than mql ??
   for (size_t i = 0; i < schedule.second.size(); ++i) {
@@ -501,48 +502,47 @@ auto NativeGateDecomposer::convertCircuitToDAG(
 }
 
 auto NativeGateDecomposer::maxTheta(
-    DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+    DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
     const std::vector<std::size_t>& nodes) -> qc::fp {
   qc::fp max_cost = 0;
   for (const auto node : nodes) {
-    if (std::fabs(
-            std::get<StructU3>(circuit.getNodeValue(node)).angles.theta) >=
+    if (std::fabs(std::get<U3Gate>(circuit.getNodeValue(node)).angles.theta) >=
         max_cost) {
-      max_cost = std::fabs(
-          std::get<StructU3>(circuit.getNodeValue(node)).angles.theta);
+      max_cost =
+          std::fabs(std::get<U3Gate>(circuit.getNodeValue(node)).angles.theta);
     }
   }
   return max_cost;
 }
 auto NativeGateDecomposer::sift(
-    DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+    DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
     std::vector<std::size_t> remainingNodes, size_t nQubits)
     -> std::array<std::vector<size_t>, 3> {
   std::vector<size_t> vp = std::vector<size_t>();
   std::vector<size_t> v_c = std::vector<size_t>();
   std::vector<size_t> vr = std::vector<size_t>();
 
-  std::set<std::size_t> vRemaining =
-      std::set(remainingNodes.begin(), remainingNodes.end());
-  std::set<size_t> removed = std::set<size_t>();
+  std::unordered_set<std::size_t> vRemaining =
+      std::unordered_set(remainingNodes.begin(), remainingNodes.end());
+  std::unordered_set<size_t> removed = std::unordered_set<size_t>();
 
   // We traverse the graph rather than v_rem to use the graph's topological
   // ordering
   for (size_t node = 0; node < circuit.size(); node++) {
     if (vRemaining.contains(node)) {
       auto op = circuit.getNodeValue(node);
-      std::set<size_t> opQubits = std::set<size_t>();
+      std::unordered_set<size_t> opQubits = std::unordered_set<size_t>();
 
-      if (std::holds_alternative<StructU3>(op)) {
-        opQubits = {std::get<StructU3>(op).qubit};
+      if (std::holds_alternative<U3Gate>(op)) {
+        opQubits = {std::get<U3Gate>(op).qubit};
       } else {
         opQubits = {std::get<std::array<qc::Qubit, 2>>(op)[0],
                     std::get<std::array<qc::Qubit, 2>>(op)[1]};
       }
       if (removed.size() < nQubits && disjunct(removed, opQubits)) {
-        if (std::holds_alternative<StructU3>(op)) {
+        if (std::holds_alternative<U3Gate>(op)) {
           v_c.emplace_back(node);
-          removed.insert(std::get<StructU3>(op).qubit);
+          removed.insert(std::get<U3Gate>(op).qubit);
         } else {
           vp.emplace_back(node);
         }
@@ -558,26 +558,26 @@ auto NativeGateDecomposer::sift(
 }
 
 auto NativeGateDecomposer::buildSchedule(
-    DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+    DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
     DirectedGraph<std::pair<std::vector<std::size_t>,
                             std::vector<std::size_t>>>& subproblemGraph)
-    -> std::pair<std::vector<std::vector<StructU3>>,
+    -> std::pair<std::vector<std::vector<U3Gate>>,
                  std::vector<TwoQubitGateLayer>> {
 
   std::vector<std::size_t> leafNodes = findLeafNodes(subproblemGraph);
   std::vector<std::size_t> minimalPath =
       findCheapestPath(subproblemGraph, leafNodes);
-  std::pair<std::vector<std::vector<StructU3>>, std::vector<TwoQubitGateLayer>>
-      schedule = std::pair<std::vector<std::vector<StructU3>>,
+  std::pair<std::vector<std::vector<U3Gate>>, std::vector<TwoQubitGateLayer>>
+      schedule = std::pair<std::vector<std::vector<U3Gate>>,
                            std::vector<TwoQubitGateLayer>>{};
 
-  std::vector<StructU3> singleQubitGates;
+  std::vector<U3Gate> singleQubitGates;
   std::vector<std::array<qc::Qubit, 2>> twoQubitGates;
 
   if (!subproblemGraph.getNodeValue(minimalPath[0]).first.empty()) {
     schedule.first.emplace_back();
   }
-  std::set<qc::Qubit> usedQubits{};
+  std::unordered_set<qc::Qubit> usedQubits{};
 
   for (std::size_t i = 0; i < minimalPath.size(); i++) {
     singleQubitGates.clear();
@@ -603,8 +603,8 @@ auto NativeGateDecomposer::buildSchedule(
 
     for (auto j : subproblemGraph.getNodeValue(minimalPath[i]).second) {
       auto op = circuit.getNodeValue(j);
-      if (std::holds_alternative<StructU3>(op)) {
-        singleQubitGates.emplace_back(std::get<StructU3>(op));
+      if (std::holds_alternative<U3Gate>(op)) {
+        singleQubitGates.emplace_back(std::get<U3Gate>(op));
       }
     }
     schedule.first.emplace_back(singleQubitGates);
@@ -629,7 +629,7 @@ auto NativeGateDecomposer::addNodeToSubproblemGraph(
 
 auto NativeGateDecomposer::scheduleRemaining(
     const std::array<std::vector<size_t>, 3>& v,
-    DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+    DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
     DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
         subproblemGraph,
     size_t prevNode, size_t nQubits, bool checkFinalCond,
@@ -652,12 +652,12 @@ auto NativeGateDecomposer::scheduleRemaining(
       cost = 0;
     } else {
       cost = std::fabs(
-          std::get<StructU3>(circuit.getNodeValue(v[1].at(0))).angles.theta);
+          std::get<U3Gate>(circuit.getNodeValue(v[1].at(0))).angles.theta);
     }
     for (std::size_t i : v[1]) {
-      if (std::get<StructU3>(circuit.getNodeValue(i)).angles.theta > cost) {
+      if (std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta > cost) {
         cost =
-            std::fabs(std::get<StructU3>(circuit.getNodeValue(i)).angles.theta);
+            std::fabs(std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta);
       }
     }
     auto end_node =
@@ -692,13 +692,13 @@ auto NativeGateDecomposer::scheduleRemaining(
 }
 
 auto NativeGateDecomposer::scheduleThetaOpt(
-    const std::pair<std::vector<std::vector<StructU3>>,
+    const std::pair<std::vector<std::vector<U3Gate>>,
                     std::vector<TwoQubitGateLayer>>& schedule,
-    std::size_t nQubits) const -> std::pair<std::vector<std::vector<StructU3>>,
+    std::size_t nQubits) const -> std::pair<std::vector<std::vector<U3Gate>>,
                                             std::vector<TwoQubitGateLayer>> {
 
   // TODO: Convert Circuit to DAG: How to handle the unique Pointer situation???
-  DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>> circuit =
+  DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> circuit =
       convertCircuitToDAG(schedule, nQubits);
   // TODO: Get initial Moments( Not does MQB THEN SQB!! SOl to get SQB MQB??)
   std::vector<std::size_t> v_start{};
@@ -715,12 +715,12 @@ auto NativeGateDecomposer::scheduleThetaOpt(
   // TODO: First Call of Recursive Function to create Schedule
   auto baseNode = subproblemGraph.add_Node(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
-  std::map<std::size_t, std::pair<std::size_t, std::array<double, 2>>> memo =
-      {};
+  std::unordered_map<std::size_t, std::pair<std::size_t, std::array<double, 2>>>
+      memo = {};
   auto cost = scheduleRemaining(v, circuit, subproblemGraph, baseNode, nQubits,
                                 config_.checkFinalCond, memo);
   // TODO: Create Schedule from Subproblem Graph
-  std::pair<std::vector<std::vector<StructU3>>, std::vector<TwoQubitGateLayer>>
+  std::pair<std::vector<std::vector<U3Gate>>, std::vector<TwoQubitGateLayer>>
       finalCircuit = buildSchedule(circuit, subproblemGraph);
   return finalCircuit;
 }

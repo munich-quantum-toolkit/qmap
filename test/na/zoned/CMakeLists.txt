@@ -7,7 +7,7 @@
 # Licensed under the MIT License
 
 if(TARGET MQT::QMapNAZoned)
-  file(GLOB SOURCES *.cpp)
+  file(GLOB SOURCES *.cpp *.hpp)
   file(GLOB CIRCUITS circuits/*.qasm)
   # make list of files a comma separated list of strings
   string(REPLACE ";" "\",\"" CIRCUITS "\"${CIRCUITS}\"")

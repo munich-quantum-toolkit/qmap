@@ -19,13 +19,22 @@
 #include <vector>
 
 namespace na::zoned {
-
 /**
  * Decomposes a given schedule of operations into the native gate set and, if
  * `thetaOptScheduling` is enabled, re-schedules them to minimize the total
  * global rotation angle theta across the circuit
  */
 class NativeGateDecomposer : public DecomposerBase {
+public:
+  /**
+   * A struct to store the decomposition angles of a U3 gate.
+   */
+  struct Angles {
+    qc::fp theta = 0;
+    qc::fp phi = 0;
+    qc::fp lambda = 0;
+  };
+
   /**
    * A quaternion is represented by an array of four `qc::fp` values `{q0, q1,
    * q2, q3}` denoting the components of the quaternion. The default initialized
@@ -40,29 +49,19 @@ class NativeGateDecomposer : public DecomposerBase {
     qc::fp d = 0;
   };
 
-  /// A value to use as a margin of error for float equality
-  constexpr static qc::fp epsilon =
-      std::numeric_limits<qc::fp>::epsilon() * 1024;
-
-  /**
-   * A struct to store the decomposition angles of a U3 gate.
-   */
-  struct Angles {
-    qc::fp theta = 0;
-    qc::fp phi = 0;
-    qc::fp lambda = 0;
-  };
-
   /**
    * A minimal struct to store the parameters of a U3 gate along with the qubit
    * it acts on.
    */
-  struct StructU3 {
+  struct U3Gate {
     Angles angles;
     qc::Qubit qubit;
   };
 
-public:
+  /// A value to use as a margin of error for float equality
+  constexpr static qc::fp epsilon =
+      std::numeric_limits<qc::fp>::epsilon() * 1024;
+
   /// The configuration of the NativeGateDecomposer
   struct Config {
     bool thetaOptSchedule = false;
@@ -116,7 +115,7 @@ public:
    * @param layers is a vector of U3 parameters.
    * @returns the maximal value of theta in the given layer.
    */
-  static auto calcThetaMax(const std::vector<StructU3>& layers) -> qc::fp;
+  static auto calcThetaMax(const std::vector<U3Gate>& layers) -> qc::fp;
 
   /**
    * @brief Takes a vector of SingleQubitGateLayers and, for each layer,
@@ -131,7 +130,7 @@ public:
    */
   [[nodiscard]] static auto
   transformToU3(const std::vector<SingleQubitGateRefLayer>& layers,
-                size_t nQubits) -> std::vector<std::vector<StructU3>>;
+                size_t nQubits) -> std::vector<std::vector<U3Gate>>;
   /**
    * @brief Calculates the decomposition angles of a U3 gate
    * @details Takes a vector of `qc::fp` representing the U3-gate angles of a
@@ -265,10 +264,10 @@ public:
    * representation of U3-Gates of an array representation of CZ Gates.
    */
   static auto
-  convertCircuitToDAG(const std::pair<std::vector<std::vector<StructU3>>,
+  convertCircuitToDAG(const std::pair<std::vector<std::vector<U3Gate>>,
                                       std::vector<TwoQubitGateLayer>>& schedule,
                       size_t nQubits)
-      -> DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>;
+      -> DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>;
   /**
    * @brief Recursively finds the cheapest path to the start node of the
    * subproblem graph from a set of leaf nodes.
@@ -338,7 +337,7 @@ public:
    * remainingGates] and the layers associated.
    */
   static auto getPossibleLayers(
-      DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
       const std::vector<size_t>& currentSingleQubitGates,
       const std::array<std::vector<size_t>, 3>& nextSubproblem,
       bool checkFinalCond)
@@ -353,7 +352,7 @@ public:
    * @returns the maximal theta value.
    */
   static auto maxTheta(
-      DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
       const std::vector<size_t>& nodes) -> qc::fp;
 
   /**
@@ -367,7 +366,7 @@ public:
    * [twoQubitGates, singleQubitGates, remainingGates]
    */
   static auto
-  sift(DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+  sift(DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
        std::vector<size_t> remainingNodes, size_t nQubits)
       -> std::array<std::vector<size_t>, 3>;
 
@@ -379,9 +378,9 @@ public:
    * element arrays of qubits representing CZ gates making up a schedule.
    */
   static auto buildSchedule(
-      DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
       DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
-          subproblemGraph) -> std::pair<std::vector<std::vector<StructU3>>,
+          subproblemGraph) -> std::pair<std::vector<std::vector<U3Gate>>,
                                         std::vector<TwoQubitGateLayer>>;
 
   /**
@@ -424,7 +423,7 @@ public:
    */
   static auto scheduleRemaining(
       const std::array<std::vector<size_t>, 3>& v,
-      DirectedGraph<std::variant<StructU3, std::array<qc::Qubit, 2>>>& circuit,
+      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
       DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblemGraph,
       size_t prevNode, size_t nQubits, bool checkFinalCond,
@@ -439,10 +438,10 @@ public:
    * @returns a schedule minimizing the total rotation angle theta
    */
   [[nodiscard]] auto
-  scheduleThetaOpt(const std::pair<std::vector<std::vector<StructU3>>,
+  scheduleThetaOpt(const std::pair<std::vector<std::vector<U3Gate>>,
                                    std::vector<TwoQubitGateLayer>>& schedule,
                    size_t nQubits) const
-      -> std::pair<std::vector<std::vector<StructU3>>,
+      -> std::pair<std::vector<std::vector<U3Gate>>,
                    std::vector<TwoQubitGateLayer>>;
 };
 } // namespace na::zoned
