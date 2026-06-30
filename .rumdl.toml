@@ -11,8 +11,9 @@
 
 [MD013]
 line-length = 80
+code-blocks = false
 reflow = true
-reflow-mode = "semantic-line-breaks"
+reflow-mode = "normalize"
 
 [MD060]
 enabled = true
