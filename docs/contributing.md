@@ -50,8 +50,8 @@ Pick the path that fits your time and interests:
 
 - ⚡️ Performance and reliability:
 
-  Profile hot paths, add benchmarks, reduce allocations, deflake tests,
-  and improve error messages.
+  Profile hot paths, add benchmarks, reduce allocations, deflake tests, and
+  improve error messages.
 
 - 📦 Packaging and tooling:
 
@@ -73,8 +73,8 @@ or violate our {doc}`ai_usage` may be rejected without further review.
 ### Core Guidelines
 
 - ["Commit early and push often"](https://www.worklytics.co/blog/commit-early-push-often).
-- Write meaningful commit messages,
-  preferably using [gitmoji](https://gitmoji.dev) for additional context.
+- Write meaningful commit messages, preferably using
+  [gitmoji](https://gitmoji.dev) for additional context.
 - Focus on a single feature or bug at a time and only touch relevant files.
   Split multiple features into separate contributions.
 - Add tests for new features to ensure they work as intended.
@@ -84,8 +84,8 @@ or violate our {doc}`ai_usage` may be rejected without further review.
   For details, see {ref}`maintaining-changelog-upgrade-guide`.
 - Add tests for bug fixes to demonstrate the fix.
 - Document your code thoroughly and ensure it is readable.
-- Keep your code clean by removing debug statements, leftover comments,
-  and unrelated code.
+- Keep your code clean by removing debug statements, leftover comments, and
+  unrelated code.
 - Check your code for style and linting errors before committing.
 - Follow the project's coding standards and conventions.
 - Be open to feedback and willing to make necessary changes based on code
@@ -217,14 +217,14 @@ and [CMake](https://cmake.org/) 3.24 or newer.
 As of August 2025, our CI pipeline on GitHub continuously tests the library
 across the following matrix of systems and compilers:
 
-- {code}`ubuntu-24.04`: {code}`Release`
-  and {code}`Debug` builds using {code}`gcc`
+- {code}`ubuntu-24.04`: {code}`Release` and {code}`Debug` builds using
+  {code}`gcc`
 - {code}`ubuntu-24.04-arm`: {code}`Release` build using {code}`gcc`
-- {code}`macos-26`: {code}`Release`
-  and {code}`Debug` builds using {code}`AppleClang`
+- {code}`macos-26`: {code}`Release` and {code}`Debug` builds using
+  {code}`AppleClang`
 - {code}`macos-26-intel`: {code}`Release` build using {code}`AppleClang`
-- {code}`windows-2025`: {code}`Release`
-  and {code}`Debug` builds using {code}`msvc`
+- {code}`windows-2025`: {code}`Release` and {code}`Debug` builds using
+  {code}`msvc`
 - {code}`windows-11-arm`: {code}`Release` build using {code}`msvc`
 
 To access the latest build logs, visit the
@@ -288,10 +288,9 @@ you will need an active internet connection to fetch the required libraries.
 
 However, there are several ways to bypass these downloads:
 
-- **Use system-installed dependencies**:
-  If the dependencies are already installed on your system
-  and Find-modules exist for them,
-  {code}`FetchContent` will use those versions instead of downloading them.
+- **Use system-installed dependencies**: If the dependencies are already
+  installed on your system and Find-modules exist for them, {code}`FetchContent`
+  will use those versions instead of downloading them.
 - **Provide a local copy**: If you have local copies of the dependencies
   (from a previous build or another project),
   you can point {code}`FetchContent` to them by passing the
@@ -357,18 +356,18 @@ set of guidelines for writing C++ code.
 To ensure the quality of the code and that it conforms to these guidelines,
 we use:
 
-- [`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/),
-  a static analysis tool that checks for common mistakes in C++ code, and
-- [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html),
-  a tool that automatically formats C++ code according to a given style guide.
+- [`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/), a static analysis
+  tool that checks for common mistakes in C++ code, and
+- [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html), a tool that
+  automatically formats C++ code according to a given style guide.
 
 Common IDEs like [CLion][clion] or [Visual Studio Code][vscode] have plugins
 that can automatically run {code}`clang-tidy` on the code
 and automatically format it with {code}`clang-format`.
 
-- If you are using CLion,
-  you can configure the project to use the {code}`.clang-tidy`
-  and {code}`.clang-format` files in the project root directory.
+- If you are using CLion, you can configure the project to use the
+  {code}`.clang-tidy` and {code}`.clang-format` files in the project root
+  directory.
 - If you are using [Visual Studio Code][vscode], you can install the
   [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd).
 
@@ -706,11 +705,11 @@ There are the following categories:
 When updating the changelog, follow these guidelines:
 
 - Add a changelog entry for every user-facing change in your PR.
-- Write entries in the imperative mood
-  (e.g., "Add support for X" or "Fix bug in Y").
+- Write entries in the imperative mood (e.g., "Add support for X" or "Fix bug in
+  Y").
 - A single PR may result in multiple changelog entries.
-- Entries in each category are sorted by merge time,
-  with the latest PR appearing first.
+- Entries in each category are sorted by merge time, with the latest PR
+  appearing first.
 - Each entry links to the PR and all contributing authors.
   The links are defined at the bottom of the file.
   If this is your first contribution to this project,
@@ -735,15 +734,15 @@ This PR should:
 - add new version titles in both the changelog and the upgrade guide,
 - add the release date to the changelog entry for the new version,
 - update the version links at the bottom of both files,
-- review and streamline all changelog and upgrade guide entries for clarity
-  and consistency,
+- review and streamline all changelog and upgrade guide entries for clarity and
+  consistency,
 - ensure that all links (to PRs, authors, etc.) are defined and correct,
-- double-check that the changelog comprehensively covers all changes
-  since the last release and that nothing is missing,
-- review the upgrade guide to ensure it covers all major or breaking changes
-  and provides helpful context, and
-- if the upgrade guide contains a section relevant to the release,
-  add a reference to it in the changelog.
+- double-check that the changelog comprehensively covers all changes since the
+  last release and that nothing is missing,
+- review the upgrade guide to ensure it covers all major or breaking changes and
+  provides helpful context, and
+- if the upgrade guide contains a section relevant to the release, add a
+  reference to it in the changelog.
 
 Before merging the PR preparing the release,
 check the GitHub release draft generated by the Release Drafter
