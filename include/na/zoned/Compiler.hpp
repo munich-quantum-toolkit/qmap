@@ -152,21 +152,19 @@ public:
       SPDLOG_DEBUG("Number of qubits: {}", qComp.getNqubits());
       const auto nTwoQubitGates = static_cast<size_t>(
           std::count_if(qComp.cbegin(), qComp.cend(),
-                        [](const std::unique_ptr<qc::Operation>& op) {
+                        [](const std::unique_ptr<qc::Operation>& op) -> bool {
                           return op->getNqubits() == 2;
                         }));
       SPDLOG_DEBUG("Number of two-qubit gates: {}", nTwoQubitGates);
       const auto nSingleQubitGates = static_cast<size_t>(
           std::count_if(qComp.cbegin(), qComp.cend(),
-                        [](const std::unique_ptr<qc::Operation>& op) {
+                        [](const std::unique_ptr<qc::Operation>& op) -> bool {
                           return op->getNqubits() == 1;
                         }));
       SPDLOG_DEBUG("Number of single-qubit gates: {}", nSingleQubitGates);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
-    // CodeQL was not very happy about the structural binding here, hence I
-    // removed it.
     SPDLOG_DEBUG("Scheduling...");
     const auto schedulingStart = std::chrono::system_clock::now();
     const auto& [singleQubitGateLayers, twoQubitGateLayers] =

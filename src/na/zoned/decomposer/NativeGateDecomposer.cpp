@@ -148,6 +148,19 @@ auto NativeGateDecomposer::transformToU3(
     std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
         gatesPerQubit(nQubits);
     std::ranges::for_each(layer, [&gatesPerQubit](const auto& gate) -> void {
+      // if compound operations, go instead over the contained operations
+      if (gate.get().isCompoundOperation()) {
+        const auto& compoundOp =
+            dynamic_cast<const qc::CompoundOperation&>(gate.get());
+        std::ranges::for_each(
+            compoundOp.getOps(), [&gatesPerQubit](const auto& subGate) -> void {
+              assert(subGate->getNqubits() == 1 &&
+                     "Gate has to be a single qubit gate, in particular, no "
+                     "nested compound operations are allowed.");
+              gatesPerQubit[subGate->getTargets().front()].emplace_back(
+                  subGate);
+            });
+      }
       assert(gate.get().getNqubits() == 1 &&
              "Gate has to be a single qubit gate.");
       gatesPerQubit[gate.get().getTargets().front()].emplace_back(gate);
@@ -210,10 +223,10 @@ auto NativeGateDecomposer::decompose(
   auto u3Layers = transformToU3(singleQubitGateLayers, nQubits);
   std::vector<TwoQubitGateLayer> newTwoQubitLayers;
   if (config_.thetaOptSchedule) {
-    auto schedule =
+    auto [optSingleQubitGateLayers, optTwoQubitGateLayers] =
         scheduleThetaOpt(std::pair(u3Layers, twoQubitGateLayers), nQubits);
-    u3Layers = schedule.first;
-    newTwoQubitLayers = schedule.second;
+    u3Layers = std::move(optSingleQubitGateLayers);
+    newTwoQubitLayers = std::move(optTwoQubitGateLayers);
   } else {
     newTwoQubitLayers = twoQubitGateLayers;
   }
@@ -467,8 +480,8 @@ auto NativeGateDecomposer::convertCircuitToDAG(
                     std::vector<TwoQubitGateLayer>>& schedule,
     std::size_t nQubits)
     -> DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> {
-  // std::variant<StructU3, std::array<qc::Qubit, 2>> instead of Unique_pointer
-  // For Readout:
+  // std::variant<StructU3, std::array<qc::Qubit, 2>> instead of
+  // Unique_pointer For Readout:
   DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> graph =
       DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>();
   std::vector<std::vector<size_t>> qubitPaths(nQubits);
@@ -696,7 +709,8 @@ auto NativeGateDecomposer::scheduleThetaOpt(
     std::size_t nQubits) const -> std::pair<std::vector<std::vector<U3Gate>>,
                                             std::vector<TwoQubitGateLayer>> {
 
-  // TODO: Convert Circuit to DAG: How to handle the unique Pointer situation???
+  // TODO: Convert Circuit to DAG: How to handle the unique Pointer
+  // situation???
   DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> circuit =
       convertCircuitToDAG(schedule, nQubits);
   // TODO: Get initial Moments( Not does MQB THEN SQB!! SOl to get SQB MQB??)
