@@ -51,7 +51,7 @@ protected:
         decomposer(architecture, decomposerConfig) {}
 };
 
-TEST(NativeGateDecomposerTest, TranslationZ) {
+TEST_F(NativeGateDecomposerTest, TranslationZ) {
   const qc::StandardOperation op(0, qc::Z);
   EXPECT_THAT(
       NativeGateDecomposer::convertGateToQuaternion(op),
@@ -59,7 +59,7 @@ TEST(NativeGateDecomposerTest, TranslationZ) {
                                 NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationRZ) {
+TEST_F(NativeGateDecomposerTest, TranslationRZ) {
   const qc::StandardOperation op(0, qc::RZ, {qc::PI_2});
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -68,7 +68,7 @@ TEST(NativeGateDecomposerTest, TranslationRZ) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationP) {
+TEST_F(NativeGateDecomposerTest, TranslationP) {
   const qc::StandardOperation op(0, qc::P, {qc::PI_2});
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -77,7 +77,7 @@ TEST(NativeGateDecomposerTest, TranslationP) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationS) {
+TEST_F(NativeGateDecomposerTest, TranslationS) {
   const qc::StandardOperation op(0, qc::S);
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -86,7 +86,7 @@ TEST(NativeGateDecomposerTest, TranslationS) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationSdg) {
+TEST_F(NativeGateDecomposerTest, TranslationSdg) {
   const qc::StandardOperation op(0, qc::Sdg);
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -95,7 +95,7 @@ TEST(NativeGateDecomposerTest, TranslationSdg) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationT) {
+TEST_F(NativeGateDecomposerTest, TranslationT) {
   const qc::StandardOperation op(0, qc::T);
   EXPECT_THAT(
       NativeGateDecomposer::convertGateToQuaternion(op),
@@ -105,7 +105,7 @@ TEST(NativeGateDecomposerTest, TranslationT) {
           NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationTdg) {
+TEST_F(NativeGateDecomposerTest, TranslationTdg) {
   const qc::StandardOperation op(0, qc::Tdg);
   EXPECT_THAT(
       NativeGateDecomposer::convertGateToQuaternion(op),
@@ -115,7 +115,7 @@ TEST(NativeGateDecomposerTest, TranslationTdg) {
           NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationX) {
+TEST_F(NativeGateDecomposerTest, TranslationX) {
   const qc::StandardOperation op(0, qc::X);
   EXPECT_THAT(
       NativeGateDecomposer::convertGateToQuaternion(op),
@@ -123,7 +123,7 @@ TEST(NativeGateDecomposerTest, TranslationX) {
                                 NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationRX) {
+TEST_F(NativeGateDecomposerTest, TranslationRX) {
   const qc::StandardOperation op(0, qc::RX, {qc::PI_2});
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -132,7 +132,7 @@ TEST(NativeGateDecomposerTest, TranslationRX) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationY) {
+TEST_F(NativeGateDecomposerTest, TranslationY) {
   const qc::StandardOperation op(0, qc::Y);
   EXPECT_THAT(
       NativeGateDecomposer::convertGateToQuaternion(op),
@@ -140,7 +140,7 @@ TEST(NativeGateDecomposerTest, TranslationY) {
                                 NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationRY) {
+TEST_F(NativeGateDecomposerTest, TranslationRY) {
   const qc::StandardOperation op(0, qc::RY, {qc::PI_2});
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -149,7 +149,7 @@ TEST(NativeGateDecomposerTest, TranslationRY) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationSX) {
+TEST_F(NativeGateDecomposerTest, TranslationSX) {
   const qc::StandardOperation op(0, qc::SX);
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -158,7 +158,7 @@ TEST(NativeGateDecomposerTest, TranslationSX) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationSXdg) {
+TEST_F(NativeGateDecomposerTest, TranslationSXdg) {
   const qc::StandardOperation op(0, qc::SXdg);
   EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
@@ -167,7 +167,7 @@ TEST(NativeGateDecomposerTest, TranslationSXdg) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, TranslationU) {
+TEST_F(NativeGateDecomposerTest, TranslationU) {
   qc::fp p = qc::PI_2;
   qc::fp t = qc::PI_4;
   qc::fp l = qc::PI_4;
@@ -225,7 +225,7 @@ TEST(NativeGateDecomposerTest, TranslationU) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, CombineQuaternion1) {
+TEST_F(NativeGateDecomposerTest, CombineQuaternion1) {
   const NativeGateDecomposer::Quaternion q1{cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
   const NativeGateDecomposer::Quaternion q2{cos(qc::PI_2), 0, sin(qc::PI_2), 0};
   const auto& q12 = NativeGateDecomposer::combineQuaternions(q1, q2);
@@ -241,7 +241,7 @@ TEST(NativeGateDecomposerTest, CombineQuaternion1) {
                        NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, CombineQuaternion2) {
+TEST_F(NativeGateDecomposerTest, CombineQuaternion2) {
   const NativeGateDecomposer::Quaternion q1{cos(qc::PI_2), 0, 0, sin(qc::PI_2)};
   const NativeGateDecomposer::Quaternion q2{cos(qc::PI_4 / 2), 0,
                                             sin(qc::PI_4 / 2), 0};
@@ -260,7 +260,7 @@ TEST(NativeGateDecomposerTest, CombineQuaternion2) {
                         NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, SingleXGateAngle) {
+TEST_F(NativeGateDecomposerTest, SingleXGateAngle) {
   const qc::StandardOperation op(0, qc::X);
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
   EXPECT_THAT(
@@ -269,7 +269,7 @@ TEST(NativeGateDecomposerTest, SingleXGateAngle) {
                             NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, SingleU3GateAngle) {
+TEST_F(NativeGateDecomposerTest, SingleU3GateAngle) {
   const qc::StandardOperation op(0, qc::U, {qc::PI_4, qc::PI, qc::PI_2});
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
   const auto r = 1 / sqrt(2);
@@ -285,7 +285,7 @@ TEST(NativeGateDecomposerTest, SingleU3GateAngle) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, ThetaPiAngle) {
+TEST_F(NativeGateDecomposerTest, ThetaPiAngle) {
   qc::StandardOperation op(0, qc::U, {qc::PI, qc::PI, qc::PI_2});
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
   const auto r = 1 / sqrt(2);
@@ -298,7 +298,7 @@ TEST(NativeGateDecomposerTest, ThetaPiAngle) {
                             NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, ThetaZeroAngle) {
+TEST_F(NativeGateDecomposerTest, ThetaZeroAngle) {
   const qc::StandardOperation op(0, qc::U, {0, qc::PI, qc::PI_2});
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
   const auto r = 1 / sqrt(2);
@@ -312,7 +312,7 @@ TEST(NativeGateDecomposerTest, ThetaZeroAngle) {
                             NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, DecompositionU3) {
+TEST_F(NativeGateDecomposerTest, DecompositionU3) {
   constexpr NativeGateDecomposer::Angles u3{qc::PI_4, qc::PI, qc::PI_2};
   EXPECT_THAT(NativeGateDecomposer::getDecompositionAngles(u3, qc::PI_4),
               ::testing::AnglesNear(
@@ -320,14 +320,14 @@ TEST(NativeGateDecomposerTest, DecompositionU3) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, DecompositionX) {
+TEST_F(NativeGateDecomposerTest, DecompositionX) {
   constexpr NativeGateDecomposer::Angles x{qc::PI, -qc::PI_2, qc::PI_2};
   EXPECT_THAT(NativeGateDecomposer::getDecompositionAngles(x, qc::PI),
               ::testing::AnglesNear(NativeGateDecomposer::Angles{qc::PI, 0, 0},
                                     NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, DecompositionZ) {
+TEST_F(NativeGateDecomposerTest, DecompositionZ) {
   constexpr NativeGateDecomposer::Angles z{0, 0, qc::PI};
   EXPECT_THAT(
       NativeGateDecomposer::getDecompositionAngles(z, qc::PI),
