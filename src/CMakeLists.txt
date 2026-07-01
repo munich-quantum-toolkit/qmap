@@ -14,6 +14,8 @@ if(Z3_FOUND)
   add_subdirectory(cliffordsynthesis)
 endif()
 
+add_subdirectory(datastructures)
+
 add_subdirectory(sc)
 
 add_subdirectory(hybridmap)

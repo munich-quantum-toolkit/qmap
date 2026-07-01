@@ -6,9 +6,7 @@
 #
 # Licensed under the MIT License
 
-add_subdirectory(datastructures)
-add_subdirectory(sc)
-add_subdirectory(hybridmap)
-add_subdirectory(na)
-add_subdirectory(logicblocks)
-add_subdirectory(cliffordsynthesis)
+if(TARGET MQT::QMapDS)
+  file(GLOB_RECURSE DS_TEST_SOURCES *.cpp)
+  package_add_test(mqt-qmap-ds-test MQT::QMapDS ${DS_TEST_SOURCES})
+endif()

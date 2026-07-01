@@ -3,21 +3,19 @@
 
 # Installation
 
-MQT QMAP is primarily developed as a C++20 library with Python bindings.
-The Python package is available on [PyPI](https://pypi.org/project/mqt.qmap/)
-and can be installed on all major operating systems with all
+MQT QMAP is primarily developed as a C++20 library with Python bindings. The
+Python package is available on [PyPI](https://pypi.org/project/mqt.qmap/) and
+can be installed on all major operating systems with all
 [officially supported Python versions](https://devguide.python.org/versions/).
 
 :::::{tip}
 :name: uv-recommendation
 
-We recommend using [{code}`uv`][uv].
-It is a fast Python package and project manager by [Astral](https://astral.sh/)
-(creators of [{code}`ruff`][ruff]).
-It can replace {code}`pip` and {code}`virtualenv`,
-automatically manages virtual environments, installs packages,
-and can install Python itself.
-It is significantly faster than {code}`pip`.
+We recommend using [{code}`uv`][uv]. It is a fast Python package and project
+manager by [Astral](https://astral.sh/) (creators of [{code}`ruff`][ruff]). It
+can replace {code}`pip` and {code}`virtualenv`, automatically manages virtual
+environments, installs packages, and can install Python itself. It is
+significantly faster than {code}`pip`.
 
 If you do not have {code}`uv` installed, install it with:
 
@@ -68,8 +66,8 @@ python -m pip install mqt.qmap
 
 ::::
 
-In most cases, no compilation is required;
-a platform-specific prebuilt wheel is downloaded and installed.
+In most cases, no compilation is required; a platform-specific prebuilt wheel is
+downloaded and installed.
 
 Verify the installation:
 
@@ -81,9 +79,8 @@ This prints the installed package version.
 
 ## Building from Source for Performance
 
-To get the best performance
-and enable platform-specific optimizations not available in portable wheels,
-we recommend building the library from source:
+To get the best performance and enable platform-specific optimizations not
+available in portable wheels, we recommend building the library from source:
 
 ::::{tab-set}
 :sync-group: installer
@@ -114,9 +111,9 @@ and [CMake](https://cmake.org/) 3.24 or newer.
 
 ## Integrating MQT QMAP into Your Project
 
-To use the MQT QMAP Python package in your project,
-add it as a dependency in your {code}`pyproject.toml` or {code}`setup.py`.
-This ensures the package is installed when your project is installed.
+To use the MQT QMAP Python package in your project, add it as a dependency in
+your {code}`pyproject.toml` or {code}`setup.py`. This ensures the package is
+installed when your project is installed.
 
 ::::{tab-set}
 
@@ -155,13 +152,13 @@ setup(
 
 ::::
 
-If you want to integrate the C++ library directly into your project,
-you can either
+If you want to integrate the C++ library directly into your project, you can
+either
 
 - add it as a [{code}`git` submodule][git-submodule] and build it as part of
   your project, or
-- install MQT QMAP on your system and use CMake's {code}`find_package()`
-  command to locate it, or
+- install MQT QMAP on your system and use CMake's {code}`find_package()` command
+  to locate it, or
 - use CMake's [{code}`FetchContent`][FetchContent] module to combine both
   approaches.
 
@@ -169,9 +166,8 @@ you can either
 
 :::{tab-item} {code}`FetchContent`
 
-This is the recommended approach
-because it lets you detect installed versions of MQT QMAP
-and only downloads the library if it is not available on the system.
+This is the recommended approach because it lets you detect installed versions
+of MQT QMAP and only downloads the library if it is not available on the system.
 Furthermore, CMake's [{code}`FetchContent`][FetchContent] module provides
 flexibility in how the library is integrated into the project.
 
@@ -205,11 +201,9 @@ FetchContent_MakeAvailable(${FETCH_PACKAGES})
 :::{tab-item} {code}`git-submodule`
 
 Adding the library as a [{code}`git` submodule][git-submodule] is a simple
-approach.
-However, {code}`git` submodules can be cumbersome,
-especially when working with multiple branches or versions of the library.
-First, add the submodule to your project
-(e.g., in the {code}`external` directory):
+approach. However, {code}`git` submodules can be cumbersome, especially when
+working with multiple branches or versions of the library. First, add the
+submodule to your project (e.g., in the {code}`external` directory):
 
 ```console
 git submodule add https://github.com/munich-quantum-toolkit/qmap.git external/mqt-qmap
@@ -236,8 +230,8 @@ cmake --build build
 cmake --install build
 ```
 
-Then, in your project's {code}`CMakeLists.txt`,
-use {code}`find_package()` to locate the installed library:
+Then, in your project's {code}`CMakeLists.txt`, use {code}`find_package()` to
+locate the installed library:
 
 ```cmake
 find_package(mqt-qmap <version> REQUIRED)
@@ -251,9 +245,9 @@ find_package(mqt-qmap <version> REQUIRED)
 
 ## Development Setup
 
-Set up a reproducible development environment for MQT QMAP.
-This is the recommended starting point for both bug fixes and new features.
-For detailed guidelines and workflows, see {doc}`contributing`.
+Set up a reproducible development environment for MQT QMAP. This is the
+recommended starting point for both bug fixes and new features. For detailed
+guidelines and workflows, see {doc}`contributing`.
 
 1. Get the code: <!-- rumdl-disable-line MD013 -->
 
