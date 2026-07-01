@@ -19,7 +19,7 @@ if(NOT TARGET ${MQT_QMAP_NALAC_TARGET_NAME})
 
   target_link_libraries(
     ${MQT_QMAP_NALAC_TARGET_NAME}
-    PUBLIC MQT::CoreIR MQT::CoreDS nlohmann_json::nlohmann_json
+    PUBLIC MQT::CoreIR MQT::QMapDS nlohmann_json::nlohmann_json
     PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
   add_library(MQT::NALAC ALIAS ${MQT_QMAP_NALAC_TARGET_NAME})
