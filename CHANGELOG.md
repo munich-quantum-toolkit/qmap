@@ -14,8 +14,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
-- 🎨 Move auxiliary datastructures used in, e.g.,
-  NASP and NALAC from MQT Core to QMAP ([#1058]) ([**@ystade**])
+- 🎨 Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
+  to QMAP ([#1058]) ([**@ystade**])
 
 ### Removed
 
