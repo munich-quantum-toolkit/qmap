@@ -160,10 +160,11 @@ auto NativeGateDecomposer::transformToU3(
               gatesPerQubit[subGate->getTargets().front()].emplace_back(
                   *subGate);
             });
+      } else {
+        assert(gate.get().getNqubits() == 1 &&
+               "Gate has to be a single qubit gate.");
+        gatesPerQubit[gate.get().getTargets().front()].emplace_back(gate);
       }
-      assert(gate.get().getNqubits() == 1 &&
-             "Gate has to be a single qubit gate.");
-      gatesPerQubit[gate.get().getTargets().front()].emplace_back(gate);
     });
     auto& newLayer = newLayers.emplace_back();
     std::ranges::transform(
