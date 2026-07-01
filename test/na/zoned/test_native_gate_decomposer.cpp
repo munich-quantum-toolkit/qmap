@@ -38,133 +38,136 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 
-class DecomposerTest : public ::testing::Test {
+class NativeGateDecomposerTest : public ::testing::Test {
 protected:
   Architecture architecture;
   ASAPScheduler::Config schedulerConfig{.maxFillingFactor = .8};
   ASAPScheduler scheduler;
   NativeGateDecomposer::Config decomposerConfig{};
   NativeGateDecomposer decomposer;
-  DecomposerTest()
+  NativeGateDecomposerTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
         scheduler(architecture, schedulerConfig),
         decomposer(architecture, decomposerConfig) {}
 };
 
-// Test Translation of gates S, Sdg, T, Tdg, U2, RY, Y, Vdg, SX, SXdg,
-// Unrecognized, H
-
-TEST(NativeGateDecomposerTest, ZRotGateTranslationTest) {
-  qc::StandardOperation op(0, qc::Z);
+TEST(NativeGateDecomposerTest, TranslationZ) {
+  const qc::StandardOperation op(0, qc::Z);
   EXPECT_THAT(
-      NativeGateDecomposer::convertGateToQuaternion(
-          std::reference_wrapper<const qc::Operation>(op)),
+      NativeGateDecomposer::convertGateToQuaternion(op),
       ::testing::QuaternionNear(NativeGateDecomposer::Quaternion{0, 0, 0, 1},
                                 NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::RZ, {qc::PI_2});
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationRZ) {
+  const qc::StandardOperation op(0, qc::RZ, {qc::PI_2});
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2), 0, 0,
                                                    1 / std::sqrt(2)},
                   NativeGateDecomposer::epsilon));
-  op = qc::StandardOperation(0, qc::P, {qc::PI_2});
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+}
+
+TEST(NativeGateDecomposerTest, TranslationP) {
+  const qc::StandardOperation op(0, qc::P, {qc::PI_2});
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2), 0, 0,
                                                    1 / std::sqrt(2)},
                   NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::S);
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationS) {
+  const qc::StandardOperation op(0, qc::S);
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2), 0, 0,
                                                    1 / std::sqrt(2)},
                   NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::Sdg);
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationSdg) {
+  const qc::StandardOperation op(0, qc::Sdg);
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2), 0, 0,
                                                    -1 / std::sqrt(2)},
                   NativeGateDecomposer::epsilon));
-  op = qc::StandardOperation(0, qc::T);
+}
+
+TEST(NativeGateDecomposerTest, TranslationT) {
+  const qc::StandardOperation op(0, qc::T);
   EXPECT_THAT(
-      NativeGateDecomposer::convertGateToQuaternion(
-          std::reference_wrapper<const qc::Operation>(op)),
+      NativeGateDecomposer::convertGateToQuaternion(op),
       ::testing::QuaternionNear(
           NativeGateDecomposer::Quaternion{std::sqrt(2 + std::sqrt(2)) / 2, 0,
                                            0, std::sqrt(2 - std::sqrt(2)) / 2},
           NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::Tdg);
+TEST(NativeGateDecomposerTest, TranslationTdg) {
+  const qc::StandardOperation op(0, qc::Tdg);
   EXPECT_THAT(
-      NativeGateDecomposer::convertGateToQuaternion(
-          std::reference_wrapper<const qc::Operation>(op)),
+      NativeGateDecomposer::convertGateToQuaternion(op),
       ::testing::QuaternionNear(
           NativeGateDecomposer::Quaternion{std::sqrt(2 + std::sqrt(2)) / 2, 0,
                                            0, -std::sqrt(2 - std::sqrt(2)) / 2},
           NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, XYRotGateTranslationTest) {
-  qc::StandardOperation op = qc::StandardOperation(0, qc::X);
+TEST(NativeGateDecomposerTest, TranslationX) {
+  const qc::StandardOperation op(0, qc::X);
   EXPECT_THAT(
-      NativeGateDecomposer::convertGateToQuaternion(
-          std::reference_wrapper<const qc::Operation>(op)),
+      NativeGateDecomposer::convertGateToQuaternion(op),
       ::testing::QuaternionNear(NativeGateDecomposer::Quaternion{0, 1, 0, 0},
                                 NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::RX, {qc::PI_2});
-
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationRX) {
+  const qc::StandardOperation op(0, qc::RX, {qc::PI_2});
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2),
                                                    1 / std::sqrt(2), 0, 0},
                   NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::Y);
-
+TEST(NativeGateDecomposerTest, TranslationY) {
+  const qc::StandardOperation op(0, qc::Y);
   EXPECT_THAT(
-      NativeGateDecomposer::convertGateToQuaternion(
-          std::reference_wrapper<const qc::Operation>(op)),
+      NativeGateDecomposer::convertGateToQuaternion(op),
       ::testing::QuaternionNear(NativeGateDecomposer::Quaternion{0, 0, 1, 0},
                                 NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::RY, {qc::PI_2});
-
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationRY) {
+  const qc::StandardOperation op(0, qc::RY, {qc::PI_2});
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2), 0,
                                                    1 / std::sqrt(2), 0},
                   NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::SX);
-
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationSX) {
+  const qc::StandardOperation op(0, qc::SX);
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2),
                                                    1 / std::sqrt(2), 0, 0},
                   NativeGateDecomposer::epsilon));
+}
 
-  op = qc::StandardOperation(0, qc::SXdg);
-
-  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(
-                  std::reference_wrapper<const qc::Operation>(op)),
+TEST(NativeGateDecomposerTest, TranslationSXdg) {
+  const qc::StandardOperation op(0, qc::SXdg);
+  EXPECT_THAT(NativeGateDecomposer::convertGateToQuaternion(op),
               ::testing::QuaternionNear(
                   NativeGateDecomposer::Quaternion{1 / std::sqrt(2),
                                                    -1 / std::sqrt(2), 0, 0},
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, UGateTranslationTest) {
+TEST(NativeGateDecomposerTest, TranslationU) {
   qc::fp p = qc::PI_2;
   qc::fp t = qc::PI_4;
   qc::fp l = qc::PI_4;
@@ -222,7 +225,7 @@ TEST(NativeGateDecomposerTest, UGateTranslationTest) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, ThreeQuaternionCombiTest) {
+TEST(NativeGateDecomposerTest, CombineQuaternion1) {
   const NativeGateDecomposer::Quaternion q1{cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
   const NativeGateDecomposer::Quaternion q2{cos(qc::PI_2), 0, sin(qc::PI_2), 0};
   const auto& q12 = NativeGateDecomposer::combineQuaternions(q1, q2);
@@ -238,7 +241,7 @@ TEST(NativeGateDecomposerTest, ThreeQuaternionCombiTest) {
                        NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, ThreeQuaternionU3Test) {
+TEST(NativeGateDecomposerTest, CombineQuaternion2) {
   const NativeGateDecomposer::Quaternion q1{cos(qc::PI_2), 0, 0, sin(qc::PI_2)};
   const NativeGateDecomposer::Quaternion q2{cos(qc::PI_4 / 2), 0,
                                             sin(qc::PI_4 / 2), 0};
@@ -248,16 +251,16 @@ TEST(NativeGateDecomposerTest, ThreeQuaternionU3Test) {
                                                         0, cos(qc::PI_4 / 2)},
                        NativeGateDecomposer::epsilon));
   const NativeGateDecomposer::Quaternion q3{cos(qc::PI_4), 0, 0, sin(qc::PI_4)};
-  const auto& q13 = NativeGateDecomposer::combineQuaternions(q12, q3);
-  const auto r2 = 1 / std::sqrt(2);
-  EXPECT_THAT(q13, ::testing::QuaternionNear(
-                       NativeGateDecomposer::Quaternion{
-                           -r2 * cos(qc::PI_4 / 2), -r2 * sin(qc::PI_4 / 2),
-                           r2 * sin(qc::PI_4 / 2), r2 * cos(qc::PI_4 / 2)},
-                       NativeGateDecomposer::epsilon));
+  const auto& q123 = NativeGateDecomposer::combineQuaternions(q12, q3);
+  const auto r = 1 / std::sqrt(2);
+  EXPECT_THAT(q123, ::testing::QuaternionNear(
+                        NativeGateDecomposer::Quaternion{
+                            -r * cos(qc::PI_4 / 2), -r * sin(qc::PI_4 / 2),
+                            r * sin(qc::PI_4 / 2), r * cos(qc::PI_4 / 2)},
+                        NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, SingleXGateAngleTest) {
+TEST(NativeGateDecomposerTest, SingleXGateAngle) {
   const qc::StandardOperation op(0, qc::X);
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
   EXPECT_THAT(
@@ -266,14 +269,14 @@ TEST(NativeGateDecomposerTest, SingleXGateAngleTest) {
                             NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, SingleU3GateAngleTest) {
+TEST(NativeGateDecomposerTest, SingleU3GateAngle) {
   const qc::StandardOperation op(0, qc::U, {qc::PI_4, qc::PI, qc::PI_2});
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
-  const auto r2 = 1 / sqrt(2);
+  const auto r = 1 / sqrt(2);
   EXPECT_THAT(q, ::testing::QuaternionNear(
                      NativeGateDecomposer::Quaternion{
-                         -r2 * cos(qc::PI_4 / 2), -r2 * sin(qc::PI_4 / 2),
-                         r2 * sin(qc::PI_4 / 2), r2 * cos(qc::PI_4 / 2)},
+                         -r * cos(qc::PI_4 / 2), -r * sin(qc::PI_4 / 2),
+                         r * sin(qc::PI_4 / 2), r * cos(qc::PI_4 / 2)},
                      NativeGateDecomposer::epsilon));
 
   EXPECT_THAT(NativeGateDecomposer::getU3AnglesFromQuaternion(q),
@@ -282,12 +285,12 @@ TEST(NativeGateDecomposerTest, SingleU3GateAngleTest) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, ThetaPiAngleTest) {
+TEST(NativeGateDecomposerTest, ThetaPiAngle) {
   qc::StandardOperation op(0, qc::U, {qc::PI, qc::PI, qc::PI_2});
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
-  const auto r2 = 1 / sqrt(2);
+  const auto r = 1 / sqrt(2);
   EXPECT_THAT(q, ::testing::QuaternionNear(
-                     NativeGateDecomposer::Quaternion{0, -r2, r2, 0},
+                     NativeGateDecomposer::Quaternion{0, -r, r, 0},
                      NativeGateDecomposer::epsilon));
   EXPECT_THAT(
       NativeGateDecomposer::getU3AnglesFromQuaternion(q),
@@ -295,12 +298,12 @@ TEST(NativeGateDecomposerTest, ThetaPiAngleTest) {
                             NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, ThetaZeroAngleTest) {
+TEST(NativeGateDecomposerTest, ThetaZeroAngle) {
   const qc::StandardOperation op(0, qc::U, {0, qc::PI, qc::PI_2});
   const auto& q = NativeGateDecomposer::convertGateToQuaternion(op);
-  const auto r2 = 1 / sqrt(2);
+  const auto r = 1 / sqrt(2);
   EXPECT_THAT(q, ::testing::QuaternionNear(
-                     NativeGateDecomposer::Quaternion{-r2, 0, 0, r2},
+                     NativeGateDecomposer::Quaternion{-r, 0, 0, r},
                      NativeGateDecomposer::epsilon));
 
   EXPECT_THAT(
@@ -309,14 +312,7 @@ TEST(NativeGateDecomposerTest, ThetaZeroAngleTest) {
                             NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, RXDecompositionTest) {
-  constexpr NativeGateDecomposer::Angles rx{qc::PI, -qc::PI_2, qc::PI_2};
-  EXPECT_THAT(NativeGateDecomposer::getDecompositionAngles(rx, qc::PI),
-              ::testing::AnglesNear(NativeGateDecomposer::Angles{qc::PI, 0, 0},
-                                    NativeGateDecomposer::epsilon));
-}
-
-TEST(NativeGateDecomposerTest, U3DecompositionTest) {
+TEST(NativeGateDecomposerTest, DecompositionU3) {
   constexpr NativeGateDecomposer::Angles u3{qc::PI_4, qc::PI, qc::PI_2};
   EXPECT_THAT(NativeGateDecomposer::getDecompositionAngles(u3, qc::PI_4),
               ::testing::AnglesNear(
@@ -324,24 +320,26 @@ TEST(NativeGateDecomposerTest, U3DecompositionTest) {
                   NativeGateDecomposer::epsilon));
 }
 
-TEST(NativeGateDecomposerTest, DoubleDecompositionTest) {
-  constexpr NativeGateDecomposer::Angles x1{qc::PI, -qc::PI_2, qc::PI_2};
-  constexpr NativeGateDecomposer::Angles z2{0, 0, qc::PI};
-  EXPECT_THAT(NativeGateDecomposer::getDecompositionAngles(x1, qc::PI),
+TEST(NativeGateDecomposerTest, DecompositionX) {
+  constexpr NativeGateDecomposer::Angles x{qc::PI, -qc::PI_2, qc::PI_2};
+  EXPECT_THAT(NativeGateDecomposer::getDecompositionAngles(x, qc::PI),
               ::testing::AnglesNear(NativeGateDecomposer::Angles{qc::PI, 0, 0},
                                     NativeGateDecomposer::epsilon));
+}
+
+TEST(NativeGateDecomposerTest, DecompositionZ) {
+  constexpr NativeGateDecomposer::Angles z{0, 0, qc::PI};
   EXPECT_THAT(
-      NativeGateDecomposer::getDecompositionAngles(z2, qc::PI),
+      NativeGateDecomposer::getDecompositionAngles(z, qc::PI),
       ::testing::AnglesNear(NativeGateDecomposer::Angles{0, qc::PI_2, qc::PI_2},
                             NativeGateDecomposer::epsilon));
 }
 
-TEST_F(DecomposerTest, SingleRXGate) {
+TEST_F(NativeGateDecomposerTest, OneRXOneQubit) {
   //    ┌───────┐
   // q: ┤ Rx(π) ├
   //    └───────┘
-  size_t n = 1;
-  qc::QuantumComputation qc(n);
+  qc::QuantumComputation qc(1);
   qc.rx(qc::PI, 0);
   const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
   const auto& decompSingleQubitLayers =
@@ -356,7 +354,7 @@ TEST_F(DecomposerTest, SingleRXGate) {
               ::testing::ElementsAre(::testing::DoubleNear(
                   qc::PI_2, NativeGateDecomposer::epsilon)));
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(1));
   EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
               ::testing::ElementsAre(0));
@@ -364,7 +362,7 @@ TEST_F(DecomposerTest, SingleRXGate) {
               ::testing::ElementsAre(::testing::DoubleNear(
                   qc::PI, NativeGateDecomposer::epsilon)));
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(1));
   EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
               ::testing::ElementsAre(0));
@@ -373,12 +371,11 @@ TEST_F(DecomposerTest, SingleRXGate) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 }
 
-TEST_F(DecomposerTest, SingleU3Gate) {
+TEST_F(NativeGateDecomposerTest, OneU3OneQubit) {
   //    ┌─────────────┐
   // q: ┤ U3(0,π,π/2) ├
   //    └─────────────┘
-  size_t n = 1;
-  qc::QuantumComputation qc(n);
+  qc::QuantumComputation qc(1);
   qc.u(0.0, qc::PI, qc::PI_2, 0);
   const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
   const auto& decompSingleQubitLayers =
@@ -394,7 +391,7 @@ TEST_F(DecomposerTest, SingleU3Gate) {
               ::testing::ElementsAre(
                   ::testing::DoubleNear(0, NativeGateDecomposer::epsilon)));
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(1));
   EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
               ::testing::ElementsAre(0));
@@ -402,7 +399,7 @@ TEST_F(DecomposerTest, SingleU3Gate) {
               ::testing::ElementsAre(::testing::DoubleNear(
                   qc::PI, NativeGateDecomposer::epsilon)));
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(1));
   EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
               ::testing::ElementsAre(0));
@@ -411,12 +408,11 @@ TEST_F(DecomposerTest, SingleU3Gate) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 }
 
-TEST_F(DecomposerTest, TwoPauliGatesOneQubit) {
+TEST_F(NativeGateDecomposerTest, TwoGatesOneQubit) {
   //    ┌───────┐  ┌───────┐
   // q: ┤   X   ├──┤   Z   ├
   //    └───────┘  └───────┘
-  size_t n = 1;
-  qc::QuantumComputation qc(n);
+  qc::QuantumComputation qc(1);
   qc.x(0);
   qc.z(0);
   const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
@@ -433,7 +429,7 @@ TEST_F(DecomposerTest, TwoPauliGatesOneQubit) {
               ::testing::ElementsAre(::testing::DoubleNear(
                   qc::PI_2, NativeGateDecomposer::epsilon)));
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(1));
   EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
               ::testing::ElementsAre(0));
@@ -441,7 +437,7 @@ TEST_F(DecomposerTest, TwoPauliGatesOneQubit) {
               ::testing::ElementsAre(::testing::DoubleNear(
                   qc::PI, NativeGateDecomposer::epsilon)));
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(1));
   EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
               ::testing::ElementsAre(0));
@@ -450,16 +446,14 @@ TEST_F(DecomposerTest, TwoPauliGatesOneQubit) {
                   3 * qc::PI_2, NativeGateDecomposer::epsilon)));
 }
 
-TEST_F(DecomposerTest, TwoPauliGatesTwoQubits) {
+TEST_F(NativeGateDecomposerTest, TwoGatesTwoQubits) {
   //       ┌───────┐
   // q_0: ─┤   X   ├─
   //       └───────┘
   //       ┌───────┐
   // q_1: ─┤   Z   ├─
   //       └───────┘
-
-  size_t n = 2;
-  qc::QuantumComputation qc(n);
+  qc::QuantumComputation qc(2);
   qc.x(0);
   qc.z(1);
   const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
@@ -484,7 +478,7 @@ TEST_F(DecomposerTest, TwoPauliGatesTwoQubits) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][2]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][2]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][2]->isGlobal(2));
 
   EXPECT_EQ(decompSingleQubitLayers[0][3]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][3]->getTargets(),
@@ -501,7 +495,7 @@ TEST_F(DecomposerTest, TwoPauliGatesTwoQubits) {
                   ::testing::DoubleNear(0, NativeGateDecomposer::epsilon)));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][5]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][5]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][5]->isGlobal(2));
 
   EXPECT_EQ(decompSingleQubitLayers[0][6]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][6]->getTargets(),
@@ -518,16 +512,14 @@ TEST_F(DecomposerTest, TwoPauliGatesTwoQubits) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 }
 
-TEST_F(DecomposerTest, TwoQubitsTwoLayers) {
+TEST_F(NativeGateDecomposerTest, TwoQubitsTwoLayers) {
   //       ┌───────┐       ┌───────┐
   // q_0: ─┤   X   ├───■───┤   Z   ├─
   //       └───────┘   │   └───────┘
   //                   │   ┌───────┐
   // q_1: ─────────────■───┤   X   ├─
   //                       └───────┘
-
-  size_t n = 2;
-  qc::QuantumComputation qc(n);
+  qc::QuantumComputation qc(2);
   qc.x(0);
   qc.cz(0, 1);
   qc.z(0);
@@ -549,7 +541,7 @@ TEST_F(DecomposerTest, TwoQubitsTwoLayers) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(2));
 
   EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
@@ -559,7 +551,7 @@ TEST_F(DecomposerTest, TwoQubitsTwoLayers) {
                   qc::PI, NativeGateDecomposer::epsilon)));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(2));
 
   EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
@@ -569,7 +561,6 @@ TEST_F(DecomposerTest, TwoQubitsTwoLayers) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 
   // Layer 2
-
   EXPECT_EQ(decompSingleQubitLayers[1][0]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[1][0]->getTargets(),
               ::testing::ElementsAre(0));
@@ -585,7 +576,7 @@ TEST_F(DecomposerTest, TwoQubitsTwoLayers) {
                   qc::PI_2, NativeGateDecomposer::epsilon)));
 
   EXPECT_TRUE(decompSingleQubitLayers[1][2]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[1][2]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[1][2]->isGlobal(2));
 
   EXPECT_EQ(decompSingleQubitLayers[1][3]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[1][3]->getTargets(),
@@ -602,7 +593,7 @@ TEST_F(DecomposerTest, TwoQubitsTwoLayers) {
                   qc::PI, NativeGateDecomposer::epsilon)));
 
   EXPECT_TRUE(decompSingleQubitLayers[1][5]->isCompoundOperation());
-  EXPECT_TRUE(decompSingleQubitLayers[1][5]->isGlobal(n));
+  EXPECT_TRUE(decompSingleQubitLayers[1][5]->isGlobal(2));
 
   EXPECT_EQ(decompSingleQubitLayers[1][6]->getType(), qc::RZ);
   EXPECT_THAT(decompSingleQubitLayers[1][6]->getTargets(),
