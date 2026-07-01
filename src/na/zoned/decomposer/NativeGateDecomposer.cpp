@@ -153,12 +153,12 @@ auto NativeGateDecomposer::transformToU3(
         const auto& compoundOp =
             dynamic_cast<const qc::CompoundOperation&>(gate.get());
         std::ranges::for_each(
-            compoundOp.getOps(), [&gatesPerQubit](const auto& subGate) -> void {
+            compoundOp, [&gatesPerQubit](const auto& subGate) -> void {
               assert(subGate->getNqubits() == 1 &&
                      "Gate has to be a single qubit gate, in particular, no "
                      "nested compound operations are allowed.");
               gatesPerQubit[subGate->getTargets().front()].emplace_back(
-                  subGate);
+                  *subGate);
             });
       }
       assert(gate.get().getNqubits() == 1 &&
@@ -286,14 +286,14 @@ auto NativeGateDecomposer::findCheapestPath(
 }
 auto disjunct(const std::unordered_set<size_t>& set1,
               const std::unordered_set<size_t>& set2) -> bool {
-  return std::ranges::all_of(set1,
-                             [&](auto elem) { return !set2.contains(elem); });
+  return std::ranges::all_of(
+      set1, [&set2](auto elem) -> bool { return !set2.contains(elem); });
 }
 
 auto disjunct(const std::unordered_set<qc::Qubit>& set1,
               const std::unordered_set<qc::Qubit>& set2) -> bool {
-  return std::ranges::all_of(set1,
-                             [&](auto elem) { return !set2.contains(elem); });
+  return std::ranges::all_of(
+      set1, [&set2](auto elem) -> bool { return !set2.contains(elem); });
 }
 
 auto NativeGateDecomposer::cheapestPathToStart(
@@ -326,7 +326,7 @@ auto NativeGateDecomposer::cheapestPathToStart(
   assert(!possiblePaths.empty() && "No path found to leaf nodes.");
   const auto& bestPathWithCost = *std::ranges::min_element(
       possiblePaths,
-      [](const auto& a, const auto& b) { return a.second < b.second; });
+      [](const auto& a, const auto& b) -> bool { return a.second < b.second; });
   memo[currentNode] = bestPathWithCost;
   return bestPathWithCost;
 }
@@ -392,7 +392,7 @@ auto NativeGateDecomposer::getPossibleLayers(
   auto prevTheta =
       std::fabs(std::get<U3Gate>(circuit.getNodeValue(vSort[0])).angles.theta);
   auto thisTheta = prevTheta;
-  std::unordered_set<qc::Qubit> mkQubits = {
+  std::unordered_set mkQubits = {
       std::get<U3Gate>(circuit.getNodeValue(vSort[0])).qubit};
   for (auto i = 0; static_cast<size_t>(i) < vSort.size(); i++) {
     thisTheta = std::fabs(
@@ -404,9 +404,7 @@ auto NativeGateDecomposer::getPossibleLayers(
       potentialArg.emplace_back(
           std::pair<std::array<std::vector<std::size_t>, 2>,
                     std::pair<std::unordered_set<qc::Qubit>, qc::fp>>(
-              {kept, discarded},
-              std::pair<std::unordered_set<qc::Qubit>, qc::fp>(mkQubits,
-                                                               thisTheta)));
+              {kept, discarded}, std::pair(mkQubits, thisTheta)));
       prevTheta = thisTheta;
       mkQubits.clear();
     }
@@ -488,19 +486,19 @@ auto NativeGateDecomposer::convertCircuitToDAG(
   // TODO:assert that One more sql exists than mql ??
   for (size_t i = 0; i < schedule.second.size(); ++i) {
     for (const auto& s : schedule.first.at(i)) {
-      size_t node = graph.add_Node(s);
+      size_t node = graph.addNode(s);
       qubitPaths.at(s.qubit).emplace_back(node);
     }
 
     for (const auto& gate : schedule.second.at(i)) {
-      size_t node = graph.add_Node(gate);
+      size_t node = graph.addNode(gate);
       qubitPaths.at(gate[0]).emplace_back(node);
       qubitPaths.at(gate[1]).emplace_back(node);
     }
   }
   SPDLOG_DEBUG("Added Nodes");
   for (const auto& s : schedule.first.back()) {
-    size_t node = graph.add_Node(s);
+    size_t node = graph.addNode(s);
     qubitPaths.at(s.qubit).emplace_back(node);
   }
   for (std::size_t i = 0; i < qubitPaths.size(); ++i) {
@@ -634,7 +632,7 @@ auto NativeGateDecomposer::addNodeToSubproblemGraph(
                             std::vector<std::size_t>>>& subproblemGraph,
     std::size_t prevNode) -> size_t {
   std::size_t newNode =
-      subproblemGraph.add_Node(std::pair(twoQubitGates, singleQubitGates));
+      subproblemGraph.addNode(std::pair(twoQubitGates, singleQubitGates));
   subproblemGraph.addEdge(prevNode, newNode, cost);
   return newNode;
 }
@@ -726,7 +724,7 @@ auto NativeGateDecomposer::scheduleThetaOpt(
       subproblemGraph = DirectedGraph<
           std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>();
   // TODO: First Call of Recursive Function to create Schedule
-  auto baseNode = subproblemGraph.add_Node(
+  auto baseNode = subproblemGraph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   std::unordered_map<std::size_t, std::pair<std::size_t, std::array<double, 2>>>
       memo = {};

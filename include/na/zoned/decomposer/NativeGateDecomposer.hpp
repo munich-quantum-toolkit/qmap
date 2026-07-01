@@ -13,6 +13,7 @@
 #include "na/zoned/Types.hpp"
 #include "na/zoned/decomposer/DecomposerBase.hpp"
 
+#include <format>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -55,7 +56,7 @@ public:
    */
   struct U3Gate {
     Angles angles;
-    qc::Qubit qubit;
+    qc::Qubit qubit = 0;
   };
 
   /// A value to use as a margin of error for float equality
@@ -166,9 +167,7 @@ public:
     std::vector<T> nodeValues_;
 
   public:
-    /**
-     * @brief Creates an empty graph to hold objects of type T.
-     */
+    /// Creates an empty graph to hold objects of type T.
     DirectedGraph() {
       nNodes_ = 0;
       adjacencies_ = std::vector<std::vector<std::pair<size_t, double>>>();
@@ -180,7 +179,7 @@ public:
      * @param node the type T value to be added to the graph.
      * @returns the node index of the created node.
      */
-    auto add_Node(T&& node) -> size_t {
+    auto addNode(T&& node) -> size_t {
       adjacencies_.emplace_back();
       nodeValues_.emplace_back(std::move(node));
       return nNodes_++;
@@ -190,27 +189,13 @@ public:
      * @brief Adds an edge between two nodes to the graph with the given weight.
      * @param from is the index of the node from which the edge originates.
      * @param to is the index of the node the edge is going to.
-     * @param weight is the weight of the edge.
+     * @param weight is the weight of the edge, defaulting to 1.0.
      * @returns a bool indicating if adding the edge was successful.
      */
-    auto addEdge(const size_t from, const size_t to, const double weight)
+    auto addEdge(const size_t from, const size_t to, const double weight = 1.0)
         -> bool {
       if (from < nNodes_ && to < nNodes_ && from != to) {
         adjacencies_[from].emplace_back(to, weight);
-        return true;
-      }
-      return false;
-    }
-
-    /**
-     * @brief Adds an edge between two nodes to the graph (weight 1.0).
-     * @param from is the index of the node from which the edge originates.
-     * @param to is the index of the node the edge is going to.
-     * @returns a bool indicating if adding the edge was successful.
-     */
-    auto addEdge(const size_t from, const size_t to) -> bool {
-      if (from < nNodes_ && to < nNodes_ && from != to) {
-        adjacencies_[from].emplace_back(to, 1.0);
         return true;
       }
       return false;
@@ -221,14 +206,15 @@ public:
      * @param node is the node index of a node in the graph.
      * @returns an object of type T contained in the given node.
      */
-    auto getNodeValue(const size_t node) -> T& {
+    auto getNodeValue(const size_t node) const -> const T& {
       if (node < nNodes_) {
         return nodeValues_[node];
       }
       std::ostringstream oss;
       oss << "Node Number out of range: " << node << " (nNodes_=" << nNodes_
           << ")";
-      throw std::invalid_argument(oss.str());
+      throw std::invalid_argument(std::format(
+          "Node Number out of range: {} (nNodes_={})", node, nNodes_));
     }
 
     /// @returns the number of nodes in the graph.

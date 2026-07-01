@@ -55,7 +55,7 @@ protected:
         decomposer(architecture, decomposerConfig) {}
 };
 
-TEST_F(ThetaOptTest, GraphTest) {
+TEST_F(ThetaOptTest, Graph) {
   // Circuit
   //        ┌───────┐       ┌───────┐
   //  q_0: ─┤   X   ├───■───┤   Z   ├─
@@ -63,53 +63,51 @@ TEST_F(ThetaOptTest, GraphTest) {
   //                    │   ┌───────┐
   //  q_1: ─────────────■───┤   X   ├─
   //                        └───────┘
-
-  size_t n = 2;
-  qc::QuantumComputation qc(n);
+  qc::QuantumComputation qc(2);
   qc.x(0);
   qc.cz(0, 1);
   qc.z(0);
   qc.x(1);
 
-  auto schedule = scheduler.schedule(qc);
-  auto one_qubit_gates =
-      NativeGateDecomposer::transformToU3(schedule.singleQubitLayers, n);
-  auto graph = NativeGateDecomposer::convertCircuitToDAG(
-      {one_qubit_gates, schedule.twoQubitLayers}, n);
-  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(0)).qubit,
+  const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  const auto& u3Layers =
+      NativeGateDecomposer::transformToU3(singleQubitLayers, 2);
+  const auto& dag =
+      NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, 2);
+  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(dag.getNodeValue(0)).qubit,
             0);
   EXPECT_THAT(
-      std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(0)).angles,
-      ::testing::AnglesNear(one_qubit_gates.front().front().angles,
+      std::get<NativeGateDecomposer::U3Gate>(dag.getNodeValue(0)).angles,
+      ::testing::AnglesNear(u3Layers.front().front().angles,
                             NativeGateDecomposer::epsilon));
-  EXPECT_THAT(graph.getAdjacent(0),
+  EXPECT_THAT(dag.getAdjacent(0),
               ::testing::ElementsAre(std::pair<std::size_t, double>(1, 1.0)));
 
-  auto tqg = std::get<std::array<qc::Qubit, 2>>(graph.getNodeValue(1));
+  auto tqg = std::get<std::array<qc::Qubit, 2>>(dag.getNodeValue(1));
   EXPECT_THAT(tqg, ::testing::ElementsAre(static_cast<qc::Qubit>(0),
                                           static_cast<qc::Qubit>(1)));
-  EXPECT_THAT(graph.getAdjacent(1),
+  EXPECT_THAT(dag.getAdjacent(1),
               ::testing::ElementsAre(std::pair<std::size_t, double>(2, 1.0),
                                      std::pair<std::size_t, double>(3, 1.0)));
 
-  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(2)).qubit,
+  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(dag.getNodeValue(2)).qubit,
             0);
   EXPECT_THAT(
-      std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(2)).angles,
-      ::testing::AnglesNear(one_qubit_gates.at(1).front().angles,
+      std::get<NativeGateDecomposer::U3Gate>(dag.getNodeValue(2)).angles,
+      ::testing::AnglesNear(u3Layers.at(1).front().angles,
                             NativeGateDecomposer::epsilon));
-  EXPECT_THAT(graph.getAdjacent(2), ::testing::IsEmpty());
+  EXPECT_THAT(dag.getAdjacent(2), ::testing::IsEmpty());
 
-  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(3)).qubit,
+  EXPECT_EQ(std::get<NativeGateDecomposer::U3Gate>(dag.getNodeValue(3)).qubit,
             1);
   EXPECT_THAT(
-      std::get<NativeGateDecomposer::U3Gate>(graph.getNodeValue(3)).angles,
-      ::testing::AnglesNear(one_qubit_gates.at(1).at(1).angles,
+      std::get<NativeGateDecomposer::U3Gate>(dag.getNodeValue(3)).angles,
+      ::testing::AnglesNear(u3Layers.at(1).at(1).angles,
                             NativeGateDecomposer::epsilon));
-  EXPECT_THAT(graph.getAdjacent(3), ::testing::IsEmpty());
+  EXPECT_THAT(dag.getAdjacent(3), ::testing::IsEmpty());
 }
 
-TEST_F(ThetaOptTest, SiftTest) {
+TEST_F(ThetaOptTest, Sift) {
   // Circuit
   //         ┌───────┐           ┌───────┐       ┌───────┐
   //  q_0: ──┤   X   ├───■───────┤   Z   ├───■───┤   Y   ├─
@@ -163,7 +161,7 @@ TEST_F(ThetaOptTest, SiftTest) {
   EXPECT_THAT(v[2], ::testing::IsEmpty());
 }
 
-TEST_F(ThetaOptTest, NextMomentsPushTest) {
+TEST_F(ThetaOptTest, NextMomentsPush) {
   // Circuit
   //         ┌─────────────────┐             ┌───────┐
   //  q_0: ──┤ U(PI,Pi/2,PI/4) ├─────────■───┤   X   ├─────────■────
@@ -192,7 +190,7 @@ TEST_F(ThetaOptTest, NextMomentsPushTest) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   auto v_new = NativeGateDecomposer::sift(graph, v[2], n);
   auto moments =
@@ -215,7 +213,7 @@ TEST_F(ThetaOptTest, NextMomentsPushTest) {
   EXPECT_THAT(moments[1].first[3], ::testing::UnorderedElementsAre(4, 5, 6, 7));
 }
 
-TEST_F(ThetaOptTest, NextMomentsCond2Test) {
+TEST_F(ThetaOptTest, NextMomentsCond2) {
   // Circuit
   //         ┌─────────────────┐             ┌───────┐
   //  q_0: ──┤ U(PI,Pi/2,PI/4) ├─────■───■───┤   X   ├─────────■────
@@ -244,7 +242,7 @@ TEST_F(ThetaOptTest, NextMomentsCond2Test) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   auto v_new = NativeGateDecomposer::sift(graph, v[2], n);
   auto moments =
@@ -260,7 +258,7 @@ TEST_F(ThetaOptTest, NextMomentsCond2Test) {
   EXPECT_THAT(moments[0].first[3], ::testing::UnorderedElementsAre(7));
 }
 
-TEST_F(ThetaOptTest, NextMomentsCond3Test) {
+TEST_F(ThetaOptTest, NextMomentsCond3) {
   // Circuit
   //         ┌──────────────────┐             ┌───────┐
   //  q_0: ──┤ U(-PI,Pi/2,PI/4) ├─────────■───┤   X   ├─────■────
@@ -288,7 +286,7 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   auto v_new = NativeGateDecomposer::sift(graph, v[2], n);
   auto moments =
@@ -304,7 +302,7 @@ TEST_F(ThetaOptTest, NextMomentsCond3Test) {
   EXPECT_THAT(moments[0].first[3], ::testing::UnorderedElementsAre(6));
 }
 
-TEST_F(ThetaOptTest, RecursionBaseTest) {
+TEST_F(ThetaOptTest, RecursionBase) {
   // Circuit
   //         ┌─────────────────┐             ┌───────┐
   //  q_0: ──┤ U(PI,Pi/2,PI/4) ├─────────■───┤   X   ├─────────■─ ─ ─
@@ -345,7 +343,7 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   std::unordered_map<size_t, std::pair<size_t, std::array<double, 2>>> memo;
   auto result = NativeGateDecomposer::scheduleRemaining(
@@ -416,13 +414,13 @@ TEST_F(ThetaOptTest, RecursionBaseTest) {
           ::testing::DoubleNear(qc::PI_2, NativeGateDecomposer::epsilon))));
 }
 
-TEST_F(ThetaOptTest, CheapestPathTest) {
+TEST_F(ThetaOptTest, CheapestPath) {
   // Subproblem graph!
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
   for (int i = 0; i < 14; i++) {
-    subproblem_graph.add_Node(
+    subproblem_graph.addNode(
         std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   }
   subproblem_graph.addEdge(0, 1);
@@ -446,7 +444,7 @@ TEST_F(ThetaOptTest, CheapestPathTest) {
   EXPECT_THAT(path, ::testing::ElementsAre(3, 6, 10));
 }
 
-TEST_F(ThetaOptTest, BuildScheduleTest) {
+TEST_F(ThetaOptTest, BuildSchedule) {
   // Circuit
   //         ┌───────┐           ┌───────┐       ┌───────┐
   //  q_0: ──┤   X   ├───■───────┤   Z   ├───■───┤   Y   ├─
@@ -479,15 +477,15 @@ TEST_F(ThetaOptTest, BuildScheduleTest) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblem_graph{};
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({},
                                                                     {0, 1}));
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({2, 4},
                                                                     {3, 5, 6}));
-  subproblem_graph.add_Node(
+  subproblem_graph.addNode(
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({7}, {8}));
   subproblem_graph.addEdge(0, 1, NativeGateDecomposer::maxTheta(graph, {0, 1}));
   subproblem_graph.addEdge(1, 2,
@@ -621,7 +619,7 @@ TEST_F(ThetaOptTest, CompleteTestSmall) {
                                     NativeGateDecomposer::epsilon));
 }
 
-TEST_F(ThetaOptTest, CompleteTest) {
+TEST_F(ThetaOptTest, Complete) {
   qc::QuantumComputation qc(4);
   qc.u(qc::PI, qc::PI_2, qc::PI_4, 0);
   qc.u(qc::PI_4, qc::PI_2, qc::PI_2, 1);
