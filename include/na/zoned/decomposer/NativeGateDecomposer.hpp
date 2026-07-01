@@ -337,9 +337,10 @@ public:
    * theta.
    * @returns the maximal theta value.
    */
-  static auto maxTheta(
-      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
-      const std::vector<size_t>& nodes) -> qc::fp;
+  static auto
+  maxTheta(const DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>&
+               circuit,
+           const std::vector<size_t>& nodes) -> qc::fp;
 
   /**
    * @brief returns the next two- and single-Qubit layers which can be
@@ -391,8 +392,8 @@ public:
 
   /**
    * @brief Recursively creates a subproblem graph for a given circuit.
-   * @param v is the current subproblem [twoQubitGates, singleQubitGates,
-   * remainingGates] for which to create a schedule.
+   * @param subproblem is the current subproblem [twoQubitGates,
+   * singleQubitGates, remainingGates] for which to create a schedule.
    * @param circuit is the graph representation of the circuit to be scheduled.
    * @param subproblemGraph is the subproblem graph of the circuit to be
    * scheduled.
@@ -408,13 +409,14 @@ public:
    * @returns the cost of the schedule originating from the current subproblem.
    */
   static auto scheduleRemaining(
-      const std::array<std::vector<size_t>, 3>& v,
+      const std::array<std::vector<size_t>, 3>& subproblem,
       DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
       DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblemGraph,
       size_t prevNode, size_t nQubits, bool checkFinalCond,
-      std::unordered_map<size_t, std::pair<size_t, std::array<double, 2>>>&
-          memo) -> double;
+      std::unordered_map<std::array<std::vector<size_t>, 3>,
+                         std::pair<size_t, std::array<double, 2>>>& memo)
+      -> double;
 
   /**
    * @brief Creates a schedule minimizing the total sum of the global rotation

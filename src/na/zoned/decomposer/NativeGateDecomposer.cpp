@@ -512,7 +512,8 @@ auto NativeGateDecomposer::convertCircuitToDAG(
 }
 
 auto NativeGateDecomposer::maxTheta(
-    DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
+    const DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>&
+        circuit,
     const std::vector<std::size_t>& nodes) -> qc::fp {
   qc::fp max_cost = 0;
   for (const auto node : nodes) {
@@ -638,101 +639,93 @@ auto NativeGateDecomposer::addNodeToSubproblemGraph(
 }
 
 auto NativeGateDecomposer::scheduleRemaining(
-    const std::array<std::vector<size_t>, 3>& v,
+    const std::array<std::vector<size_t>, 3>& subproblem,
     DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
     DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
         subproblemGraph,
-    size_t prevNode, size_t nQubits, bool checkFinalCond,
-    std::unordered_map<size_t, std::pair<size_t, std::array<double, 2>>>& memo)
+    const size_t prevNode, const size_t nQubits, const bool checkFinalCond,
+    std::unordered_map<std::array<std::vector<size_t>, 3>,
+                       std::pair<size_t, std::array<double, 2>>>& memo)
     -> double {
   double cost;
-  // TODO: Check if subproblem has been computed
-  std::size_t id = std::hash<std::array<std::vector<size_t>, 3>>{}(v);
-  if (memo.contains(id)) {
-    std::size_t subNode = memo.at(id).first;
-    double edgeWeight = memo.at(id).second[1];
-    cost = memo.at(id).second[0];
-    subproblemGraph.addEdge(prevNode, subNode, edgeWeight);
+  // Check if a subproblem has been computed
+  if (memo.contains(subproblem)) {
+    const auto [to, result] = memo.at(subproblem);
+    cost = result[0];
+    subproblemGraph.addEdge(prevNode, to, result[1]);
     return cost;
   }
-  // TODO: Base Case-> V_rem is empty
-  if (v[2].empty()) {
-    // TODO:Decide if I need if to check for TWO QUBIT
-    if (v[1].empty()) {
+  // Base Case: remaining nodes is empty
+  if (subproblem[2].empty()) {
+    if (subproblem[1].empty()) {
       cost = 0;
     } else {
-      cost = std::fabs(
-          std::get<U3Gate>(circuit.getNodeValue(v[1].at(0))).angles.theta);
+      cost =
+          std::fabs(std::get<U3Gate>(circuit.getNodeValue(subproblem[1].at(0)))
+                        .angles.theta);
     }
-    for (std::size_t i : v[1]) {
+    for (const auto i : subproblem[1]) {
       if (std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta > cost) {
         cost =
             std::fabs(std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta);
       }
     }
-    auto end_node =
-        addNodeToSubproblemGraph(v[0], v[1], cost, subproblemGraph, prevNode);
-    memo[id] = std::pair<std::size_t, std::array<double, 2>>(
-        end_node, {cost, cost}); // TODO: Correct to put cost for both???
+    const auto endNode = addNodeToSubproblemGraph(
+        subproblem[0], subproblem[1], cost, subproblemGraph, prevNode);
+    memo[subproblem] =
+        std::pair<std::size_t, std::array<double, 2>>(endNode, {cost, cost});
     return cost;
   }
-  // TODO: Recursive Call: Only
-  auto vNew = sift(circuit, v[2], nQubits);
-  auto args = getPossibleLayers(circuit, v[1], vNew, checkFinalCond);
-  qc::fp tempCost = 0;
-  double minCost = std::numeric_limits<double>::max();
-  double minWeight = std::numeric_limits<double>::max();
+  // Recursive call
+  const auto& nextSubproblem = sift(circuit, subproblem[2], nQubits);
+  const auto& args =
+      getPossibleLayers(circuit, subproblem[1], nextSubproblem, checkFinalCond);
+  qc::fp tempCost = 0.0;
+  auto minCost = std::numeric_limits<double>::max();
+  auto minWeight = std::numeric_limits<double>::max();
   std::size_t minNode;
-  for (const auto& val : args) {
-    auto newNode = addNodeToSubproblemGraph(v[0], val.first[0], val.second,
-                                            subproblemGraph, prevNode);
-    tempCost = scheduleRemaining({val.first[1], val.first[2], val.first[3]},
-                                 circuit, subproblemGraph, newNode, nQubits,
-                                 checkFinalCond, memo) +
-               val.second;
+  for (const auto& [singleQubitGates, twoQubitGates] : args) {
+    const auto newNode =
+        addNodeToSubproblemGraph(subproblem[0], singleQubitGates[0],
+                                 twoQubitGates, subproblemGraph, prevNode);
+    tempCost =
+        scheduleRemaining(
+            {singleQubitGates[1], singleQubitGates[2], singleQubitGates[3]},
+            circuit, subproblemGraph, newNode, nQubits, checkFinalCond, memo) +
+        twoQubitGates;
     if (tempCost < minCost) {
       minCost = tempCost;
       minNode = newNode;
-      minWeight = val.second;
+      minWeight = twoQubitGates;
     }
   }
-  memo[id] = std::pair<std::size_t, std::array<double, 2>>(
-      minNode, {minCost, minWeight});
+  memo[subproblem] = {minNode, {minCost, minWeight}};
   return minCost;
 }
 
 auto NativeGateDecomposer::scheduleThetaOpt(
     const std::pair<std::vector<std::vector<U3Gate>>,
                     std::vector<TwoQubitGateLayer>>& schedule,
-    std::size_t nQubits) const -> std::pair<std::vector<std::vector<U3Gate>>,
-                                            std::vector<TwoQubitGateLayer>> {
-
-  // TODO: Convert Circuit to DAG: How to handle the unique Pointer
-  // situation???
-  DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> circuit =
-      convertCircuitToDAG(schedule, nQubits);
-  // TODO: Get initial Moments( Not does MQB THEN SQB!! SOl to get SQB MQB??)
-  std::vector<std::size_t> v_start{};
-  v_start.reserve(circuit.size());
-  for (size_t i = 0; i < circuit.size(); ++i) {
-    v_start.emplace_back(i);
-  }
-  // v=(v_p,v_c,v_r)
-  std::array<std::vector<size_t>, 3> v = sift(circuit, v_start, nQubits);
-  // TODO: Create Subproblem Graph
+    const std::size_t nQubits) const
+    -> std::pair<std::vector<std::vector<U3Gate>>,
+                 std::vector<TwoQubitGateLayer>> {
+  // Convert circuit to DAG
+  auto circuit = convertCircuitToDAG(schedule, nQubits);
+  // Get initial layers
+  std::vector<std::size_t> allNodes(circuit.size());
+  std::iota(allNodes.begin(), allNodes.end(), 0);
+  const auto& subproblem = sift(circuit, allNodes, nQubits);
+  // Create subproblem graph
   DirectedGraph<std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
-      subproblemGraph = DirectedGraph<
-          std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>();
-  // TODO: First Call of Recursive Function to create Schedule
-  auto baseNode = subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
-  std::unordered_map<std::size_t, std::pair<std::size_t, std::array<double, 2>>>
-      memo = {};
-  auto cost = scheduleRemaining(v, circuit, subproblemGraph, baseNode, nQubits,
-                                config_.checkFinalCond, memo);
-  // TODO: Create Schedule from Subproblem Graph
-  std::pair<std::vector<std::vector<U3Gate>>, std::vector<TwoQubitGateLayer>>
-      finalCircuit = buildSchedule(circuit, subproblemGraph);
-  return finalCircuit;
+      subproblemGraph;
+  // First call of recursive function to create schedule
+  const auto baseNode = subproblemGraph.addNode({});
+  std::unordered_map<std::array<std::vector<size_t>, 3>,
+                     std::pair<std::size_t, std::array<double, 2>>>
+      memo;
+  scheduleRemaining(subproblem, circuit, subproblemGraph, baseNode, nQubits,
+                    config_.checkFinalCond, memo);
+  // Create a schedule from the subproblem graph
+  return buildSchedule(circuit, subproblemGraph);
 }
 } // namespace na::zoned
