@@ -299,15 +299,6 @@ public:
           subproblemGraph) -> std::vector<size_t>;
 
   /**
-   * @brief Removes all copies of an element from a vector.
-   * @param vector is the vector of size_t to remove the element from.
-   * @param elem is the element to be removed from the vector.
-   * @returns the vector without the element.
-   */
-  static auto removeElement(const std::vector<size_t>& vector, size_t elem)
-      -> std::vector<size_t>;
-
-  /**
    * @brief Returns all plausible subsets of the current layers to be
    * scheduled.
    * @param circuit is the graph representation of the quantum circuit.
@@ -353,8 +344,9 @@ public:
    * [twoQubitGates, singleQubitGates, remainingGates]
    */
   static auto
-  sift(DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
-       std::vector<size_t> remainingNodes, size_t nQubits)
+  sift(const DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>&
+           circuit,
+       const std::vector<size_t>& remainingNodes, size_t nQubits)
       -> std::array<std::vector<size_t>, 3>;
 
   /**
@@ -365,8 +357,9 @@ public:
    * element arrays of qubits representing CZ gates making up a schedule.
    */
   static auto buildSchedule(
-      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
-      DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
+      const DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>&
+          circuit,
+      const DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblemGraph) -> std::pair<std::vector<std::vector<U3Gate>>,
                                         std::vector<TwoQubitGateLayer>>;
 
