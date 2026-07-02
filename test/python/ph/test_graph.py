@@ -162,6 +162,25 @@ class TestDetermineRoutingFidelities:
         assert len(bar_fids) == 6
         assert len(cross_fids) == 6
 
+    @staticmethod
+    def test_nonideal_bs_bar_fidelities_match_correct_pairs(nonideal_bs_chip4):
+        """Test that each bar fidelity is computed from the correct in/out pair.
+
+        The BS array has layout ``[in0, out0, in1, out1, …]``, so MZI k uses
+        indices ``[2k, 2k+1]``.  Any wrong pairing would produce a different
+        fidelity value because the per-MZI reflectivities are all distinct.
+        """
+        bar_fids, _ = determine_routing_fidelitites(nonideal_bs_chip4, chip_dim=4)
+        expected = [bar_fidelity([nonideal_bs_chip4[2 * k], nonideal_bs_chip4[2 * k + 1]]) for k in range(6)]
+        assert bar_fids == pytest.approx(expected)
+
+    @staticmethod
+    def test_nonideal_bs_cross_fidelities_match_correct_pairs(nonideal_bs_chip4):
+        """Test that each cross fidelity is computed from the correct in/out pair."""
+        _, cross_fids = determine_routing_fidelitites(nonideal_bs_chip4, chip_dim=4)
+        expected = [cross_fidelity([nonideal_bs_chip4[2 * k], nonideal_bs_chip4[2 * k + 1]]) for k in range(6)]
+        assert cross_fids == pytest.approx(expected)
+
 
 class TestConstructGraph:
     """Tests for construct_graph."""

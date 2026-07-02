@@ -174,29 +174,20 @@ def determine_routing_fidelitites(
         a flat list of per-MZI fidelity values indexed as
         ``[layer0_mzi0, layer0_mzi1, …, layer1_mzi0, …]``.
     """
-    used_beam_splitters = 0
+    bs_idx = 0
     bar_fidelities: list[float] = []
     cross_fidelities: list[float] = []
 
     for layer in range(chip_dim):
-        if layer % 2 == 0:
-            for i in range(chip_dim // 2):
-                current_bs = [
-                    beam_splitter_reflectivities[i + used_beam_splitters],
-                    beam_splitter_reflectivities[i + used_beam_splitters + chip_dim // 2],
-                ]
-                bar_fidelities.append(bar_fidelity(current_bs))
-                cross_fidelities.append(cross_fidelity(current_bs))
-            used_beam_splitters += chip_dim
-        if layer % 2 == 1:
-            for i in range(chip_dim // 2 - 1):
-                current_bs = [
-                    beam_splitter_reflectivities[i + used_beam_splitters],
-                    beam_splitter_reflectivities[i + used_beam_splitters + chip_dim // 2 - 2],
-                ]
-                bar_fidelities.append(bar_fidelity(current_bs))
-                cross_fidelities.append(cross_fidelity(current_bs))
-            used_beam_splitters += chip_dim - 2
+        mzi_count = chip_dim // 2 if layer % 2 == 0 else chip_dim // 2 - 1
+        for _ in range(mzi_count):
+            current_bs = [
+                beam_splitter_reflectivities[bs_idx],
+                beam_splitter_reflectivities[bs_idx + 1],
+            ]
+            bar_fidelities.append(bar_fidelity(current_bs))
+            cross_fidelities.append(cross_fidelity(current_bs))
+            bs_idx += 2
 
     return bar_fidelities, cross_fidelities
 
@@ -453,10 +444,10 @@ def construct_graph(
             ])
         elif layer == 1:
             bar_costs = [
-                -np.log(np.prod(bar_fidelities[i : i + target_dim // 2 - 1])) for i in range(number_nodes_first_layer)
+                -np.log(np.prod(bar_fidelities[i : i + target_dim // 2])) for i in range(number_nodes_first_layer)
             ]
             cross_costs = [
-                -np.log(np.prod(cross_fidelities[i : i + target_dim // 2 - 1])) for i in range(number_nodes_first_layer)
+                -np.log(np.prod(cross_fidelities[i : i + target_dim // 2])) for i in range(number_nodes_first_layer)
             ]
             current_edges = [
                 (layers[layer][i], layers[layer + 1][2 * i], bar_costs[i]) for i in range(number_nodes_first_layer)
