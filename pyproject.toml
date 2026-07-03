@@ -69,7 +69,7 @@ visualization = [
 photonics = [
     "numpy>=1.26.0",
     "perceval-quandela>=1.1.0",
-    "pandas>=2.0.0",
+    "pandas>=2.3.3",
     "torch>=2.9.0",
 ]
 
