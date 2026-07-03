@@ -197,7 +197,7 @@ class TestRunReturnStructure:
             float(scenario_result.result.performance["coincidence_rate"]),
             float(scenario_result.result.baseline_performance["coincidence_rate"]),
         ):
-            assert 0.0 <= cr
+            assert cr >= 0.0
             assert cr <= 1.0 or cr == pytest.approx(1.0)
 
     @staticmethod
@@ -207,7 +207,7 @@ class TestRunReturnStructure:
             float(scenario_result.result.performance["tvd"]),
             float(scenario_result.result.baseline_performance["tvd"]),
         ):
-            assert 0.0 <= tvd
+            assert tvd >= 0.0
             assert tvd <= 1.0 or tvd == pytest.approx(1.0)
 
     @staticmethod
