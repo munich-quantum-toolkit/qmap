@@ -193,14 +193,22 @@ class TestRunReturnStructure:
     @staticmethod
     def test_coincidence_rate_in_unit_interval(scenario_result):
         """Test that coincidence_rate values lie in [0, 1] for both compiled and baseline."""
-        assert 0.0 <= float(scenario_result.result.performance["coincidence_rate"]) <= 1.0
-        assert 0.0 <= float(scenario_result.result.baseline_performance["coincidence_rate"]) <= 1.0
+        for cr in (
+            float(scenario_result.result.performance["coincidence_rate"]),
+            float(scenario_result.result.baseline_performance["coincidence_rate"]),
+        ):
+            assert 0.0 <= cr
+            assert cr <= 1.0 or cr == pytest.approx(1.0)
 
     @staticmethod
     def test_tvd_in_unit_interval(scenario_result):
         """Test that TVD values lie in [0, 1] for both compiled and baseline."""
-        assert 0.0 <= float(scenario_result.result.performance["tvd"]) <= 1.0
-        assert 0.0 <= float(scenario_result.result.baseline_performance["tvd"]) <= 1.0
+        for tvd in (
+            float(scenario_result.result.performance["tvd"]),
+            float(scenario_result.result.baseline_performance["tvd"]),
+        ):
+            assert 0.0 <= tvd
+            assert tvd <= 1.0 or tvd == pytest.approx(1.0)
 
     @staticmethod
     def test_losses_non_negative(scenario_result):

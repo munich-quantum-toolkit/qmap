@@ -70,7 +70,7 @@ photonics = [
     "numpy>=1.26.0",
     "perceval-quandela>=1.1.0",
     "pandas>=2.0.0",
-    "torch>=2.0.0",
+    "torch>=2.9.0",
 ]
 
 [project.urls]
