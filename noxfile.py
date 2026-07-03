@@ -94,6 +94,8 @@ def _run_tests(
         "--no-dev",  # do not auto-install dev dependencies
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
+        "--extra",
+        "photonics",
         *install_args,
         env=env,
     )

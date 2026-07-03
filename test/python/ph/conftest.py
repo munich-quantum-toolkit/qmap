@@ -34,10 +34,8 @@ sys.path.insert(0, str(_PYTHON_SRC))
 
 import numpy as np
 import pytest
-import torch
 
 from mqt.qmap.ph.graph import generate_beam_splitter_matrix
-from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
 
 
 @pytest.fixture
@@ -66,5 +64,8 @@ def ones_transmissions_chip4():
 @pytest.fixture
 def haar_unitary_dim2():
     """Return a Haar-random 2x2 unitary with a fixed seed."""
+    torch = pytest.importorskip("torch")
+    from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
+
     rng = torch.Generator().manual_seed(7)
     return get_haar_random_unitary(2, rng, dtype=torch.complex128)
