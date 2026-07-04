@@ -213,10 +213,10 @@ compilers or operating systems. If you encounter any problems, please
 ### Configure and Build
 
 :::{tip}
-We recommend using an IDE like [CLion][clion] or [Visual Studio Code][vscode]
-for development. Both IDEs have excellent support for CMake projects and provide
-a convenient way to run CMake and build the project. If you prefer to work on
-the command line, the following instructions will guide you through the process.
+We recommend using an IDE like [CLion][clion] or [VS Code][vscode] for
+development. Both IDEs have excellent support for CMake projects and provide a
+convenient way to run CMake and build the project. If you prefer to work on the
+command line, the following instructions will guide you through the process.
 :::
 
 This project uses CMake as the main build configuration tool. To standardize the
@@ -286,9 +286,9 @@ different parts of the library. You are expected to write tests for any new
 features you implement and ensure that all tests pass. Our CI pipeline on GitHub
 will also run the tests and check for any failures.
 
-Most IDEs like [CLion][clion] or [Visual Studio Code][vscode] provide a
-convenient way to run the tests directly from the IDE. If you prefer to run the
-tests from the command line, you can use CMake's test runner
+Most IDEs like [CLion][clion] or [VS Code][vscode] provide a convenient way to
+run the tests directly from the IDE. If you prefer to run the tests from the
+command line, you can use CMake's test runner
 [CTest](https://cmake.org/cmake/help/latest/manual/ctest.1.html). To run the
 tests, run the following command from the main project directory after building
 the project as described above:
@@ -329,14 +329,14 @@ that it conforms to these guidelines, we use:
 - [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html), a tool that
   automatically formats C++ code according to a given style guide.
 
-Common IDEs like [CLion][clion] or [Visual Studio Code][vscode] have plugins
-that can automatically run {code}`clang-tidy` on the code and automatically
-format it with {code}`clang-format`.
+Common IDEs like [CLion][clion] or [VS Code][vscode] have plugins that can
+automatically run {code}`clang-tidy` on the code and automatically format it
+with {code}`clang-format`.
 
 - If you are using CLion, you can configure the project to use the
   {code}`.clang-tidy` and {code}`.clang-format` files in the project root
   directory.
-- If you are using [Visual Studio Code][vscode], you can install the
+- If you are using [VS Code][vscode], you can install the
   [clangd extension](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd).
 
 They will automatically execute {code}`clang-tidy` on your code and highlight
