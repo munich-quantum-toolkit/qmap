@@ -434,7 +434,7 @@ public:
       size_t prevNode, size_t nQubits, bool checkFinalCond,
       std::unordered_map<std::array<std::vector<size_t>, 3>,
                          std::pair<size_t, std::array<double, 2>>,
-                         na::zoned::SubproblemHasher>& memo) -> double;
+                         SubproblemHasher>& memo) -> double;
 
   /**
    * @brief Creates a schedule minimizing the total sum of the global rotation

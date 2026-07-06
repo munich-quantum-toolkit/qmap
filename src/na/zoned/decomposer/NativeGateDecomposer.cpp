@@ -637,7 +637,7 @@ auto NativeGateDecomposer::scheduleRemaining(
     const size_t prevNode, const size_t nQubits, const bool checkFinalCond,
     std::unordered_map<std::array<std::vector<size_t>, 3>,
                        std::pair<size_t, std::array<double, 2>>,
-                       na::zoned::SubproblemHasher>& memo) -> double {
+                       SubproblemHasher>& memo) -> double {
   double cost;
   // Check if a subproblem has been computed
   if (memo.contains(subproblem)) {
@@ -713,7 +713,7 @@ auto NativeGateDecomposer::scheduleThetaOpt(
   const auto baseNode = subproblemGraph.addNode({});
   std::unordered_map<std::array<std::vector<size_t>, 3>,
                      std::pair<std::size_t, std::array<double, 2>>,
-                     na::zoned::SubproblemHasher>
+                     SubproblemHasher>
       memo;
   scheduleRemaining(subproblem, circuit, subproblemGraph, baseNode, nQubits,
                     config_.checkFinalCond, memo);

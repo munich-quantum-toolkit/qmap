@@ -17,7 +17,7 @@
 // NOLINTBEGIN(modernize-use-trailing-return-type)
 
 namespace testing {
-constexpr auto angleDiff = [](const double a, const double b) {
+constexpr auto angleDiff = [](const double a, const double b) -> double {
   double d = std::fmod(a - b, 2 * qc::PI);
   if (d > qc::PI) {
     d -= 2 * qc::PI;
@@ -30,9 +30,9 @@ constexpr auto angleDiff = [](const double a, const double b) {
 MATCHER_P2(AnglesNear, expected, tolerance,
            std::string("angles ") + (negation ? "aren't" : "are") +
                " near expected") {
-  if (angleDiff(arg.theta - expected.theta) <= tolerance &&
-      angleDiff(arg.phi - expected.phi) <= tolerance &&
-      angleDiff(arg.lambda - expected.lambda) <= tolerance) {
+  if (angleDiff(arg.theta, expected.theta) <= tolerance &&
+      angleDiff(arg.phi, expected.phi) <= tolerance &&
+      angleDiff(arg.lambda, expected.lambda) <= tolerance) {
     return true;
   }
   *result_listener << "actual: {theta=" << arg.theta << ", phi=" << arg.phi
@@ -71,15 +71,15 @@ MATCHER_P2(QuaternionNear, expected, tolerance,
 MATCHER_P4(ExpectRotationGate, type, qubit, angle, tolerance,
            DescribeMatcher<qc::OpType>(Eq(type), negation) +
                (negation ? " or " : " and ") +
-               DescribeMatcher<qc::Qubit>(ElementsAre(Eq(qubit)), negation) +
+               DescribeMatcher<qc::Targets>(ElementsAre(Eq(qubit)), negation) +
                (negation ? " or " : " and ") +
-               DescribeMatcher<qc::fp>(
+               DescribeMatcher<std::vector<qc::fp>>(
                    ElementsAre(DoubleNear(angle, tolerance)), negation)) {
-  return ExplainMatchResult(Eq(type), arg.getType(), result_listener) &&
-         ExplainMatchResult(ElementsAre(Eq(qubit)), arg.getTargets(),
+  return ExplainMatchResult(Eq(type), arg->getType(), result_listener) &&
+         ExplainMatchResult(ElementsAre(Eq(qubit)), arg->getTargets(),
                             result_listener) &&
          ExplainMatchResult(ElementsAre(DoubleNear(angle, tolerance)),
-                            arg.getParameter(), result_listener);
+                            arg->getParameter(), result_listener);
 }
 } // namespace testing
 
