@@ -207,8 +207,8 @@ To access the latest build logs, visit the
 
 Additionally, we regularly run extensive tests with an even wider matrix of
 compilers and operating systems. We are not aware of any issues with other
-compilers or operating systems. If you encounter any problems, please [open an
-issue][issues] and let us know.
+compilers or operating systems. If you encounter any problems, please
+[open an issue][issues] and let us know.
 
 ### Configure and Build
 
