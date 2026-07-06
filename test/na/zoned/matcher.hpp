@@ -27,6 +27,13 @@ constexpr auto angleDiff = [](const double a, const double b) -> double {
   }
   return std::fabs(d);
 };
+/**
+ * @brief Matcher that checks if three Euler angles (theta, phi, lambda)
+ *        are within a given tolerance of the expected angles.
+ *
+ * @param expected The expected na::zoned::NativeGateDecomposer::Angles value.
+ * @param tolerance Numeric tolerance for angle comparisons (radians).
+ */
 MATCHER_P2(AnglesNear, expected, tolerance,
            std::string("angles ") + (negation ? "aren't" : "are") +
                " near expected") {
@@ -43,6 +50,12 @@ MATCHER_P2(AnglesNear, expected, tolerance,
                    << "(tolerance=" << tolerance << ")";
   return false;
 }
+/**
+ * @brief Matcher for U3 gate-like structures: checks angles and target qubit.
+ *
+ * @param expected Struct containing expected angles and qubit.
+ * @param tolerance Tolerance passed to AnglesNear for angle comparisons.
+ */
 MATCHER_P2(U3GateNear, expected, tolerance,
            DescribeMatcher<na::zoned::NativeGateDecomposer::Angles>(
                AnglesNear(expected.angles, tolerance), negation) +
@@ -52,6 +65,15 @@ MATCHER_P2(U3GateNear, expected, tolerance,
                             result_listener) &&
          ExplainMatchResult(Eq(expected.qubit), arg.qubit, result_listener);
 }
+// Note: q and -q encode the same rotation, but the matcher only checks one
+// sign. Currently, we have not implemented a canonicalized form, so equivalent
+// results can fail here (but, currently, there are no false-positives).
+/**
+ * @brief Matcher that compares two quaternions element-wise within tolerance.
+ *
+ * @param expected Quaternion with components {a, b, c, d} to compare against.
+ * @param tolerance Absolute tolerance for each component comparison.
+ */
 MATCHER_P2(QuaternionNear, expected, tolerance,
            std::string("quaternion ") + (negation ? "isn't" : "is") +
                " near expected") {
@@ -68,6 +90,14 @@ MATCHER_P2(QuaternionNear, expected, tolerance,
                    << "(tolerance=" << tolerance << ")";
   return false;
 }
+/**
+ * @brief Matcher verifying a rotation gate's type, target qubit, and angle.
+ *
+ * @param type Expected gate type (e.g., qc::RZ).
+ * @param qubit Expected target qubit index.
+ * @param angle Expected rotation angle (radians).
+ * @param tolerance Allowed difference between expected and actual angle.
+ */
 MATCHER_P4(ExpectRotationGate, type, qubit, angle, tolerance,
            DescribeMatcher<qc::OpType>(Eq(type), negation) +
                (negation ? " or " : " and ") +

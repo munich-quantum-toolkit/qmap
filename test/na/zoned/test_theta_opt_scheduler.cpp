@@ -589,7 +589,6 @@ TEST_F(ThetaOptTest, CompleteTestSmall) {
   EXPECT_THAT(optTwoQubitLayers.at(0).front(), ::testing::ElementsAre(1, 2));
 
   EXPECT_THAT(optTwoQubitLayers.at(1).front(), ::testing::ElementsAre(0, 1));
-  // QUAT
   EXPECT_EQ(optU3Layers.at(2).at(0).qubit, 2);
   EXPECT_THAT(optU3Layers.at(2).at(0).angles,
               ::testing::AnglesNear(u3Layers.at(1).at(0).angles,

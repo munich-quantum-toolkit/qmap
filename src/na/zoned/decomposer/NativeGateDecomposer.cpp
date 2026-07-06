@@ -27,9 +27,11 @@
 #include <vector>
 
 namespace na::zoned {
+namespace {
 template <class... Ts> struct overloads : Ts... {
   using Ts::operator()...;
 };
+} // namespace
 NativeGateDecomposer::NativeGateDecomposer(const Architecture&,
                                            const Config& config) {
   config_ = config;
@@ -295,17 +297,15 @@ auto NativeGateDecomposer::findCheapestPath(
   std::ranges::reverse(path);
   return path;
 }
-auto disjunct(const std::unordered_set<size_t>& set1,
-              const std::unordered_set<size_t>& set2) -> bool {
+namespace {
+/// Returns true if set1 and set2 share no elements.
+template <class T>
+auto disjunct(const std::unordered_set<T>& set1,
+              const std::unordered_set<T>& set2) -> bool {
   return std::ranges::all_of(
-      set1, [&set2](auto elem) -> bool { return !set2.contains(elem); });
+      set1, [&set2](const T& elem) -> bool { return !set2.contains(elem); });
 }
-
-auto disjunct(const std::unordered_set<qc::Qubit>& set1,
-              const std::unordered_set<qc::Qubit>& set2) -> bool {
-  return std::ranges::all_of(
-      set1, [&set2](auto elem) -> bool { return !set2.contains(elem); });
-}
+} // namespace
 
 auto NativeGateDecomposer::cheapestPathToStart(
     const DirectedGraph<std::pair<std::vector<std::size_t>,
@@ -656,7 +656,8 @@ auto NativeGateDecomposer::scheduleRemaining(
                         .angles.theta);
     }
     for (const auto i : subproblem[1]) {
-      if (std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta > cost) {
+      if (std::fabs(std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta) >
+          cost) {
         cost =
             std::fabs(std::get<U3Gate>(circuit.getNodeValue(i)).angles.theta);
       }

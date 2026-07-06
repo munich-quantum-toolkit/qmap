@@ -245,8 +245,22 @@ class Evaluator:
         """
         self.arch = arch
         self.filename = filename
+        self.circuit_name = 0
+        self.num_qubits = 0
+        self.setting = 0
+        self.two_qubit_gates = 0
+        self.scheduling_time = 0
+        self.reuse_analysis_time = 0
+        self.placement_time = 0
+        self.routing_time = 0
+        self.code_generation_time = 0
+        self.total_time = 0
 
-        self.reset()
+        self.rearrangement_duration = 0.0
+        self.two_qubit_gate_layer = 0
+        self.max_two_qubit_gates = 0
+
+        self.atom_locations = {}
 
     def reset(self) -> None:
         """Reset the Evaluator."""
@@ -297,6 +311,9 @@ class Evaluator:
                     msg = f"Atom {atom} not found in atom locations"
                     raise ValueError(msg)
                 atoms.append(atom)
+            else:
+                msg = f"Unrecognized load operation: {line}"
+                raise ValueError(msg)
         self._apply_load(atoms)
 
     def _process_move(self, line: str, it: Iterator[str]) -> None:
@@ -331,6 +348,9 @@ class Evaluator:
                     msg = f"Atom {atom} not found in atom locations"
                     raise ValueError(msg)
                 moves.append((atom, (int(float(x)), int(float(y)))))
+            else:
+                msg = f"Unrecognized move operation: {line}"
+                raise ValueError(msg)
         self._apply_move(moves)
 
     def _process_store(self, line: str, it: Iterator[str]) -> None:
@@ -361,6 +381,9 @@ class Evaluator:
                     msg = f"Atom {match.group(1)} not found in atom locations"
                     raise ValueError(msg)
                 atoms.append(match.group(1))
+            else:
+                msg = f"Unrecognized store operation: {line}"
+                raise ValueError(msg)
         self._apply_store(atoms)
 
     def _process_cz(self) -> None:
@@ -403,6 +426,9 @@ class Evaluator:
                     self._apply_global_u()
                     return
                 atoms.append(match.group(2))
+            else:
+                msg = f"Unrecognized unitary (u) operation: {line}"
+                raise ValueError(msg)
         self._apply_u(atoms)
 
     def _process_rz(self, line: str, it: Iterator[str]) -> None:
@@ -433,6 +459,9 @@ class Evaluator:
                     msg = f"Atom {match.group(1)} not found in atom locations"
                     raise ValueError(msg)
                 atoms.append(match.group(1))
+            else:
+                msg = f"Unrecognized rotation (rz) operation: {line}"
+                raise ValueError(msg)
         self._apply_rz(atoms)
 
     def _process_ry(self, line: str, it: Iterator[str]) -> None:  # noqa: ARG002 -- must have identical signature to the other functions to be exchangeable even though arguments and not used here
@@ -604,7 +633,7 @@ class Evaluator:
             setting: Compiler setting name.
         """
         with pathlib.Path(self.filename).open("a", encoding="utf-8") as csv:
-            csv.write(f"{circuit_name},{qc.num_qubits},{setting},timeout,,,,,,,,,\n")
+            csv.write(f"{circuit_name},{qc.num_qubits},{setting},timeout,,,,,,,,,,\n")
 
     def print_memout(self, circuit_name: str, qc: QuantumComputation, setting: str) -> None:
         """Print the data of the CSV file.
@@ -615,7 +644,7 @@ class Evaluator:
             setting: Compiler setting name.
         """
         with pathlib.Path(self.filename).open("a", encoding="utf-8") as csv:
-            csv.write(f"{circuit_name},{qc.num_qubits},{setting},memout,,,,,,,,,\n")
+            csv.write(f"{circuit_name},{qc.num_qubits},{setting},memout,,,,,,,,,,\n")
 
     def print_error(self, circuit_name: str, qc: QuantumComputation, setting: str) -> None:
         """Print the data of the CSV file.
@@ -626,4 +655,4 @@ class Evaluator:
             setting: Compiler setting name.
         """
         with pathlib.Path(self.filename).open("a", encoding="utf-8") as csv:
-            csv.write(f"{circuit_name},{qc.num_qubits},{setting},error,,,,,,,,,\n")
+            csv.write(f"{circuit_name},{qc.num_qubits},{setting},error,,,,,,,,,,\n")
