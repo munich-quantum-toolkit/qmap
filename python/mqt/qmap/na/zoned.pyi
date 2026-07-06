@@ -131,7 +131,7 @@ class RoutingAgnosticCompiler:
             The compilation result as a string in the .naviz format.
         """
 
-    def stats(self) -> dict[str, float]:
+    def stats(self) -> dict[str, object]:
         """Get the statistics of the last compilation as a JSON-style dictionary.
 
         Returns:
@@ -213,7 +213,7 @@ class RoutingAwareCompiler:
             The compilation result as a string in the .naviz format.
         """
 
-    def stats(self) -> dict[str, float]:
+    def stats(self) -> dict[str, object]:
         """Get the statistics of the last compilation.
 
         Returns:
@@ -246,7 +246,7 @@ class RoutingAwareNativeGateCompiler:
         prefer_split: float = 1.0,
         warn_unsupported_gates: bool = True,
     ) -> None:
-        """Create a routing-aware compiler for the given architecture and configurations.
+        """Create a routing-aware native gate compiler for the given architecture and configurations.
 
         Args:
             arch: The zoned neutral atom architecture
@@ -299,7 +299,7 @@ class RoutingAwareNativeGateCompiler:
             The compilation result as a string in the .naviz format.
         """
 
-    def stats(self) -> dict[str, float]:
+    def stats(self) -> dict[str, object]:
         """Get the statistics of the last compilation.
 
         Returns:
