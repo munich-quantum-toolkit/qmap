@@ -628,4 +628,18 @@ TEST_F(ThetaOptTest, Complete) {
       decomposer.decompose(4, singleQubitLayers, twoQubitLayers);
   EXPECT_EQ(decompSingleQubitLayers.size(), 5);
 }
+
+TEST_F(ThetaOptTest, SiftOrder) {
+  qc::QuantumComputation qc(2);
+  qc.cz(0, 1);
+  qc.x(0);
+  const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
+  const auto& [decomposedSingleQubitLayers, decomposedTwoQubitLayers] =
+      decomposer.decompose(2, singleQubitLayers, twoQubitLayers);
+  EXPECT_THAT(decomposedSingleQubitLayers,
+              ::testing::ElementsAre(::testing::IsEmpty(),
+                                     ::testing::Not(::testing::IsEmpty())));
+  EXPECT_THAT(decomposedTwoQubitLayers,
+              ::testing::ElementsAre(::testing::Not(::testing::IsEmpty())));
+}
 } // namespace na::zoned
