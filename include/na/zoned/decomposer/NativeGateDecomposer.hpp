@@ -13,13 +13,38 @@
 #include "na/zoned/Types.hpp"
 #include "na/zoned/decomposer/DecomposerBase.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <format>
+#include <functional>
+#include <limits>
+#include <ranges>
+#include <sstream>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <variant>
 #include <vector>
 
 namespace na::zoned {
+/**
+ * Hasher for subproblems [twoQubitGates, singleQubitGates, remainingGates].
+ */
+struct SubproblemHasher {
+  auto
+  operator()(const std::array<std::vector<size_t>, 3>& array) const noexcept
+      -> size_t {
+    size_t seed = 0;
+    std::ranges::for_each(array, [&seed](const std::vector<size_t>& v) -> void {
+      std::ranges::for_each(v, [&seed](const size_t node) -> void {
+        qc::hashCombine(seed, std::hash<size_t>{}(node));
+      });
+    });
+    return seed;
+  }
+};
 /**
  * Decomposes a given schedule of operations into the native gate set and, if
  * `thetaOptScheduling` is enabled, re-schedules them to minimize the total
@@ -408,8 +433,8 @@ public:
           subproblemGraph,
       size_t prevNode, size_t nQubits, bool checkFinalCond,
       std::unordered_map<std::array<std::vector<size_t>, 3>,
-                         std::pair<size_t, std::array<double, 2>>>& memo)
-      -> double;
+                         std::pair<size_t, std::array<double, 2>>,
+                         na::zoned::SubproblemHasher>& memo) -> double;
 
   /**
    * @brief Creates a schedule minimizing the total sum of the global rotation
@@ -426,20 +451,3 @@ public:
                    std::vector<TwoQubitGateLayer>>;
 };
 } // namespace na::zoned
-/**
- * A hash function for subproblems [twoQubitGates, singleQubitGates,
- * remainingGates].
- */
-template <> struct std::hash<std::array<std::vector<size_t>, 3>> {
-  auto
-  operator()(const std::array<std::vector<size_t>, 3>& array) const noexcept
-      -> size_t {
-    size_t seed = 0;
-    std::ranges::for_each(array, [&seed](const std::vector<size_t>& v) -> void {
-      std::ranges::for_each(v, [&seed](const size_t node) -> void {
-        qc::hashCombine(seed, std::hash<size_t>{}(node));
-      });
-    });
-    return seed;
-  }
-};

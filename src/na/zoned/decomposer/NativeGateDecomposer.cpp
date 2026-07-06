@@ -15,6 +15,14 @@
 #include "ir/operations/StandardOperation.hpp"
 #include "spdlog/spdlog.h"
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <numeric>
+#include <ranges>
+#include <sstream>
+#include <stdexcept>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -367,6 +375,9 @@ auto NativeGateDecomposer::getPossibleLayers(
   std::array vArg{currentSingleQubitGates, nextSubproblem[0], nextSubproblem[1],
                   nextSubproblem[2]};
   std::vector args{std::pair(vArg, vc0Cost)};
+  if (currentSingleQubitGates.empty()) {
+    return args;
+  }
   // Sort currentSingleQubitGates from highest to lowest theta
   std::vector vSort(currentSingleQubitGates);
   std::ranges::sort(
@@ -402,6 +413,7 @@ auto NativeGateDecomposer::getPossibleLayers(
 
   for (auto pot : potentialArg) {
     // Check Condition 2
+    emplaceBackNodes.clear();
     for (auto node : vP1Star) {
       std::unordered_set qubits = {
           std::get<std::array<qc::Qubit, 2>>(circuit.getNodeValue(node))[0],
@@ -422,7 +434,7 @@ auto NativeGateDecomposer::getPossibleLayers(
     }
     // Check Condition 3
     std::unordered_set<qc::Qubit> pushQubits = pot.second.first;
-    pushQubits.merge(pSquareQubits);
+    pushQubits.insert(pSquareQubits.begin(), pSquareQubits.end());
     emplaceBackNodes.clear();
 
     for (auto node : vc1Star) {
@@ -455,12 +467,11 @@ auto NativeGateDecomposer::getPossibleLayers(
 auto NativeGateDecomposer::convertCircuitToDAG(
     const std::pair<std::vector<std::vector<U3Gate>>,
                     std::vector<TwoQubitGateLayer>>& schedule,
-    std::size_t nQubits)
+    const std::size_t nQubits)
     -> DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> {
   // std::variant<StructU3, std::array<qc::Qubit, 2>> instead of
   // Unique_pointer For Readout:
-  DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> graph =
-      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>();
+  DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>> graph;
   std::vector<std::vector<size_t>> qubitPaths(nQubits);
   // TODO:assert that One more sql exists than mql ??
   for (size_t i = 0; i < schedule.second.size(); ++i) {
@@ -544,9 +555,7 @@ auto NativeGateDecomposer::sift(
                    op);
       } else {
         remainingGates.emplace_back(node);
-        for (auto qubit : opQubits) {
-          removed.insert(qubit);
-        }
+        std::ranges::copy(opQubits, std::inserter(removed, removed.end()));
       }
     }
   }
@@ -627,8 +636,8 @@ auto NativeGateDecomposer::scheduleRemaining(
         subproblemGraph,
     const size_t prevNode, const size_t nQubits, const bool checkFinalCond,
     std::unordered_map<std::array<std::vector<size_t>, 3>,
-                       std::pair<size_t, std::array<double, 2>>>& memo)
-    -> double {
+                       std::pair<size_t, std::array<double, 2>>,
+                       na::zoned::SubproblemHasher>& memo) -> double {
   double cost;
   // Check if a subproblem has been computed
   if (memo.contains(subproblem)) {
@@ -703,7 +712,8 @@ auto NativeGateDecomposer::scheduleThetaOpt(
   // First call of recursive function to create schedule
   const auto baseNode = subproblemGraph.addNode({});
   std::unordered_map<std::array<std::vector<size_t>, 3>,
-                     std::pair<std::size_t, std::array<double, 2>>>
+                     std::pair<std::size_t, std::array<double, 2>>,
+                     na::zoned::SubproblemHasher>
       memo;
   scheduleRemaining(subproblem, circuit, subproblemGraph, baseNode, nQubits,
                     config_.checkFinalCond, memo);

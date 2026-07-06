@@ -184,7 +184,7 @@ public:
         spdlog::should_log(spdlog::level::debug)) {
       const auto& [min, sum, max] = std::accumulate(
           twoQubitGateLayers.cbegin(), twoQubitGateLayers.cend(),
-          std::array{std::numeric_limits<size_t>::max(), 0UL, 0UL},
+          std::array<size_t, 3>{std::numeric_limits<size_t>::max(), 0UL, 0UL},
           [](const auto& acc, const auto& layer) -> std::array<size_t, 3> {
             const auto& [minAcc, sumAcc, maxAcc] = acc;
             const auto n = layer.size();

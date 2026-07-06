@@ -347,28 +347,19 @@ TEST_F(NativeGateDecomposerTest, OneRXOneQubit) {
           .singleQubitLayers;
   EXPECT_EQ(decompSingleQubitLayers.size(), 1);
   EXPECT_EQ(decompSingleQubitLayers[0].size(), 5);
-  EXPECT_EQ(decompSingleQubitLayers[0][0]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][0],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(1));
-  EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][2],
+      ExpectRotationGate(qc::RZ, 0, qc::PI, NativeGateDecomposer::epsilon));
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(1));
-  EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][4],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 }
 
 TEST_F(NativeGateDecomposerTest, OneU3OneQubit) {
@@ -384,28 +375,18 @@ TEST_F(NativeGateDecomposerTest, OneU3OneQubit) {
   EXPECT_EQ(decompSingleQubitLayers.size(), 1);
   EXPECT_EQ(decompSingleQubitLayers[0].size(), 5);
 
-  EXPECT_EQ(decompSingleQubitLayers[0][0]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getParameter(),
-              ::testing::ElementsAre(
-                  ::testing::DoubleNear(0, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(decompSingleQubitLayers[0][0],
+              ExpectRotationGate(qc::RZ, 0, 0, NativeGateDecomposer::epsilon));
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(1));
-  EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][2],
+      ExpectRotationGate(qc::RZ, 0, qc::PI, NativeGateDecomposer::epsilon));
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(1));
-  EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][4],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 }
 
 TEST_F(NativeGateDecomposerTest, TwoGatesOneQubit) {
@@ -422,28 +403,19 @@ TEST_F(NativeGateDecomposerTest, TwoGatesOneQubit) {
 
   EXPECT_EQ(decompSingleQubitLayers.size(), 1);
   EXPECT_EQ(decompSingleQubitLayers[0].size(), 5);
-  EXPECT_EQ(decompSingleQubitLayers[0][0]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][0],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(1));
-  EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][2],
+      ExpectRotationGate(qc::RZ, 0, qc::PI, NativeGateDecomposer::epsilon));
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(1));
-  EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  3 * qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(decompSingleQubitLayers[0][4],
+              ExpectRotationGate(qc::RZ, 0, 3 * qc::PI_2,
+                                 NativeGateDecomposer::epsilon));
 }
 
 TEST_F(NativeGateDecomposerTest, TwoGatesTwoQubits) {
@@ -463,53 +435,34 @@ TEST_F(NativeGateDecomposerTest, TwoGatesTwoQubits) {
   EXPECT_EQ(decompSingleQubitLayers.size(), 1);
   EXPECT_EQ(decompSingleQubitLayers[0].size(), 8);
 
-  EXPECT_EQ(decompSingleQubitLayers[0][0]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][0],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][1]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][1]->getTargets(),
-              ::testing::ElementsAre(1));
-  EXPECT_THAT(decompSingleQubitLayers[0][1]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][1],
+      ExpectRotationGate(qc::RZ, 1, qc::PI_2, NativeGateDecomposer::epsilon));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][2]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][2]->isGlobal(2));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][3]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][3]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][3]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][3],
+      ExpectRotationGate(qc::RZ, 0, qc::PI, NativeGateDecomposer::epsilon));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
-              ::testing::ElementsAre(1));
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getParameter(),
-              ::testing::ElementsAre(
-                  ::testing::DoubleNear(0, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(decompSingleQubitLayers[0][4],
+              ExpectRotationGate(qc::RZ, 1, 0, NativeGateDecomposer::epsilon));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][5]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][5]->isGlobal(2));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][6]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][6]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][6]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][6],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][7]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][7]->getTargets(),
-              ::testing::ElementsAre(1));
-  EXPECT_THAT(decompSingleQubitLayers[0][7]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][7],
+      ExpectRotationGate(qc::RZ, 1, qc::PI_2, NativeGateDecomposer::epsilon));
 }
 
 TEST_F(NativeGateDecomposerTest, TwoQubitsTwoLayers) {
@@ -533,81 +486,53 @@ TEST_F(NativeGateDecomposerTest, TwoQubitsTwoLayers) {
   EXPECT_EQ(decompSingleQubitLayers[1].size(), 8);
 
   // Layer 1
-  EXPECT_EQ(decompSingleQubitLayers[0][0]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][0]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][0],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][1]->isGlobal(2));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][2]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][2]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][2],
+      ExpectRotationGate(qc::RZ, 0, qc::PI, NativeGateDecomposer::epsilon));
 
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[0][3]->isGlobal(2));
 
-  EXPECT_EQ(decompSingleQubitLayers[0][4]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[0][4]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[0][4],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 
   // Layer 2
-  EXPECT_EQ(decompSingleQubitLayers[1][0]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[1][0]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[1][0]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[1][0],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 
-  EXPECT_EQ(decompSingleQubitLayers[1][1]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[1][1]->getTargets(),
-              ::testing::ElementsAre(1));
-  EXPECT_THAT(decompSingleQubitLayers[1][1]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[1][1],
+      ExpectRotationGate(qc::RZ, 1, qc::PI_2, NativeGateDecomposer::epsilon));
 
   EXPECT_TRUE(decompSingleQubitLayers[1][2]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[1][2]->isGlobal(2));
 
-  EXPECT_EQ(decompSingleQubitLayers[1][3]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[1][3]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[1][3]->getParameter(),
-              ::testing::ElementsAre(
-                  ::testing::DoubleNear(0, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(decompSingleQubitLayers[1][3],
+              ExpectRotationGate(qc::RZ, 0, 0, NativeGateDecomposer::epsilon));
 
-  EXPECT_EQ(decompSingleQubitLayers[1][4]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[1][4]->getTargets(),
-              ::testing::ElementsAre(1));
-  EXPECT_THAT(decompSingleQubitLayers[1][4]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[1][4],
+      ExpectRotationGate(qc::RZ, 1, qc::PI, NativeGateDecomposer::epsilon));
 
   EXPECT_TRUE(decompSingleQubitLayers[1][5]->isCompoundOperation());
   EXPECT_TRUE(decompSingleQubitLayers[1][5]->isGlobal(2));
 
-  EXPECT_EQ(decompSingleQubitLayers[1][6]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[1][6]->getTargets(),
-              ::testing::ElementsAre(0));
-  EXPECT_THAT(decompSingleQubitLayers[1][6]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[1][6],
+      ExpectRotationGate(qc::RZ, 0, qc::PI_2, NativeGateDecomposer::epsilon));
 
-  EXPECT_EQ(decompSingleQubitLayers[1][7]->getType(), qc::RZ);
-  EXPECT_THAT(decompSingleQubitLayers[1][7]->getTargets(),
-              ::testing::ElementsAre(1));
-  EXPECT_THAT(decompSingleQubitLayers[1][7]->getParameter(),
-              ::testing::ElementsAre(::testing::DoubleNear(
-                  qc::PI_2, NativeGateDecomposer::epsilon)));
+  EXPECT_THAT(
+      decompSingleQubitLayers[1][7],
+      ExpectRotationGate(qc::RZ, 1, qc::PI_2, NativeGateDecomposer::epsilon));
 }
 
 } // namespace na::zoned

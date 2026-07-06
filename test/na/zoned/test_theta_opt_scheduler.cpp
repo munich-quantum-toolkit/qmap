@@ -16,6 +16,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <gtest/gtest.h>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -192,10 +193,6 @@ TEST_F(ThetaOptTest, NextMomentsPush) {
       NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, 3);
   const auto& subproblem1 =
       NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, 3);
-  NativeGateDecomposer::DirectedGraph<
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
-      subproblemGraph;
-  subproblemGraph.addNode({});
   const auto& subproblem2 =
       NativeGateDecomposer::sift(graph, subproblem1[2], 3);
   const auto& layers = NativeGateDecomposer::getPossibleLayers(
@@ -246,11 +243,6 @@ TEST_F(ThetaOptTest, NextMomentsCond2) {
       NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, 3);
   const auto& subproblem1 =
       NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, 3);
-  NativeGateDecomposer::DirectedGraph<
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
-      subproblemGraph{};
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   const auto& subproblem = NativeGateDecomposer::sift(graph, subproblem1[2], 3);
   const auto& layers = NativeGateDecomposer::getPossibleLayers(
       graph, subproblem1[1], subproblem, false);
@@ -291,11 +283,6 @@ TEST_F(ThetaOptTest, NextMomentsCond3) {
       NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, 3);
   const auto& subproblem =
       NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7, 8}, 3);
-  NativeGateDecomposer::DirectedGraph<
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
-      subproblemGraph{};
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
   const auto& subproblem2 = NativeGateDecomposer::sift(graph, subproblem[2], 3);
   const auto& moments = NativeGateDecomposer::getPossibleLayers(
       graph, subproblem[1], subproblem2, false);
@@ -353,10 +340,10 @@ TEST_F(ThetaOptTest, RecursionBase) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblemGraph{};
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
+  subproblemGraph.addNode({});
   std::unordered_map<std::array<std::vector<size_t>, 3>,
-                     std::pair<size_t, std::array<double, 2>>>
+                     std::pair<size_t, std::array<double, 2>>,
+                     na::zoned::SubproblemHasher>
       memo;
   const auto& result = NativeGateDecomposer::scheduleRemaining(
       subproblem, graph, subproblemGraph, 0, n, false, memo);
@@ -485,59 +472,57 @@ TEST_F(ThetaOptTest, BuildSchedule) {
   NativeGateDecomposer::DirectedGraph<
       std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
       subproblemGraph{};
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({}, {}));
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({},
-                                                                    {0, 1}));
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({2, 4},
-                                                                    {3, 5, 6}));
-  subproblemGraph.addNode(
-      std::pair<std::vector<std::size_t>, std::vector<std::size_t>>({7}, {8}));
+  subproblemGraph.addNode({});
+  subproblemGraph.addNode({{}, {0, 1}});
+  subproblemGraph.addNode({{2, 4}, {3, 5, 6}});
+  subproblemGraph.addNode({{7}, {8}});
   subproblemGraph.addEdge(0, 1, NativeGateDecomposer::maxTheta(graph, {0, 1}));
   subproblemGraph.addEdge(1, 2,
                           NativeGateDecomposer::maxTheta(graph, {3, 5, 6}));
   subproblemGraph.addEdge(2, 3, NativeGateDecomposer::maxTheta(graph, {8}));
 
-  auto schedule = NativeGateDecomposer::buildSchedule(graph, subproblemGraph);
+  auto [singleQubitLayersDecomposed, twoQubitLayersDecomposed] =
+      NativeGateDecomposer::buildSchedule(graph, subproblemGraph);
 
-  EXPECT_EQ(schedule.first.size(), 4);
-  EXPECT_EQ(schedule.second.size(), 3);
+  EXPECT_EQ(singleQubitLayersDecomposed.size(), 4);
+  EXPECT_EQ(twoQubitLayersDecomposed.size(), 3);
 
-  EXPECT_EQ(schedule.first.front().at(0).qubit, 0);
-  EXPECT_THAT(schedule.first.front().at(0).angles,
+  EXPECT_EQ(singleQubitLayersDecomposed.front().at(0).qubit, 0);
+  EXPECT_THAT(singleQubitLayersDecomposed.front().at(0).angles,
               ::testing::AnglesNear(u3Layers.at(0).at(0).angles,
                                     NativeGateDecomposer::epsilon));
-  EXPECT_EQ(schedule.first.at(0).at(1).qubit, 2);
-  EXPECT_THAT(schedule.first.at(0).at(1).angles,
+  EXPECT_EQ(singleQubitLayersDecomposed.at(0).at(1).qubit, 2);
+  EXPECT_THAT(singleQubitLayersDecomposed.at(0).at(1).angles,
               ::testing::AnglesNear(u3Layers.at(0).at(0).angles,
                                     NativeGateDecomposer::epsilon));
 
-  EXPECT_THAT(schedule.second.at(0).at(0), ::testing::ElementsAre(0, 1));
+  EXPECT_THAT(twoQubitLayersDecomposed.at(0).at(0),
+              ::testing::ElementsAre(0, 1));
 
-  EXPECT_TRUE(schedule.first.at(1).empty());
+  EXPECT_TRUE(singleQubitLayersDecomposed.at(1).empty());
 
-  EXPECT_THAT(schedule.second.at(1).at(0), ::testing::ElementsAre(1, 2));
+  EXPECT_THAT(twoQubitLayersDecomposed.at(1).at(0),
+              ::testing::ElementsAre(1, 2));
 
-  EXPECT_EQ(schedule.first.at(2).at(0).qubit, 0);
-  EXPECT_THAT(schedule.first.at(2).at(0).angles,
+  EXPECT_EQ(singleQubitLayersDecomposed.at(2).at(0).qubit, 0);
+  EXPECT_THAT(singleQubitLayersDecomposed.at(2).at(0).angles,
               ::testing::AnglesNear(u3Layers.at(1).at(0).angles,
                                     NativeGateDecomposer::epsilon));
   // Two gates flipped??
-  EXPECT_EQ(schedule.first.at(2).at(1).qubit, 1);
-  EXPECT_THAT(schedule.first.at(2).at(1).angles,
+  EXPECT_EQ(singleQubitLayersDecomposed.at(2).at(1).qubit, 1);
+  EXPECT_THAT(singleQubitLayersDecomposed.at(2).at(1).angles,
               ::testing::AnglesNear(u3Layers.at(2).at(0).angles,
                                     NativeGateDecomposer::epsilon));
-  EXPECT_EQ(schedule.first.at(2).at(2).qubit, 2);
-  EXPECT_THAT(schedule.first.at(2).at(2).angles,
+  EXPECT_EQ(singleQubitLayersDecomposed.at(2).at(2).qubit, 2);
+  EXPECT_THAT(singleQubitLayersDecomposed.at(2).at(2).angles,
               ::testing::AnglesNear(u3Layers.at(2).at(1).angles,
                                     NativeGateDecomposer::epsilon));
 
-  EXPECT_THAT(schedule.second.at(2).at(0), ::testing::ElementsAre(0, 2));
+  EXPECT_THAT(twoQubitLayersDecomposed.at(2).at(0),
+              ::testing::ElementsAre(0, 2));
 
-  EXPECT_EQ(schedule.first.at(3).at(0).qubit, 0);
-  EXPECT_THAT(schedule.first.at(3).at(0).angles,
+  EXPECT_EQ(singleQubitLayersDecomposed.at(3).at(0).qubit, 0);
+  EXPECT_THAT(singleQubitLayersDecomposed.at(3).at(0).angles,
               ::testing::AnglesNear(u3Layers.at(3).at(0).angles,
                                     NativeGateDecomposer::epsilon));
 }

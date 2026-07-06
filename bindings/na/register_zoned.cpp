@@ -214,7 +214,7 @@ Returns:
         const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         const auto dict = loads(stats.dump());
-        return nb::cast<nb::typed<nb::dict, nb::str, nb::float_>>(dict);
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::object>>(dict);
       },
       R"pb(Get the statistics of the last compilation as a JSON-style dictionary.
 
@@ -367,7 +367,7 @@ Returns:
         const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         const auto dict = loads(stats.dump());
-        return nb::cast<nb::typed<nb::dict, nb::str, nb::float_>>(dict);
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::object>>(dict);
       },
       R"pb(Get the statistics of the last compilation.
 
@@ -530,7 +530,7 @@ Returns:
         const auto loads = json.attr("loads");
         const nlohmann::json stats = self.getStatistics();
         const auto dict = loads(stats.dump());
-        return nb::cast<nb::typed<nb::dict, nb::str, nb::float_>>(dict);
+        return nb::cast<nb::typed<nb::dict, nb::str, nb::object>>(dict);
       },
       R"pb(Get the statistics of the last compilation.
 

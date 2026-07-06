@@ -10,10 +10,10 @@
 # /// script
 # dependencies = [
 #   "mqt.bench==2.1.0",
-#   "mqt.qmap==3.7.1",
+#   "mqt.qmap @ git+https://github.com/cda-tum/mqt-qmap@e6048e0fce5ed10468dde74aa1571a274da5d8df",
 # ]
 # [tool.uv]
-# exclude-newer = "2026-06-30T12:59:59Z"
+# exclude-newer = "2026-07-06T23:59:59Z"
 # ///
 
 """Script for evaluating the routing-aware native gate zoned neutral atom compiler.
@@ -42,7 +42,6 @@ from qiskit import QuantumCircuit, transpile
 from mqt.qmap.na.zoned import (
     PlacementMethod,
     RoutingAwareCompiler,
-    # RoutingAwareAxialCompiler,
     RoutingAwareNativeGateCompiler,
     RoutingMethod,
     ZonedNeutralAtomArchitecture,
@@ -74,7 +73,7 @@ def _proc_target(q: Queue, func: Callable[P, R], args: P.args, kwargs: P.kwargs)
     """
     try:
         q.put(("ok", func(*args, **kwargs)))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001 -- must forward any exception from the child process to the parent via the queue
         q.put(("err", e))
 
 
@@ -199,9 +198,7 @@ def process_benchmark(
     compiler_name = type(compiler).__name__
     print(f"\033[32m[INFO]\033[0m Compiling {benchmark_name} with {qc.num_qubits} qubits with {compiler_name}...")
     try:
-        code, stats = _compile_wrapper(
-            compiler, qc
-        )  # run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
+        code, stats = run_with_process_timeout(_compile_wrapper, TIMEOUT, compiler, qc)
     except TimeoutError as e:
         print(f"\033[31m[ERROR]\033[0m Failed ({e})")
         evaluator.print_timeout(benchmark_name, qc, setting_name)
@@ -441,7 +438,7 @@ class Evaluator:
                 atoms.append(match.group(1))
         self._apply_rz(atoms)
 
-    def _process_ry(self, line: str, it: Iterator[str]) -> None:  # noqa: ARG002
+    def _process_ry(self, line: str, it: Iterator[str]) -> None:  # noqa: ARG002 -- must have identical signature to the other functions to be exchangeable even though arguments and not used here
         """Process a global ry operation.
 
         Args:
@@ -635,7 +632,7 @@ class Evaluator:
 
 def main() -> None:
     """Main function for evaluating the native gate compiler."""
-    # set working directory to script location
+    # set the working directory to the script location
     os.chdir(pathlib.Path(pathlib.Path(__file__).resolve()).parent)
     print("\033[32m[INFO]\033[0m Reading in architecture...")
     with pathlib.Path("square_architecture.json").open(encoding="utf-8") as f:
