@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <format>
 #include <functional>
 #include <limits>
 #include <ranges>
@@ -238,8 +237,7 @@ public:
       std::ostringstream oss;
       oss << "Node Number out of range: " << node << " (nNodes_=" << nNodes_
           << ")";
-      throw std::invalid_argument(std::format(
-          "Node Number out of range: {} (nNodes_={})", node, nNodes_));
+      throw std::invalid_argument(oss.str());
     }
 
     /// @returns the number of nodes in the graph.
