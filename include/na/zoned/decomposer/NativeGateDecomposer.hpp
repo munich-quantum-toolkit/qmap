@@ -337,7 +337,8 @@ public:
    * remainingGates] and the layers associated.
    */
   static auto getPossibleLayers(
-      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
+      const DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>&
+          circuit,
       const std::vector<size_t>& currentSingleQubitGates,
       const std::array<std::vector<size_t>, 3>& nextSubproblem,
       bool checkFinalCond)
@@ -426,7 +427,8 @@ public:
    */
   static auto scheduleRemaining(
       const std::array<std::vector<size_t>, 3>& subproblem,
-      DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>& circuit,
+      const DirectedGraph<std::variant<U3Gate, std::array<qc::Qubit, 2>>>&
+          circuit,
       DirectedGraph<std::pair<std::vector<size_t>, std::vector<size_t>>>&
           subproblemGraph,
       size_t prevNode, size_t nQubits, bool checkFinalCond,
