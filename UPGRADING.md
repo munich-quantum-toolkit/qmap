@@ -6,6 +6,15 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+This release updates the minimum required `mqt-core` version to `v3.6.2`.
+
+The Zoned Neutral Atom Compiler got a component to transform single-qubit gates
+into the native gate set of the target architecture. Previously, single qubit
+gates were only piped through the compiler to the output. The
+`NativeGateDecomposer` can be used, by using the
+`RoutingAwareNativeGateCompiler` as the compiler. For an example how to use it,
+also see the script `eval/na/zined/eval_native_gate_decomposer.py`.
+
 ## [3.7.0]
 
 This release also updates the minimum required `mqt-core` version to `v3.6.0` as
