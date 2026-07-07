@@ -28,14 +28,17 @@
 
 namespace na::zoned {
 namespace {
+/**
+ * Helper to combine multiple lambdas into a single overload set for
+ * `std::visit`.
+ */
 template <class... Ts> struct overloads : Ts... {
   using Ts::operator()...;
 };
 } // namespace
 NativeGateDecomposer::NativeGateDecomposer(const Architecture&,
-                                           const Config& config) {
-  config_ = config;
-}
+                                           const Config& config)
+    : config_(config) {}
 auto NativeGateDecomposer::convertGateToQuaternion(
     const std::reference_wrapper<const qc::Operation> op) -> Quaternion {
   assert(op.get().getNqubits() == 1 && "Works only for single-qubit gates.");
@@ -674,6 +677,7 @@ auto NativeGateDecomposer::scheduleRemaining(
   const auto& nextSubproblem = sift(circuit, subproblem[2], nQubits);
   const auto& args =
       getPossibleLayers(circuit, subproblem[1], nextSubproblem, checkFinalCond);
+  assert(!args.empty() && "No possible layers found.");
   qc::fp tempCost = 0.0;
   auto minCost = std::numeric_limits<double>::max();
   auto minWeight = std::numeric_limits<double>::max();
