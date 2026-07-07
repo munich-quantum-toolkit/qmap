@@ -407,7 +407,7 @@ class Evaluator:
         """
         # Extract atoms from u operation
         atoms = []
-        match = re.match(r"@\+ u( \d\.\d+){3} \[", line)
+        match = re.match(r"@\+ u( -?\d\.\d+){3} \[", line)
         if match:
             # Multi-line u
             for next_line in it:
@@ -420,7 +420,7 @@ class Evaluator:
                 atoms.append(next_line_stripped)
         else:
             # Single atom u
-            match = re.match(r"@\+ u( \d\.\d+){3} (\w+)", line)
+            match = re.match(r"@\+ u( -?\d\.\d+){3} (\w+)", line)
             if match:
                 if match.group(2) not in self.atom_locations:
                     self._apply_global_u()
@@ -438,9 +438,9 @@ class Evaluator:
             line: The current line being processed.
             it: An iterator over the remaining lines.
         """
-        # Extract atoms from u operation
+        # Extract atoms from rz operation
         atoms = []
-        match = re.match(r"@\+ rz \d\.\d+ \[", line)
+        match = re.match(r"@\+ rz -?\d\.\d+ \[", line)
         if match:
             # Multi-line u
             for next_line in it:
@@ -452,8 +452,8 @@ class Evaluator:
                     raise ValueError(msg)
                 atoms.append(next_line_stripped)
         else:
-            # Single atom u
-            match = re.match(r"@\+ rz \d\.\d+ (\w+)", line)
+            # Single atom rz
+            match = re.match(r"@\+ rz -?\d\.\d+ (\w+)", line)
             if match:
                 if match.group(1) not in self.atom_locations:
                     msg = f"Atom {match.group(1)} not found in atom locations"
