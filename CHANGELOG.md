@@ -14,6 +14,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
+- ✨ Add Native Gate Decomposer to Zoned Neutral Atom Compiler ([#1050])
+  ([**@ystade**])
 - 🎨 Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
   to QMAP ([#1058]) ([**@ystade**])
 
@@ -270,6 +272,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
+[#1050]: https://github.com/munich-quantum-toolkit/qmap/pull/1050
 [#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
 [#953]: https://github.com/munich-quantum-toolkit/qmap/pull/953
 [#924]: https://github.com/munich-quantum-toolkit/qmap/pull/924
