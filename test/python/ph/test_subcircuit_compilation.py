@@ -24,6 +24,7 @@ regressions while tolerating minor numerical variation across runs.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import cast
 
 import numpy as np
 import pytest
@@ -111,7 +112,7 @@ _SCENARIOS = [
 # fmt: on
 
 # Subset used for tests that only make sense when there are transmission losses.
-_SCENARIOS_WITH_LOSS = [p for p in _SCENARIOS if p.values[0].t_low is not None]
+_SCENARIOS_WITH_LOSS = [p for p in _SCENARIOS if cast(_Scenario, p.values[0]).t_low is not None]
 
 
 @dataclass
