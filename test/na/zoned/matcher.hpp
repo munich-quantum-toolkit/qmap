@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "ir/operations/CompoundOperation.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
 
 #include <gmock/gmock-matchers.h>
