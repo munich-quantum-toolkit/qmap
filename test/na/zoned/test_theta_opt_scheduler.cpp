@@ -9,8 +9,8 @@
  */
 
 #include "ir/QuantumComputation.hpp"
-#include "matcher.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
+#include "na/zoned/matcher.hpp"
 #include "na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include <gmock/gmock-matchers.h>
@@ -283,7 +283,7 @@ TEST_F(ThetaOptTest, NextLayersCond3) {
   const auto& graph =
       NativeGateDecomposer::convertCircuitToDAG({u3Layers, twoQubitLayers}, 3);
   const auto& subproblem =
-      NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6, 7}, 3);
+      NativeGateDecomposer::sift(graph, {0, 1, 2, 3, 4, 5, 6}, 3);
   const auto& subproblem2 = NativeGateDecomposer::sift(graph, subproblem[2], 3);
   const auto& Layers = NativeGateDecomposer::getPossibleLayers(
       graph, subproblem[1], subproblem2, false);
@@ -602,7 +602,44 @@ TEST_F(ThetaOptTest, Complete) {
   const auto& [singleQubitLayers, twoQubitLayers] = scheduler.schedule(qc);
   const auto& [decompSingleQubitLayers, decompTwoQubitLayers] =
       decomposer.decompose(4, singleQubitLayers, twoQubitLayers);
+
   EXPECT_THAT(decompSingleQubitLayers, ::testing::SizeIs(5));
+  EXPECT_THAT(decompSingleQubitLayers.at(0), ::testing::SizeIs(8));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(0),
+              ::testing::ExpectRotationGate(qc::RZ, 2, qc::PI_2,
+                                            NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(1),
+              ::testing::ExpectRotationGate(qc::RZ, 1, 2.7145140671973169,
+                                            NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(2),
+              ::testing::ExpectGlobalRotationGate(
+                  qc::RY, 4U, qc::PI_4, NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(3),
+              ::testing::ExpectRotationGate(qc::RZ, 2, qc::PI,
+                                            NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(4),
+              ::testing::ExpectRotationGate(qc::RZ, 1, 1.1437177404024206,
+                                            NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(5),
+              ::testing::ExpectGlobalRotationGate(
+                  qc::RY, 4U, -qc::PI_4, NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(6),
+              ::testing::ExpectRotationGate(qc::RZ, 2, -qc::PI_2,
+                                            NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(0).at(7),
+              ::testing::ExpectRotationGate(qc::RZ, 1, -0.4270785863924762,
+                                            NativeGateDecomposer::epsilon));
+  EXPECT_THAT(decompSingleQubitLayers.at(1), ::testing::IsEmpty());
+  EXPECT_THAT(decompSingleQubitLayers.at(2), ::testing::SizeIs(8));
+  EXPECT_THAT(decompSingleQubitLayers.at(3), ::testing::SizeIs(8));
+  EXPECT_THAT(decompSingleQubitLayers.at(4), ::testing::IsEmpty());
+
+  EXPECT_THAT(decompTwoQubitLayers,
+              ::testing::ElementsAre(
+                  ::testing::ElementsAre(::testing::ElementsAre(1, 2)),
+                  ::testing::ElementsAre(::testing::ElementsAre(2, 3)),
+                  ::testing::ElementsAre(::testing::ElementsAre(2, 3)),
+                  ::testing::ElementsAre(::testing::ElementsAre(0, 1))));
 }
 
 TEST_F(ThetaOptTest, SiftOrder) {

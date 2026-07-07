@@ -118,6 +118,52 @@ MATCHER_P4(ExpectRotationGate, type, qubit, angle, tolerance,
          ExplainMatchResult(ElementsAre(DoubleNear(angle, tolerance)),
                             arg->getParameter(), result_listener);
 }
+/**
+ * @brief Matcher verifying a global rotation gate's type and angle.
+ *
+ * @param type Expected gate type (e.g., qc::RZ).
+ * @param nQubit Expected number of qubits the gate acts on.
+ * @param angle Expected rotation angle (radians).
+ * @param tolerance Allowed difference between expected and actual angle.
+ */
+MATCHER_P4(ExpectGlobalRotationGate, type, nQubit, angle, tolerance,
+           std::string("global gate ") + (negation ? "isn't" : "is") +
+               " as expected") {
+  if (arg->getType() != qc::Compound) {
+    *result_listener << "actual: type=" << arg->getType()
+                     << ", expected: type=" << qc::Compound;
+    return false;
+  }
+  const auto& compoundOp = dynamic_cast<const qc::CompoundOperation&>(*arg);
+  if (compoundOp.size() != nQubit) {
+    *result_listener << "actual: nqubits=" << compoundOp.size()
+                     << ", expected: nqubits=" << nQubit;
+    return false;
+  }
+  const auto& ops = compoundOp.getOps();
+  for (size_t i = 0; i < nQubit; ++i) {
+    if (ops.at(i)->getType() != type) {
+      *result_listener << "actual: gate[" << i
+                       << "] type=" << ops.at(i)->getType()
+                       << ", expected: type=" << type;
+      return false;
+    }
+    if (ops.at(i)->getTargets().front() != i) {
+      *result_listener << "actual: gate[" << i
+                       << "] target=" << ops.at(i)->getTargets().front()
+                       << ", expected: target=" << i;
+      return false;
+    }
+    if (std::fabs(ops.at(i)->getParameter().front() - angle) > tolerance) {
+      *result_listener << "actual: gate[" << i
+                       << "] angle=" << ops.at(i)->getParameter().front()
+                       << ", expected: angle=" << angle
+                       << ", tolerance=" << tolerance;
+      return false;
+    }
+  }
+  return true;
+}
 } // namespace testing
 
 // NOLINTEND(modernize-use-trailing-return-type)

@@ -169,6 +169,7 @@ def process_benchmark(
     qc: QuantumComputation,
     benchmark_name: str,
     evaluator: Evaluator,
+    drop_u_gates: bool = False,
 ) -> bool:
     """Compile and evaluate the given benchmark circuit.
 
@@ -178,6 +179,7 @@ def process_benchmark(
         qc: The benchmark circuit to compile.
         benchmark_name: Name of the benchmark.
         evaluator: The evaluator to use.
+        drop_u_gates: Whether to drop u gates in the output code.
 
     Returns:
         True if compilation succeeded, False otherwise.
@@ -199,7 +201,8 @@ def process_benchmark(
         evaluator.print_error(benchmark_name, qc, setting_name)
         return False
 
-    code = "\n".join(line for line in code.splitlines() if not line.startswith("@+ u"))
+    if drop_u_gates:
+        code = "\n".join(line for line in code.splitlines() if not line.startswith("@+ u"))
     pathlib.Path(f"out/{compiler_name}/{setting_name}").mkdir(exist_ok=True, parents=True)
     pathlib.Path(f"out/{compiler_name}/{setting_name}/{benchmark_name}_{qc.num_qubits}.naviz").write_text(
         code, encoding="utf-8"

@@ -528,39 +528,38 @@ auto NativeGateDecomposer::sift(
   std::vector<size_t> singleQubitGates;
   std::vector<size_t> remainingGates;
 
-  std::unordered_set vRemaining(remainingNodes.begin(), remainingNodes.end());
+  // we use a sorted set here on purpose to align with the topological order
+  // of the DAG, see also the next for loop.
+  std::set vRemaining(remainingNodes.begin(), remainingNodes.end());
   std::unordered_set<size_t> removed;
 
-  // We traverse the graph rather than v_rem to use the graph's topological
-  // ordering
-  for (size_t node = 0; node < circuit.size(); node++) {
-    if (vRemaining.contains(node)) {
-      auto op = circuit.getNodeValue(node);
-      if (const auto opQubits = std::visit(
-              overloads{
-                  [](const U3Gate& u3) -> std::unordered_set<std::size_t> {
-                    return {u3.qubit};
-                  },
-                  [](const std::array<qc::Qubit, 2>& cz)
-                      -> std::unordered_set<std::size_t> {
-                    return {cz[0], cz[1]};
-                  }},
-              op);
-          removed.size() < nQubits && disjunct(removed, opQubits)) {
-        std::visit(overloads{[&singleQubitGates, &removed,
-                              node](const U3Gate& u3) -> void {
-                               singleQubitGates.emplace_back(node);
-                               removed.emplace(u3.qubit);
-                             },
-                             [&twoQubitGates,
-                              node](const std::array<qc::Qubit, 2>&) -> void {
-                               twoQubitGates.emplace_back(node);
-                             }},
-                   op);
-      } else {
-        remainingGates.emplace_back(node);
-        std::ranges::copy(opQubits, std::inserter(removed, removed.end()));
-      }
+  // the remainingNodes ids already reflect the graph's topological order, so
+  // sorting is enough to iterate nodes in topological order.
+  for (const auto node : vRemaining) {
+    auto op = circuit.getNodeValue(node);
+    if (const auto opQubits = std::visit(
+            overloads{[](const U3Gate& u3) -> std::unordered_set<std::size_t> {
+                        return {u3.qubit};
+                      },
+                      [](const std::array<qc::Qubit, 2>& cz)
+                          -> std::unordered_set<std::size_t> {
+                        return {cz[0], cz[1]};
+                      }},
+            op);
+        removed.size() < nQubits && disjunct(removed, opQubits)) {
+      std::visit(
+          overloads{
+              [&singleQubitGates, &removed, node](const U3Gate& u3) -> void {
+                singleQubitGates.emplace_back(node);
+                removed.emplace(u3.qubit);
+              },
+              [&twoQubitGates, node](const std::array<qc::Qubit, 2>&) -> void {
+                twoQubitGates.emplace_back(node);
+              }},
+          op);
+    } else {
+      remainingGates.emplace_back(node);
+      std::ranges::copy(opQubits, std::inserter(removed, removed.end()));
     }
   }
   return {{twoQubitGates, singleQubitGates, remainingGates}};

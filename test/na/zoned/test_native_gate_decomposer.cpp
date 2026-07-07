@@ -9,8 +9,8 @@
  */
 
 #include "ir/QuantumComputation.hpp"
-#include "matcher.hpp"
 #include "na/zoned/decomposer/NativeGateDecomposer.hpp"
+#include "na/zoned/matcher.hpp"
 #include "na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include <gmock/gmock-matchers.h>

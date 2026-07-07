@@ -98,9 +98,9 @@ def main() -> None:
 
     for benchmark, qc in benchmarks(benchmark_list):
         qc.qasm3(f"in/{benchmark}_n{qc.num_qubits}.qasm")
-        process_benchmark(astar_compiler, "astar", qc, benchmark, evaluator)
-        process_benchmark(ids_compiler, "ids", qc, benchmark, evaluator)
-        process_benchmark(relaxed_compiler, "relaxed", qc, benchmark, evaluator)
+        process_benchmark(astar_compiler, "astar", qc, benchmark, evaluator, drop_u_gates=True)
+        process_benchmark(ids_compiler, "ids", qc, benchmark, evaluator, drop_u_gates=True)
+        process_benchmark(relaxed_compiler, "relaxed", qc, benchmark, evaluator, drop_u_gates=True)
 
     print(
         "\033[32m[INFO]\033[0m =============================================================\n"
