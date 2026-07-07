@@ -179,7 +179,7 @@ public:
    * @param nQubits the number of qubits in the circuit.
    * @param singleQubitGateLayers the single-qubit gate layers to decompose.
    * @param twoQubitGateLayers the two-qubit gate layers of the schedule.
-   * @returns` the decomposition result.
+   * @returns the decomposition result.
    */
   [[nodiscard]] auto
   decompose(size_t nQubits,
