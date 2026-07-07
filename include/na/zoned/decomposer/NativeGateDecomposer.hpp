@@ -38,6 +38,7 @@ struct SubproblemHasher {
       -> size_t {
     size_t seed = 0;
     std::ranges::for_each(array, [&seed](const std::vector<size_t>& v) -> void {
+      qc::hashCombine(seed, std::hash<size_t>{}(v.size()));
       std::ranges::for_each(v, [&seed](const size_t node) -> void {
         qc::hashCombine(seed, std::hash<size_t>{}(node));
       });
