@@ -169,6 +169,7 @@ def process_benchmark(
     qc: QuantumComputation,
     benchmark_name: str,
     evaluator: Evaluator,
+    *,
     drop_u_gates: bool = False,
 ) -> bool:
     """Compile and evaluate the given benchmark circuit.
