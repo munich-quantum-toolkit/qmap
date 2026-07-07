@@ -224,6 +224,8 @@ def _compute_ideal_distributions(target_unitary: torch.Tensor, target_dim: int) 
 
     Returns:
         A tuple of ``(ideal_probability_distribution, baseline_ideal_probability_distribution)``.
+        Both entries are identical since proposed and baseline share the same target unitary
+        and input state; the tuple is kept for a consistent call interface.
     """
     pcvl_u = pcvl.Unitary(pcvl.MatrixN(target_unitary))
 
@@ -231,14 +233,8 @@ def _compute_ideal_distributions(target_unitary: torch.Tensor, target_dim: int) 
     ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
     ground_truth_processor.with_input(pcvl.BasicState([1, 0] * (target_dim // 2)))
 
-    baseline_ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
-    baseline_ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
-    baseline_ground_truth_processor.with_input(pcvl.BasicState([1, 0] * (target_dim // 2)))
-
-    return (
-        algorithm.Sampler(ground_truth_processor).probs()["results"],
-        algorithm.Sampler(baseline_ground_truth_processor).probs()["results"],
-    )
+    ideal_prob_dist = algorithm.Sampler(ground_truth_processor).probs()["results"]
+    return ideal_prob_dist, ideal_prob_dist
 
 
 def compile_subcircuit(
