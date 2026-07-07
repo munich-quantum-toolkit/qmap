@@ -32,9 +32,7 @@ def embed_target_unitary_into_chip(target_unitary: np.ndarray, chip_dim: int, ta
         which is replaced by ``target_unitary``.
     """
     embedded = torch.eye(chip_dim, dtype=torch.complex128)
-    for i in range(target_dim):
-        for j in range(target_dim):
-            embedded[i, j] = target_unitary[i, j]
+    embedded[:target_dim, :target_dim] = torch.tensor(target_unitary, dtype=torch.complex128)
     return embedded
 
 

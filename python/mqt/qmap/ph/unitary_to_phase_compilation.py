@@ -517,6 +517,7 @@ def optimize_unitary_subcircuit_parameters(
     loop_loss = float("inf")
     index = 0
     best_loss = float("inf")
+    best_params = phase_shifter_params.detach().clone()
     no_improve_steps = 0
 
     while loop_loss > threshold and index < max_iterations:
@@ -579,11 +580,13 @@ def optimize_unitary_subcircuit_parameters(
 
         if loop_loss < best_loss - min_improvement:
             best_loss = loop_loss
+            best_params = phase_shifter_params.detach().clone()
             no_improve_steps = 0
         else:
             no_improve_steps += 1
 
-        index % 100 == 0 and verbose
+        if verbose and index % 100 == 0:
+            print(f"[optimize] iter {index:5d}  loss={loop_loss:.6f}  lr={optimizer.param_groups[0]['lr']:.2e}")
 
         lrs.append(optimizer.param_groups[0]["lr"])
 
@@ -601,7 +604,7 @@ def optimize_unitary_subcircuit_parameters(
             break
 
     return {
-        "phase_shifter_params": torch.remainder(phase_shifter_params.detach(), TWO_PI),
+        "phase_shifter_params": torch.remainder(best_params, TWO_PI),
         "beam_splitter_params": beam_splitter_reflectivities,
         "losses": losses,
         "lrs": lrs,
