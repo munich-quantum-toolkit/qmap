@@ -262,6 +262,9 @@ public:
   }
 };
 
+/**
+ * Concrete synthesizer that performs routing-agnostic layout synthesis.
+ */
 class RoutingAgnosticSynthesizer
     : public PlaceAndRouteSynthesizer<RoutingAgnosticSynthesizer,
                                       VertexMatchingPlacer,
@@ -275,6 +278,10 @@ public:
       : PlaceAndRouteSynthesizer(architecture) {}
 };
 
+/**
+ * Concrete compiler that schedules and performs routing-agnostic layout
+ * synthesis.
+ */
 class RoutingAgnosticCompiler final
     : public Compiler<RoutingAgnosticCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAgnosticSynthesizer,
@@ -288,6 +295,9 @@ public:
       : Compiler(architecture) {}
 };
 
+/**
+ * Concrete synthesizer that performs routing-aware layout synthesis.
+ */
 class RoutingAwareSynthesizer
     : public PlaceAndRouteSynthesizer<RoutingAwareSynthesizer, HeuristicPlacer,
                                       IndependentSetRouter> {
@@ -300,6 +310,12 @@ public:
       : PlaceAndRouteSynthesizer(architecture) {}
 };
 
+/**
+ * Concrete compiler that schedules and performs routing-aware layout synthesis.
+ *
+ * In particular, it leaves the decomposition of gates into native gates to the
+ * user, i.e., it does not perform any decomposition of gates into native gates.
+ */
 class RoutingAwareCompiler final
     : public Compiler<RoutingAwareCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
@@ -312,6 +328,10 @@ public:
       : Compiler(architecture) {}
 };
 
+/**
+ * Concrete compiler that schedules, decomposes into native gates, and performs
+ * routing-aware layout synthesis.
+ */
 class RoutingAwareNativeGateCompiler final
     : public Compiler<RoutingAwareNativeGateCompiler, ASAPScheduler,
                       NativeGateDecomposer, VertexMatchingReuseAnalyzer,
