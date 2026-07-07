@@ -55,7 +55,7 @@ class TestBuildSetupGrid:
     def test_valid_multiple_setups():
         """Test that the Cartesian product of valid inputs produces all expected setups."""
         setups = build_setup_grid([4, 6], [2, 4])
-        # (4,2), (4,4), (6,2), (6,4) — all even; (6,6) excluded because target==chip allowed
+        # Cartesian product: (4,2), (4,4), (6,2), (6,4) — target_dims_list contains only 2 and 4, so 6 is never a candidate target dimension
         assert Setup(num_modes=4, target_dim=2) in setups
         assert Setup(num_modes=4, target_dim=4) in setups
         assert Setup(num_modes=6, target_dim=2) in setups

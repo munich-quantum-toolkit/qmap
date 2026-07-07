@@ -164,34 +164,34 @@ class TestRunReturnStructure:
     """Tests verifying the structure and types of the RunResult returned by compile_subcircuit."""
 
     @staticmethod
-    def test_returns_run_result(scenario_result):
+    def test_returns_run_result(scenario_result) -> None:
         """Test that compile_subcircuit returns a RunResult instance."""
         assert isinstance(scenario_result.result, RunResult)
 
     @staticmethod
-    def test_performance_dict_has_required_keys(scenario_result):
+    def test_performance_dict_has_required_keys(scenario_result) -> None:
         """Test that the performance dict contains all required metric keys."""
         assert set(scenario_result.result.performance.keys()) >= _PERF_KEYS
 
     @staticmethod
-    def test_baseline_performance_dict_has_required_keys(scenario_result):
+    def test_baseline_performance_dict_has_required_keys(scenario_result) -> None:
         """Test that the baseline performance dict contains all required metric keys."""
         assert set(scenario_result.result.baseline_performance.keys()) >= _PERF_KEYS
 
     @staticmethod
-    def test_losses_is_float(scenario_result):
+    def test_losses_is_float(scenario_result) -> None:
         """Test that loss and baseline_loss are convertible to float."""
         assert isinstance(float(scenario_result.result.loss), float)
         assert isinstance(float(scenario_result.result.baseline_loss), float)
 
     @staticmethod
-    def test_compute_times_are_positive(scenario_result):
+    def test_compute_times_are_positive(scenario_result) -> None:
         """Test that compute_time and baseline_compute_time are strictly positive."""
         assert scenario_result.result.compute_time > 0
         assert scenario_result.result.baseline_compute_time > 0
 
     @staticmethod
-    def test_coincidence_rate_in_unit_interval(scenario_result):
+    def test_coincidence_rate_in_unit_interval(scenario_result) -> None:
         """Test that coincidence_rate values lie in [0, 1] for both compiled and baseline."""
         for cr in (
             float(scenario_result.result.performance["coincidence_rate"]),
@@ -201,7 +201,7 @@ class TestRunReturnStructure:
             assert cr <= 1.0 or cr == pytest.approx(1.0)
 
     @staticmethod
-    def test_tvd_in_unit_interval(scenario_result):
+    def test_tvd_in_unit_interval(scenario_result) -> None:
         """Test that TVD values lie in [0, 1] for both compiled and baseline."""
         for tvd in (
             float(scenario_result.result.performance["tvd"]),
@@ -211,7 +211,7 @@ class TestRunReturnStructure:
             assert tvd <= 1.0 or tvd == pytest.approx(1.0)
 
     @staticmethod
-    def test_losses_non_negative(scenario_result):
+    def test_losses_non_negative(scenario_result) -> None:
         """Test that loss and baseline_loss are non-negative."""
         assert float(scenario_result.result.loss) >= 0.0
         assert float(scenario_result.result.baseline_loss) >= 0.0
@@ -228,36 +228,36 @@ class TestRunValueRanges:
     """
 
     @staticmethod
-    def test_coincidence_rate_above_minimum(scenario_result):
+    def test_coincidence_rate_above_minimum(scenario_result) -> None:
         """Test that the compiled coincidence rate meets the scenario's minimum threshold."""
         cr = float(scenario_result.result.performance["coincidence_rate"])
         assert cr >= scenario_result.scenario.coincidence_rate_min
 
     @staticmethod
-    def test_baseline_coincidence_rate_above_minimum(scenario_result):
+    def test_baseline_coincidence_rate_above_minimum(scenario_result) -> None:
         """Test that the baseline coincidence rate meets the baseline's minimum threshold."""
         cr = float(scenario_result.result.baseline_performance["coincidence_rate"])
         assert cr >= scenario_result.scenario.baseline_coincidence_rate_min
 
     @staticmethod
-    def test_tvd_below_maximum(scenario_result):
+    def test_tvd_below_maximum(scenario_result) -> None:
         """Test that the compiled TVD is below the scenario's maximum threshold."""
         tvd = float(scenario_result.result.performance["tvd"])
         assert tvd <= scenario_result.scenario.tvd_max
 
     @staticmethod
-    def test_baseline_tvd_below_maximum(scenario_result):
+    def test_baseline_tvd_below_maximum(scenario_result) -> None:
         """Test that the baseline TVD is below the baseline's maximum threshold."""
         tvd = float(scenario_result.result.baseline_performance["tvd"])
         assert tvd <= scenario_result.scenario.baseline_tvd_max
 
     @staticmethod
-    def test_optimization_loss_below_maximum(scenario_result):
+    def test_optimization_loss_below_maximum(scenario_result) -> None:
         """Test that the final optimization loss is below the convergence threshold."""
         assert float(scenario_result.result.loss) <= scenario_result.scenario.losses_max
 
     @staticmethod
-    def test_baseline_loss_below_maximum(scenario_result):
+    def test_baseline_loss_below_maximum(scenario_result) -> None:
         """Test that the baseline loss is below the convergence threshold."""
         assert float(scenario_result.result.baseline_loss) <= scenario_result.scenario.losses_max
 
