@@ -41,11 +41,11 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_MINIMUM_VERSION 3.6.0
+set(MQT_CORE_MINIMUM_VERSION 3.6.2
     CACHE STRING "MQT Core minimum version")
 set(MQT_CORE_VERSION 3.6.2
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "5a1ea9d21f1d76f55f0ab65cda8df96f37c17867"
+set(MQT_CORE_REV "332818c3f035402d89d0f674dfdf3ccf9e622598"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
