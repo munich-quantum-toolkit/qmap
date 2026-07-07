@@ -69,9 +69,135 @@ def build_setup_grid(
     return setups
 
 
-def _mean_std(values: list[float]) -> tuple[float, float]:
-    arr = np.asarray(values, dtype=np.float64)
-    return float(arr.mean()), float(arr.std(ddof=0))
+def _mean(values: list[float]) -> float:
+    """Compute the mean of a list of floats.
+
+    Args:
+        values: Sequence of numeric values.
+
+    Returns:
+        The mean as a float.
+    """
+    return float(np.mean(values))
+
+
+def _build_hardware_cache(
+    setups: list[Setup],
+    base_seed: int,
+    *,
+    input_losses: bool,
+    output_losses: bool,
+    ideal_beam_splitters: bool,
+    custom_bs_data: dict[int, np.ndarray] | None,
+) -> dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """Build per-num_modes hardware parameter cache.
+
+    Args:
+        setups: All setups whose unique ``num_modes`` values are cached.
+        base_seed: Base RNG seed; the seed for ``num_modes`` is
+            ``base_seed + 10 * num_modes``.
+        input_losses: Sample random input transmissions when ``True``.
+        output_losses: Sample random output transmissions when ``True``.
+        ideal_beam_splitters: Use ideal 50/50 beam splitters when ``True``.
+        custom_bs_data: Pre-loaded reflectivity arrays keyed by ``num_modes``.
+
+    Returns:
+        Mapping from ``num_modes`` to ``(bs, in_t, out_t)`` arrays.
+    """
+    hardware_cache: dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+    for num_modes in sorted({s.num_modes for s in setups}):
+        np_rng = np.random.default_rng(base_seed + 10 * num_modes)
+
+        if custom_bs_data is not None and num_modes in custom_bs_data:
+            bs = custom_bs_data[num_modes]
+        else:
+            bs = generate_beam_splitter_matrix(chip_size=num_modes, ideal_bs=ideal_beam_splitters, rng=np_rng)
+
+        if input_losses:
+            raw_in = np_rng.uniform(0.7, 1.0, size=num_modes)
+            in_t: np.ndarray = raw_in / np.max(raw_in)
+        else:
+            in_t = np.ones(num_modes)
+
+        if output_losses:
+            raw_out = np_rng.uniform(0.7, 1.0, size=num_modes)
+            out_t: np.ndarray = raw_out / np.max(raw_out)
+        else:
+            out_t = np.ones(num_modes)
+
+        hardware_cache[num_modes] = (bs, in_t, out_t)
+    return hardware_cache
+
+
+def _run_repeats(
+    beam_splitter_reflectivities: np.ndarray,
+    input_transmissions: np.ndarray,
+    output_transmissions: np.ndarray,
+    target_unitary: torch.Tensor,
+    target_unitary_embedded: torch.Tensor,
+    phase_error: float,
+    config: OptimizationConfig,
+    repeats_per_unitary: int,
+    unitary_seed: int,
+) -> dict[str, float]:
+    """Run ``compile_subcircuit`` ``repeats_per_unitary`` times and return mean metrics.
+
+    Args:
+        beam_splitter_reflectivities: Chip beam-splitter reflectivity array.
+        input_transmissions: Per-mode input transmission coefficients.
+        output_transmissions: Per-mode output transmission coefficients.
+        target_unitary: Target unitary tensor.
+        target_unitary_embedded: Target unitary embedded into chip-sized identity.
+        phase_error: Phase-noise standard deviation.
+        config: Optimisation hyperparameters.
+        repeats_per_unitary: Number of independent runs to average over.
+        unitary_seed: Seed used to derive per-repeat PyTorch seeds.
+
+    Returns:
+        Dict of mean metric values across all repeats, keyed by the same names
+        used in the ``rows`` dicts of :func:`collect_pipeline_results`.
+    """
+    normal_coincidence_rates: list[float] = []
+    normal_tvds: list[float] = []
+    baseline_coincidence_rates: list[float] = []
+    baseline_tvds: list[float] = []
+    normal_losses: list[float] = []
+    baseline_losses: list[float] = []
+    normal_compute_times: list[float] = []
+    baseline_compute_times: list[float] = []
+
+    for repeat_idx in range(repeats_per_unitary):
+        torch.manual_seed(unitary_seed * 1000 + repeat_idx)
+
+        result = compile_subcircuit(
+            beam_splitter_reflectivities=beam_splitter_reflectivities,
+            input_transmissions=input_transmissions,
+            output_transmissions=output_transmissions,
+            target_unitary=target_unitary,
+            target_unitary_embedded=target_unitary_embedded,
+            phase_error=phase_error,
+            config=config,
+        )
+
+        normal_coincidence_rates.append(float(result.performance["coincidence_rate"]))
+        normal_tvds.append(float(result.performance["tvd"]))
+        baseline_coincidence_rates.append(float(result.baseline_performance["coincidence_rate"]))
+        baseline_tvds.append(float(result.baseline_performance["tvd"]))
+        normal_losses.append(float(result.loss))
+        baseline_losses.append(float(result.baseline_loss))
+        normal_compute_times.append(float(result.compute_time))
+        baseline_compute_times.append(float(result.baseline_compute_time))
+
+    return {
+        "avg_coincidence_rate": _mean(normal_coincidence_rates),
+        "avg_tvd": _mean(normal_tvds),
+        "avg_baseline_coincidence_rate": _mean(baseline_coincidence_rates),
+        "avg_baseline_tvd": _mean(baseline_tvds),
+        "avg_loss": _mean(normal_losses),
+        "avg_baseline_loss": _mean(baseline_losses),
+        "avg_compute_time": _mean(normal_compute_times),
+        "avg_baseline_compute_time": _mean(baseline_compute_times),
+    }
 
 
 def collect_pipeline_results(
@@ -81,6 +207,7 @@ def collect_pipeline_results(
     repeats_per_unitary: int = 3,
     phase_errors: Iterable[float] = (0.01,),
     base_seed: int = 0,
+    *,
     input_losses: bool = False,
     output_losses: bool = False,
     ideal_beam_splitters: bool = False,
@@ -130,39 +257,21 @@ def collect_pipeline_results(
     if config is None:
         config = OptimizationConfig()
 
-    rows: list[dict] = []
-    phase_errors_list = list(phase_errors)
-
     if repeats_per_unitary < 1:
         msg = "repeats_per_unitary must be >= 1"
         raise ValueError(msg)
 
-    # Precompute hardware parameters once per num_modes.
-    hardware_cache: dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
-    for num_modes in sorted({s.num_modes for s in setups}):
-        np_rng = np.random.default_rng(base_seed + 10 * num_modes)
+    phase_errors_list = list(phase_errors)
+    hardware_cache = _build_hardware_cache(
+        setups,
+        base_seed,
+        input_losses=input_losses,
+        output_losses=output_losses,
+        ideal_beam_splitters=ideal_beam_splitters,
+        custom_bs_data=custom_bs_data,
+    )
 
-        if custom_bs_data is not None and num_modes in custom_bs_data:
-            bs = custom_bs_data[num_modes]
-        else:
-            bs = generate_beam_splitter_matrix(chip_size=num_modes, ideal_bs=ideal_beam_splitters, rng=np_rng)
-
-        in_t: np.ndarray
-        if input_losses:
-            raw_in = np_rng.uniform(0.7, 1.0, size=num_modes)
-            in_t = raw_in / np.max(raw_in)
-        else:
-            in_t = np.ones(num_modes)
-
-        out_t: np.ndarray
-        if output_losses:
-            raw_out = np_rng.uniform(0.7, 1.0, size=num_modes)
-            out_t = raw_out / np.max(raw_out)
-        else:
-            out_t = np.ones(num_modes)
-
-        hardware_cache[num_modes] = (bs, in_t, out_t)
-
+    rows: list[dict] = []
     for setup in setups:
         num_modes = setup.num_modes
         target_dim = setup.target_dim
@@ -170,7 +279,7 @@ def collect_pipeline_results(
 
         for phase_error in phase_errors_list:
             for unitary_index in range(num_unitaries_per_setup):
-                unitary_seed = target_dim + unitary_index
+                unitary_seed = target_dim * 1000 + unitary_index
                 target_unitary = get_haar_random_unitary(
                     target_dim,
                     torch.Generator().manual_seed(unitary_seed),
@@ -182,45 +291,17 @@ def collect_pipeline_results(
                     target_dim=target_dim,
                 )
 
-                normal_coincidence_rates: list[float] = []
-                normal_tvds: list[float] = []
-                baseline_coincidence_rates: list[float] = []
-                baseline_tvds: list[float] = []
-                normal_losses: list[float] = []
-                baseline_losses: list[float] = []
-                normal_compute_times: list[float] = []
-                baseline_compute_times: list[float] = []
-
-                for repeat_idx in range(repeats_per_unitary):
-                    torch.manual_seed(unitary_seed * 1000 + repeat_idx)
-
-                    result = compile_subcircuit(
-                        beam_splitter_reflectivities=beam_splitter_reflectivities,
-                        input_transmissions=input_transmissions,
-                        output_transmissions=output_transmissions,
-                        target_unitary=target_unitary,
-                        target_unitary_embedded=target_unitary_embedded,
-                        phase_error=phase_error,
-                        config=config,
-                    )
-
-                    normal_coincidence_rates.append(float(result.performance["coincidence_rate"]))
-                    normal_tvds.append(float(result.performance["tvd"]))
-                    baseline_coincidence_rates.append(float(result.baseline_performance["coincidence_rate"]))
-                    baseline_tvds.append(float(result.baseline_performance["tvd"]))
-                    normal_losses.append(float(result.loss))
-                    baseline_losses.append(float(result.baseline_loss))
-                    normal_compute_times.append(float(result.compute_time))
-                    baseline_compute_times.append(float(result.baseline_compute_time))
-
-                mean_normal_coincidence_rate, _ = _mean_std(normal_coincidence_rates)
-                mean_normal_tvd, _ = _mean_std(normal_tvds)
-                mean_baseline_coincidence_rate, _ = _mean_std(baseline_coincidence_rates)
-                mean_baseline_tvd, _ = _mean_std(baseline_tvds)
-                mean_loss, _ = _mean_std(normal_losses)
-                mean_baseline_loss, _ = _mean_std(baseline_losses)
-                mean_compute_time, _ = _mean_std(normal_compute_times)
-                mean_baseline_compute_time, _ = _mean_std(baseline_compute_times)
+                means = _run_repeats(
+                    beam_splitter_reflectivities,
+                    input_transmissions,
+                    output_transmissions,
+                    target_unitary,
+                    target_unitary_embedded,
+                    phase_error,
+                    config,
+                    repeats_per_unitary,
+                    unitary_seed,
+                )
 
                 rows.append({
                     "Input Losses": input_losses,
@@ -232,19 +313,10 @@ def collect_pipeline_results(
                     "unitary_seed": unitary_seed,
                     "phase_error": phase_error,
                     "repeats_per_unitary": repeats_per_unitary,
-                    "avg_coincidence_rate": mean_normal_coincidence_rate,
-                    "avg_baseline_coincidence_rate": mean_baseline_coincidence_rate,
-                    "avg_baseline_tvd": mean_baseline_tvd,
-                    "avg_tvd": mean_normal_tvd,
-                    "tvd_difference": mean_normal_tvd - mean_baseline_tvd,
-                    "coincidence_rate_difference": mean_normal_coincidence_rate - mean_baseline_coincidence_rate,
-                    "avg_loss": mean_loss,
-                    "avg_baseline_loss": mean_baseline_loss,
-                    "avg_compute_time": mean_compute_time,
-                    "avg_baseline_compute_time": mean_baseline_compute_time,
+                    **means,
+                    "tvd_difference": means["avg_tvd"] - means["avg_baseline_tvd"],
+                    "coincidence_rate_difference": means["avg_coincidence_rate"] - means["avg_baseline_coincidence_rate"],
                 })
-
-    df = pd.DataFrame(rows)
 
     groupby_cols = [
         "num_modes",
@@ -255,12 +327,32 @@ def collect_pipeline_results(
         "Ideal Beam Splitters",
         "repeats_per_unitary",
     ]
+    agg_cols = [
+        "avg_tvd",
+        "avg_coincidence_rate",
+        "avg_baseline_tvd",
+        "avg_baseline_coincidence_rate",
+        "avg_loss",
+        "avg_baseline_loss",
+        "avg_compute_time",
+        "avg_baseline_compute_time",
+        "tvd_difference",
+        "coincidence_rate_difference",
+        "compute_time_difference",
+    ]
+
+    if not rows:
+        return pd.DataFrame(columns=groupby_cols + agg_cols)
+
+    df = pd.DataFrame(rows)
 
     df_aggregated = df.groupby(groupby_cols, as_index=False).agg(
         avg_tvd=("avg_tvd", "mean"),
         avg_coincidence_rate=("avg_coincidence_rate", "mean"),
         avg_baseline_tvd=("avg_baseline_tvd", "mean"),
         avg_baseline_coincidence_rate=("avg_baseline_coincidence_rate", "mean"),
+        avg_loss=("avg_loss", "mean"),
+        avg_baseline_loss=("avg_baseline_loss", "mean"),
         avg_compute_time=("avg_compute_time", "mean"),
         avg_baseline_compute_time=("avg_baseline_compute_time", "mean"),
     )
