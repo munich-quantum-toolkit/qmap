@@ -179,7 +179,7 @@ Args:
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
-      "arch"_a, "json"_a,
+      nb::keep_alive<0, 1>(), "arch"_a, "json"_a,
       R"pb(Create a compiler for the given architecture and with configurations from a JSON string.
 
 Args:
@@ -332,7 +332,7 @@ Args:
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
-      "arch"_a, "json"_a,
+      nb::keep_alive<0, 1>(), "arch"_a, "json"_a,
       R"pb(Create a compiler for the given architecture and configurations from a JSON string.
 
 Args:
@@ -495,7 +495,7 @@ Args:
         // NOLINTNEXTLINE(misc-include-cleaner)
         return {arch, nlohmann::json::parse(json)};
       },
-      "arch"_a, "json"_a,
+      nb::keep_alive<0, 1>(), "arch"_a, "json"_a,
       R"pb(Create a compiler for the given architecture and configurations from a JSON string.
 
 Args:

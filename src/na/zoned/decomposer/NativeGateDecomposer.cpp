@@ -682,19 +682,19 @@ auto NativeGateDecomposer::scheduleRemaining(
   auto minCost = std::numeric_limits<double>::max();
   auto minWeight = std::numeric_limits<double>::max();
   std::size_t minNode;
-  for (const auto& [singleQubitGates, twoQubitGates] : args) {
+  for (const auto& [singleQubitGates, nodeCost] : args) {
     const auto newNode =
-        addNodeToSubproblemGraph(subproblem[0], singleQubitGates[0],
-                                 twoQubitGates, subproblemGraph, prevNode);
+        addNodeToSubproblemGraph(subproblem[0], singleQubitGates[0], nodeCost,
+                                 subproblemGraph, prevNode);
     tempCost =
         scheduleRemaining(
             {singleQubitGates[1], singleQubitGates[2], singleQubitGates[3]},
             circuit, subproblemGraph, newNode, nQubits, checkFinalCond, memo) +
-        twoQubitGates;
+        nodeCost;
     if (tempCost < minCost) {
       minCost = tempCost;
       minNode = newNode;
-      minWeight = twoQubitGates;
+      minWeight = nodeCost;
     }
   }
   memo[subproblem] = {minNode, {minCost, minWeight}};

@@ -17,6 +17,13 @@
 // NOLINTBEGIN(modernize-use-trailing-return-type)
 
 namespace testing {
+/**
+ * @brief Computes the wraparound-aware absolute angular distance between two
+ *        angles (radians), normalized into [-π, π].
+ * @param a first angle.
+ * @param b second angle.
+ * @returns the absolute angular distance.
+ */
 constexpr auto angleDiff = [](const double a, const double b) -> double {
   double d = std::fmod(a - b, 2 * qc::PI);
   if (d > qc::PI) {

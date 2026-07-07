@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
+#include <nlohmann/json.hpp>
 #include <ranges>
 #include <sstream>
 #include <stdexcept>
@@ -171,6 +172,15 @@ public:
   auto static getDecompositionAngles(const Angles& angles, qc::fp thetaMax)
       -> Angles;
 
+  /**
+   * @brief Decomposes single-qubit and two-qubit gate layers into the native
+   * gate set (global y-rotations and local z-rotations), optionally applying
+   * theta-optimization scheduling.
+   * @param nQubits the number of qubits in the circuit.
+   * @param singleQubitGateLayers the single-qubit gate layers to decompose.
+   * @param twoQubitGateLayers the two-qubit gate layers of the schedule.
+   * @returns` the decomposition result.
+   */
   [[nodiscard]] auto
   decompose(size_t nQubits,
             const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
@@ -184,7 +194,7 @@ public:
    */
   template <class T> class DirectedGraph {
     /// number of nodes in the graph
-    size_t nNodes_;
+    size_t nNodes_ = 0;
     /// a vector containing the adjacency lists of each node
     std::vector<std::vector<std::pair<size_t, double>>> adjacencies_;
     /// a vector containing the values associated with each node
@@ -192,11 +202,7 @@ public:
 
   public:
     /// Creates an empty graph to hold objects of type T.
-    DirectedGraph() {
-      nNodes_ = 0;
-      adjacencies_ = std::vector<std::vector<std::pair<size_t, double>>>();
-      nodeValues_ = std::vector<T>();
-    }
+    DirectedGraph() {}
 
     /**
      * @brief Adds a node with a given value to the graph.
