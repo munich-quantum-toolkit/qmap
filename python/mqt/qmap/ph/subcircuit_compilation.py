@@ -83,6 +83,164 @@ class RunResult:
     baseline_compute_time: float
 
 
+def _setup_routing(
+    beam_splitter_reflectivities: np.ndarray,
+    input_transmissions: np.ndarray,
+    output_transmissions: np.ndarray,
+    target_unitary: torch.Tensor,
+    chip_dim: int,
+    target_dim: int,
+) -> tuple[Any, list[int], list[int], list[int], list[int], torch.Tensor]:
+    """Find the best photon route and derive port assignments and an adjusted target unitary.
+
+    Returns:
+        A tuple of ``(movement_mask, input_ports, output_ports,
+        active_cols_computation_zone, converted_input_ports, target_unitary_opt)``.
+    """
+    graph, _, layers = construct_graph(
+        chip_dim=chip_dim,
+        target_dim=target_dim,
+        input_transmission=input_transmissions,
+        beam_splitter_reflectivities=beam_splitter_reflectivities,
+        output_transmission=output_transmissions,
+    )
+
+    best_node_sequence, _ = get_best_route(graph, layers)
+
+    movement_mask = route_to_movement_mask(best_node_sequence, chip_dim=chip_dim, target_dim=target_dim)
+
+    input_ports, output_ports, active_cols_computation_zone = infer_input_computation_and_output_ports(
+        best_node_sequence, target_dim
+    )
+    converted_input_ports = convert_input_ports(input_ports, chip_dim)
+    convert_output_ports(output_ports, chip_dim)
+    input_ports_for_computation_zone = get_input_ports_for_computation_zone(active_cols_computation_zone, target_dim)
+
+    # When photons enter on odd columns, apply a swap permutation to the target
+    # so the optimiser sees the correct column ordering.
+    if input_ports_for_computation_zone[0] == 0:
+        permutation_matrix = torch.zeros((target_dim, target_dim), dtype=torch.complex128)
+        for i in range(target_dim):
+            if i % 2 == 0:
+                permutation_matrix[i, i + 1] = 1
+            else:
+                permutation_matrix[i, i - 1] = 1
+        target_unitary_opt = target_unitary @ permutation_matrix
+    else:
+        target_unitary_opt = target_unitary
+
+    return movement_mask, input_ports, output_ports, active_cols_computation_zone, converted_input_ports, target_unitary_opt
+
+
+def _run_proposed_optimization(
+    target_unitary_opt: torch.Tensor,
+    beam_splitter_reflectivities: np.ndarray,
+    movement_mask: Any,
+    config: OptimizationConfig,
+    chip_dim: int,
+    input_ports: list[int],
+    active_cols_computation_zone: list[int],
+    output_ports: list[int],
+) -> tuple[float, torch.Tensor]:
+    """Optimize phase-shifter parameters for the proposed routing path.
+
+    Returns:
+        A tuple of ``(final_loss, phase_shifter_params_including_routing)``.
+    """
+    result = optimize_unitary_subcircuit_parameters(
+        target_unitary=target_unitary_opt,
+        beam_splitter_reflectivities=beam_splitter_reflectivities,
+        movement_mask=movement_mask,
+        lr=config.lr,
+        threshold=config.threshold,
+        active_cols=input_ports,
+        active_cols_target=active_cols_computation_zone,
+        output_rows=output_ports,
+        max_iterations=config.max_iterations,
+        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
+        optimize_routing_parameters=config.optimize_routing_parameters,
+        early_stop_patience=50,
+        min_improvement=1e-4,
+    )
+
+    losses = result["losses"][-1] if result["losses"] else float("inf")
+    phase_shifter_params = result["phase_shifter_params"].detach()
+
+    phase_shifter_params_2d = reshape_flattened_params_to_grid(
+        phase_shifter_params,
+        chip_dim,
+        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
+    )
+
+    params_including_routing, _, _ = get_effective_params_and_mask(
+        chip_dim,
+        movement_mask,
+        phase_shifter_params_2d,
+        optimize_routing_parameters=config.optimize_routing_parameters,
+    )
+
+    return losses, params_including_routing
+
+
+def _run_baseline_optimization(
+    target_unitary_embedded: torch.Tensor,
+    beam_splitter_reflectivities: torch.Tensor,
+    config: OptimizationConfig,
+    chip_dim: int,
+    baseline_active_cols: list[int],
+) -> tuple[float, torch.Tensor]:
+    """Optimize phase-shifter parameters for the baseline dual-rail placement.
+
+    Returns:
+        A tuple of ``(final_loss, baseline_phase_shifter_params_2d)``.
+    """
+    baseline_result = optimize_unitary_subcircuit_parameters(
+        target_unitary=target_unitary_embedded,
+        beam_splitter_reflectivities=beam_splitter_reflectivities,
+        lr=config.lr,
+        threshold=config.threshold,
+        active_cols=baseline_active_cols,
+        max_iterations=config.max_iterations,
+        baseline=True,
+        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
+        early_stop_patience=50,
+        min_improvement=1e-6,
+    )
+
+    baseline_losses = baseline_result["losses"][-1] if baseline_result["losses"] else float("inf")
+    baseline_phase_shifter_params = baseline_result["phase_shifter_params"].detach()
+
+    baseline_phase_shifter_params_2d = reshape_flattened_params_to_grid(
+        baseline_phase_shifter_params,
+        chip_dim,
+        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
+    )
+
+    return baseline_losses, baseline_phase_shifter_params_2d
+
+
+def _compute_ideal_distributions(target_unitary: torch.Tensor, target_dim: int) -> tuple[Any, Any]:
+    """Compute ground-truth output distributions via ideal Perceval simulation.
+
+    Returns:
+        A tuple of ``(ideal_probability_distribution, baseline_ideal_probability_distribution)``.
+    """
+    pcvl_u = pcvl.Unitary(pcvl.MatrixN(target_unitary))
+
+    ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
+    ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
+    ground_truth_processor.with_input(pcvl.BasicState([1, 0] * (target_dim // 2)))
+
+    baseline_ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
+    baseline_ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
+    baseline_ground_truth_processor.with_input(pcvl.BasicState([1, 0] * (target_dim // 2)))
+
+    return (
+        algorithm.Sampler(ground_truth_processor).probs()["results"],
+        algorithm.Sampler(baseline_ground_truth_processor).probs()["results"],
+    )
+
+
 def compile_subcircuit(
     beam_splitter_reflectivities: np.ndarray,
     input_transmissions: np.ndarray,
@@ -133,123 +291,36 @@ def compile_subcircuit(
     chip_dim = len(input_transmissions)
     target_dim = int(target_unitary.shape[0])
 
-    proposed_compiler_start = time.time()
-
-    graph, _, layers = construct_graph(
-        chip_dim=chip_dim,
-        target_dim=target_dim,
-        input_transmission=input_transmissions,
-        beam_splitter_reflectivities=beam_splitter_reflectivities,
-        output_transmission=output_transmissions,
-    )
-
-    best_node_sequence, _ = get_best_route(graph, layers)
-
-    movement_mask = route_to_movement_mask(best_node_sequence, chip_dim=chip_dim, target_dim=target_dim)
-
-    input_ports, output_ports, active_cols_computation_zone = infer_input_computation_and_output_ports(
-        best_node_sequence, target_dim
-    )
-    converted_input_ports = convert_input_ports(input_ports, chip_dim)
-    convert_output_ports(output_ports, chip_dim)
-    input_ports_for_computation_zone = get_input_ports_for_computation_zone(active_cols_computation_zone, target_dim)
-
     baseline_active_cols = get_baseline_active_cols(target_dim)
     baseline_input_ports = get_baseline_input_ports(baseline_active_cols, chip_dim)
 
-    # When photons enter on odd columns, apply a swap permutation to the target
-    # so the optimiser sees the correct column ordering.
-    if input_ports_for_computation_zone[0] == 0:
-        permutation_matrix = torch.zeros((target_dim, target_dim), dtype=torch.complex128)
-        for i in range(target_dim):
-            if i % 2 == 0:
-                permutation_matrix[i, i + 1] = 1
-            else:
-                permutation_matrix[i, i - 1] = 1
-        target_unitary_opt = target_unitary @ permutation_matrix
-    else:
-        target_unitary_opt = target_unitary
-
-    result = optimize_unitary_subcircuit_parameters(
-        target_unitary=target_unitary_opt,
-        beam_splitter_reflectivities=beam_splitter_reflectivities,
-        movement_mask=movement_mask,
-        lr=config.lr,
-        threshold=config.threshold,
-        active_cols=input_ports,
-        active_cols_target=active_cols_computation_zone,
-        output_rows=output_ports,
-        max_iterations=config.max_iterations,
-        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
-        optimize_routing_parameters=config.optimize_routing_parameters,
-        early_stop_patience=50,
-        min_improvement=1e-4,
-    )
-
-    losses = result["losses"][-1] if result["losses"] else float("inf")
-    phase_shifter_params = result["phase_shifter_params"].detach()
-
-    phase_shifter_params_2d = reshape_flattened_params_to_grid(
-        phase_shifter_params,
-        chip_dim,
-        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
-    )
-
-    phase_shifter_params_including_routing, _, _ = get_effective_params_and_mask(
-        chip_dim,
+    proposed_start = time.time()
+    (
         movement_mask,
-        phase_shifter_params_2d,
-        optimize_routing_parameters=config.optimize_routing_parameters,
+        input_ports,
+        output_ports,
+        active_cols_computation_zone,
+        converted_input_ports,
+        target_unitary_opt,
+    ) = _setup_routing(
+        beam_splitter_reflectivities, input_transmissions, output_transmissions,
+        target_unitary, chip_dim, target_dim,
     )
-
-    proposed_compiler_end = time.time()
-    proposed_compiler_compute_time = proposed_compiler_end - proposed_compiler_start
+    losses, phase_shifter_params_including_routing = _run_proposed_optimization(
+        target_unitary_opt, beam_splitter_reflectivities, movement_mask, config,
+        chip_dim, input_ports, active_cols_computation_zone, output_ports,
+    )
+    proposed_compute_time = time.time() - proposed_start
 
     beam_splitter_reflectivities = torch.as_tensor(beam_splitter_reflectivities, dtype=torch.float64)
 
-    baseline_start_time = time.time()
-
-    baseline_result = optimize_unitary_subcircuit_parameters(
-        target_unitary=target_unitary_embedded,
-        beam_splitter_reflectivities=beam_splitter_reflectivities,
-        lr=config.lr,
-        threshold=config.threshold,
-        active_cols=baseline_active_cols,
-        max_iterations=config.max_iterations,
-        baseline=True,
-        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
-        early_stop_patience=50,
-        min_improvement=1e-6,
+    baseline_start = time.time()
+    baseline_losses, baseline_phase_shifter_params_2d = _run_baseline_optimization(
+        target_unitary_embedded, beam_splitter_reflectivities, config, chip_dim, baseline_active_cols,
     )
+    baseline_compute_time = time.time() - baseline_start
 
-    baseline_losses = baseline_result["losses"][-1] if baseline_result["losses"] else float("inf")
-    baseline_phase_shifter_params = baseline_result["phase_shifter_params"].detach()
-
-    baseline_phase_shifter_params_2d = reshape_flattened_params_to_grid(
-        baseline_phase_shifter_params,
-        chip_dim,
-        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
-    )
-
-    baseline_end_time = time.time()
-    baseline_compute_time = baseline_end_time - baseline_start_time
-
-    # -------------------------------------------------------------------------
-    # Ground-truth distributions via ideal Perceval simulation.
-    # -------------------------------------------------------------------------
-    pcvl_u = pcvl.Unitary(pcvl.MatrixN(target_unitary))
-
-    ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
-    ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
-    ground_truth_processor.with_input(pcvl.BasicState([1, 0] * (target_dim // 2)))
-
-    baseline_ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
-    baseline_ground_truth_processor.add(mode_mapping=list(range(target_dim)), component=pcvl_u)
-    baseline_ground_truth_processor.with_input(pcvl.BasicState([1, 0] * (target_dim // 2)))
-
-    ideal_probability_distribution = algorithm.Sampler(ground_truth_processor).probs()["results"]
-    baseline_ideal_probability_distribution = algorithm.Sampler(baseline_ground_truth_processor).probs()["results"]
-    # -------------------------------------------------------------------------
+    ideal_prob_dist, baseline_ideal_prob_dist = _compute_ideal_distributions(target_unitary, target_dim)
 
     virtual_chip = create_mzi_chip(
         beam_splitter_reflectivities,
@@ -266,14 +337,14 @@ def compile_subcircuit(
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
     )
 
-    _processor, probability_distribution = simulate_with_loss(
+    _, probability_distribution = simulate_with_loss(
         virtual_chip,
         chip_dim,
         input_state=converted_input_ports,
         input_transmissions=input_transmissions,
         output_transmissions=output_transmissions,
     )
-    _baseline_processor, baseline_probability_distribution = simulate_with_loss(
+    _, baseline_probability_distribution = simulate_with_loss(
         baseline_virtual_chip,
         chip_dim,
         input_state=baseline_input_ports,
@@ -283,15 +354,14 @@ def compile_subcircuit(
 
     performance_dict = evaluate_chip_performance(
         raw_results=probability_distribution,
-        ideal_baseline=ideal_probability_distribution,
+        ideal_baseline=ideal_prob_dist,
         target_modes=output_ports,
         required_photons=target_dim // 2,
         output_transmissions=output_transmissions,
     )
-
     baseline_performance_dict = evaluate_chip_performance(
         raw_results=baseline_probability_distribution,
-        ideal_baseline=baseline_ideal_probability_distribution,
+        ideal_baseline=baseline_ideal_prob_dist,
         target_modes=list(range(target_dim)),
         required_photons=target_dim // 2,
         output_transmissions=output_transmissions,
@@ -302,6 +372,6 @@ def compile_subcircuit(
         baseline_performance=baseline_performance_dict,
         loss=losses,
         baseline_loss=baseline_losses,
-        compute_time=proposed_compiler_compute_time,
+        compute_time=proposed_compute_time,
         baseline_compute_time=baseline_compute_time,
     )
