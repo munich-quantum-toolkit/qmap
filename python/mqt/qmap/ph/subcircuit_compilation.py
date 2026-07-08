@@ -129,13 +129,20 @@ def _setup_routing(
     else:
         target_unitary_opt = target_unitary
 
-    return movement_mask, input_ports, output_ports, active_cols_computation_zone, converted_input_ports, target_unitary_opt
+    return (
+        movement_mask,
+        input_ports,
+        output_ports,
+        active_cols_computation_zone,
+        converted_input_ports,
+        target_unitary_opt,
+    )
 
 
 def _run_proposed_optimization(
     target_unitary_opt: torch.Tensor,
     beam_splitter_reflectivities: np.ndarray,
-    movement_mask: Any,
+    movement_mask: torch.Tensor,
     config: OptimizationConfig,
     chip_dim: int,
     input_ports: list[int],
@@ -299,12 +306,22 @@ def compile_subcircuit(
         converted_input_ports,
         target_unitary_opt,
     ) = _setup_routing(
-        beam_splitter_reflectivities, input_transmissions, output_transmissions,
-        target_unitary, chip_dim, target_dim,
+        beam_splitter_reflectivities,
+        input_transmissions,
+        output_transmissions,
+        target_unitary,
+        chip_dim,
+        target_dim,
     )
     losses, phase_shifter_params_including_routing = _run_proposed_optimization(
-        target_unitary_opt, beam_splitter_reflectivities, movement_mask, config,
-        chip_dim, input_ports, active_cols_computation_zone, output_ports,
+        target_unitary_opt,
+        beam_splitter_reflectivities,
+        movement_mask,
+        config,
+        chip_dim,
+        input_ports,
+        active_cols_computation_zone,
+        output_ports,
     )
     proposed_compute_time = time.time() - proposed_start
 
@@ -312,7 +329,11 @@ def compile_subcircuit(
 
     baseline_start = time.time()
     baseline_losses, baseline_phase_shifter_params_2d = _run_baseline_optimization(
-        target_unitary_embedded, beam_splitter_reflectivities, config, chip_dim, baseline_active_cols,
+        target_unitary_embedded,
+        beam_splitter_reflectivities,
+        config,
+        chip_dim,
+        baseline_active_cols,
     )
     baseline_compute_time = time.time() - baseline_start
 

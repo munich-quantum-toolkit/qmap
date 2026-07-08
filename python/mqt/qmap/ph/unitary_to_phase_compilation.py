@@ -589,8 +589,7 @@ def optimize_unitary_subcircuit_parameters(
         else:
             no_improve_steps += 1
 
-        if verbose and index % 100 == 0:
-            print(f"[optimize] iter {index:5d}  loss={loop_loss:.6f}  lr={optimizer.param_groups[0]['lr']:.2e}")
+        verbose and index % 100 == 0
 
         lrs.append(optimizer.param_groups[0]["lr"])
 
