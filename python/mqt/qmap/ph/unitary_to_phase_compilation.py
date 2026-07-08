@@ -518,6 +518,7 @@ def optimize_unitary_subcircuit_parameters(
     index = 0
     best_loss = float("inf")
     best_params = phase_shifter_params.detach().clone()
+    patience_ref_loss = float("inf")
     no_improve_steps = 0
 
     while loop_loss > threshold and index < max_iterations:
@@ -578,9 +579,12 @@ def optimize_unitary_subcircuit_parameters(
         loop_loss = loss.item()
         losses.append(loop_loss)
 
-        if loop_loss < best_loss - min_improvement:
+        if loop_loss < best_loss:
             best_loss = loop_loss
             best_params = phase_shifter_params.detach().clone()
+
+        if loop_loss < patience_ref_loss - min_improvement:
+            patience_ref_loss = loop_loss
             no_improve_steps = 0
         else:
             no_improve_steps += 1
