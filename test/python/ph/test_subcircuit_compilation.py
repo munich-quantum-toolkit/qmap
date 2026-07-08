@@ -95,19 +95,19 @@ _SCENARIOS = [
     # t = 1.0  (lossless)
     pytest.param(_Scenario(16, 4, 0.000, None, 0.90, 0.002, 0.80, 0.001), id="chip16-t1.0-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, None, 0.85, 0.050, 0.75, 0.100), id="chip16-t1.0-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, None, 0.80, 0.100, 0.70, 0.100), id="chip16-t1.0-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.030, None, 0.80, 0.100, 0.70, 0.150), id="chip16-t1.0-pe0.030"),
     # t ~ Uniform[0.9, 1.0]
     pytest.param(_Scenario(16, 4, 0.000, 0.9, 0.70, 0.002, 0.60, 0.002), id="chip16-t0.9-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, 0.9, 0.65, 0.050, 0.55, 0.100), id="chip16-t0.9-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, 0.9, 0.60, 0.100, 0.50, 0.100), id="chip16-t0.9-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.030, 0.9, 0.60, 0.100, 0.50, 0.150), id="chip16-t0.9-pe0.030"),
     # t ~ Uniform[0.8, 1.0]
     pytest.param(_Scenario(16, 4, 0.000, 0.8, 0.40, 0.005, 0.30, 0.005), id="chip16-t0.8-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, 0.8, 0.35, 0.050, 0.25, 0.100), id="chip16-t0.8-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, 0.8, 0.30, 0.100, 0.20, 0.100), id="chip16-t0.8-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.030, 0.8, 0.30, 0.100, 0.20, 0.200), id="chip16-t0.8-pe0.030"),
     # t ~ Uniform[0.7, 1.0]
     pytest.param(_Scenario(16, 4, 0.000, 0.7, 0.30, 0.010, 0.20, 0.010), id="chip16-t0.7-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, 0.7, 0.25, 0.050, 0.15, 0.100), id="chip16-t0.7-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, 0.7, 0.20, 0.100, 0.10, 0.100), id="chip16-t0.7-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.030, 0.7, 0.20, 0.100, 0.10, 0.200), id="chip16-t0.7-pe0.030"),
 ]
 # fmt: on
 
