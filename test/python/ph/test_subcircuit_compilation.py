@@ -112,7 +112,7 @@ _SCENARIOS = [
 # fmt: on
 
 # Subset used for tests that only make sense when there are transmission losses.
-_SCENARIOS_WITH_LOSS = [p for p in _SCENARIOS if cast(_Scenario, p.values[0]).t_low is not None]
+_SCENARIOS_WITH_LOSS = [p for p in _SCENARIOS if cast("_Scenario", p.values[0]).t_low is not None]
 
 
 @dataclass
