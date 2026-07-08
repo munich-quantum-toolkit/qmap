@@ -13,7 +13,7 @@ into the native gate set of the target architecture. Previously, single qubit
 gates were only piped through the compiler to the output. The
 `NativeGateDecomposer` can be used, by using the
 `RoutingAwareNativeGateCompiler` as the compiler. For an example how to use it,
-also see the script `eval/na/zined/eval_native_gate_decomposer.py`.
+also see the script `eval/na/zined/eval_native_gate_decomposition.py`.
 
 ## [3.7.0]
 
