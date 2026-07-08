@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 from mqt.core import load
@@ -67,4 +68,4 @@ def test_na_routing_aware_compiler(compiler: RoutingAwareCompiler, circuit_filen
     assert result is not None
     stats = compiler.stats()
     assert "totalTime" in stats
-    assert stats["totalTime"] > 0
+    assert cast("float", stats["totalTime"]) > 0

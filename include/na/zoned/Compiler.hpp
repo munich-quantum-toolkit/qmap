@@ -10,18 +10,19 @@
 
 #pragma once
 
-#include "Architecture.hpp"
-#include "code_generator/CodeGenerator.hpp"
-#include "decomposer/NoOpDecomposer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
-#include "layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
-#include "layout_synthesizer/placer/HeuristicPlacer.hpp"
-#include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
-#include "layout_synthesizer/router/IndependentSetRouter.hpp"
 #include "na/NAComputation.hpp"
-#include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
-#include "scheduler/ASAPScheduler.hpp"
+#include "na/zoned/Architecture.hpp"
+#include "na/zoned/code_generator/CodeGenerator.hpp"
+#include "na/zoned/decomposer/NativeGateDecomposer.hpp"
+#include "na/zoned/decomposer/NoOpDecomposer.hpp"
+#include "na/zoned/layout_synthesizer/PlaceAndRouteSynthesizer.hpp"
+#include "na/zoned/layout_synthesizer/placer/HeuristicPlacer.hpp"
+#include "na/zoned/layout_synthesizer/placer/VertexMatchingPlacer.hpp"
+#include "na/zoned/layout_synthesizer/router/IndependentSetRouter.hpp"
+#include "na/zoned/reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
+#include "na/zoned/scheduler/ASAPScheduler.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -151,21 +152,19 @@ public:
       SPDLOG_DEBUG("Number of qubits: {}", qComp.getNqubits());
       const auto nTwoQubitGates = static_cast<size_t>(
           std::count_if(qComp.cbegin(), qComp.cend(),
-                        [](const std::unique_ptr<qc::Operation>& op) {
+                        [](const std::unique_ptr<qc::Operation>& op) -> bool {
                           return op->getNqubits() == 2;
                         }));
       SPDLOG_DEBUG("Number of two-qubit gates: {}", nTwoQubitGates);
       const auto nSingleQubitGates = static_cast<size_t>(
           std::count_if(qComp.cbegin(), qComp.cend(),
-                        [](const std::unique_ptr<qc::Operation>& op) {
+                        [](const std::unique_ptr<qc::Operation>& op) -> bool {
                           return op->getNqubits() == 1;
                         }));
       SPDLOG_DEBUG("Number of single-qubit gates: {}", nSingleQubitGates);
     }
 #endif // SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
 
-    // CodeQL was not very happy about the structural binding here, hence I
-    // removed it.
     SPDLOG_DEBUG("Scheduling...");
     const auto schedulingStart = std::chrono::system_clock::now();
     const auto& [singleQubitGateLayers, twoQubitGateLayers] =
@@ -203,7 +202,8 @@ public:
     const auto decomposingStart = std::chrono::system_clock::now();
     const auto& [decomposedSingleQubitGateLayers,
                  decomposedTwoQubitGateLayers] =
-        SELF.decompose(singleQubitGateLayers, twoQubitGateLayers);
+        SELF.decompose(qComp.getNqubits(), singleQubitGateLayers,
+                       twoQubitGateLayers);
     const auto decomposingEnd = std::chrono::system_clock::now();
     statistics_.decomposingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(decomposingEnd -
@@ -262,6 +262,9 @@ public:
   }
 };
 
+/**
+ * Concrete synthesizer that performs routing-agnostic layout synthesis.
+ */
 class RoutingAgnosticSynthesizer
     : public PlaceAndRouteSynthesizer<RoutingAgnosticSynthesizer,
                                       VertexMatchingPlacer,
@@ -275,6 +278,10 @@ public:
       : PlaceAndRouteSynthesizer(architecture) {}
 };
 
+/**
+ * Concrete compiler that schedules and performs routing-agnostic layout
+ * synthesis.
+ */
 class RoutingAgnosticCompiler final
     : public Compiler<RoutingAgnosticCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAgnosticSynthesizer,
@@ -288,6 +295,9 @@ public:
       : Compiler(architecture) {}
 };
 
+/**
+ * Concrete synthesizer that performs routing-aware layout synthesis.
+ */
 class RoutingAwareSynthesizer
     : public PlaceAndRouteSynthesizer<RoutingAwareSynthesizer, HeuristicPlacer,
                                       IndependentSetRouter> {
@@ -300,6 +310,12 @@ public:
       : PlaceAndRouteSynthesizer(architecture) {}
 };
 
+/**
+ * Concrete compiler that schedules and performs routing-aware layout synthesis.
+ *
+ * In particular, it leaves the decomposition of gates into native gates to the
+ * user, i.e., it does not perform any decomposition of gates into native gates.
+ */
 class RoutingAwareCompiler final
     : public Compiler<RoutingAwareCompiler, ASAPScheduler, NoOpDecomposer,
                       VertexMatchingReuseAnalyzer, RoutingAwareSynthesizer,
@@ -309,6 +325,23 @@ public:
       : Compiler(architecture, config) {}
 
   explicit RoutingAwareCompiler(const Architecture& architecture)
+      : Compiler(architecture) {}
+};
+
+/**
+ * Concrete compiler that schedules, decomposes into native gates, and performs
+ * routing-aware layout synthesis.
+ */
+class RoutingAwareNativeGateCompiler final
+    : public Compiler<RoutingAwareNativeGateCompiler, ASAPScheduler,
+                      NativeGateDecomposer, VertexMatchingReuseAnalyzer,
+                      RoutingAwareSynthesizer, CodeGenerator> {
+public:
+  RoutingAwareNativeGateCompiler(const Architecture& architecture,
+                                 const Config& config)
+      : Compiler(architecture, config) {}
+
+  explicit RoutingAwareNativeGateCompiler(const Architecture& architecture)
       : Compiler(architecture) {}
 };
 } // namespace na::zoned

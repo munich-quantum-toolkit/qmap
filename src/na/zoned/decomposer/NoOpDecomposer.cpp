@@ -17,6 +17,7 @@
 
 namespace na::zoned {
 auto NoOpDecomposer::decompose(
+    [[maybe_unused]] const size_t nQubits,
     const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
     -> DecompositionResult {

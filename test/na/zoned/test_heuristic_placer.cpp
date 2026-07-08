@@ -51,25 +51,25 @@ constexpr std::string_view configJson = R"({
   "lookaheadFactor": 0.2,
   "reuseLevel": 5.0
 })";
-class AStarPlacerPlaceTest : public ::testing::Test {
+class AStarPlacerTest : public ::testing::Test {
 protected:
   Architecture architecture;
   HeuristicPlacer::Config config;
   HeuristicPlacer placer;
-  AStarPlacerPlaceTest()
+  AStarPlacerTest()
       : architecture(Architecture::fromJSONString(architectureJson)),
         config(nlohmann::json::parse(configJson)
                    .template get<HeuristicPlacer::Config>()),
         placer(architecture, config) {}
 };
-TEST_F(AStarPlacerPlaceTest, Empty) {
+TEST_F(AStarPlacerTest, Empty) {
   constexpr size_t nQubits = 1;
   EXPECT_THAT(placer.place(nQubits,
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
                            std::vector<std::unordered_set<qc::Qubit>>{}),
               ::testing::ElementsAre(::testing::SizeIs(nQubits)));
 }
-TEST_F(AStarPlacerPlaceTest, OneGate) {
+TEST_F(AStarPlacerTest, OneGate) {
   constexpr size_t nQubits = 2;
   EXPECT_THAT(placer.place(nQubits,
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{
@@ -79,7 +79,7 @@ TEST_F(AStarPlacerPlaceTest, OneGate) {
                                      ::testing::SizeIs(nQubits),
                                      ::testing::SizeIs(nQubits)));
 }
-TEST_F(AStarPlacerPlaceTest, TwoGatesCons) {
+TEST_F(AStarPlacerTest, TwoGatesCons) {
   constexpr size_t nQubits = 4;
   const auto& placement = placer.place(
       nQubits,
@@ -118,7 +118,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesCons) {
   EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U, 2U, 3U));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
-TEST_F(AStarPlacerPlaceTest, OneGateCross) {
+TEST_F(AStarPlacerTest, OneGateCross) {
   constexpr size_t nQubits = 2;
   const auto& placement = placer.place(
       nQubits, std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{1U, 0U}}},
@@ -138,7 +138,7 @@ TEST_F(AStarPlacerPlaceTest, OneGateCross) {
   }
   EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U));
 }
-TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
+TEST_F(AStarPlacerTest, TwoGatesZip) {
   constexpr size_t nQubits = 4;
   const auto& placement = placer.place(
       nQubits,
@@ -164,7 +164,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
                                ::testing::ElementsAre(1U, 3U, 0U, 2U)));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
-TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
+TEST_F(AStarPlacerTest, FullEntanglementZone) {
   constexpr size_t nQubits = 32;
   const auto& placement = placer.place(
       nQubits,
@@ -196,7 +196,7 @@ TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
   }
   EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
 }
-TEST_F(AStarPlacerPlaceTest, TwoTwoQubitLayerReuse) {
+TEST_F(AStarPlacerTest, TwoTwoQubitLayerReuse) {
   constexpr size_t nQubits = 3;
   const auto& placement =
       placer.place(nQubits,

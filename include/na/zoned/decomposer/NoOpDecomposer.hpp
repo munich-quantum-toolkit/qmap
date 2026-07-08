@@ -48,8 +48,17 @@ public:
   NoOpDecomposer(const Architecture& /* unused */, const Config& /* unused */) {
   }
 
+  /**
+   * @brief Decomposes single-qubit and two-qubit gate layers by copying them
+   * unchanged (no-op decomposition).
+   * @param nQubits the number of qubits in the circuit.
+   * @param singleQubitGateLayers the single-qubit gate layers to decompose.
+   * @param twoQubitGateLayers the two-qubit gate layers of the schedule.
+   * @returns the decomposition result.
+   */
   [[nodiscard]] auto
-  decompose(const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
+  decompose(size_t nQubits,
+            const std::vector<SingleQubitGateRefLayer>& singleQubitGateLayers,
             const std::vector<TwoQubitGateLayer>& twoQubitGateLayers) const
       -> DecompositionResult override;
 };
