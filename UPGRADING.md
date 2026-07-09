@@ -6,6 +6,8 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+## [3.8.0]
+
 This release updates the minimum required `mqt-core` version to 3.7.0 as well as
 the `nanobind` version to 2.13.0.
 
@@ -198,7 +200,8 @@ be conveniently installed from PyPI using the
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.7.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.8.0...HEAD
+[3.8.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.7.0...v3.8.0
 [3.7.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.4.0...v3.5.0
