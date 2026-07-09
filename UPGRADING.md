@@ -6,10 +6,13 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+This release updates the minimum required `mqt-core` version to 3.7.0 as well as
+the `nanobind` version to 2.13.0.
+
 ## [3.7.0]
 
-This release also updates the minimum required `mqt-core` version to `v3.6.0` as
-well as the `nanobind` version to `v2.12.0`.
+This release updates the minimum required `mqt-core` version to 3.6.0 as well as
+the `nanobind` version to 2.12.0.
 
 ### CMake presets
 

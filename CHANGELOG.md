@@ -17,6 +17,11 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 - 🎨 Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
   to QMAP ([#1058]) ([**@ystade**])
 
+### Changed
+
+- ⬆️ Update `mqt-core` to version 3.7.0 ([#1069]) ([**@denialhaag**])
+- ⬆️ Update `nanobind` to version 2.13.0 ([#1069]) ([**@denialhaag**])
+
 ### Removed
 
 - 📝 Remove support for generating LaTeX documentation ([#1057])
@@ -268,6 +273,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
 [#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
