@@ -113,7 +113,7 @@ To support this endeavor, please consider:
 MQT QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/).
 
 ```console
-(venv) $ pip install mqt.qmap
+uv pip install mqt.qmap
 ```
 
 Compiling a given quantum circuit to a certain device is as easy as
