@@ -1678,39 +1678,39 @@ wheels = [
 
 [[package]]
 name = "mqt-core"
-version = "3.6.1"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/63/95/e1429f163a477845785a71d6dea92dfa1675d5228c1a01135f38340436ed/mqt_core-3.6.1.tar.gz", hash = "sha256:ce26f34bc0a363a795c8f95a2aa19341104b2961f3a2a4e2a19e2229e9e7dcd5", size = 655317, upload-time = "2026-05-20T00:34:36.107Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/67/e9/a9bde84ad0b9e4f3d142bf5d211859101348cc96c18f9cec5e45e1069ad0/mqt_core-3.7.0.tar.gz", hash = "sha256:b6dad03018624bbe44f0eeaf5bc8f4a8f9ccc241f08a70be6983f2f51fd8ea59", size = 680151, upload-time = "2026-07-08T23:23:54.673Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/18/e0/3e362a11e4103dd4c456f381daad92c5f18a6c467426999f58c480ba2cd6/mqt_core-3.6.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:79de9549084ca6b107153b9fbab5987354a50c5ce692930b40679a4416f74c6c", size = 5180469, upload-time = "2026-05-20T00:33:52.936Z" },
-    { url = "https://files.pythonhosted.org/packages/90/ea/2d5529b1d6983f5f20ba5e095a4a2476348c5faee92cbba847a69a8a48e9/mqt_core-3.6.1-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:a5e1c7f5f2522471700e908c8e2dc1963c1458e952a6814f021e0ed13724035d", size = 5671256, upload-time = "2026-05-20T00:33:55.019Z" },
-    { url = "https://files.pythonhosted.org/packages/71/ac/1cb831f10d1be99114c8df214ff96bab3ffdc9913f4494984ce3398e5f5a/mqt_core-3.6.1-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:87d93dd7a1f2a45083facc5e376b40e5c4306703eb5af56f9381678244226061", size = 6693517, upload-time = "2026-05-20T00:33:57.005Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/66/971c7c7e5f570899fbaed56b43523698faa0b46c575e9be114fd6a7c7eca/mqt_core-3.6.1-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:181b62397c04f30f4b482bfb588b1e08ea21d8ca6a78a94d45c8170d3dd0ade4", size = 7128865, upload-time = "2026-05-20T00:33:58.732Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/75/66776318b8399d3ee0e995cc5415b17e3b86d0debcc8f2b94054a35fd550/mqt_core-3.6.1-cp310-cp310-win_amd64.whl", hash = "sha256:1275e6be9f4198ffa16df06443df081ffa0d9016edd5bc22f2e5fb6866d692d1", size = 4046804, upload-time = "2026-05-20T00:34:00.767Z" },
-    { url = "https://files.pythonhosted.org/packages/b8/67/fdc2331352e35d938b276416008be7ffc0178eb66276b1445bc3a3767897/mqt_core-3.6.1-cp310-cp310-win_arm64.whl", hash = "sha256:74d03c9782cd2be1a7dc9f35a06815faf924caf9cf6572da815bfb59425f2c56", size = 7936592, upload-time = "2026-05-20T00:34:02.329Z" },
-    { url = "https://files.pythonhosted.org/packages/48/b0/a5a7450a9ffaff0ae8de49f65cd24c63901e3fee3dc740584c09b046165c/mqt_core-3.6.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:27b80e793f27a963417cc06da908a31f51fae07722a20cdb5b32edd8e0276be1", size = 5181464, upload-time = "2026-05-20T00:34:04.102Z" },
-    { url = "https://files.pythonhosted.org/packages/75/3d/9409c8f111c119722a8909bbfc92a7a3d8e4377e058ccfe62a46bf61ac09/mqt_core-3.6.1-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:2eae0ed0d4233749a8831bbeb32948da4031566acb742212b3681ed208289159", size = 5672582, upload-time = "2026-05-20T00:34:05.8Z" },
-    { url = "https://files.pythonhosted.org/packages/fa/dc/ba457c6db680a6e9aa84895bb25da826f03fb6454cfbd496a6c0ece3a9da/mqt_core-3.6.1-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1bb184b52c318b3b9d5db97fa006120cbe683a8fa9cd80790bf24b67489cd204", size = 6694132, upload-time = "2026-05-20T00:34:07.64Z" },
-    { url = "https://files.pythonhosted.org/packages/20/f9/3cc61de4fab97611c89d5977156ead60eb48c2721b8d4126d0ff1704e73c/mqt_core-3.6.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7b5c1b9750fa3e8447fd1bfd92b599688d3dc8574d3e70d1264c9a40b1b7be94", size = 7129376, upload-time = "2026-05-20T00:34:09.454Z" },
-    { url = "https://files.pythonhosted.org/packages/59/b5/80713df591091312e3801a5ecb84bf93c2996dfb0dbd9a912973ed3adc9c/mqt_core-3.6.1-cp311-cp311-win_amd64.whl", hash = "sha256:9d607b34f571500dbf0fb1ecb5f5ef95139dc32d57461a1cd0614387af778e75", size = 4047971, upload-time = "2026-05-20T00:34:11.097Z" },
-    { url = "https://files.pythonhosted.org/packages/58/7e/e9ace3e69c3613f5e1b73e5497cc94c451c259ab66fc3fda077f908ffc32/mqt_core-3.6.1-cp311-cp311-win_arm64.whl", hash = "sha256:8520f7cfa3b5e7465555fe06c3c1c17c194cfca92a06ac3f1bdf3c7660c1ef88", size = 7937030, upload-time = "2026-05-20T00:34:12.761Z" },
-    { url = "https://files.pythonhosted.org/packages/77/c1/423abe9632f79a8174d87b0b3f60d08d8e033e5c947c1a35e8cf7f4b4b33/mqt_core-3.6.1-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:8136975d84f3ad721a01e4461dbd15e8ae00630e8cf8ca000e247c68d44b32cc", size = 5177324, upload-time = "2026-05-20T00:34:14.518Z" },
-    { url = "https://files.pythonhosted.org/packages/8f/45/c2af228132100238121b256c84172acaaba3c4f68b45b0fcfab2a7684910/mqt_core-3.6.1-cp312-abi3-macosx_11_0_x86_64.whl", hash = "sha256:ee0433a5f4a22e6542e86558e29665219415aad730f699c555743d8fbd38a110", size = 5668253, upload-time = "2026-05-20T00:34:16.491Z" },
-    { url = "https://files.pythonhosted.org/packages/bb/c1/1e4596f76d52e56b96849575795be5132320c7fa39df1dd83e1eff9f7d4a/mqt_core-3.6.1-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a7ff7726627bfe4e779fa74397b89d9e686543a99ea2132d588aee7da6ecc89d", size = 6679218, upload-time = "2026-05-20T00:34:18.481Z" },
-    { url = "https://files.pythonhosted.org/packages/a2/df/de19e1e6f9f2b0cfdca08af28ff033a883a1995185724de8812728d45f3f/mqt_core-3.6.1-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ba1cf804ce909a7f9301759cfbc83b0d7dd6234752504f24185a39f616078bfb", size = 7112143, upload-time = "2026-05-20T00:34:19.967Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/e4/8d18330770afe008a5f26598e5b8025404d3adab04d8fe3e590576fd31aa/mqt_core-3.6.1-cp312-abi3-win_amd64.whl", hash = "sha256:ef594511df7596c23c61d96adf8d3f805ee81aa1afb52fc589d19b2b036d88fc", size = 4040427, upload-time = "2026-05-20T00:34:22.237Z" },
-    { url = "https://files.pythonhosted.org/packages/c6/1c/5f054d1c0a1f3be73135bcb324ff5c1ef1312fa2d94c78a88b7e264dec0d/mqt_core-3.6.1-cp312-abi3-win_arm64.whl", hash = "sha256:9ed5a594426937520bc2b3c8f92a5a52cb37df8a9d55661e1a6d8ec37d169b39", size = 7929919, upload-time = "2026-05-20T00:34:23.922Z" },
-    { url = "https://files.pythonhosted.org/packages/3f/12/f50cadbb52bda38a4d727a90d5542c64078da8b5f0f18f36938e41877bd1/mqt_core-3.6.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:c103a008405f4b554ee7bf092cd26a7d46cf7425c5ca8fa9b0a2e0004c4d8fa9", size = 5190293, upload-time = "2026-05-20T00:34:25.703Z" },
-    { url = "https://files.pythonhosted.org/packages/a7/0f/53b37b867d077124e30907bc520a80ceab0ca045f7687ea3aac301eebbab/mqt_core-3.6.1-cp314-cp314t-macosx_11_0_x86_64.whl", hash = "sha256:0ef1c62495ed4b110f3bce89dcf0a21a1353f64010cccc1ec71a50ce0cdea26e", size = 5682141, upload-time = "2026-05-20T00:34:27.394Z" },
-    { url = "https://files.pythonhosted.org/packages/eb/ce/3bb8f5f64897fc1d70d637097098c1ada7abf579a93f8d66e392a3eb5e18/mqt_core-3.6.1-cp314-cp314t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f7459aae9b2d80be7b32e3317d3fb86f5f5977b27c149de1e6d68c67d4c80b71", size = 6699266, upload-time = "2026-05-20T00:34:29.069Z" },
-    { url = "https://files.pythonhosted.org/packages/7a/9f/87088625f8d5426caf4a66bcc288e1833999c5dd3e9718604117821b25ec/mqt_core-3.6.1-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6e4183e8ec739087e5f94319bfb054318b184d6fdaab2bca5207745ff89dae09", size = 7129965, upload-time = "2026-05-20T00:34:31.213Z" },
-    { url = "https://files.pythonhosted.org/packages/6c/b7/4b9b70f914add8961fb736008618ea28f93b5acdba19878fde7d9fd4f30a/mqt_core-3.6.1-cp314-cp314t-win_amd64.whl", hash = "sha256:c5c7a2bdc0ff010672501cfc5735a547d9b15cab4f1604a78c687b69924ab25f", size = 4133733, upload-time = "2026-05-20T00:34:32.79Z" },
-    { url = "https://files.pythonhosted.org/packages/0a/5d/4e1e3e2ea7cab9d093a865c0e2b3de0729257e4eaff8abcd654503e43aa7/mqt_core-3.6.1-cp314-cp314t-win_arm64.whl", hash = "sha256:31df5b87f5afc09bbe3f815df434f0306a56b952b4f5dc2599e4d53625031b09", size = 8008654, upload-time = "2026-05-20T00:34:34.446Z" },
+    { url = "https://files.pythonhosted.org/packages/63/28/b564c030d05327be870105de61e1d5c053351fc48ca1a758514708026819/mqt_core-3.7.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5c214906f6c44501f44d68735600dcaf9bef03ab82e8c28a1ec3598341a77a7d", size = 5219987, upload-time = "2026-07-08T23:23:09.773Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/20/6ce443751548b82d9c0bd46d28fed0ceba8760c0fffa8339a56756057b56/mqt_core-3.7.0-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:f035ebe4aaa5cd157299deb931346685fda7155ed766f34f549a4e29968f889b", size = 5691688, upload-time = "2026-07-08T23:23:11.986Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/07/9da691977f7c4f3dcbfe2acb66c6f71049c39c4eae676dbac76fba8668ba/mqt_core-3.7.0-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e2de1a664b41eb59df7e422b491150e916a75e6bc8d74b1bfafeb2878d980af7", size = 6715927, upload-time = "2026-07-08T23:23:13.648Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/36/f9121569c19709478e66bfd7b76ae6d01cbd959a4cfec0e6e32b6983bdec/mqt_core-3.7.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fd537702e9ae4f0dbfa519808baec049230523c364adbb84b57e432800b60dad", size = 7152081, upload-time = "2026-07-08T23:23:15.369Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/56/da4deeb4137c751eab7e304bb97b37610098ff72f6de5046c82ee9ac3b82/mqt_core-3.7.0-cp310-cp310-win_amd64.whl", hash = "sha256:f30c4cb95555e20fea57d9ea96cc96279e44d3f7a4490cb62d20c9e375c72cad", size = 8066357, upload-time = "2026-07-08T23:23:17.153Z" },
+    { url = "https://files.pythonhosted.org/packages/55/52/166a3f17ae01e3767405a064dbbf21a4b70f1b668787ba7abdb17ca8fd7f/mqt_core-3.7.0-cp310-cp310-win_arm64.whl", hash = "sha256:99a546f8f653b23f1a16fc202f3cad588f70eb3c2ce581923e4da48ed3caa367", size = 7951308, upload-time = "2026-07-08T23:23:19.951Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/7c/b3f8595a59011951c63891dc7930fd70dd64dc438da99b5c054937c429f7/mqt_core-3.7.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d101ddac7e704c1f2a18591be0ba05fd148df4de3be03327cc2e78e2f9be8fed", size = 5219815, upload-time = "2026-07-08T23:23:21.918Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/7a/c1a5c5e4581442d34169b3318e85232682414af130f0b7c9a6a96be9895e/mqt_core-3.7.0-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:2cc1cb0cdc83cc352fec6fee71df9ed3c30c2cbdf163e0af59a3835f53eb11c4", size = 5691518, upload-time = "2026-07-08T23:23:23.678Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/97/dfa55943fd05d1c4b2a061db17b297d64a473d319b5abc0c38dd6eea9a87/mqt_core-3.7.0-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e9058762975f8fd09b33453d56e2e81dcaf9f27635f15e97fb429b6780d206c6", size = 6715504, upload-time = "2026-07-08T23:23:25.399Z" },
+    { url = "https://files.pythonhosted.org/packages/76/fa/2252535dae7358324fac83267619017583011f000944b99fb3b35fbc78a4/mqt_core-3.7.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3335998c93a601ef17672df239ff3e59ad4f0ba646f0576007c9e64483937b8a", size = 7151936, upload-time = "2026-07-08T23:23:27.439Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/c6/60e2b6d3336e7b9d530864a82a401cde4c79e1863894603dba706cefa43a/mqt_core-3.7.0-cp311-cp311-win_amd64.whl", hash = "sha256:7aff40d8043fb009ea7f36d160651891dc163c5813eca19cbfd6bba0333301b2", size = 8066529, upload-time = "2026-07-08T23:23:29.04Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/5d/9404802663938bea4564ca4e69e88b18e6988f1c4f11d117658922535255/mqt_core-3.7.0-cp311-cp311-win_arm64.whl", hash = "sha256:e331f150cd435858c51d72891e25e3e920c910d09dde08fd0f8341382a3bbf6a", size = 7951129, upload-time = "2026-07-08T23:23:30.856Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/6f/e5a9c767ea006416a309644a461130ca662d9e826e33e1e35da1d2fd4d3b/mqt_core-3.7.0-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:5e0af92724e3cb331d88db7e1c4c4fce6296520603be694f86c8f74adb6620f2", size = 5211763, upload-time = "2026-07-08T23:23:32.605Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/e3/d5ac6f0db322fadf8ed2b1af9e726d748d1840750c3460f61e6d1948d3e3/mqt_core-3.7.0-cp312-abi3-macosx_11_0_x86_64.whl", hash = "sha256:42a09e718ff9e801cd29422ec4e6bb5a39a923e9159b995647b9745f74fc5194", size = 5685492, upload-time = "2026-07-08T23:23:34.261Z" },
+    { url = "https://files.pythonhosted.org/packages/14/3c/ebf28553eb37b86368c4046963e8e2e4a2f0612a63072689579700236215/mqt_core-3.7.0-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:bc27f85c8c8d700b7d53c1b2c6cb52ab12d8ae61f37a0b2c3999791af564b8b9", size = 6699042, upload-time = "2026-07-08T23:23:35.813Z" },
+    { url = "https://files.pythonhosted.org/packages/43/23/599c8192073b6891ec829ac44237d39843a9d6007da10e51a00a607a3aa5/mqt_core-3.7.0-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:baeda0bc20303948dfb27ae4f815fc66577f2c615c3f46ea9f4aca14e53619ff", size = 7133398, upload-time = "2026-07-08T23:23:37.762Z" },
+    { url = "https://files.pythonhosted.org/packages/30/08/f737a9aa6b795e095e8ad6621b352b12c83d5a6543c35fc57969222f029e/mqt_core-3.7.0-cp312-abi3-win_amd64.whl", hash = "sha256:eaaf3e4ec1bdb6df7325fd305cd47eb3607f4619d0702a56519fb4be93fd1459", size = 8057646, upload-time = "2026-07-08T23:23:39.524Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/a1/2571eb9fc0fa9eff770d32435fbe95cb23b9505ff225ac27e8b1a5a1bed3/mqt_core-3.7.0-cp312-abi3-win_arm64.whl", hash = "sha256:70bdf26447fe42f033383646afdf98bbebfd319f917102dbc4a6b7d9809ba3d1", size = 7939316, upload-time = "2026-07-08T23:23:41.293Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/f0/e0584f77b3474c1cb616adae56f4afd0552145812dd31dab48054e575ab4/mqt_core-3.7.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:db344b721a6e8c3bedfe398b6a561fe8cb63d21ec7cf9142e58f3608b211deb8", size = 5226079, upload-time = "2026-07-08T23:23:43.205Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/9a/ca9c24007c5b62475e1c50a5061215037e129fa70aa51fe2e73623760559/mqt_core-3.7.0-cp314-cp314t-macosx_11_0_x86_64.whl", hash = "sha256:94b3ba6177ed0d7d3c012c9b590ad41a74386ab267fd6fe307769d6572943387", size = 5701134, upload-time = "2026-07-08T23:23:44.931Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/7a/eb8dd41c3783bd7072abb59db0077bfe7bd385e320e9c1035aa6ac218752/mqt_core-3.7.0-cp314-cp314t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4b7352f1fe76cbd3150586a30ed9e3aa5257cc96596a4bd602b40cbe797340eb", size = 6718109, upload-time = "2026-07-08T23:23:47.025Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/1b/c800230ba42b7e658e65e359bf18fd2a51532da14e89331256a466c2e9cf/mqt_core-3.7.0-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:eab167445b041b258120b2a8b9a776334f185cb6108dce1c49985530b78aba19", size = 7152032, upload-time = "2026-07-08T23:23:48.943Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/fd/673c808e77eb808c3f980af928f1db42a3cc189f32bb83286c56bfe77792/mqt_core-3.7.0-cp314-cp314t-win_amd64.whl", hash = "sha256:3c6734d51a54490d16de9f45a5bdd05bcbdc1ebf83f08cbca042add9e43c5594", size = 8127355, upload-time = "2026-07-08T23:23:50.793Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/1e/ef910579560991fa0a69c0c7d6d17d1e3e2e3ba66f7cf17bc96cb25ad0dd/mqt_core-3.7.0-cp314-cp314t-win_arm64.whl", hash = "sha256:e95d30b2aa9afb3ea03f8c4ce31058f11f0b8c3069df4ea7082b84e15a363edd", size = 8019397, upload-time = "2026-07-08T23:23:52.713Z" },
 ]
 
 [[package]]
 name = "mqt-qcec"
-version = "3.6.1"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mqt-core" },
@@ -1719,32 +1719,32 @@ dependencies = [
     { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d5/16/1e900e1c89a034ee8d6196de3d2b5f30711ffe159c5a4de0fdc6189374b3/mqt_qcec-3.6.1.tar.gz", hash = "sha256:0d053387fa2d660fcf8ec9ab6e5da6069634d73a3e95a7a9e5b5fed7479af3e3", size = 293070, upload-time = "2026-05-20T22:19:36.403Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/76/53d6fb3aadeac1d0749950c82e8f12461e3e5b6ab17bb509d0dca8a62bb0/mqt_qcec-3.7.0.tar.gz", hash = "sha256:b0a59e93b5c3b52dd5b95614f61cb97b0221f783b90e62fc140c0ba159132e01", size = 315200, upload-time = "2026-07-09T18:50:15.671Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/e8/c3718edaf04407b42d4476cadeb08d55c45b8693cc89da74fb4050157c09/mqt_qcec-3.6.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c1623a60eb35f558db3e6bc38345d8ce6fcd165e48817f6227dc53cf064f19b1", size = 224147, upload-time = "2026-05-20T22:18:55.334Z" },
-    { url = "https://files.pythonhosted.org/packages/d1/55/6e50ca989af1484118e88aa0b80208ad83d4f8b6bec9c19bbb344dce5e62/mqt_qcec-3.6.1-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:93d51dd278966aa222a4c2d867d8f61b7a40638160398cc2d09e97bdf1dab94a", size = 237244, upload-time = "2026-05-20T22:18:57.565Z" },
-    { url = "https://files.pythonhosted.org/packages/f2/a9/4c61d6af5acb56ef0e1b69d650bb774e2383b7355b0071f1f1141cb31214/mqt_qcec-3.6.1-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9ca76885b3afc20460a38a3d7a4c08c4e51dd35d7fc38f12870595f312a318fb", size = 238734, upload-time = "2026-05-20T22:18:59.599Z" },
-    { url = "https://files.pythonhosted.org/packages/03/36/d91036cb97f10b2276cf0a192a0a619e2ac82fa6f54cfcf354c85509677d/mqt_qcec-3.6.1-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:79018893072853030faaa3e066981c6e7b20fc2ca7cd6c5820ef997c65350ffb", size = 249180, upload-time = "2026-05-20T22:19:01.135Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/85/8775d220d06e02ea701d2f6994dc17be173013ad4d9eacd7435cafae1f8a/mqt_qcec-3.6.1-cp310-cp310-win_amd64.whl", hash = "sha256:2e1db239d0bec8198d1317c8b1cf08ed20c887eb63bae85590035655c8e6b623", size = 448206, upload-time = "2026-05-20T22:19:02.659Z" },
-    { url = "https://files.pythonhosted.org/packages/52/c5/82510c8721b63891e72e7ad75b70f7918e42f2a7b8a2ac5ab960939a4cc3/mqt_qcec-3.6.1-cp310-cp310-win_arm64.whl", hash = "sha256:c093175c97a67c5731bbadf7cd7063abda7e1bd50ea3e80f821a9ac0b2e65095", size = 614084, upload-time = "2026-05-20T22:19:04.309Z" },
-    { url = "https://files.pythonhosted.org/packages/de/0b/0619ba807fd52ab1edefb22f352d6b70e147d21053cf8fc5d3770c125e95/mqt_qcec-3.6.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:12a0640b2480f72292e75a57783403edf811650405c155a860083c601f381961", size = 224721, upload-time = "2026-05-20T22:19:05.916Z" },
-    { url = "https://files.pythonhosted.org/packages/e5/e8/14d46d1ddba1aaa26136ef639028c3905488be5b83134f67241689d5cf07/mqt_qcec-3.6.1-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:88e36543d8ea65886360960814416c27b6f8474e255d9f4cb2254c553546dd7c", size = 237716, upload-time = "2026-05-20T22:19:07.492Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/56/ff4896dd651786d67fd5b6b8a3ee3ddaf384b1b9b0c60b75284c119aee88/mqt_qcec-3.6.1-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9dc2b0fa06e5484328f1f0bba6097cb683ddc3f99b6a545aea775585a027d66a", size = 239552, upload-time = "2026-05-20T22:19:09.017Z" },
-    { url = "https://files.pythonhosted.org/packages/87/5e/2d58b085e09b6d8afe4455546c5d2f0e2780f921999a5d55240edb0cf3b0/mqt_qcec-3.6.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d9a3bc83ef743f3365daf807f3f4618d47aa856ebdd3ac4fb7687efc6f976641", size = 250637, upload-time = "2026-05-20T22:19:10.87Z" },
-    { url = "https://files.pythonhosted.org/packages/a5/7f/3268ce58888314697d6f5c6e9aa29ca238c7649bdaf8844a4cd7cca313e5/mqt_qcec-3.6.1-cp311-cp311-win_amd64.whl", hash = "sha256:b52795a6afbda923823da3485ee584a56c7fb4a4fa7c6b977091844021f6369e", size = 448256, upload-time = "2026-05-20T22:19:12.286Z" },
-    { url = "https://files.pythonhosted.org/packages/9a/7a/65ac8b6a801eaa1c5c6112cc3b6158b2d8b1fc8d23e67f3a1ead3dedb7b2/mqt_qcec-3.6.1-cp311-cp311-win_arm64.whl", hash = "sha256:336dcdd229827b07cb0544fb6bcc1bb2ac38817579d2d8a231bd2f9262261bf6", size = 614236, upload-time = "2026-05-20T22:19:13.941Z" },
-    { url = "https://files.pythonhosted.org/packages/01/4c/f058c0f6acf45342c9713095aa23275cc591bad35ba5c21acec3203548a7/mqt_qcec-3.6.1-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:8300e38baaeaade42e278cc89d472f0442511b6380ff9e0366ae68993ea0e0b0", size = 222543, upload-time = "2026-05-20T22:19:15.753Z" },
-    { url = "https://files.pythonhosted.org/packages/56/b8/705803cf605a4f30987031da56d3136df1be995edff4558251776b282169/mqt_qcec-3.6.1-cp312-abi3-macosx_11_0_x86_64.whl", hash = "sha256:1a649008da91b42b7a7231512ddfe78b851454bab4e6d062c29049ade5d16ec1", size = 235672, upload-time = "2026-05-20T22:19:18.024Z" },
-    { url = "https://files.pythonhosted.org/packages/30/3c/c55bfc33eea06e713077cc3162e2e2f2a3a836e8ab1f13798a2864759795/mqt_qcec-3.6.1-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:03e37a3ee86ace7d8541fee0b647feb004465e2c56624a3337cdc7a77c0c6c75", size = 235953, upload-time = "2026-05-20T22:19:19.995Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/14/a2562098c399c1cafe48e03f8523a08c149ed8104d382d4e24cfba614d99/mqt_qcec-3.6.1-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:529835521e8e4e217cdd61215b8a7c47a349baa86b1f32408c19cb4fb0399a54", size = 246929, upload-time = "2026-05-20T22:19:21.583Z" },
-    { url = "https://files.pythonhosted.org/packages/e3/f2/a17519cfab01176c03a96079c2a712ef2a2c99833abc6d97c7b9aea46969/mqt_qcec-3.6.1-cp312-abi3-win_amd64.whl", hash = "sha256:5ee3a48fbc3b145a92d9209bebaf92d01741f481789fdd5935cc840fa9029d40", size = 445481, upload-time = "2026-05-20T22:19:23.092Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/c8/2710ed3781bcb80b7c87451b78e081bdb31570820031eb13396623853a49/mqt_qcec-3.6.1-cp312-abi3-win_arm64.whl", hash = "sha256:c4f1068fd2ae8d926ba9048e99306b3349e06f7509a40454f55dc786c7665055", size = 611543, upload-time = "2026-05-20T22:19:24.894Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/9d/a2303a4bab2b1a35c58248185f89e4a5871ec14c088e9e84b7bbc80bca73/mqt_qcec-3.6.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:e888f31dacd78c27005c8e4eca45674b3295087717d47b542e62ce18c12d9a31", size = 226598, upload-time = "2026-05-20T22:19:26.828Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/0e/faeb4ec285f47dea7463b8b859ea9e8c7b9ed78481584dfe538e83f86eb4/mqt_qcec-3.6.1-cp314-cp314t-macosx_11_0_x86_64.whl", hash = "sha256:1d8800075dd71c125c22cb3b0b3502b5058e7cd83964e7c68b05ec9eb058421f", size = 240324, upload-time = "2026-05-20T22:19:28.427Z" },
-    { url = "https://files.pythonhosted.org/packages/33/9a/3654183129053163f67b97e08ea4547947e4b30593be3f0e3c4c65510596/mqt_qcec-3.6.1-cp314-cp314t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7dd36f4b68ef86d42cbe140e48922df018a47d73000b44aae9cc9fe66217632c", size = 239324, upload-time = "2026-05-20T22:19:29.935Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/26/ec188dde64eab22f28d6555bf4d14cb4af249f81fc710888f68f618bd720/mqt_qcec-3.6.1-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cedf1a5ad487622af7edcc2f7c2af6e3ede791130bd9cd88d333fa9a5a99a0c5", size = 250367, upload-time = "2026-05-20T22:19:31.495Z" },
-    { url = "https://files.pythonhosted.org/packages/db/34/02404e95f3b905689849eb797372e31f8714ab5de5a28fd3f2f695dbd20f/mqt_qcec-3.6.1-cp314-cp314t-win_amd64.whl", hash = "sha256:bb63f16760c333c3d04a56970c1bdfe21e99d0da9b9b039b0085813195e6ee7f", size = 465962, upload-time = "2026-05-20T22:19:33.096Z" },
-    { url = "https://files.pythonhosted.org/packages/65/dd/3ac789c6d6e835c7c483422db15c65f566e1357ba988f2161685adb9413e/mqt_qcec-3.6.1-cp314-cp314t-win_arm64.whl", hash = "sha256:5a20662bb0e0e0d067c970fc6f89e7c74edb2fc16e054d53c615eff0746f41a6", size = 637086, upload-time = "2026-05-20T22:19:34.778Z" },
+    { url = "https://files.pythonhosted.org/packages/24/af/71972a2ca12f894d24bc0cea994c0b9b4230a41a1b30318e70605772742c/mqt_qcec-3.7.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:3733e40e197f42ff5e4229f183acf097a25c108503d523a6d0f1c8fdfec99afa", size = 226617, upload-time = "2026-07-09T18:49:44.292Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/b2/af759cef4c62d6e9ac8814d53d6018785375841af495508517287daf14ce/mqt_qcec-3.7.0-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:5cb66b994c3efb5b95fb9f88bcfd91bb3ab22ee027136e6d3b3ebf4ff4fe0c34", size = 245583, upload-time = "2026-07-09T18:49:45.903Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/1f/e08c5f8723ab007a1615bb85a7b091c2e1c8dffb6a78e5ee03612911a887/mqt_qcec-3.7.0-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:54e09971a276d2c42ef6de8e495e5ce258c4941e796867c5970e455688fd4162", size = 243026, upload-time = "2026-07-09T18:49:47.265Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/30/f6e104d726b4bc98e3529491dbc258e728ba7803db53d7ee1dd2b00ece34/mqt_qcec-3.7.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4438647de66fb1428b2592762593c80663543554e9a15c18afa1e469e9a2dc66", size = 255493, upload-time = "2026-07-09T18:49:48.489Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/c1/ec2e05e3b9b3be3b25e238af10962177b11cfc9694ece971a142e1d2f2af/mqt_qcec-3.7.0-cp310-cp310-win_amd64.whl", hash = "sha256:0d5ceade7c636728b7eb2d9a6ed2d94d0642e29951f74bd7931da5db1682fddb", size = 448141, upload-time = "2026-07-09T18:49:49.645Z" },
+    { url = "https://files.pythonhosted.org/packages/66/8a/d666df0df23e312ffc8ffbeb098e1e5df64947fad6ba828d1ae7f940c362/mqt_qcec-3.7.0-cp310-cp310-win_arm64.whl", hash = "sha256:eeb63e195b26b30f23b2e59663ab106d3e82d8be9e2052b4a5ca744055f99ad1", size = 616472, upload-time = "2026-07-09T18:49:51.022Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/2e/0771fbf624be40d21f4a341f3fcb093479c76a76aeaa96b3dd89be2a20e6/mqt_qcec-3.7.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:1cca6cfef7553c76fbc27e6af2ce6aeaaf1fd83da4c02eee45d6f4f53b26c467", size = 226894, upload-time = "2026-07-09T18:49:52.259Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/ec/b8dcd844853ac1b4b46e70d77398cff1cbe9b1985a25d5952ba5a5163090/mqt_qcec-3.7.0-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:3ecec487578ef55d973f712ad9f410eb6a0ba1bf68fbe33d5b4cec6f726821ea", size = 245906, upload-time = "2026-07-09T18:49:53.495Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/08/afaa009a4af946b2f2ba45c8e7c638925ed8eb8e5f4243406f2211e95855/mqt_qcec-3.7.0-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:712f3f69b7d8bd14b8d5a2f7b620e46563cf70194ba8f3d84d00fdead505f328", size = 243030, upload-time = "2026-07-09T18:49:54.671Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/7e/11980f50ba4c8afe7dfafc6191bfb7004c568effb71ab5dcc419c8a56603/mqt_qcec-3.7.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b4e20b144a6d4294d6db4af60970cd9a14f788d4d340915d9f45b90365721d38", size = 255945, upload-time = "2026-07-09T18:49:56.159Z" },
+    { url = "https://files.pythonhosted.org/packages/08/fb/19116aaa8dd5e79e44f1db07d43b01fb8522d6ca7a6a9748283390d0afc1/mqt_qcec-3.7.0-cp311-cp311-win_amd64.whl", hash = "sha256:f3e97407cbd37a52f645bfc67986683dcae7111f1521fca73e66bed4f34dcd77", size = 447963, upload-time = "2026-07-09T18:49:57.378Z" },
+    { url = "https://files.pythonhosted.org/packages/80/58/76f7dad2c4dc978bec7a8bd810cbd64e91913ff85583e3abb64847c64488/mqt_qcec-3.7.0-cp311-cp311-win_arm64.whl", hash = "sha256:5588bbdf7aa96c958ca431f7c85f79408b80fc8d1b757353a8c4c4baa1924fe8", size = 616386, upload-time = "2026-07-09T18:49:58.849Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/b2/98a039529d39a0cb6b51bc487b332e5f28c92bc57c0e68d1c2b85beee652/mqt_qcec-3.7.0-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:d693628fd47e63b7971a21647be0a886e2854a365153a2e3e74ffa17aaf0d6a0", size = 224188, upload-time = "2026-07-09T18:50:00.042Z" },
+    { url = "https://files.pythonhosted.org/packages/af/ba/f007fa9ff77389872a7b1d415eb52ab403a7613dc8a29591df3448b6ca13/mqt_qcec-3.7.0-cp312-abi3-macosx_11_0_x86_64.whl", hash = "sha256:80477619ccc5e65555ce7763ae6eaefe9e59d2b02a46ad6d238e9594896338fd", size = 243715, upload-time = "2026-07-09T18:50:01.164Z" },
+    { url = "https://files.pythonhosted.org/packages/00/1f/9522eefd113c4c7e162a0245c6aff53156237327dbfb2aeb794ed496abe4/mqt_qcec-3.7.0-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3a5e616f5486848fcaf90001a1cc859882a7703af96b620268d83626810f2ec2", size = 239438, upload-time = "2026-07-09T18:50:02.311Z" },
+    { url = "https://files.pythonhosted.org/packages/af/9d/277ccec280bb7b674772bda869b8a6df762f46ae9a9069efe37661d6bdda/mqt_qcec-3.7.0-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:61897cc5898afe6f3d62a054d22452575fd7e6728e1aabcdaffcbd56c436838a", size = 251173, upload-time = "2026-07-09T18:50:03.621Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/42/5af0f39c1a74ee3ddbcc79ad3a26515c3325c0cff69d95474f2e1ade4fc9/mqt_qcec-3.7.0-cp312-abi3-win_amd64.whl", hash = "sha256:60382489e30019cc5645e7bb4cf4ef1a582516e0b80f55ea5f8fd6c6c3768a82", size = 445304, upload-time = "2026-07-09T18:50:05.01Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/8c/6074b131154649881e615adc9e4a84efda72496b876fed0433889f27a43d/mqt_qcec-3.7.0-cp312-abi3-win_arm64.whl", hash = "sha256:28b1f04841ff7f3795d74bea2fb2a8b9b3f3a8be179d3f35e3e283042fce27fa", size = 613406, upload-time = "2026-07-09T18:50:06.456Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/ec/3fe2da97a30d6f673c75a9256d46863b34d84aefe2530559ffd35a227259/mqt_qcec-3.7.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:b8f8183baf1a96e564a341ad18cbad16d136c6c6d6d3ecf87066c17573ab21ce", size = 227699, upload-time = "2026-07-09T18:50:07.601Z" },
+    { url = "https://files.pythonhosted.org/packages/38/2d/60f43888f70755f5603db887655b4ade55f6fad36638c5942e29fb97e1e7/mqt_qcec-3.7.0-cp314-cp314t-macosx_11_0_x86_64.whl", hash = "sha256:ca072de91f199acc604412ef9397f1227f17d930babefcab3e3cdb94b79208b9", size = 247038, upload-time = "2026-07-09T18:50:08.957Z" },
+    { url = "https://files.pythonhosted.org/packages/70/55/1df11f35367f63242f003464acdd2520d14b8b19e3b2f7373782b2a9dabd/mqt_qcec-3.7.0-cp314-cp314t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:73494d0f120ff0903696af5b0f6ae0dd9544a0b6837c876bc136647adc9f0d37", size = 242694, upload-time = "2026-07-09T18:50:10.237Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/10/e290f0f67cb6ce1393041a12c48779205b7fb6fdbbe4e4b88bb50d066646/mqt_qcec-3.7.0-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6b62741e37f24f713eaf8b91300c65465bc0c952acc499d9c4897cc32b77f6b3", size = 253399, upload-time = "2026-07-09T18:50:11.795Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/0b/6f6904d6039fbc5f4b55f0a2bde73c12f517bdf816beefce9e37d5be5c32/mqt_qcec-3.7.0-cp314-cp314t-win_amd64.whl", hash = "sha256:169cdecfe415b1da1f36d0e7c917d5a9923b8aa755319995b9524904c6be990f", size = 465027, upload-time = "2026-07-09T18:50:13.196Z" },
+    { url = "https://files.pythonhosted.org/packages/04/6e/dc440301a32881814c638ebac5b678bb8bdba79f924a6b1308e6e6933811/mqt_qcec-3.7.0-cp314-cp314t-win_arm64.whl", hash = "sha256:96b1272bc758499af191c0f6f91de3d51f8c78e41c793c67c808f11d69d6392f", size = 638950, upload-time = "2026-07-09T18:50:14.381Z" },
 ]
 
 [[package]]
@@ -1836,7 +1836,7 @@ test = [
 requires-dist = [
     { name = "distinctipy", marker = "extra == 'visualization'", specifier = ">=1.3.4" },
     { name = "ipywidgets", marker = "extra == 'visualization'", specifier = ">=8.1.7" },
-    { name = "mqt-core", specifier = "~=3.6.0" },
+    { name = "mqt-core", specifier = "~=3.7.0" },
     { name = "networkx", marker = "extra == 'visualization'", specifier = ">=3.2.1" },
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
@@ -1848,17 +1848,17 @@ provides-extras = ["visualization"]
 
 [package.metadata.requires-dev]
 build = [
-    { name = "mqt-core", specifier = "~=3.6.0" },
-    { name = "nanobind", specifier = "~=2.12.0" },
+    { name = "mqt-core", specifier = "~=3.7.0" },
+    { name = "nanobind", specifier = "~=2.13.0" },
     { name = "scikit-build-core", specifier = "~=0.12" },
     { name = "setuptools-scm", specifier = ">=9.2.2" },
 ]
 dev = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-    { name = "mqt-core", specifier = "~=3.6.0" },
-    { name = "mqt-qcec", specifier = ">=3.6.0" },
-    { name = "nanobind", specifier = "~=2.12.0" },
+    { name = "mqt-core", specifier = "~=3.7.0" },
+    { name = "mqt-qcec", specifier = ">=3.7.0" },
+    { name = "nanobind", specifier = "~=2.13.0" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "nox", specifier = ">=2025.11.12" },
     { name = "plotly", specifier = ">=6.0.1" },
@@ -1894,7 +1894,7 @@ docs = [
 test = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-    { name = "mqt-qcec", specifier = ">=3.6.0" },
+    { name = "mqt-qcec", specifier = ">=3.7.0" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
@@ -1985,11 +1985,11 @@ wheels = [
 
 [[package]]
 name = "nanobind"
-version = "2.12.0"
+version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c6/5c/3b69bc3933ad3c3668ba029ad410ba8ecfdc8ee7262ff1009f3304f3c562/nanobind-2.12.0.tar.gz", hash = "sha256:0ae77c1a88f27153fa57045ee00f7b0a7b06b1cd3df942e95a34b38c5d0a5bee", size = 1002704, upload-time = "2026-02-25T09:41:54.691Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/e5/a6fc2f024eaef17c68b94b5f8f56098d31859a7840a11a3dd45da2d3908a/nanobind-2.13.0.tar.gz", hash = "sha256:c7b04d6a6a4cd57985571e605539399b51331ae455d7fce576a5e2fcb89b1dcf", size = 1052101, upload-time = "2026-06-18T06:03:49.491Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/bf/1a54e3573736f3ad15fc599c5dde007937234652a1a7efd62573b4ce3a7e/nanobind-2.12.0-py3-none-any.whl", hash = "sha256:a10d3d88e691dcdf22696f9acd893fda3c5a05635763aea238829d274fcad480", size = 249512, upload-time = "2026-02-25T09:41:52.908Z" },
+    { url = "https://files.pythonhosted.org/packages/39/8d/cec69a0a804711fd89f47fad92cd2a438a1ceaafd9dabaf3b8b403b5cbba/nanobind-2.13.0-py3-none-any.whl", hash = "sha256:9268d7201eaf5519ae61b7a83175f2af77088cb4b99dd3ce5b00550f697da7b7", size = 269387, upload-time = "2026-06-18T06:03:47.508Z" },
 ]
 
 [[package]]

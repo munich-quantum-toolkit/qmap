@@ -41,7 +41,7 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_MINIMUM_VERSION 3.6.0
+set(MQT_CORE_MINIMUM_VERSION 3.7.0
     CACHE STRING "MQT Core minimum version")
 set(MQT_CORE_VERSION 3.7.0
     CACHE STRING "MQT Core version")
