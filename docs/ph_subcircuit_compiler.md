@@ -86,18 +86,18 @@ selected zone.
 ### Providing the chip characterisation and target unitary
 
 On real hardware the beam-splitter reflectivities and the per-mode input/output
-transmissions are **properties of the fabricated chip**, obtained
-from a calibration measurements; the target unitary is the gate you want to run.
-In practice you would load them from your own files, for example:
+transmissions are **properties of the fabricated chip**, obtained from a
+calibration measurements; the target unitary is the gate you want to run. In
+practice you would load them from your own files, for example:
 
 ```python
 import numpy as np
 import torch
 
 # Measured device characterisation:
-input_transmissions = np.loadtxt("input_transmissions.txt")       # shape (chip_dim,)
-output_transmissions = np.loadtxt("output_transmissions.txt")     # shape (chip_dim,)
-beam_splitter_reflectivities = np.loadtxt("beam_splitters.txt")   # shape (2 * total_mzis,)
+input_transmissions = np.loadtxt("input_transmissions.txt")  # shape (chip_dim,)
+output_transmissions = np.loadtxt("output_transmissions.txt")  # shape (chip_dim,)
+beam_splitter_reflectivities = np.loadtxt("beam_splitters.txt")  # shape (2 * total_mzis,)
 
 # The gate to compile, as a complex (target_dim, target_dim) unitary:
 target_unitary = torch.as_tensor(np.load("target_unitary.npy"), dtype=torch.complex128)
@@ -350,7 +350,7 @@ df = collect_pipeline_results(
     num_unitaries_per_setup=4,
     repeats_per_unitary=1,
     phase_errors=[0.0, 0.015, 0.03],
-    input_losses=True,   # loads eval/ph/hardware_data/{num_modes}_mode_input_transmissions.txt
+    input_losses=True,  # loads eval/ph/hardware_data/{num_modes}_mode_input_transmissions.txt
     output_losses=True,  # loads the matching output-transmission file
     ideal_beam_splitters=False,
 )

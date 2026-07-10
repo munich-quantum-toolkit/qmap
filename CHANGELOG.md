@@ -14,8 +14,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
-- 🚀 Add photonic subcircuit compiler that optimizes coincidence rates 
-  ([#1059]) ([**@tobi-forster**])
+- 🚀 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
+  ([**@tobi-forster**])
 - 🎨 Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
   to QMAP ([#1058]) ([**@ystade**])
 
