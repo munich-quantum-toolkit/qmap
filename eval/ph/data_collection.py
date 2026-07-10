@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import pathlib
+import warnings
 from dataclasses import dataclass
 from itertools import product
 from typing import TYPE_CHECKING
@@ -25,13 +26,23 @@ import numpy as np
 import pandas as pd
 import torch
 
-from .baseline import embed_target_unitary_into_chip
-from .graph import generate_beam_splitter_matrix
-from .subcircuit_compilation import OptimizationConfig, compile_subcircuit
-from .unitary_to_phase_compilation import get_haar_random_unitary
+from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
+from mqt.qmap.ph.graph import generate_beam_splitter_matrix
+from mqt.qmap.ph.subcircuit_compilation import (
+    OptimizationConfig,
+    compile_subcircuit,
+    evaluate_subcircuit,
+)
+from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+# Directory holding the exact per-mode transmission coefficients used for the
+# paper submission, so reviewers can reproduce the reported results.  Each file
+# is named ``{num_modes}_mode_{input,output}_transmissions.txt`` with one
+# transmission value per line.
+_HARDWARE_DATA_DIR = pathlib.Path(__file__).parent / "hardware_data"
 
 
 @dataclass(frozen=True)
@@ -81,6 +92,52 @@ def _mean(values: list[float]) -> float:
     return float(np.mean(values))
 
 
+def _resolve_transmissions(
+    num_modes: int,
+    kind: str,
+    hardware_data_dir: pathlib.Path,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Return per-mode transmission coefficients, preferring the paper's data.
+
+    If ``hardware_data_dir`` contains ``{num_modes}_mode_{kind}_transmissions.txt``
+    the exact paper values are loaded (used as-is; the files are already
+    normalised so the maximum is 1.0).  If no such file exists, per-mode
+    transmissions are instead sampled from ``Uniform(0.7, 1.0)`` and normalised
+    so the maximum is 1.0, and a :class:`UserWarning` is emitted so the caller
+    knows the run is not reproducing the paper's exact hardware.
+
+    Args:
+        num_modes: Chip mode count; selects the file
+            ``{num_modes}_mode_{kind}_transmissions.txt``.
+        kind: Either ``"input"`` or ``"output"``.
+        hardware_data_dir: Directory holding the transmission text files.
+        rng: Generator used for the random fallback when no file is present.
+
+    Returns:
+        1D array of ``num_modes`` transmission coefficients.
+
+    Raises:
+        ValueError: If the file exists but does not contain exactly
+            ``num_modes`` values.
+    """
+    path = hardware_data_dir / f"{num_modes}_mode_{kind}_transmissions.txt"
+    if path.is_file():
+        values = np.loadtxt(path, dtype=float).reshape(-1)
+        if values.size != num_modes:
+            msg = f"File '{path}' contains {values.size} values but {num_modes} were expected."
+            raise ValueError(msg)
+        return values
+
+    warnings.warn(
+        f"No transmission file '{path}' for the {num_modes}-mode {kind} transmissions; "
+        f"sampling random values from Uniform(0.7, 1.0) instead (not the paper's exact hardware).",
+        stacklevel=2,
+    )
+    raw = rng.uniform(0.7, 1.0, size=num_modes)
+    return raw / np.max(raw)
+
+
 def _build_hardware_cache(
     setups: list[Setup],
     base_seed: int,
@@ -89,6 +146,7 @@ def _build_hardware_cache(
     output_losses: bool,
     ideal_beam_splitters: bool,
     custom_bs_data: dict[int, np.ndarray] | None,
+    hardware_data_dir: pathlib.Path = _HARDWARE_DATA_DIR,
 ) -> dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """Build per-num_modes hardware parameter cache.
 
@@ -96,10 +154,13 @@ def _build_hardware_cache(
         setups: All setups whose unique ``num_modes`` values are cached.
         base_seed: Base RNG seed; the seed for ``num_modes`` is
             ``base_seed + 10 * num_modes``.
-        input_losses: Sample random input transmissions when ``True``.
-        output_losses: Sample random output transmissions when ``True``.
+        input_losses: When ``True``, load the paper's exact input transmissions
+            for each ``num_modes``, falling back to random sampling (with a
+            warning) if no file is present.
+        output_losses: As ``input_losses`` but for the output transmissions.
         ideal_beam_splitters: Use ideal 50/50 beam splitters when ``True``.
         custom_bs_data: Pre-loaded reflectivity arrays keyed by ``num_modes``.
+        hardware_data_dir: Directory holding the transmission text files.
 
     Returns:
         Mapping from ``num_modes`` to ``(bs, in_t, out_t)`` arrays.
@@ -114,14 +175,12 @@ def _build_hardware_cache(
             bs = generate_beam_splitter_matrix(chip_size=num_modes, ideal_bs=ideal_beam_splitters, rng=np_rng)
 
         if input_losses:
-            raw_in = np_rng.uniform(0.7, 1.0, size=num_modes)
-            in_t: np.ndarray = raw_in / np.max(raw_in)
+            in_t: np.ndarray = _resolve_transmissions(num_modes, "input", hardware_data_dir, np_rng)
         else:
             in_t = np.ones(num_modes)
 
         if output_losses:
-            raw_out = np_rng.uniform(0.7, 1.0, size=num_modes)
-            out_t: np.ndarray = raw_out / np.max(raw_out)
+            out_t: np.ndarray = _resolve_transmissions(num_modes, "output", hardware_data_dir, np_rng)
         else:
             out_t = np.ones(num_modes)
 
@@ -140,7 +199,7 @@ def _run_repeats(
     repeats_per_unitary: int,
     unitary_seed: int,
 ) -> dict[str, float]:
-    """Run ``compile_subcircuit`` ``repeats_per_unitary`` times and return mean metrics.
+    """Compile and evaluate ``repeats_per_unitary`` times and return mean metrics.
 
     Args:
         beam_splitter_reflectivities: Chip beam-splitter reflectivity array.
@@ -169,7 +228,15 @@ def _run_repeats(
     for repeat_idx in range(repeats_per_unitary):
         torch.manual_seed(unitary_seed * 1000 + repeat_idx)
 
-        result = compile_subcircuit(
+        compilation = compile_subcircuit(
+            beam_splitter_reflectivities=beam_splitter_reflectivities,
+            input_transmissions=input_transmissions,
+            output_transmissions=output_transmissions,
+            target_unitary=target_unitary,
+            config=config,
+        )
+        result = evaluate_subcircuit(
+            compilation,
             beam_splitter_reflectivities=beam_splitter_reflectivities,
             input_transmissions=input_transmissions,
             output_transmissions=output_transmissions,
@@ -235,10 +302,13 @@ def collect_pipeline_results(
         phase_errors: Phase-noise standard deviations to sweep over.
         base_seed: Base integer seed used to derive hardware-parameter RNG
             seeds per chip size (``base_seed + 10 * num_modes``).
-        input_losses: If ``True``, sample per-mode input transmissions from
-            ``Uniform(0.7, 1.0)`` and normalise so the maximum is 1.0.
-            If ``False``, use all-ones (lossless inputs).
-        output_losses: Analogous to ``input_losses`` for output modes.
+        input_losses: If ``True``, load the paper's exact per-mode input
+            transmissions from ``hardware_data/{num_modes}_mode_input_transmissions.txt``.
+            When no such file exists, per-mode transmissions are sampled from
+            ``Uniform(0.7, 1.0)`` (normalised to max 1.0) and a ``UserWarning``
+            is emitted.  If ``False``, use all-ones (lossless inputs).
+        output_losses: Analogous to ``input_losses`` for output modes, loaded
+            from ``hardware_data/{num_modes}_mode_output_transmissions.txt``.
         ideal_beam_splitters: If ``True``, use ideal 50/50 beam splitters
             instead of the statistically distributed model.
         custom_bs_data: Optional mapping from ``num_modes`` to a pre-loaded

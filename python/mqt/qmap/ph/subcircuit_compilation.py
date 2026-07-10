@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import numpy as np
 import perceval as pcvl
 import torch
 from perceval import algorithm
@@ -31,9 +32,6 @@ from .routing import (
 )
 from .routing_to_phases import get_effective_params_and_mask, reshape_flattened_params_to_grid
 from .unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
-
-if TYPE_CHECKING:
-    import numpy as np
 
 
 @dataclass
@@ -59,8 +57,36 @@ class OptimizationConfig:
 
 
 @dataclass
-class RunResult:
+class CompilationResult:
     """Output of a single :func:`compile_subcircuit` call.
+
+    This is the end-user result of compiling a target unitary onto a physical
+    chip.  It carries everything needed to drive the hardware: the phase-shifter
+    values to program, and the input/output ports the photons enter and leave on.
+
+    Attributes:
+        phases: Effective phase-shifter parameters of shape
+            ``(chip_dim, chip_dim)`` — rows are spatial modes, columns are MZI
+            layers.  These are the values to program onto the chip.
+        input_ports: Chip-wide binary input-state vector of length ``chip_dim``
+            marking the modes into which photons are injected (dual-rail).
+        output_ports: Physical mode indices of the computation zone where the
+            output photons are measured.
+        loss: Final fidelity loss of the proposed compiler optimisation.
+        compute_time: Wall-clock seconds for the proposed compiler (routing
+            + optimisation).
+    """
+
+    phases: torch.Tensor
+    input_ports: list[int]
+    output_ports: list[int]
+    loss: float
+    compute_time: float
+
+
+@dataclass
+class RunResult:
+    """Output of a single :func:`evaluate_subcircuit` call.
 
     Attributes:
         performance: Metrics for the proposed compiler (coincidence rate, TVD,
@@ -70,9 +96,9 @@ class RunResult:
         loss: Final fidelity loss of the proposed compiler optimisation.
         baseline_loss: Final fidelity loss of the baseline optimisation.
         compute_time: Wall-clock seconds for the proposed compiler (routing
-            + optimisation + simulation).
+            + optimisation).
         baseline_compute_time: Wall-clock seconds for the baseline
-            optimisation + simulation.
+            optimisation.
     """
 
     performance: dict[str, Any]
@@ -249,23 +275,18 @@ def compile_subcircuit(
     input_transmissions: np.ndarray,
     output_transmissions: np.ndarray,
     target_unitary: torch.Tensor,
-    target_unitary_embedded: torch.Tensor,
-    phase_error: float,
     config: OptimizationConfig | None = None,
-) -> RunResult:
-    """Compile a target unitary onto the chip and evaluate against the baseline.
+) -> CompilationResult:
+    """Compile a target unitary onto the chip and return the phases to program.
 
     ``chip_dim`` is derived from ``len(input_transmissions)`` and
     ``target_dim`` from ``target_unitary.shape[0]``.
 
-    The proposed compiler searches for the optimal photon routing through the
-    chip before optimising the phase-shifter parameters for the found
-    placement.  The baseline uses a fixed dual-rail placement on the first
-    ``target_dim`` modes with no routing step.
-
-    Both approaches are evaluated on the same hardware model (beam-splitter
-    imperfections, optional phase noise, input/output transmission losses) and
-    their output distributions are compared to an ideal Perceval simulation.
+    The compiler searches for the optimal photon routing through the chip
+    (the path minimising overall photon loss, independent of the target
+    operation) and then optimises the phase-shifter parameters for that
+    placement.  No hardware simulation is performed, so this step is suitable
+    for chips too large to simulate classically.
 
     Args:
         beam_splitter_reflectivities: 1D array of chip beam-splitter
@@ -277,25 +298,19 @@ def compile_subcircuit(
             ``(chip_dim,)``.
         target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
             Its first dimension determines ``target_dim``.
-        target_unitary_embedded: ``target_unitary`` embedded into a ``(chip_dim, chip_dim)``
-            identity matrix (used by the baseline optimiser).
-        phase_error: Standard deviation of Gaussian phase noise applied to
-            each phase shifter during Perceval simulation.
         config: Optimisation hyperparameters.  Defaults to
             :class:`OptimizationConfig` with all defaults when ``None``.
 
     Returns:
-        A :class:`RunResult` containing performance metrics, final losses, and
-        compute times for both the proposed compiler and the baseline.
+        A :class:`CompilationResult` containing the phase-shifter matrix to
+        program, the input/output ports, the final fidelity loss, and the
+        compilation compute time.
     """
     if config is None:
         config = OptimizationConfig()
 
     chip_dim = len(input_transmissions)
     target_dim = int(target_unitary.shape[0])
-
-    baseline_active_cols = get_baseline_active_cols(target_dim)
-    baseline_input_ports = get_baseline_input_ports(baseline_active_cols, chip_dim)
 
     proposed_start = time.time()
     (
@@ -325,6 +340,82 @@ def compile_subcircuit(
     )
     proposed_compute_time = time.time() - proposed_start
 
+    return CompilationResult(
+        phases=phase_shifter_params_including_routing,
+        input_ports=converted_input_ports,
+        output_ports=output_ports,
+        loss=losses,
+        compute_time=proposed_compute_time,
+    )
+
+
+def evaluate_subcircuit(
+    compilation: CompilationResult,
+    beam_splitter_reflectivities: np.ndarray,
+    input_transmissions: np.ndarray,
+    output_transmissions: np.ndarray,
+    target_unitary: torch.Tensor,
+    target_unitary_embedded: torch.Tensor,
+    phase_error: float,
+    config: OptimizationConfig | None = None,
+    phase_noise_seed: np.random.Generator | int | None = None,
+) -> RunResult:
+    """Evaluate a compiled subcircuit against the baseline via Perceval simulation.
+
+    Takes the output of :func:`compile_subcircuit` and simulates the resulting
+    chip, comparing it to a fixed dual-rail baseline placement (first
+    ``target_dim`` modes, no routing).  Both are simulated on the same hardware
+    model (beam-splitter imperfections, phase noise, input/output transmission
+    losses) and their output distributions are compared to an ideal Perceval
+    simulation.
+
+    This step requires a classical simulation of the chip and is intended for
+    reproducing benchmark results; it is not needed to drive real hardware.
+
+    Args:
+        compilation: The :class:`CompilationResult` returned by
+            :func:`compile_subcircuit` for the same target unitary and chip.
+        beam_splitter_reflectivities: 1D array of chip beam-splitter
+            reflectivities as produced by
+            :func:`graph.generate_beam_splitter_matrix`.
+        input_transmissions: Per-mode input transmission coefficients, shape
+            ``(chip_dim,)``.  Its length determines ``chip_dim``.
+        output_transmissions: Per-mode output transmission coefficients, shape
+            ``(chip_dim,)``.
+        target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
+            Its first dimension determines ``target_dim``.
+        target_unitary_embedded: ``target_unitary`` embedded into a ``(chip_dim, chip_dim)``
+            identity matrix (used by the baseline optimiser).
+        phase_error: Standard deviation of Gaussian phase noise applied to
+            each phase shifter during Perceval simulation.
+        config: Optimisation hyperparameters.  Defaults to
+            :class:`OptimizationConfig` with all defaults when ``None``.
+        phase_noise_seed: Source of randomness for the Gaussian phase noise.
+            Accepts a :class:`numpy.random.Generator`, an integer seed, or
+            ``None`` (default).  When ``None``, the proposed and baseline chips
+            each draw fresh, non-reproducible noise from OS entropy.  When a
+            generator or integer is given, a single generator is shared across
+            both chips so the whole evaluation is reproducible while the two
+            chips still see independent (sequential) noise draws.
+
+    Returns:
+        A :class:`RunResult` containing performance metrics, final losses, and
+        compute times for both the proposed compiler and the baseline.
+    """
+    if config is None:
+        config = OptimizationConfig()
+
+    chip_dim = len(input_transmissions)
+    target_dim = int(target_unitary.shape[0])
+
+    # When a seed is supplied, share one generator across both create_mzi_chip
+    # calls so the evaluation is reproducible; ``None`` preserves the original
+    # behaviour of drawing fresh entropy per chip.
+    noise_rng = None if phase_noise_seed is None else np.random.default_rng(phase_noise_seed)
+
+    baseline_active_cols = get_baseline_active_cols(target_dim)
+    baseline_input_ports = get_baseline_input_ports(baseline_active_cols, chip_dim)
+
     beam_splitter_reflectivities = torch.as_tensor(beam_splitter_reflectivities, dtype=torch.float64)
 
     baseline_start = time.time()
@@ -341,10 +432,11 @@ def compile_subcircuit(
 
     virtual_chip = create_mzi_chip(
         beam_splitter_reflectivities,
-        phase_shifter_params_including_routing,
+        compilation.phases,
         phase_error=phase_error,
         chip_size=chip_dim,
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
+        rng=noise_rng,
     )
     baseline_virtual_chip = create_mzi_chip(
         beam_splitter_reflectivities,
@@ -352,12 +444,13 @@ def compile_subcircuit(
         phase_error=phase_error,
         chip_size=chip_dim,
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
+        rng=noise_rng,
     )
 
     _, probability_distribution = simulate_with_loss(
         virtual_chip,
         chip_dim,
-        input_state=converted_input_ports,
+        input_state=compilation.input_ports,
         input_transmissions=input_transmissions,
         output_transmissions=output_transmissions,
     )
@@ -372,7 +465,7 @@ def compile_subcircuit(
     performance_dict = evaluate_chip_performance(
         raw_results=probability_distribution,
         ideal_baseline=ideal_prob_dist,
-        target_modes=output_ports,
+        target_modes=compilation.output_ports,
         required_photons=target_dim // 2,
         output_transmissions=output_transmissions,
     )
@@ -387,8 +480,8 @@ def compile_subcircuit(
     return RunResult(
         performance=performance_dict,
         baseline_performance=baseline_performance_dict,
-        loss=losses,
+        loss=compilation.loss,
         baseline_loss=baseline_losses,
-        compute_time=proposed_compute_time,
+        compute_time=compilation.compute_time,
         baseline_compute_time=baseline_compute_time,
     )

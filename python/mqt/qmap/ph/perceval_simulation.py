@@ -26,6 +26,7 @@ def create_mzi_chip(
     phase_error: float | None,
     chip_size: int,
     exclude_edge_phase_shifters: bool = False,
+    rng: np.random.Generator | int | None = None,
 ) -> pcvl.Circuit:
     """Build a Perceval circuit representing a staggered MZI mesh chip.
 
@@ -46,6 +47,11 @@ def create_mzi_chip(
             layers).
         exclude_edge_phase_shifters: If ``True``, omit the phase shifters on
             modes 0 and ``chip_size - 1`` in the last odd layer.
+        rng: Source of randomness for the Gaussian phase noise.  Accepts a
+            :class:`numpy.random.Generator`, an integer seed, or ``None``
+            (default) which draws fresh, non-reproducible noise from OS
+            entropy.  Pass a seeded generator or integer for reproducible
+            noise.  Ignored when ``phase_error`` is ``None``.
 
     Returns:
         A :class:`perceval.Circuit` of size ``chip_size`` implementing the
@@ -57,7 +63,7 @@ def create_mzi_chip(
 
     if phase_error is not None:
         ps_matrix = np.asarray(ps_matrix, dtype=np.float64)
-        noise = np.random.default_rng().normal(loc=0.0, scale=phase_error, size=ps_matrix.shape)
+        noise = np.random.default_rng(rng).normal(loc=0.0, scale=phase_error, size=ps_matrix.shape)
         ps_matrix += noise
 
     for layer in range(mzi_layers):

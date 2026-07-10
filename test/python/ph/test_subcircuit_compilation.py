@@ -6,14 +6,15 @@
 #
 # Licensed under the MIT License
 
-"""Regression tests for subcircuit_compilation.compile_subcircuit().
+"""Regression tests for subcircuit_compilation.compile_subcircuit / evaluate_subcircuit.
 
 Twenty-four scenarios: chip_dim in {8, 16} x phase_error in {0.0, 0.015, 0.030}
 x transmission range in {ones, [0.9,1], [0.8,1], [0.7,1]}, target_dim=4.
 All tests run for each scenario via the parametrized `scenario_result` fixture.
 
-Setup: ideal BS, torch.manual_seed(0) immediately before compile_subcircuit().
-       1 restart, 300 iterations.
+Setup: non-ideal (statistically distributed) beam splitters seeded per chip size,
+       torch.manual_seed(0) immediately before compile_subcircuit(), then
+       evaluate_subcircuit() on its result.  1 restart, 300 iterations.
 
 Each scenario in _SCENARIOS carries its own bounds (cr_min, tvd_max, losses_max).
 Adjust any row's values directly in the _SCENARIOS table below the _Scenario class.
@@ -34,7 +35,13 @@ torch = pytest.importorskip("torch")
 
 from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
 from mqt.qmap.ph.graph import generate_beam_splitter_matrix
-from mqt.qmap.ph.subcircuit_compilation import OptimizationConfig, RunResult, compile_subcircuit
+from mqt.qmap.ph.subcircuit_compilation import (
+    CompilationResult,
+    OptimizationConfig,
+    RunResult,
+    compile_subcircuit,
+    evaluate_subcircuit,
+)
 from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
 
 _PERF_KEYS = {"compensated_weight_sum", "mapped_distribution", "coincidence_rate", "tvd"}
@@ -54,8 +61,10 @@ class _Scenario:
     # Baseline bounds (no routing — typically lower cr, similar tvd)
     baseline_coincidence_rate_min: float
     baseline_tvd_max: float
-    # Shared optimizer-convergence bound (independent of routing and transmission)
-    losses_max: float = field(default=1e-2)
+    # Shared optimizer-convergence bound (independent of routing and transmission).
+    # Observed losses are <= 1.2e-3; 5e-3 leaves headroom for cross-platform/torch
+    # variation while still flagging a failure to converge.
+    losses_max: float = field(default=5e-3)
 
     @property
     def id(self) -> str:
@@ -70,44 +79,48 @@ class _Scenario:
 #          baseline_cr_min, baseline_tvd_max  ← baseline (no routing)
 #
 # t_low=None → perfect transmission (all ones); otherwise Uniform[t_low, 1.0], normalised.
-# Bounds are conservative — tighten them after observing actual run values.
-# phase_error=0 → tight tvd_max; phase_error>0 → loose tvd_max.
-# cr_min drops with lower transmission; baseline cr_min is lower still (no routing benefit).
+# Bounds calibrated against observed runs with NON-IDEAL (statistically distributed) beam
+# splitters and DETERMINISTIC phase noise (phase_noise_seed=0 in the fixture).  Because
+# every random input is now seeded, tvd_max/cr_min sit only a small margin beyond the
+# observed values (about +0.015 on tvd, -0.025 on cr) - tight enough to catch semantic
+# regressions, with headroom only for cross-platform/torch numerical variation.
+# tvd grows with phase_error; cr is transmission-dominated and the proposed cr_min sits
+# above the baseline's, reflecting the routing advantage under transmission loss.
 _SCENARIOS = [
     # ── chip_dim = 8 ──────────────────────────────────────────────────────────────────────
     # t = 1.0  (lossless)
-    pytest.param(_Scenario(8,  4, 0.000, None, 0.90, 0.001, 0.80, 0.001), id="chip8-t1.0-pe0.000"),
-    pytest.param(_Scenario(8,  4, 0.015, None, 0.85, 0.050, 0.75, 0.050), id="chip8-t1.0-pe0.015"),
-    pytest.param(_Scenario(8,  4, 0.030, None, 0.80, 0.100, 0.70, 0.100), id="chip8-t1.0-pe0.030"),
+    pytest.param(_Scenario(8,  4, 0.000, None, 0.97, 0.008, 0.97, 0.005), id="chip8-t1.0-pe0.000"),
+    pytest.param(_Scenario(8,  4, 0.015, None, 0.97, 0.045, 0.97, 0.035), id="chip8-t1.0-pe0.015"),
+    pytest.param(_Scenario(8,  4, 0.030, None, 0.97, 0.065, 0.97, 0.050), id="chip8-t1.0-pe0.030"),
     # t ~ Uniform[0.9, 1.0]
-    pytest.param(_Scenario(8,  4, 0.000, 0.9, 0.70, 0.002, 0.60, 0.002), id="chip8-t0.9-pe0.000"),
-    pytest.param(_Scenario(8,  4, 0.015, 0.9, 0.65, 0.050, 0.55, 0.050), id="chip8-t0.9-pe0.015"),
-    pytest.param(_Scenario(8,  4, 0.030, 0.9, 0.60, 0.100, 0.50, 0.100), id="chip8-t0.9-pe0.030"),
+    pytest.param(_Scenario(8,  4, 0.000, 0.9, 0.86, 0.008, 0.84, 0.005), id="chip8-t0.9-pe0.000"),
+    pytest.param(_Scenario(8,  4, 0.015, 0.9, 0.86, 0.045, 0.84, 0.035), id="chip8-t0.9-pe0.015"),
+    pytest.param(_Scenario(8,  4, 0.030, 0.9, 0.86, 0.065, 0.84, 0.050), id="chip8-t0.9-pe0.030"),
     # t ~ Uniform[0.8, 1.0]
-    pytest.param(_Scenario(8,  4, 0.000, 0.8, 0.40, 0.005, 0.30, 0.005), id="chip8-t0.8-pe0.000"),
-    pytest.param(_Scenario(8,  4, 0.015, 0.8, 0.35, 0.050, 0.25, 0.050), id="chip8-t0.8-pe0.015"),
-    pytest.param(_Scenario(8,  4, 0.030, 0.8, 0.30, 0.100, 0.20, 0.100), id="chip8-t0.8-pe0.030"),
+    pytest.param(_Scenario(8,  4, 0.000, 0.8, 0.79, 0.008, 0.71, 0.005), id="chip8-t0.8-pe0.000"),
+    pytest.param(_Scenario(8,  4, 0.015, 0.8, 0.79, 0.035, 0.71, 0.035), id="chip8-t0.8-pe0.015"),
+    pytest.param(_Scenario(8,  4, 0.030, 0.8, 0.79, 0.050, 0.71, 0.050), id="chip8-t0.8-pe0.030"),
     # t ~ Uniform[0.7, 1.0]
-    pytest.param(_Scenario(8,  4, 0.000, 0.7, 0.30, 0.010, 0.20, 0.010), id="chip8-t0.7-pe0.000"),
-    pytest.param(_Scenario(8,  4, 0.015, 0.7, 0.25, 0.050, 0.15, 0.050), id="chip8-t0.7-pe0.015"),
-    pytest.param(_Scenario(8,  4, 0.030, 0.7, 0.20, 0.100, 0.10, 0.100), id="chip8-t0.7-pe0.030"),
+    pytest.param(_Scenario(8,  4, 0.000, 0.7, 0.71, 0.008, 0.59, 0.005), id="chip8-t0.7-pe0.000"),
+    pytest.param(_Scenario(8,  4, 0.015, 0.7, 0.71, 0.035, 0.59, 0.035), id="chip8-t0.7-pe0.015"),
+    pytest.param(_Scenario(8,  4, 0.030, 0.7, 0.71, 0.050, 0.59, 0.050), id="chip8-t0.7-pe0.030"),
     # ── chip_dim = 16 ─────────────────────────────────────────────────────────────────────
     # t = 1.0  (lossless)
-    pytest.param(_Scenario(16, 4, 0.000, None, 0.90, 0.002, 0.80, 0.001), id="chip16-t1.0-pe0.000"),
-    pytest.param(_Scenario(16, 4, 0.015, None, 0.85, 0.050, 0.75, 0.100), id="chip16-t1.0-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, None, 0.80, 0.100, 0.70, 0.150), id="chip16-t1.0-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.000, None, 0.97, 0.008, 0.97, 0.005), id="chip16-t1.0-pe0.000"),
+    pytest.param(_Scenario(16, 4, 0.015, None, 0.97, 0.045, 0.97, 0.050), id="chip16-t1.0-pe0.015"),
+    pytest.param(_Scenario(16, 4, 0.030, None, 0.97, 0.065, 0.97, 0.080), id="chip16-t1.0-pe0.030"),
     # t ~ Uniform[0.9, 1.0]
-    pytest.param(_Scenario(16, 4, 0.000, 0.9, 0.70, 0.002, 0.60, 0.002), id="chip16-t0.9-pe0.000"),
-    pytest.param(_Scenario(16, 4, 0.015, 0.9, 0.65, 0.050, 0.55, 0.100), id="chip16-t0.9-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, 0.9, 0.60, 0.100, 0.50, 0.150), id="chip16-t0.9-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.000, 0.9, 0.85, 0.008, 0.85, 0.005), id="chip16-t0.9-pe0.000"),
+    pytest.param(_Scenario(16, 4, 0.015, 0.9, 0.85, 0.035, 0.85, 0.050), id="chip16-t0.9-pe0.015"),
+    pytest.param(_Scenario(16, 4, 0.030, 0.9, 0.85, 0.050, 0.85, 0.080), id="chip16-t0.9-pe0.030"),
     # t ~ Uniform[0.8, 1.0]
-    pytest.param(_Scenario(16, 4, 0.000, 0.8, 0.40, 0.005, 0.30, 0.005), id="chip16-t0.8-pe0.000"),
-    pytest.param(_Scenario(16, 4, 0.015, 0.8, 0.35, 0.050, 0.25, 0.100), id="chip16-t0.8-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, 0.8, 0.30, 0.100, 0.20, 0.200), id="chip16-t0.8-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.000, 0.8, 0.75, 0.008, 0.73, 0.005), id="chip16-t0.8-pe0.000"),
+    pytest.param(_Scenario(16, 4, 0.015, 0.8, 0.75, 0.035, 0.73, 0.050), id="chip16-t0.8-pe0.015"),
+    pytest.param(_Scenario(16, 4, 0.030, 0.8, 0.75, 0.050, 0.73, 0.080), id="chip16-t0.8-pe0.030"),
     # t ~ Uniform[0.7, 1.0]
-    pytest.param(_Scenario(16, 4, 0.000, 0.7, 0.30, 0.010, 0.20, 0.010), id="chip16-t0.7-pe0.000"),
-    pytest.param(_Scenario(16, 4, 0.015, 0.7, 0.25, 0.050, 0.15, 0.100), id="chip16-t0.7-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, 0.7, 0.20, 0.100, 0.10, 0.200), id="chip16-t0.7-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.000, 0.7, 0.66, 0.008, 0.62, 0.005), id="chip16-t0.7-pe0.000"),
+    pytest.param(_Scenario(16, 4, 0.015, 0.7, 0.66, 0.035, 0.62, 0.050), id="chip16-t0.7-pe0.015"),
+    pytest.param(_Scenario(16, 4, 0.030, 0.7, 0.66, 0.050, 0.62, 0.080), id="chip16-t0.7-pe0.030"),
 ]
 # fmt: on
 
@@ -117,9 +130,10 @@ _SCENARIOS_WITH_LOSS = [p for p in _SCENARIOS if cast("_Scenario", p.values[0]).
 
 @dataclass
 class ScenarioResult:
-    """Bundles the RunResult with the scenario that produced it."""
+    """Bundles the CompilationResult and RunResult with the scenario that produced it."""
 
     result: RunResult
+    compilation: CompilationResult
     scenario: _Scenario
 
 
@@ -128,7 +142,12 @@ def scenario_result(request) -> ScenarioResult:
     """Run compile_subcircuit for one scenario and return a ScenarioResult."""
     s: _Scenario = request.param
 
-    bs = generate_beam_splitter_matrix(chip_size=s.chip_dim, ideal_bs=True)
+    # Non-ideal beam splitters (statistically distributed reflectivities): this is
+    # the realistic regime the compiler must handle, and it strongly influences
+    # performance.  Seed by chip_dim so every scenario on the same chip size sees
+    # the same physical beam-splitter layout, deterministically.
+    bs_rng = np.random.default_rng(2 * s.chip_dim)
+    bs = generate_beam_splitter_matrix(chip_size=s.chip_dim, ideal_bs=False, rng=bs_rng)
 
     hw_rng = np.random.default_rng(10 * s.chip_dim)
     if s.t_low is None:
@@ -148,21 +167,79 @@ def scenario_result(request) -> ScenarioResult:
 
     torch.manual_seed(0)
 
-    run_result = compile_subcircuit(
+    config = OptimizationConfig(max_iterations=300)
+    compilation = compile_subcircuit(
+        beam_splitter_reflectivities=bs,
+        input_transmissions=input_t,
+        output_transmissions=output_t,
+        target_unitary=target_unitary,
+        config=config,
+    )
+    run_result = evaluate_subcircuit(
+        compilation,
         beam_splitter_reflectivities=bs,
         input_transmissions=input_t,
         output_transmissions=output_t,
         target_unitary=target_unitary,
         target_unitary_embedded=embedded,
         phase_error=s.phase_error,
-        config=OptimizationConfig(max_iterations=300),
+        config=config,
+        # Fixed seed → deterministic phase noise, so the tvd bounds below can be
+        # tight rather than padded ceilings.
+        phase_noise_seed=0,
     )
 
-    return ScenarioResult(result=run_result, scenario=s)
+    return ScenarioResult(result=run_result, compilation=compilation, scenario=s)
+
+
+class TestCompilationResult:
+    """Tests verifying the structure and types of the CompilationResult from compile_subcircuit."""
+
+    @staticmethod
+    def test_returns_compilation_result(scenario_result) -> None:
+        """Test that compile_subcircuit returns a CompilationResult instance."""
+        assert isinstance(scenario_result.compilation, CompilationResult)
+
+    @staticmethod
+    def test_phases_shape(scenario_result) -> None:
+        """Test that the phase matrix has shape (chip_dim, chip_dim)."""
+        chip_dim = scenario_result.scenario.chip_dim
+        assert tuple(scenario_result.compilation.phases.shape) == (chip_dim, chip_dim)
+
+    @staticmethod
+    def test_phases_are_finite(scenario_result) -> None:
+        """Test that all phase values are finite real numbers."""
+        assert bool(torch.isfinite(scenario_result.compilation.phases).all())
+
+    @staticmethod
+    def test_input_ports_length_matches_chip_dim(scenario_result) -> None:
+        """Test that the binary input-port vector has length chip_dim."""
+        assert len(scenario_result.compilation.input_ports) == scenario_result.scenario.chip_dim
+
+    @staticmethod
+    def test_output_ports_length_matches_target_dim(scenario_result) -> None:
+        """Test that the output-port list has length target_dim."""
+        assert len(scenario_result.compilation.output_ports) == scenario_result.scenario.target_dim
+
+    @staticmethod
+    def test_compilation_loss_non_negative(scenario_result) -> None:
+        """Test that the compilation loss is non-negative."""
+        assert float(scenario_result.compilation.loss) >= 0.0
+
+    @staticmethod
+    def test_compilation_compute_time_positive(scenario_result) -> None:
+        """Test that the compilation compute time is strictly positive."""
+        assert scenario_result.compilation.compute_time > 0
+
+    @staticmethod
+    def test_run_result_reuses_compilation_loss_and_time(scenario_result) -> None:
+        """Test that evaluate_subcircuit propagates the compilation loss and compute time."""
+        assert scenario_result.result.loss == scenario_result.compilation.loss
+        assert scenario_result.result.compute_time == scenario_result.compilation.compute_time
 
 
 class TestRunReturnStructure:
-    """Tests verifying the structure and types of the RunResult returned by compile_subcircuit."""
+    """Tests verifying the structure and types of the RunResult returned by evaluate_subcircuit."""
 
     @staticmethod
     def test_returns_run_result(scenario_result) -> None:
@@ -222,10 +299,12 @@ class TestRunValueRanges:
     """Range-based regression checks with per-scenario bounds.
 
     coincidence_rate_min varies with t_low (transmission loss reduces detected photons).
-    tvd_max is split by phase_error regime: tight (0.01) for phase_error=0,
-    loose (0.05) for phase_error>0.  losses_max is uniform across all scenarios.
+    tvd_max grows with phase_error (about 0.008 at phase_error=0, up to 0.065-0.080 at 0.030).
+    losses_max is uniform across all scenarios.
 
-    Bounds are conservative — tighten them after observing typical results.
+    All random inputs are seeded (beam splitters, optimiser, and phase noise), so the
+    bounds sit just above the observed values with headroom only for cross-platform and
+    torch-version numerical variation.
     """
 
     @staticmethod
