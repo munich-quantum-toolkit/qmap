@@ -14,6 +14,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
+- 🚀 Add photonic subcircuit compiler that optimizes coincidence rates 
+  ([#1059]) ([**@tobi-forster**])
 - 🎨 Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
   to QMAP ([#1058]) ([**@ystade**])
 
@@ -268,6 +270,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1059]: https://github.com/munich-quantum-toolkit/qmap/pull/1059
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
 [#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
@@ -316,6 +319,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [**@ystade**]: https://github.com/ystade
 [**@denialhaag**]: https://github.com/denialhaag
 [**@lsschmid**]: https://github.com/lsschmid
+[**@tobi-forster**]: https://github.com/tobi-forster
 
 <!-- General links -->
 
