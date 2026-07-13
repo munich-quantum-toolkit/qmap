@@ -384,9 +384,6 @@ def collect_pipeline_results(
                     "phase_error": phase_error,
                     "repeats_per_unitary": repeats_per_unitary,
                     **means,
-                    "tvd_difference": means["avg_tvd"] - means["avg_baseline_tvd"],
-                    "coincidence_rate_difference": means["avg_coincidence_rate"]
-                    - means["avg_baseline_coincidence_rate"],
                 })
 
     groupby_cols = [
