@@ -210,3 +210,19 @@ class TestConstructGraph:
             beam_splitter_reflectivities=ideal_bs_chip4,
         )
         assert len(layers) == 5
+
+    @staticmethod
+    def test_chip_dim_equal_target_dim_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """Test that chip_dim == target_dim is rejected before any node access.
+
+        A chip no larger than the target has no routing room; construct_graph must
+        fail immediately rather than indexing nonexistent nodes in the layer==1 branch.
+        """
+        with pytest.raises(ValueError, match="must be greater than target_dim"):
+            construct_graph(
+                chip_dim=4,
+                target_dim=4,
+                input_transmission=ones_transmissions_chip4,
+                output_transmission=ones_transmissions_chip4,
+                beam_splitter_reflectivities=ideal_bs_chip4,
+            )
