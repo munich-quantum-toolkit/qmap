@@ -73,7 +73,7 @@ class NAStatePreparationSolver:
         num_transfers: int | None = None,
         mind_ops_order: bool = False,
         shield_idle_qubits: bool = True,
-    ) -> NAStatePreparationSolver.Result:
+    ) -> Result:
         """Solve the neutral atom state preparation problem.
 
         The solver generates an optimal sequence of neutral atom operations for a given state preparation circuit.

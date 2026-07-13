@@ -12,11 +12,16 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
-### Added
+## [3.8.0] - 2026-07-09
 
-- 🚀 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
-  ([**@tobi-forster**])
-- 🎨 Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#380)._
+
+### Changed
+
+- 🚀 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059]) ([**@tobi-forster**])
+- ⬆️ Update `mqt-core` to version 3.7.0 ([#1069]) ([**@denialhaag**])
+- ⬆️ Update `nanobind` to version 2.13.0 ([#1069]) ([**@denialhaag**])
+- ♻️ Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core
   to QMAP ([#1058]) ([**@ystade**])
 
 ### Removed
@@ -253,7 +258,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.7.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.8.0...HEAD
+[3.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.8.0
 [3.7.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.7.0
 [3.6.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.6.0
 [3.5.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.5.0
@@ -270,7 +276,6 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#1059]: https://github.com/munich-quantum-toolkit/qmap/pull/1059
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
 [#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
