@@ -15,13 +15,10 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-import perceval as pcvl
 import torch
-from perceval import algorithm
 
 from .baseline import get_baseline_active_cols, get_baseline_input_ports
 from .graph import construct_graph
-from .perceval_simulation import create_mzi_chip, evaluate_chip_performance, simulate_with_loss
 from .routing import (
     convert_input_ports,
     convert_output_ports,
@@ -260,6 +257,9 @@ def _compute_ideal_distributions(target_unitary: torch.Tensor, target_dim: int) 
         Both entries are identical since proposed and baseline share the same target unitary
         and input state; the tuple is kept for a consistent call interface.
     """
+    import perceval as pcvl  # noqa: PLC0415  (optional dependency, only needed for evaluation)
+    from perceval import algorithm  # noqa: PLC0415
+
     pcvl_u = pcvl.Unitary(pcvl.MatrixN(target_unitary))
 
     ground_truth_processor = pcvl.Processor(m_circuit=target_dim, backend="SLOS")
@@ -402,6 +402,14 @@ def evaluate_subcircuit(
         A :class:`RunResult` containing performance metrics, final losses, and
         compute times for both the proposed compiler and the baseline.
     """
+    # Perceval is only required for this simulation-based evaluation step, so it is
+    # imported lazily: compiling a subcircuit (compile_subcircuit) needs only torch.
+    from .perceval_simulation import (  # noqa: PLC0415
+        create_mzi_chip,
+        evaluate_chip_performance,
+        simulate_with_loss,
+    )
+
     if config is None:
         config = OptimizationConfig()
 

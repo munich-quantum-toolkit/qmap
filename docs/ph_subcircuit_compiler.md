@@ -45,9 +45,8 @@ phase shifters of the chip that implement the desired target unitary and the
 routing.
 
 :::{note}
-The photonic subcircuit compiler requires the optional `photonics` dependency
-group, which includes `torch`, `perceval-quandela`, `numpy`, and `pandas`.
-Install it with:
+Compiling a subcircuit with `compile_subcircuit` needs `torch`, provided by the
+optional `photonics` dependency group. Install it with:
 
 ```console
 pip install "mqt.qmap[photonics]"
@@ -183,44 +182,6 @@ chip. `result.input_ports` tells you which modes to inject photons into and
 `result.output_ports` which modes to read out. The router chose these to
 minimise photon loss.
 
-### Evaluate in simulation (optional)
-
-For chips small enough to simulate classically, you can benchmark the compiled
-result against the fixed-placement baseline with
-{py:func}`~mqt.qmap.ph.subcircuit_compilation.evaluate_subcircuit`. This runs a
-full Perceval simulation — including optional phase noise and the transmission
-losses — and reports the coincidence rate and Total Variation Distance for both
-strategies. It is a benchmarking tool, not part of driving real hardware.
-
-```{code-cell} ipython3
-from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
-from mqt.qmap.ph.subcircuit_compilation import evaluate_subcircuit
-
-# The baseline optimiser compares against the target embedded in a chip-sized identity.
-target_unitary_embedded = embed_target_unitary_into_chip(
-    target_unitary.numpy(), chip_dim=chip_dim, target_dim=target_dim
-)
-
-run = evaluate_subcircuit(
-    result,
-    beam_splitter_reflectivities=beam_splitter_reflectivities,
-    input_transmissions=input_transmissions,
-    output_transmissions=output_transmissions,
-    target_unitary=target_unitary,
-    target_unitary_embedded=target_unitary_embedded,
-    phase_error=0.01,     # std-dev of Gaussian phase noise added in the simulation
-    config=config,
-    phase_noise_seed=0,   # fix the noise draw for a reproducible number
-)
-
-print(f"Proposed  coincidence rate: {run.performance['coincidence_rate']:.3f}  TVD: {run.performance['tvd']:.4f}")
-print(f"Baseline  coincidence rate: {run.baseline_performance['coincidence_rate']:.3f}  TVD: {run.baseline_performance['tvd']:.4f}")
-```
-
-Because the routed placement uses better-coupled modes than the fixed
-first-`target_dim` window, the proposed compiler reaches a higher coincidence
-rate than the baseline here.
-
 ## The compilation result
 
 {py:class}`~mqt.qmap.ph.subcircuit_compilation.CompilationResult` bundles:
@@ -242,57 +203,6 @@ $$\mathcal{L} = 1 - \frac{|\operatorname{Tr}(U_\text{target}^\dagger \, U_\text{
 where $N$ is the number of compared columns. A loss near zero means the chip's
 effective unitary closely matches the target in the routed subspace. It is a
 noise-free quantity computed directly from the phase-shifter parameters.
-
-## Simulation metrics
-
-When you benchmark a compiled result with `evaluate_subcircuit`, two figures of
-merit are reported — for both the proposed compiler and the baseline.
-
-### Coincidence rate
-
-The coincidence rate is the probability that all `target_dim // 2` photons
-arrive simultaneously at the correct set of output modes, as detected after the
-chip's output coupling. It is the primary figure of merit for a photonic quantum
-gate:
-
-$$\text{CR} = P(\text{all photons detected in target output modes})$$
-
-It rises with higher, more uniform input and output transmissions, which is
-exactly why routing the photons to the best-coupled modes improves it — and why
-the proposed compiler outperforms the fixed-placement baseline whenever the
-transmissions vary across modes.
-
-### Total Variation Distance (TVD)
-
-The TVD quantifies how closely the measured coincidence output distribution
-matches the ideal distribution produced by a perfect version of the target
-unitary:
-
-$$\text{TVD} = \frac{1}{2} \sum_s \lvert p_\text{chip}(s) - p_\text{ideal}(s) \rvert$$
-
-A TVD of 0 indicates a perfect match; 1 indicates completely disjoint
-distributions. In the presence of phase noise and beam-splitter imperfections,
-the TVD is a sensitive indicator of compilation quality.
-
-## Routing vs. Baseline
-
-The baseline strategy always injects photons into the first `target_dim` modes
-and optimises phase-shifter parameters for that fixed placement. No routing
-graph is consulted, which is equivalent to ignoring the hardware's spatial
-variation in transmission quality.
-
-The proposed compiler instead builds a weighted layered graph where each edge
-cost combines the MZI routing fidelity (bar or cross operation) with the
-transmission coefficients of the modes involved, and finds the minimum-cost path
-through this DAG with a shortest-path sweep. The path defines a _movement mask_:
-a `(chip_dim, chip_dim)` integer tensor that labels each MZI cell as either a
-routing element (fixed bar or cross state) or a computation element (free phase
-parameter). The optimiser then tunes only the computation-zone parameters, while
-the routing zone is held at its optimal fixed state.
-
-When all transmissions are equal (lossless, perfectly uniform chip), both
-strategies are equivalent and the routing step adds no benefit. The advantage
-grows as the spread of transmission coefficients increases.
 
 ## Configuration
 
@@ -322,39 +232,3 @@ config = OptimizationConfig(
 In practice, 300–500 iterations are sufficient for `chip_dim = 8` and
 `target_dim = 4` with a good initial learning rate. For larger chips or noisier
 hardware, increasing `max_iterations` and reducing `lr` can improve convergence.
-
-## Batch Data Collection
-
-A single compile-and-evaluate run reflects one hardware realisation and one
-target unitary. To characterise the compiler's _average_ advantage — and to
-reproduce the results reported in the accompanying paper — a batch sweep over
-many hardware configurations, target unitaries, and phase-error levels is
-provided as a standalone script under
-[`eval/ph/`](https://github.com/munich-quantum-toolkit/qmap/tree/main/eval/ph),
-alongside the `subcircuit_compilation_data_collection.ipynb` notebook that
-drives it. It is kept out of the installed package because it depends on the
-exact per-mode transmission files used for the submission
-(`eval/ph/hardware_data/`).
-
-Its `collect_pipeline_results` function sweeps all combinations and returns a
-consolidated {py:class}`pandas.DataFrame` with one row per
-`(num_modes, target_dim, phase_error)` group, averaged over all unitaries and
-repeats:
-
-```python
-from data_collection import Setup, collect_pipeline_results  # local module in eval/ph/
-
-df = collect_pipeline_results(
-    setups=[Setup(num_modes=24, target_dim=4), Setup(num_modes=48, target_dim=4)],
-    config=OptimizationConfig(max_iterations=1000),
-    num_unitaries_per_setup=4,
-    repeats_per_unitary=1,
-    phase_errors=[0.0, 0.015, 0.03],
-    input_losses=True,  # loads eval/ph/hardware_data/{num_modes}_mode_input_transmissions.txt
-    output_losses=True,  # loads the matching output-transmission file
-    ideal_beam_splitters=False,
-)
-```
-
-The `coincidence_rate_difference` column of the result directly quantifies the
-routing advantage over the baseline for each configuration.
