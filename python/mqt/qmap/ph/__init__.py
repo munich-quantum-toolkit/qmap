@@ -16,10 +16,9 @@ Typical usage::
 
     from mqt.qmap.ph.subcircuit_compilation import OptimizationConfig, compile_subcircuit
 
-Optional dependencies: ``perceval-quandela``, ``pandas`` (install via
-``pip install mqt.qmap[photonics]``) and ``torch`` (install separately
-following https://pytorch.org/get-started/locally/ to select the right
-CPU/CUDA variant).
+Optional dependencies: the ``photonics`` extra installs ``torch``,
+``perceval-quandela``, and ``pandas``.  Install it via
+``pip install mqt.qmap[photonics]``.
 """
 
 from __future__ import annotations

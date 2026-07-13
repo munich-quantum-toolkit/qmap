@@ -153,7 +153,7 @@ def generate_beam_splitter_matrix(
     return bs_values
 
 
-def determine_routing_fidelitites(
+def determine_routing_fidelities(
     beam_splitter_reflectivities: np.ndarray,
     chip_dim: int,
 ) -> tuple[list[float], list[float]]:
@@ -401,14 +401,24 @@ def construct_graph(
         acyclic graph, *pos* maps each node index to an ``(x, y)``
         visualisation coordinate, and *layers* is the list of per-layer node
         index arrays returned by rustworkx.
+
+    Raises:
+        ValueError: If ``chip_dim <= target_dim`` or ``target_dim`` is odd.
     """
+    if chip_dim <= target_dim:
+        msg = f"chip_dim ({chip_dim}) must be greater than target_dim ({target_dim})."
+        raise ValueError(msg)
+    if target_dim % 2 != 0:
+        msg = f"target_dim must be even, got {target_dim}."
+        raise ValueError(msg)
+
     graph = rx.PyDiGraph()
 
     number_of_layers = int(chip_dim - target_dim + 3)
     number_nodes_first_layer = int((chip_dim - target_dim) / 2 + 1)
     number_nodes_intermediate_layers = int(chip_dim - target_dim + 2)
 
-    bar_fidelities, cross_fidelities = determine_routing_fidelitites(beam_splitter_reflectivities, chip_dim)
+    bar_fidelities, cross_fidelities = determine_routing_fidelities(beam_splitter_reflectivities, chip_dim)
 
     # Photons enter on every other mode (dual-rail), so only even-indexed
     # transmissions are relevant for input cost.

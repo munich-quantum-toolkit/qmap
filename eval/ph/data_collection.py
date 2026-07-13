@@ -445,5 +445,5 @@ def export_results_table(df: pd.DataFrame, csv_path: str) -> None:
         csv_path: Destination path for the CSV file.  Parent directories are
             created automatically.
     """
-    pathlib.Path(pathlib.Path(csv_path).parent or ".").mkdir(exist_ok=True, parents=True)
+    pathlib.Path(csv_path).parent.mkdir(exist_ok=True, parents=True)
     df.to_csv(csv_path, index=False)

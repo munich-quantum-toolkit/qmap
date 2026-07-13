@@ -15,7 +15,7 @@ from mqt.qmap.ph.graph import (
     bar_fidelity,
     construct_graph,
     cross_fidelity,
-    determine_routing_fidelitites,
+    determine_routing_fidelities,
     generate_beam_splitter_matrix,
 )
 
@@ -140,25 +140,25 @@ class TestGenerateBeamSplitterMatrix:
 
 
 class TestDetermineRoutingFidelities:
-    """Tests for determine_routing_fidelitites."""
+    """Tests for determine_routing_fidelities."""
 
     @staticmethod
     def test_ideal_bs_all_bar_fidelities_are_one(ideal_bs_chip4) -> None:
         """Test that ideal beam splitters yield bar fidelity 1.0 for all MZIs."""
-        bar_fids, _ = determine_routing_fidelitites(ideal_bs_chip4, chip_dim=4)
+        bar_fids, _ = determine_routing_fidelities(ideal_bs_chip4, chip_dim=4)
         assert all(pytest.approx(1.0) == f for f in bar_fids)
 
     @staticmethod
     def test_ideal_bs_all_cross_fidelities_are_one(ideal_bs_chip4) -> None:
         """Test that ideal beam splitters yield cross fidelity 1.0 for all MZIs."""
-        _, cross_fids = determine_routing_fidelitites(ideal_bs_chip4, chip_dim=4)
+        _, cross_fids = determine_routing_fidelities(ideal_bs_chip4, chip_dim=4)
         assert all(pytest.approx(1.0) == f for f in cross_fids)
 
     @staticmethod
     def test_correct_number_of_fidelities_chip4(ideal_bs_chip4) -> None:
         """Test that a 4-mode chip produces 6 bar and 6 cross fidelity values."""
         # chip_size=4: 4 layers -> MZIs [2, 1, 2, 1] -> 6 fidelity values each
-        bar_fids, cross_fids = determine_routing_fidelitites(ideal_bs_chip4, chip_dim=4)
+        bar_fids, cross_fids = determine_routing_fidelities(ideal_bs_chip4, chip_dim=4)
         assert len(bar_fids) == 6
         assert len(cross_fids) == 6
 
@@ -170,14 +170,14 @@ class TestDetermineRoutingFidelities:
         indices ``[2k, 2k+1]``.  Any wrong pairing would produce a different
         fidelity value because the per-MZI reflectivities are all distinct.
         """
-        bar_fids, _ = determine_routing_fidelitites(nonideal_bs_chip4, chip_dim=4)
+        bar_fids, _ = determine_routing_fidelities(nonideal_bs_chip4, chip_dim=4)
         expected = [bar_fidelity([nonideal_bs_chip4[2 * k], nonideal_bs_chip4[2 * k + 1]]) for k in range(6)]
         assert bar_fids == pytest.approx(expected)
 
     @staticmethod
     def test_nonideal_bs_cross_fidelities_match_correct_pairs(nonideal_bs_chip4) -> None:
         """Test that each cross fidelity is computed from the correct in/out pair."""
-        _, cross_fids = determine_routing_fidelitites(nonideal_bs_chip4, chip_dim=4)
+        _, cross_fids = determine_routing_fidelities(nonideal_bs_chip4, chip_dim=4)
         expected = [cross_fidelity([nonideal_bs_chip4[2 * k], nonideal_bs_chip4[2 * k + 1]]) for k in range(6)]
         assert cross_fids == pytest.approx(expected)
 
