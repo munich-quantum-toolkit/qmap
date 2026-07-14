@@ -343,7 +343,7 @@ class TestRunValueRanges:
 
 
 @pytest.mark.parametrize("scenario_result", _SCENARIOS_WITH_LOSS, indirect=True)
-def test_proposed_coincidence_rate_exceeds_baseline(scenario_result):
+def test_proposed_coincidence_rate_exceeds_baseline(scenario_result) -> None:
     """Test that the compiled coincidence rate is at least as high as the baseline.
 
     Only parametrized for lossy scenarios (t_low is not None): routing steers

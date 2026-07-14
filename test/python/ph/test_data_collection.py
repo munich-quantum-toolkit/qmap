@@ -36,32 +36,32 @@ class TestBuildSetupGrid:
     """Tests for build_setup_grid."""
 
     @staticmethod
-    def test_filters_target_larger_than_chip():
+    def test_filters_target_larger_than_chip() -> None:
         """Test that setups where target_dim > num_modes are excluded."""
         setups = build_setup_grid([4], [6])
         assert setups == []
 
     @staticmethod
-    def test_filters_odd_chip_dim():
+    def test_filters_odd_chip_dim() -> None:
         """Test that odd chip dimensions are excluded."""
         setups = build_setup_grid([5], [2])
         assert setups == []
 
     @staticmethod
-    def test_filters_odd_target_dim():
+    def test_filters_odd_target_dim() -> None:
         """Test that odd target dimensions are excluded."""
         setups = build_setup_grid([4], [3])
         assert setups == []
 
     @staticmethod
-    def test_valid_single_setup():
+    def test_valid_single_setup() -> None:
         """Test that a single valid (num_modes, target_dim) pair produces one Setup."""
         setups = build_setup_grid([4], [2])
         assert len(setups) == 1
         assert setups[0] == Setup(num_modes=4, target_dim=2)
 
     @staticmethod
-    def test_valid_multiple_setups():
+    def test_valid_multiple_setups() -> None:
         """Test that the Cartesian product of valid inputs produces all expected setups."""
         setups = build_setup_grid([4, 6], [2, 4])
         # Cartesian product: (4,2), (4,4), (6,2), (6,4) — target_dims_list contains only 2 and 4, so 6 is never a candidate target dimension
@@ -71,7 +71,7 @@ class TestBuildSetupGrid:
         assert Setup(num_modes=6, target_dim=4) in setups
 
     @staticmethod
-    def test_produces_setup_dataclass_instances():
+    def test_produces_setup_dataclass_instances() -> None:
         """Test that all returned items are Setup dataclass instances."""
         setups = build_setup_grid([4], [2])
         assert all(isinstance(s, Setup) for s in setups)
@@ -82,7 +82,7 @@ class TestCollectPipelineResults:
 
     @pytest.fixture(scope="class")
     @staticmethod
-    def smoke_result():
+    def smoke_result() -> pd.DataFrame:
         """Run a minimal pipeline sweep and return the aggregated DataFrame."""
         torch.manual_seed(0)
 
@@ -97,18 +97,18 @@ class TestCollectPipelineResults:
         )
 
     @staticmethod
-    def test_returns_dataframe(smoke_result):
+    def test_returns_dataframe(smoke_result) -> None:
         """Test that collect_pipeline_results returns a DataFrame."""
         assert isinstance(smoke_result, pd.DataFrame)
 
     @staticmethod
-    def test_one_row_per_setup_and_phase_error(smoke_result):
+    def test_one_row_per_setup_and_phase_error(smoke_result) -> None:
         """Test that the result has one row per (setup, phase_error) combination."""
         # 1 setup x 1 phase_error -> 1 row
         assert len(smoke_result) == 1
 
     @staticmethod
-    def test_expected_columns_present(smoke_result):
+    def test_expected_columns_present(smoke_result) -> None:
         """Test that all required columns are present in the result."""
         required = {
             "num_modes",
@@ -124,18 +124,18 @@ class TestCollectPipelineResults:
         assert required.issubset(smoke_result.columns)
 
     @staticmethod
-    def test_coincidence_rate_in_unit_interval(smoke_result):
+    def test_coincidence_rate_in_unit_interval(smoke_result) -> None:
         """Test that coincidence rate values lie in [0, 1]."""
         assert (smoke_result["avg_coincidence_rate"] >= 0.0).all()
         assert (smoke_result["avg_coincidence_rate"] <= 1.0).all()
 
     @staticmethod
-    def test_tvd_non_negative(smoke_result):
+    def test_tvd_non_negative(smoke_result) -> None:
         """Test that TVD values are non-negative."""
         assert (smoke_result["avg_tvd"] >= 0.0).all()
 
     @staticmethod
-    def test_num_modes_and_target_dim_match_setup(smoke_result):
+    def test_num_modes_and_target_dim_match_setup(smoke_result) -> None:
         """Test that num_modes and target_dim in the result match the requested setup."""
         assert smoke_result["num_modes"].iloc[0] == 4
         assert smoke_result["target_dim"].iloc[0] == 2

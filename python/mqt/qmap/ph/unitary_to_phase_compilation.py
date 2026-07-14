@@ -415,7 +415,7 @@ def get_computation_zone(
 
 def optimize_unitary_subcircuit_parameters(
     target_unitary: torch.Tensor,
-    beam_splitter_reflectivities: torch.Tensor | None = None,
+    beam_splitter_reflectivities: torch.Tensor,
     movement_mask: torch.Tensor | None = None,
     lr: float = 0.05,
     threshold: float = 1e-5,
@@ -448,7 +448,8 @@ def optimize_unitary_subcircuit_parameters(
         active_cols_target: Column indices within the computation zone
             corresponding to ``active_cols``.
         verbose: If ``True``, print progress every 100 iterations.
-        max_iterations: Maximum number of gradient steps.
+        max_iterations: Maximum number of gradient steps.  Clamped to a minimum
+            of 2 so at least one optimizer step is evaluated before returning.
         baseline: If ``True``, restrict comparison to the first
             ``target_dim`` output rows (baseline mode).
         output_rows: Explicit list of output rows to compare; overrides the
@@ -471,6 +472,12 @@ def optimize_unitary_subcircuit_parameters(
         * ``"lrs"`` — learning-rate history.
         * ``"iterations"`` — number of gradient steps executed.
     """
+    # With a single iteration the loop would evaluate the initial parameters, take one
+    # optimizer step, and terminate before ever evaluating that step's result — leaving
+    # the step wasted and returning the initial parameters. Require at least two
+    # iterations so at least one optimizer step is always evaluated before returning.
+    max_iterations = max(2, max_iterations)
+
     target_dim = target_unitary.shape[0]
 
     if movement_mask is not None:

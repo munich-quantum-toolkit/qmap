@@ -116,6 +116,17 @@ def _setup_routing(
 ) -> tuple[Any, list[int], list[int], list[int], list[int], torch.Tensor]:
     """Find the best photon route and derive port assignments and an adjusted target unitary.
 
+    Args:
+        beam_splitter_reflectivities: 1D array of chip beam-splitter
+            reflectivities, ordered MZI-by-MZI.
+        input_transmissions: Per-mode input transmission coefficients, shape
+            ``(chip_dim,)``.
+        output_transmissions: Per-mode output transmission coefficients, shape
+            ``(chip_dim,)``.
+        target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
+        chip_dim: Total number of spatial modes on the chip.
+        target_dim: Dimension of the target unitary.
+
     Returns:
         A tuple of ``(movement_mask, input_ports, output_ports,
         active_cols_computation_zone, converted_input_ports, target_unitary_opt)``.
@@ -174,6 +185,18 @@ def _run_proposed_optimization(
 ) -> tuple[float, torch.Tensor]:
     """Optimize phase-shifter parameters for the proposed routing path.
 
+    Args:
+        target_unitary_opt: Target unitary, column-permuted when required to
+            match the routed input-column ordering.
+        beam_splitter_reflectivities: 1D array of chip beam-splitter reflectivities.
+        movement_mask: ``(chip_dim, chip_dim)`` routing-state mask for the chosen route.
+        config: Optimisation hyperparameters.
+        chip_dim: Total number of spatial modes on the chip.
+        input_ports: Physical input mode indices photons are injected into.
+        active_cols_computation_zone: Computation-zone column indices
+            corresponding to ``input_ports``.
+        output_ports: Physical output mode indices of the computation zone.
+
     Returns:
         A tuple of ``(final_loss, phase_shifter_params_including_routing)``.
     """
@@ -221,6 +244,15 @@ def _run_baseline_optimization(
 ) -> tuple[float, torch.Tensor]:
     """Optimize phase-shifter parameters for the baseline dual-rail placement.
 
+    Args:
+        target_unitary_embedded: Target unitary embedded into a
+            ``(chip_dim, chip_dim)`` identity matrix.
+        beam_splitter_reflectivities: Chip beam-splitter reflectivities as a tensor.
+        config: Optimisation hyperparameters.
+        chip_dim: Total number of spatial modes on the chip.
+        baseline_active_cols: Even-indexed dual-rail input columns of the fixed
+            baseline placement.
+
     Returns:
         A tuple of ``(final_loss, baseline_phase_shifter_params_2d)``.
     """
@@ -234,6 +266,10 @@ def _run_baseline_optimization(
         baseline=True,
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
         early_stop_patience=50,
+        # Deliberately stricter than the proposed path's 1e-4: the baseline optimises the
+        # full chip-sized embedding and keeps refining on smaller gains before early stopping.
+        # Both thresholds are baked into the calibrated regression bounds, so aligning them
+        # would shift the baseline metrics and is intentionally avoided.
         min_improvement=1e-6,
     )
 
@@ -251,6 +287,10 @@ def _run_baseline_optimization(
 
 def _compute_ideal_distributions(target_unitary: torch.Tensor, target_dim: int) -> tuple[Any, Any]:
     """Compute ground-truth output distributions via ideal Perceval simulation.
+
+    Args:
+        target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
+        target_dim: Dimension of the target unitary.
 
     Returns:
         A tuple of ``(ideal_probability_distribution, baseline_ideal_probability_distribution)``.
@@ -424,12 +464,12 @@ def evaluate_subcircuit(
     baseline_active_cols = get_baseline_active_cols(target_dim)
     baseline_input_ports = get_baseline_input_ports(baseline_active_cols, chip_dim)
 
-    beam_splitter_reflectivities = torch.as_tensor(beam_splitter_reflectivities, dtype=torch.float64)
+    beam_splitter_reflectivities_t = torch.as_tensor(beam_splitter_reflectivities, dtype=torch.float64)
 
     baseline_start = time.time()
     baseline_losses, baseline_phase_shifter_params_2d = _run_baseline_optimization(
         target_unitary_embedded,
-        beam_splitter_reflectivities,
+        beam_splitter_reflectivities_t,
         config,
         chip_dim,
         baseline_active_cols,

@@ -62,7 +62,9 @@ def create_mzi_chip(
     bs_idx = 0
 
     if phase_error is not None:
-        ps_matrix = np.asarray(ps_matrix, dtype=np.float64)
+        # Copy so the in-place noise addition never mutates caller-owned storage
+        # (e.g. CompilationResult.phases, which shares memory with this array).
+        ps_matrix = np.asarray(ps_matrix, dtype=np.float64).copy()
         noise = np.random.default_rng(rng).normal(loc=0.0, scale=phase_error, size=ps_matrix.shape)
         ps_matrix += noise
 

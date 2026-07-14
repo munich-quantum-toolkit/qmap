@@ -194,15 +194,22 @@ def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
     Returns:
         A list of length ``chip_dim`` suitable for use as a
         :class:`perceval.BasicState`.
+
+    Raises:
+        ValueError: If a port is out of range, lacks a partner mode at
+            ``port + 1`` below ``chip_dim``, or overlaps another dual-rail pair.
     """
-    list_iter = iter(range(chip_dim))
-    converted: list[int] = []
-    for i in list_iter:
-        if i in input_ports:
-            converted.extend([1, 0])
-            next(list_iter, None)
-        else:
-            converted.append(0)
+    converted = [0] * chip_dim
+    occupied: set[int] = set()
+    for port in input_ports:
+        if not 0 <= port < chip_dim - 1:
+            msg = f"Input port {port} is out of range or lacks a dual-rail partner below chip_dim={chip_dim}."
+            raise ValueError(msg)
+        if port in occupied or port + 1 in occupied:
+            msg = f"Input port {port} overlaps an already-occupied dual-rail pair."
+            raise ValueError(msg)
+        occupied.update((port, port + 1))
+        converted[port] = 1
     return converted
 
 

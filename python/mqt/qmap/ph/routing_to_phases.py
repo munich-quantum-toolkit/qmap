@@ -76,7 +76,11 @@ def get_effective_params_and_mask(
     The function applies the following logic in order:
 
     1. Infer virtual phase-shifter states from ``raw_params``.
-    2. Apply priority rules (``MaskState.BAR`` > ``MaskState.MZI`` > ``MaskState.CROSS``).
+    2. Resolve each MZI pair to a single routing state via ``priority_map``
+       (``BOT_ONLY`` > ``TOP_ONLY`` > ``CROSS`` > ``BAR`` > ``MZI``).  Masks
+       produced by the routing pipeline always assign both modes of a pair the
+       same state, so this ordering only acts as a defensive tiebreak and does
+       not affect the result in practice.
     3. Apply smart defaults: an MZI cell with both parameters at zero is
        set to bar state (0, π) to seal the photonic block.
 
