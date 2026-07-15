@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
+import platform
 import shutil
 import sys
 import tempfile
@@ -87,6 +88,18 @@ def _run_tests(
         *install_args,
         env=env,
     )
+    # === TEMPORARY (macOS-Intel torch wheel gap) — remove once resolved ===
+    # torch >= 2.3 ships no macOS x86_64 wheels, so the `photonics` extra (which
+    # pulls in torch) cannot be installed on Intel macOS runners. Skip just that
+    # extra there; the photonics tests self-skip via `pytest.importorskip`, and
+    # the torch-free tests (e.g. test_graph.py) still run. Remove this block and
+    # restore the unconditional `"--extra", "photonics"` args below once torch
+    # publishes macOS x86_64 wheels again or Intel macOS runners leave the matrix.
+    photonics_extra: tuple[str, ...] = ("--extra", "photonics")
+    if sys.platform == "darwin" and platform.machine() == "x86_64":
+        session.warn("Skipping the 'photonics' extra on macOS x86_64 (no torch wheel available).")
+        photonics_extra = ()
+    # === END TEMPORARY ===
     session.run(
         "uv",
         "sync",
@@ -94,8 +107,7 @@ def _run_tests(
         "--no-dev",  # do not auto-install dev dependencies
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
-        "--extra",
-        "photonics",
+        *photonics_extra,
         *install_args,
         env=env,
     )
