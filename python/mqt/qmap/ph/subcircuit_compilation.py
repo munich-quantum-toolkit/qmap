@@ -198,7 +198,8 @@ def _run_proposed_optimization(
         output_ports: Physical output mode indices of the computation zone.
 
     Returns:
-        A tuple of ``(final_loss, phase_shifter_params_including_routing)``.
+        A tuple of ``(best_loss, phase_shifter_params_including_routing)``, where
+        ``best_loss`` is the loss of the returned (best) parameters.
     """
     result = optimize_unitary_subcircuit_parameters(
         target_unitary=target_unitary_opt,
@@ -216,7 +217,7 @@ def _run_proposed_optimization(
         min_improvement=1e-4,
     )
 
-    losses = result["losses"][-1] if result["losses"] else float("inf")
+    losses = result["best_loss"]
     phase_shifter_params = result["phase_shifter_params"].detach()
 
     phase_shifter_params_2d = reshape_flattened_params_to_grid(
@@ -254,7 +255,8 @@ def _run_baseline_optimization(
             baseline placement.
 
     Returns:
-        A tuple of ``(final_loss, baseline_phase_shifter_params_2d)``.
+        A tuple of ``(best_loss, baseline_phase_shifter_params_2d)``, where
+        ``best_loss`` is the loss of the returned (best) parameters.
     """
     baseline_result = optimize_unitary_subcircuit_parameters(
         target_unitary=target_unitary_embedded,
@@ -273,7 +275,7 @@ def _run_baseline_optimization(
         min_improvement=1e-6,
     )
 
-    baseline_losses = baseline_result["losses"][-1] if baseline_result["losses"] else float("inf")
+    baseline_losses = baseline_result["best_loss"]
     baseline_phase_shifter_params = baseline_result["phase_shifter_params"].detach()
 
     baseline_phase_shifter_params_2d = reshape_flattened_params_to_grid(

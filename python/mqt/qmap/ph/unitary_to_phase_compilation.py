@@ -467,6 +467,8 @@ def optimize_unitary_subcircuit_parameters(
         A dictionary with the following keys:
 
         * ``"phase_shifter_params"`` — best flat parameter tensor (mod 2π).
+        * ``"best_loss"`` — loss of ``phase_shifter_params`` (the minimum over
+          all steps), matching the returned parameters rather than the final step.
         * ``"beam_splitter_params"`` — ``beam_splitter_reflectivities``.
         * ``"losses"`` — list of per-step loss values.
         * ``"lrs"`` — learning-rate history.
@@ -615,6 +617,7 @@ def optimize_unitary_subcircuit_parameters(
 
     return {
         "phase_shifter_params": torch.remainder(best_params, TWO_PI),
+        "best_loss": best_loss,
         "beam_splitter_params": beam_splitter_reflectivities,
         "losses": losses,
         "lrs": lrs,

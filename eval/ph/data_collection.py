@@ -210,7 +210,7 @@ def _run_repeats(
         phase_error: Phase-noise standard deviation.
         config: Optimisation hyperparameters.
         repeats_per_unitary: Number of independent runs to average over.
-        unitary_seed: Seed used to derive per-repeat PyTorch seeds.
+        unitary_seed: Seed used to derive per-repeat PyTorch and phase-noise seeds.
 
     Returns:
         Dict of mean metric values across all repeats, keyed by the same names
@@ -244,6 +244,9 @@ def _run_repeats(
             target_unitary_embedded=target_unitary_embedded,
             phase_error=phase_error,
             config=config,
+            # Seed the Perceval phase noise deterministically per repeat so the
+            # benchmark is reproducible while each repeat sees a distinct realization.
+            phase_noise_seed=unitary_seed * 1000 + repeat_idx,
         )
 
         normal_coincidence_rates.append(float(result.performance["coincidence_rate"]))

@@ -238,7 +238,8 @@ def get_edge_fidelity_even_graph_layer(
 ) -> float:
     """Compute the edge cost for an edge starting from an even graph layer.
 
-    Even graph layers (0, 2, 4, …) correspond to odd chip layers (1, 3, 5, …).
+    An edge leaving graph layer ``L`` traverses chip layer ``L - 1``, so the
+    even graph layers (2, 4, 6, …) map to the odd chip layers (1, 3, 5, …).
     Odd chip layers have MZIs only on in-between mode pairs, excluding the
     first and last modes.
 
@@ -275,7 +276,7 @@ def get_edge_fidelity_even_graph_layer(
         msg_0 = f"target_dim must be even, got {target_dim}"
         raise ValueError(msg_0)
 
-    chip_layer = graph_layer + 1  # even graph layer → next odd chip layer
+    chip_layer = graph_layer - 1  # edge leaving graph layer L traverses chip layer L-1
     mzis_per_even_chip_layer = chip_dim // 2
     mzis_per_odd_chip_layer = chip_dim // 2 - 1
 
@@ -403,8 +404,12 @@ def construct_graph(
         index arrays returned by rustworkx.
 
     Raises:
-        ValueError: If ``chip_dim <= target_dim`` or ``target_dim`` is odd.
+        ValueError: If ``target_dim`` is not positive, ``chip_dim <= target_dim``,
+            or ``target_dim`` is odd.
     """
+    if target_dim <= 0:
+        msg = f"target_dim must be positive, got {target_dim}."
+        raise ValueError(msg)
     if chip_dim <= target_dim:
         msg = f"chip_dim ({chip_dim}) must be greater than target_dim ({target_dim})."
         raise ValueError(msg)

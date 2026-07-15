@@ -17,6 +17,8 @@ from mqt.qmap.ph.graph import (
     cross_fidelity,
     determine_routing_fidelities,
     generate_beam_splitter_matrix,
+    get_edge_fidelity_even_graph_layer,
+    get_edge_fidelity_odd_graph_layer,
 )
 
 
@@ -226,3 +228,59 @@ class TestConstructGraph:
                 output_transmission=ones_transmissions_chip4,
                 beam_splitter_reflectivities=ideal_bs_chip4,
             )
+
+    @staticmethod
+    def test_non_positive_target_dim_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """Test that target_dim <= 0 (e.g. an empty unitary) is rejected.
+
+        A non-positive target_dim passes the even check (0 is even) and the
+        chip_dim comparison, so it needs its own guard before graph construction.
+        """
+        with pytest.raises(ValueError, match="target_dim must be positive"):
+            construct_graph(
+                chip_dim=4,
+                target_dim=0,
+                input_transmission=ones_transmissions_chip4,
+                output_transmission=ones_transmissions_chip4,
+                beam_splitter_reflectivities=ideal_bs_chip4,
+            )
+
+
+class TestEdgeFidelityLayerMapping:
+    """Regression tests: an edge leaving graph layer L must read chip layer L - 1.
+
+    With non-ideal beam splitters the routing cost of an edge must reflect the chip
+    layer that the photon actually traverses.  The movement mask realizes the edge
+    leaving graph layer L as chip layer L - 1, so the graph cost must read the same
+    (preceding) layer.  Distinct per-chip-layer fidelities make an off-by-two read
+    detectable; ideal beam splitters (all fidelities 1.0) would hide it.
+    """
+
+    @staticmethod
+    def _fidelities_with_distinct_layers(chip_dim: int, per_layer: dict[int, float]) -> list[float]:
+        """Build a flat per-MZI fidelity list where chip layer ``k`` has value ``per_layer[k]`` (default 1.0)."""
+        fids: list[float] = []
+        for layer in range(chip_dim):
+            mzi_count = chip_dim // 2 if layer % 2 == 0 else chip_dim // 2 - 1
+            fids.extend([per_layer.get(layer, 1.0)] * mzi_count)
+        return fids
+
+    @staticmethod
+    def test_even_graph_layer_reads_preceding_chip_layer() -> None:
+        """Test that an even graph-layer edge (L=2) reads chip layer L-1=1, not L+1=3."""
+        chip_dim, target_dim = 8, 4
+        # Chip layer 1 is the correct (preceding) layer; chip layer 3 is the wrong one.
+        bar = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {1: 0.8, 3: 0.5})
+        cross = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {})
+        cost = get_edge_fidelity_even_graph_layer(2, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
+        # target_dim // 2 = 2 photons traverse two MZIs of chip layer 1 (fidelity 0.8 each).
+        assert cost == pytest.approx(float(-np.log(0.8 * 0.8)))
+
+    @staticmethod
+    def test_odd_graph_layer_reads_preceding_chip_layer() -> None:
+        """Test that an odd graph-layer edge (L=3) reads chip layer L-1=2, not L+1=4."""
+        chip_dim, target_dim = 8, 4
+        bar = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {2: 0.7, 4: 0.3})
+        cross = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {})
+        cost = get_edge_fidelity_odd_graph_layer(3, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
+        assert cost == pytest.approx(float(-np.log(0.7 * 0.7)))

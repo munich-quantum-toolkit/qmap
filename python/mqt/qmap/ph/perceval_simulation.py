@@ -222,8 +222,11 @@ def evaluate_chip_performance(
         mapped_dist[sub_state] = mapped_dist.get(sub_state, 0.0) + corrected_prob
 
     tvd = 1.0
+    # Fall back to the raw (empty or zero-weight) mapping when nothing survives.
+    mapped_distribution = mapped_dist
     if compensated_weight_sum > 0:
         norm_sim = {s: p / compensated_weight_sum for s, p in mapped_dist.items()}
+        mapped_distribution = norm_sim  # normalised conditional distribution (sums to 1)
         baseline_total = sum(ideal_baseline.values())
         norm_ideal = {s: p / baseline_total for s, p in ideal_baseline.items()}
         all_states = set(norm_sim) | set(norm_ideal)
@@ -232,6 +235,6 @@ def evaluate_chip_performance(
     return {
         "coincidence_rate": coincidence_rate,
         "tvd": tvd,
-        "mapped_distribution": mapped_dist,
+        "mapped_distribution": mapped_distribution,
         "compensated_weight_sum": compensated_weight_sum,
     }

@@ -16,55 +16,6 @@ import torch
 from .routing import MaskState
 
 
-def infer_routing_states(
-    num_modes: int,
-    movement_mask: torch.Tensor,
-    embedded_params: torch.Tensor,
-    tolerance: float = 1e-6,
-) -> torch.Tensor:
-    """Refine a movement mask by detecting virtual phase-shifter cells.
-
-    An MZI cell whose top (bottom) parameter is non-zero while the other is
-    effectively zero is promoted to ``MaskState.TOP_ONLY`` (``MaskState.BOT_ONLY``).
-
-    Args:
-        num_modes: Number of spatial modes on the chip.
-        movement_mask: Integer tensor of shape ``(num_modes, num_modes)``
-            containing initial state codes.
-        embedded_params: Float tensor of shape ``(num_modes, num_modes)``
-            with current phase values laid out on the chip grid.
-        tolerance: Absolute threshold below which a parameter is treated as
-            zero.
-
-    Returns:
-        Refined movement mask with the same shape as ``movement_mask``.
-    """
-    refined_mask = movement_mask.clone()
-    num_layers = movement_mask.shape[1]
-
-    for layer in range(num_layers):
-        if layer % 2 == 0:
-            mzi_pairs = [(i, i + 1) for i in range(0, num_modes - 1, 2)]
-        else:
-            mzi_pairs = [(i, i + 1) for i in range(1, num_modes - 1, 2)]
-
-        for top, bot in mzi_pairs:
-            if movement_mask[top, layer].item() != MaskState.MZI:
-                continue
-
-            has_top = abs(embedded_params[top, layer].item()) > tolerance
-            has_bot = abs(embedded_params[bot, layer].item()) > tolerance
-
-            if has_top and not has_bot:
-                refined_mask[top, layer] = MaskState.TOP_ONLY
-                refined_mask[bot, layer] = MaskState.TOP_ONLY
-            elif has_bot and not has_top:
-                refined_mask[top, layer] = MaskState.BOT_ONLY
-                refined_mask[bot, layer] = MaskState.BOT_ONLY
-
-    return refined_mask
-
-
 def get_effective_params_and_mask(
     num_modes: int,
     movement_mask: torch.Tensor,
@@ -75,7 +26,11 @@ def get_effective_params_and_mask(
 
     The function applies the following logic in order:
 
-    1. Infer virtual phase-shifter states from ``raw_params``.
+    1. Take the virtual phase-shifter states (``TOP_ONLY``/``BOT_ONLY``)
+       directly from ``movement_mask``.  :func:`routing.route_to_movement_mask`
+       assigns these structurally from the compute-zone geometry, so genuine
+       compute MZI pairs stay trainable regardless of their current phase
+       magnitudes.
     2. Resolve each MZI pair to a single routing state via ``priority_map``
        (``BOT_ONLY`` > ``TOP_ONLY`` > ``CROSS`` > ``BAR`` > ``MZI``).  Masks
        produced by the routing pipeline always assign both modes of a pair the
@@ -112,7 +67,7 @@ def get_effective_params_and_mask(
         MaskState.BOT_ONLY: 4,
     }
 
-    refined_mask = infer_routing_states(num_modes, movement_mask, raw_params)
+    refined_mask = movement_mask.clone()
     effective_params = raw_params.clone()
     grad_mask = torch.ones_like(raw_params, dtype=torch.float32)
     num_layers = raw_params.shape[1]

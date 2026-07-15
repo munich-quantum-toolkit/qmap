@@ -62,7 +62,7 @@ class _Scenario:
     baseline_coincidence_rate_min: float
     baseline_tvd_max: float
     # Shared optimizer-convergence bound (independent of routing and transmission).
-    # Observed losses are <= 1.2e-3; 5e-3 leaves headroom for cross-platform/torch
+    # Observed losses are <= 1.9e-3; 5e-3 leaves headroom for cross-platform/torch
     # variation while still flagging a failure to converge.
     losses_max: float = field(default=5e-3)
 
