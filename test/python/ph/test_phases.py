@@ -118,6 +118,23 @@ class TestGetEffectiveParamsAndMask:
         # Non-zero MZI params should pass through unchanged
         assert torch.allclose(eff, raw)
 
+    @staticmethod
+    def test_mzi_zone_zero_params_stay_trainable() -> None:
+        """Test that a compute MZI with both phases near zero keeps its (0, 0) phases and gradients.
+
+        The compute/routing distinction comes from the structural mask, not from
+        transient phase magnitudes, so an all-zero compute MZI must not be sealed
+        to a bar state (0, pi) or have its gradients frozen.
+        """
+        chip_dim = 4
+        mask = torch.zeros((chip_dim, chip_dim), dtype=torch.int)  # all MaskState.MZI
+        raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
+
+        eff, grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
+
+        assert not eff.any()  # phases remain (0, 0), not overwritten to (0, pi)
+        assert grad.all()  # every compute cell stays trainable
+
     def test_returns_three_tensors(self) -> None:
         """Test that get_effective_params_and_mask returns a tuple of three tensors."""
         chip_dim = 4

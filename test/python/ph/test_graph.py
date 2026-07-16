@@ -245,6 +245,23 @@ class TestConstructGraph:
                 beam_splitter_reflectivities=ideal_bs_chip4,
             )
 
+    @staticmethod
+    def test_odd_chip_dim_minus_target_dim_raises() -> None:
+        """Test that an odd chip_dim - target_dim is rejected before layer sizing.
+
+        chip_dim=3, target_dim=2 passes the positivity, ordering, and even-target
+        checks, but chip_dim - target_dim is odd, which would silently truncate the
+        layer-node counts via integer division. It must raise instead.
+        """
+        with pytest.raises(ValueError, match="chip_dim - target_dim must be even"):
+            construct_graph(
+                chip_dim=3,
+                target_dim=2,
+                input_transmission=np.ones(3),
+                output_transmission=np.ones(3),
+                beam_splitter_reflectivities=np.ones(3),
+            )
+
 
 class TestEdgeFidelityLayerMapping:
     """Regression tests: an edge leaving graph layer L must read chip layer L - 1.

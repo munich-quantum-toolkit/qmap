@@ -36,8 +36,10 @@ def get_effective_params_and_mask(
        produced by the routing pipeline always assign both modes of a pair the
        same state, so this ordering only acts as a defensive tiebreak and does
        not affect the result in practice.
-    3. Apply smart defaults: an MZI cell with both parameters at zero is
-       set to bar state (0, π) to seal the photonic block.
+
+    Compute-zone MZI cells (``MaskState.MZI``) are always left as free,
+    trainable parameters — the compute/routing distinction comes solely from the
+    structural ``movement_mask``, never from the current phase magnitudes.
 
     When ``optimize_routing_parameters`` is ``True``, routing cells become
     trainable with a constrained offset so their relative phase relationship
@@ -109,16 +111,6 @@ def get_effective_params_and_mask(
                     grad_mask[top, layer] = 1.0
                     grad_mask[bot, layer] = 0.0
                 else:
-                    effective_params[top, layer] = 0.0
-                    effective_params[bot, layer] = np.pi
-                    grad_mask[top, layer] = 0.0
-                    grad_mask[bot, layer] = 0.0
-
-            elif state == MaskState.MZI:
-                p_top = raw_params[top, layer].item()
-                p_bot = raw_params[bot, layer].item()
-                if abs(p_top) < 1e-9 and abs(p_bot) < 1e-9:
-                    # Empty compute MZI → bar state to seal the block.
                     effective_params[top, layer] = 0.0
                     effective_params[bot, layer] = np.pi
                     grad_mask[top, layer] = 0.0

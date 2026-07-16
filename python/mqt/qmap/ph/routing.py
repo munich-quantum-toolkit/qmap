@@ -267,6 +267,12 @@ def route_to_movement_mask(
     Returns:
         Integer tensor of shape ``(chip_dim, chip_dim)`` containing
         :class:`MaskState` codes for every (mode, layer) position.
+
+    Raises:
+        ValueError: If the route contains a non-adjacent transition between
+            consecutive layers (a step that is neither straight-through nor a
+            move to an immediate neighbour), which cannot correspond to a valid
+            routing-graph edge.
     """
     movement_mask = torch.ones((chip_dim, chip_dim), dtype=torch.int)
 
@@ -290,17 +296,29 @@ def route_to_movement_mask(
         elif i % 2 == 0:
             if int(route[i - 1]) == node:
                 continue
-            if route[i - 1] != node:
+            if abs(int(route[i - 1]) - int(node)) == 1:
                 movement_mask[int(route[i - 1] // 2 * 2) : int(route[i - 1] // 2 * 2 + target_dim), i - 2] = (
                     MaskState.CROSS
                 )
+            else:
+                msg = (
+                    f"Invalid edge from node_{route[i - 1]} to node_{node}. "
+                    f"Must be {int(route[i - 1])} (bar) or {int(route[i - 1]) - 1}/{int(route[i - 1]) + 1} (cross)."
+                )
+                raise ValueError(msg)
         elif i % 2 == 1:
             if int(route[i - 1]) == node:
                 continue
-            if route[i - 1] != node:
+            if abs(int(route[i - 1]) - int(node)) == 1:
                 movement_mask[
                     int((route[i - 1] - 1) // 2 * 2 + 1) : int((route[i - 1] - 1) // 2 * 2 + target_dim + 1), i - 2
                 ] = MaskState.CROSS
+            else:
+                msg = (
+                    f"Invalid edge from node_{route[i - 1]} to node_{node}. "
+                    f"Must be {int(route[i - 1])} (bar) or {int(route[i - 1]) - 1}/{int(route[i - 1]) + 1} (cross)."
+                )
+                raise ValueError(msg)
 
     output_index = route[-2]
     mode_start = int((output_index // 2) * 2)

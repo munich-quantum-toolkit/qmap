@@ -195,6 +195,39 @@ class TestRouteToMovementMask:
         valid_routing_states = {MaskState.BAR, MaskState.CROSS}
         assert all(v.item() in valid_routing_states for v in routing_zone.flatten())
 
+    @staticmethod
+    def test_invalid_later_layer_transition_odd_branch_raises() -> None:
+        """Test that a non-adjacent transition in an odd later layer raises.
+
+        Route index i=3 (i % 2 == 1) steps from position 0 to 2 (difference 2),
+        which is not a valid routing-graph edge and must be rejected.
+        """
+        with pytest.raises(ValueError, match="Invalid edge from node_"):
+            route_to_movement_mask([0, 0, 0, 2, 0], chip_dim=4, target_dim=2)
+
+    @staticmethod
+    def test_invalid_later_layer_transition_even_branch_raises() -> None:
+        """Test that a non-adjacent transition in an even later layer raises.
+
+        Route index i=4 (i % 2 == 0) steps from position 0 to 2 (difference 2),
+        exercising the even-branch guard on a chip8/target4 layout.
+        """
+        with pytest.raises(ValueError, match="Invalid edge from node_"):
+            route_to_movement_mask([0, 0, 0, 0, 2, 0, 0], chip_dim=8, target_dim=4)
+
+    @staticmethod
+    def test_later_layer_cross_slice_is_target_dim_wide() -> None:
+        """Test that a valid later-layer cross marks a target_dim-wide CROSS slice.
+
+        With target_dim=4 the cross at chip layer 2 (route index i=4, an even
+        later layer) must span exactly four modes, not two.
+        """
+        mask = route_to_movement_mask([0, 0, 0, 0, 1, 1, 0], chip_dim=8, target_dim=4)
+        # Cross starts at mode 0 and is target_dim (=4) rows wide on chip layer 2.
+        assert torch.all(mask[0:4, 2] == MaskState.CROSS)
+        # Modes outside that target_dim-wide window are untouched on that layer.
+        assert torch.all(mask[4:8, 2] == MaskState.BAR)
+
 
 class TestGetBestRoute:
     """Tests for get_best_route."""

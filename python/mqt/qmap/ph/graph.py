@@ -405,7 +405,7 @@ def construct_graph(
 
     Raises:
         ValueError: If ``target_dim`` is not positive, ``chip_dim <= target_dim``,
-            or ``target_dim`` is odd.
+            ``target_dim`` is odd, or ``chip_dim - target_dim`` is odd.
     """
     if target_dim <= 0:
         msg = f"target_dim must be positive, got {target_dim}."
@@ -415,6 +415,9 @@ def construct_graph(
         raise ValueError(msg)
     if target_dim % 2 != 0:
         msg = f"target_dim must be even, got {target_dim}."
+        raise ValueError(msg)
+    if (chip_dim - target_dim) % 2 != 0:
+        msg = f"chip_dim - target_dim must be even, got chip_dim={chip_dim}, target_dim={target_dim}."
         raise ValueError(msg)
 
     graph = rx.PyDiGraph()
