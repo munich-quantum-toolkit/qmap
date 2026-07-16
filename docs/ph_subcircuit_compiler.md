@@ -23,8 +23,8 @@ matches the desired operation.
 
 In practice, mode-dependent input and output transmission losses directly limit
 the _coincidence rate_, defined as the probability that all photons are detected
-simultaneously within the computation zone (the target output modes), rather than
-being lost or scattered elsewhere on the chip. Beam-splitter reflectivities
+simultaneously within the computation zone (the target output modes), rather
+than being lost or scattered elsewhere on the chip. Beam-splitter reflectivities
 deviating from the ideal 50/50 split further influence this rate. Together,
 these imperfections make the choice of how and where to perform an operation on
 the chip non-trivial.
