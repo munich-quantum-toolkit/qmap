@@ -10,7 +10,7 @@
 requires = [
   "nanobind~=2.13.0",
   "setuptools-scm>=9.2.2",
-  "scikit-build-core~=1.0",
+  "scikit-build-core~=1.0.3",
   "mqt.core~=3.7.0",
 ]
 build-backend = "scikit_build_core.build"
@@ -384,7 +384,7 @@ exclude = [
 build = [
   "nanobind~=2.13.0",
   "setuptools-scm>=9.2.2",
-  "scikit-build-core~=1.0",
+  "scikit-build-core~=1.0.3",
   "mqt.core~=3.7.0",
 ]
 docs = [
