@@ -25,7 +25,7 @@ import networkx as nx
 import plotly.basedatatypes
 import plotly.callbacks
 import plotly.graph_objects as go
-from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator  # noqa: PLC2701
+from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator  # ruff:ignore[import-private-name]
 from distinctipy import distinctipy
 from ipywidgets import HBox, IntSlider, Layout, Play, VBox, interactive, jslink
 from networkx.drawing.nx_pydot import graphviz_layout
@@ -1917,9 +1917,9 @@ def visualize_search_graph(
 
     # define interactive callbacks
     def visualize_search_node_layout(
-        trace: plotly.basedatatypes.BaseTraceType | None,  # noqa: ARG001
+        trace: plotly.basedatatypes.BaseTraceType | None,  # ruff:ignore[unused-function-argument]
         points: plotly.callbacks.Points | list[int],
-        selector: plotly.callbacks.InputDeviceState | None,  # noqa: ARG001
+        selector: plotly.callbacks.InputDeviceState | None,  # ruff:ignore[unused-function-argument]
     ) -> None:
         nonlocal current_node_layout_visualized
 

@@ -67,7 +67,7 @@ def _proc_target(q: Queue, func: Callable[P, R], args: P.args, kwargs: P.kwargs)
     """
     try:
         q.put(("ok", func(*args, **kwargs)))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # ruff:ignore[blind-except]
         q.put(("err", e))
 
 

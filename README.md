@@ -240,8 +240,7 @@ _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
 [[8]](https://arxiv.org/pdf/2305.01674.pdf) T. Peham, N. Brandl, R. Kueng, R.
 Wille, and L. Burgholzer. Depth-Optimal Synthesis of Clifford Circuits with SAT
 Solvers. In
-_IEEE International Conference on Quantum Computing and Engineering (QCE)_,
-2023.
+_IEEE International Conference on Quantum Computing and Engineering (QCE)_, 2023.
 
 [[9]](https://arxiv.org/pdf/2309.08656.pdf) L. Schmid, D. F. Locher, M. Rispler,
 S. Blatt, J. Zeiher, M. Müller, and R. Wille. Computational Capabilities and

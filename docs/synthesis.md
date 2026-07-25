@@ -20,9 +20,9 @@ to be optimized as much as possible. To this end, an algorithm's description
 first has to be _synthesized_ using the device's gate library. In addition,
 circuits have to be _mapped_ to the target quantum device to satisfy its
 connectivity constraints. Even though Clifford circuits form a finite subgroup
-of all quantum circuits -- one that is not even universal for quantum computing
--- the search space for these problems grows exponentially with respect to the
-number of considered qubits.
+of all quantum circuits -- one that is not even universal for quantum
+computing -- the search space for these problems grows exponentially with
+respect to the number of considered qubits.
 
 The _Clifford synthesis approach_ in QMAP can be used to produce optimal
 Clifford circuits based on the methods proposed in

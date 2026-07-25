@@ -122,7 +122,7 @@ def _backfill_timeout_columns() -> None:
             "qmap_circ_iter_timeout_tried",
             "qmap_circ_maxsat_timeout_tried",
         ]:
-            conn.exec_driver_sql(f"UPDATE synthesis_results SET {name}=0 WHERE {name} IS NULL")  # noqa: S608
+            conn.exec_driver_sql(f"UPDATE synthesis_results SET {name}=0 WHERE {name} IS NULL")  # ruff:ignore[hardcoded-sql-expression]
         # For completed methods, set to 7200 if less
         pairs = [
             ("ag_runtime", "ag_timeout_tried"),
@@ -134,7 +134,7 @@ def _backfill_timeout_columns() -> None:
         ]
         for runtime_col, timeout_col in pairs:
             conn.exec_driver_sql(
-                f"UPDATE synthesis_results SET {timeout_col}=7200 "  # noqa: S608
+                f"UPDATE synthesis_results SET {timeout_col}=7200 "  # ruff:ignore[hardcoded-sql-expression]
                 f"WHERE {runtime_col} IS NOT NULL AND ({timeout_col} IS NULL OR {timeout_col} < 7200)"
             )
 
@@ -287,7 +287,7 @@ def _child_worker(circuit_path: str, method: str, q: mp.Queue) -> None:
     try:
         runtime, gate_count = _compute_synthesis_for_method(Path(circuit_path), method)
         q.put(("ok", runtime, gate_count))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # ruff:ignore[blind-except]
         q.put(("err", repr(e)))
 
 
@@ -311,7 +311,7 @@ def _run_with_timeout_in_subprocess(
         return False, None, None, "timeout"
     try:
         status, a, b = q.get_nowait()
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # ruff:ignore[blind-except]
         return False, None, None, f"noresult:{e!r}"
     if status == "ok":
         return True, float(a), int(b), None
@@ -387,7 +387,7 @@ def _evaluate_single_circuit(circuit_file: Path, method: str, session: Session, 
         # Do not write results on timeout/failure; only persist timeout_tried
         try:
             session.commit()
-        except Exception:  # noqa: BLE001
+        except Exception:  # ruff:ignore[blind-except]
             session.rollback()
         if err == "timeout":
             logger.info(f"Timeout after {timeout_sec:.3f}s for {method} on circuit {circuit_file.name}")
@@ -447,7 +447,7 @@ def evaluate_circuits(method: str, **kwargs: dict[str, Any]) -> None:
         return
 
     logger.info(f"Running evaluations in parallel with {workers} worker threads")
-    try:  # noqa: PLW0717
+    try:  # ruff:ignore[too-many-statements-in-try-clause]
         args_iter = [(str(cf), method, kwargs) for cf in circuit_files]
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = [executor.submit(_parallel_worker_packed, args) for args in args_iter]
@@ -587,14 +587,14 @@ def prune_excess_benchmarks() -> None:
                 parts = cf.stem.split("_")
                 q = int(parts[1])
                 g = int(parts[2])
-            except Exception:  # noqa: BLE001, S112
+            except Exception:  # ruff:ignore[blind-except, try-except-continue]
                 # Ignore files with invalid names
                 continue
             if g not in _allowed_num_gates(q):
                 try:
                     cf.unlink()
                     removed_files += 1
-                except Exception:  # noqa: BLE001
+                except Exception:  # ruff:ignore[blind-except]
                     logger.warning(f"Failed to remove file {cf}")
         if removed_files:
             logger.info(f"Removed {removed_files} circuit files outside refined gate set")
