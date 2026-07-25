@@ -131,7 +131,7 @@ class SubarchitectureOrder:
         """
         path = Path(lib_name).with_suffix(".pickle")
         with path.open("rb") as f:
-            temp = pickle.load(f)  # noqa: S301
+            temp = pickle.load(f)  # ruff:ignore[suspicious-pickle-usage]
 
         so = SubarchitectureOrder()
         so.__dict__.update(temp.__dict__)

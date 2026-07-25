@@ -39,7 +39,7 @@ def load_architecture(arch: str | Arch | Architecture | BackendV2 | None = None)
         elif isinstance(arch, Architecture):
             architecture = arch
         elif isinstance(arch, BackendV2):
-            from .import_backend import import_backend  # noqa: PLC0415 to decouple from Qiskit
+            from .import_backend import import_backend  # ruff:ignore[import-outside-top-level] to decouple from Qiskit
 
             architecture = import_backend(arch)
         else:  # pragma: no cover
