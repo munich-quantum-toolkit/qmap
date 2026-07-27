@@ -142,7 +142,7 @@ def generate_beam_splitter_matrix(
         bs_values[0::2] = pair_means - pair_deltas
         bs_values[1::2] = pair_means + pair_deltas
 
-    # Final exact mean/std normalisation.
+    # Final exact mean/std normalization.
     current_mean = np.mean(bs_values)
     current_std = np.std(bs_values)
     if current_std > 0:
@@ -154,7 +154,7 @@ def generate_beam_splitter_matrix(
 
 
 def determine_routing_fidelities(
-    beam_splitter_reflectivities: np.ndarray,
+    beam_splitter_reflectivities: list[float],
     chip_dim: int,
 ) -> tuple[list[float], list[float]]:
     """Compute bar and cross fidelities for all MZIs in the chip.
@@ -164,9 +164,10 @@ def determine_routing_fidelities(
     ordered by mode index.
 
     Args:
-        beam_splitter_reflectivities: 1D array of reflectivity values ordered
+        beam_splitter_reflectivities: List of reflectivity values ordered
             sequentially by layer, as produced by
-            :func:`generate_beam_splitter_matrix`.
+            :func:`generate_beam_splitter_matrix` (call ``.tolist()`` on its
+            NumPy array output).
         chip_dim: Number of spatial modes on the chip.
 
     Returns:
@@ -192,14 +193,14 @@ def determine_routing_fidelities(
     return bar_fidelities, cross_fidelities
 
 
-def _edge_cost_from_mzi_block(
+def _combined_fidelity_from_mzi_block(
     fidelity_list: list[float],
     fidelity_offset: int,
     source_node_idx: int,
     mzi_count_in_layer: int,
     num_parallel_photons: int,
 ) -> float:
-    """Return ``-log(product of fidelities)`` over the MZI block for one edge.
+    """Return the product of fidelities over the MZI block for one edge.
 
     For node ``i``, the contiguous MZI block starts at ``floor((i-1) / 2)``.
     For ``target_dim=4`` (two photons) this reproduces the mapping
@@ -215,7 +216,8 @@ def _edge_cost_from_mzi_block(
             (equals ``target_dim // 2``).
 
     Returns:
-        Non-negative edge cost ``-log(combined_fidelity)``.
+        Combined fidelity in ``[0, 1]``: the product of the fidelities of
+        the ``num_parallel_photons`` MZIs used by this edge.
     """
     start_mzi_idx = (source_node_idx - 1) // 2
 
@@ -224,7 +226,19 @@ def _edge_cost_from_mzi_block(
         if 0 <= mzi_idx < mzi_count_in_layer:
             combined_fidelity *= fidelity_list[fidelity_offset + mzi_idx]
 
-    return -np.log(combined_fidelity)
+    return combined_fidelity
+
+
+def _edge_cost_from_fidelity(fidelity: float) -> float:
+    """Convert a fidelity value into a non-negative routing-graph edge cost.
+
+    Args:
+        fidelity: Fidelity value in ``[0, 1]``.
+
+    Returns:
+        Non-negative edge cost ``-log(fidelity)``.
+    """
+    return -np.log(fidelity)
 
 
 def get_edge_fidelity_even_graph_layer(
@@ -289,13 +303,14 @@ def get_edge_fidelity_even_graph_layer(
 
     fidelity_list = bar_fidelities if edge_type == "bar" else cross_fidelities
 
-    return _edge_cost_from_mzi_block(
+    combined_fidelity = _combined_fidelity_from_mzi_block(
         fidelity_list=fidelity_list,
         fidelity_offset=fidelity_offset,
         source_node_idx=source_node_idx,
         mzi_count_in_layer=mzis_per_odd_chip_layer,
         num_parallel_photons=target_dim // 2,
     )
+    return _edge_cost_from_fidelity(combined_fidelity)
 
 
 def get_edge_fidelity_odd_graph_layer(
@@ -358,23 +373,24 @@ def get_edge_fidelity_odd_graph_layer(
 
     fidelity_list = bar_fidelities if edge_type == "bar" else cross_fidelities
 
-    return _edge_cost_from_mzi_block(
+    combined_fidelity = _combined_fidelity_from_mzi_block(
         fidelity_list=fidelity_list,
         fidelity_offset=fidelity_offset,
         source_node_idx=source_node_idx,
         mzi_count_in_layer=mzis_per_even_chip_layer,
         num_parallel_photons=target_dim // 2,
     )
+    return _edge_cost_from_fidelity(combined_fidelity)
 
 
 def construct_graph(
     chip_dim: int,
     target_dim: int,
-    input_transmission: np.ndarray,
-    output_transmission: np.ndarray,
-    beam_splitter_reflectivities: np.ndarray,
+    input_transmission: list[float],
+    output_transmission: list[float],
+    beam_splitter_reflectivities: list[float],
 ) -> tuple[rx.PyDiGraph, dict[int, tuple[float, float]], list]:
-    """Construct the routing DAG for photon placement optimisation.
+    """Construct the routing DAG for photon placement optimization.
 
     The graph encodes routing decisions as a shortest-path problem:
 
@@ -390,12 +406,13 @@ def construct_graph(
     Args:
         chip_dim: Total number of spatial modes on the chip.
         target_dim: Dimension of the target unitary.
-        input_transmission: Per-mode input transmission coefficients, shape
-            ``(chip_dim,)``.
-        output_transmission: Per-mode output transmission coefficients, shape
-            ``(chip_dim,)``.
-        beam_splitter_reflectivities: 1D array of beam splitter reflectivities
-            as produced by :func:`generate_beam_splitter_matrix`.
+        input_transmission: Per-mode input transmission coefficients, a list
+            of length ``chip_dim``.
+        output_transmission: Per-mode output transmission coefficients, a list
+            of length ``chip_dim``.
+        beam_splitter_reflectivities: List of beam splitter reflectivities as
+            produced by :func:`generate_beam_splitter_matrix` (call
+            ``.tolist()`` on its NumPy array output).
 
     Returns:
         A tuple ``(graph, pos, layers)`` where *graph* is the weighted directed

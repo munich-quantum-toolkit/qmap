@@ -18,8 +18,9 @@ We recommend you to start with the
 {doc}`installation instructions <installation>` or by reading our overview paper
 {cite:p}`wille2023qmap`. Then proceed to the {doc}`mapping page <mapping>`, the
 {doc}`synthesis/optimization page <synthesis>`, the
-{doc}`neutral atom state preparation page <na_state_prep>`, or the
-{doc}`zoned neutral atom compiler <na_zoned_compiler>`, and read the
+{doc}`neutral atom state preparation page <na_state_prep>`, the
+{doc}`zoned neutral atom compiler <na_zoned_compiler>`, or the
+{doc}`photonics subcircuit compiler <ph_subcircuit_compiler>`, and read the
 {doc}`reference documentation <api/mqt/qmap/index>`. If you are interested in
 the theory behind MQT QMAP, have a look at the publications in the
 {doc}`publication list <references>`.
@@ -47,6 +48,7 @@ synthesis
 na_state_prep
 na_zoned_compiler
 na_hybrid
+ph_subcircuit_compiler
 references
 CHANGELOG
 UPGRADING

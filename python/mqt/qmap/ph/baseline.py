@@ -49,20 +49,3 @@ def get_baseline_active_cols(target_dim: int) -> list[int]:
         List of even indices ``[0, 2, 4, …, target_dim - 2]``.
     """
     return [i for i in range(target_dim) if i % 2 == 0]
-
-
-def get_baseline_input_ports(active_cols: list[int], chip_dim: int) -> list[int]:
-    """Build a binary input-port vector for the baseline from active column indices.
-
-    Args:
-        active_cols: Column indices that carry a photon (``1``); all others are ``0``.
-        chip_dim: Total number of spatial modes on the chip.
-
-    Returns:
-        A list of length ``chip_dim`` with ``1`` at each active column and ``0``
-        elsewhere.
-    """
-    input_ports = [0] * chip_dim
-    for i in active_cols:
-        input_ports[i] = 1
-    return input_ports

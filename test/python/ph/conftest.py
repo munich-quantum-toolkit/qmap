@@ -32,7 +32,6 @@ for _pkg, _path in [
 
 sys.path.insert(0, str(_PYTHON_SRC))
 
-import numpy as np
 import pytest
 
 from mqt.qmap.ph.graph import generate_beam_splitter_matrix
@@ -41,24 +40,24 @@ from mqt.qmap.ph.graph import generate_beam_splitter_matrix
 @pytest.fixture
 def ideal_bs_chip4():
     """Return ideal 50/50 beam-splitter reflectivities for a 4-mode chip."""
-    return generate_beam_splitter_matrix(chip_size=4, ideal_bs=True)
+    return generate_beam_splitter_matrix(chip_size=4, ideal_bs=True).tolist()
 
 
 @pytest.fixture
 def nonideal_bs_chip4():
-    """Return a hand-crafted non-ideal BS array for a 4-mode chip.
+    """Return a hand-crafted non-ideal BS list for a 4-mode chip.
 
     Layout: ``[in0, out0, in1, out1, …]`` — 6 MZIs x 2 values = 12 entries.
     Values are chosen so that each MZI pair is unique, making wrong pairings
     detectable in tests.
     """
-    return np.array([0.40, 0.60, 0.30, 0.70, 0.45, 0.55, 0.35, 0.65, 0.48, 0.52, 0.42, 0.58])
+    return [0.40, 0.60, 0.30, 0.70, 0.45, 0.55, 0.35, 0.65, 0.48, 0.52, 0.42, 0.58]
 
 
 @pytest.fixture
 def ones_transmissions_chip4():
-    """Return all-ones transmission vector for a 4-mode chip."""
-    return np.ones(4)
+    """Return all-ones transmission list for a 4-mode chip."""
+    return [1.0, 1.0, 1.0, 1.0]
 
 
 @pytest.fixture

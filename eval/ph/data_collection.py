@@ -10,14 +10,11 @@
 
 # ------------------------------------------------------------------------------
 # Setup used for QCE26 paper submission.
-# Future structure of the code will focus on the compilation,
-# not the simulation and data collection.
 # ------------------------------------------------------------------------------
 
 from __future__ import annotations
 
 import pathlib
-import warnings
 from dataclasses import dataclass
 from itertools import product
 from typing import TYPE_CHECKING
@@ -95,58 +92,65 @@ def _mean(values: list[float]) -> float:
 def _resolve_transmissions(
     num_modes: int,
     kind: str,
-    hardware_data_dir: pathlib.Path,
+    hardware_data_dir: pathlib.Path | None,
     rng: np.random.Generator,
 ) -> np.ndarray:
-    """Return per-mode transmission coefficients, preferring the paper's data.
+    """Return per-mode transmission coefficients.
 
-    If ``hardware_data_dir`` contains ``{num_modes}_mode_{kind}_transmissions.txt``
-    the exact paper values are loaded (used as-is; the files are already
-    normalised so the maximum is 1.0).  If no such file exists, per-mode
-    transmissions are instead sampled from ``Uniform(0.7, 1.0)`` and normalised
-    so the maximum is 1.0, and a :class:`UserWarning` is emitted so the caller
-    knows the run is not reproducing the paper's exact hardware.
+    When ``hardware_data_dir`` is ``None``, per-mode transmissions are sampled
+    from ``Uniform(0.7, 1.0)`` and normalized so the maximum is 1.0.  Otherwise
+    the exact values are loaded from
+    ``{hardware_data_dir}/{num_modes}_mode_{kind}_transmissions.txt`` (used
+    as-is; the shipped files are already normalized so the maximum is 1.0).  A
+    missing file is treated as an error rather than silently falling back to
+    random data: naming a directory is a request for that data, so its absence
+    is a mistake, not a downgrade.
 
     Args:
         num_modes: Chip mode count; selects the file
             ``{num_modes}_mode_{kind}_transmissions.txt``.
         kind: Either ``"input"`` or ``"output"``.
-        hardware_data_dir: Directory holding the transmission text files.
-        rng: Generator used for the random fallback when no file is present.
+        hardware_data_dir: Directory holding the transmission text files, or
+            ``None`` to sample random values instead.
+        rng: Generator used when ``hardware_data_dir`` is ``None``.
 
     Returns:
         1D array of ``num_modes`` transmission coefficients.
 
     Raises:
+        FileNotFoundError: If ``hardware_data_dir`` is set but the expected
+            transmission file does not exist.
         ValueError: If the file exists but does not contain exactly
             ``num_modes`` values.
     """
-    path = hardware_data_dir / f"{num_modes}_mode_{kind}_transmissions.txt"
-    if path.is_file():
-        values = np.loadtxt(path, dtype=float).reshape(-1)
-        if values.size != num_modes:
-            msg = f"File '{path}' contains {values.size} values but {num_modes} were expected."
-            raise ValueError(msg)
-        return values
+    if hardware_data_dir is None:
+        raw = rng.uniform(0.7, 1.0, size=num_modes)
+        return raw / np.max(raw)
 
-    warnings.warn(
-        f"No transmission file '{path}' for the {num_modes}-mode {kind} transmissions; "
-        f"sampling random values from Uniform(0.7, 1.0) instead (not the paper's exact hardware).",
-        stacklevel=2,
-    )
-    raw = rng.uniform(0.7, 1.0, size=num_modes)
-    return raw / np.max(raw)
+    path = hardware_data_dir / f"{num_modes}_mode_{kind}_transmissions.txt"
+    if not path.is_file():
+        msg = (
+            f"No transmission file '{path}' for the {num_modes}-mode {kind} transmissions. "
+            f"Add the file, or pass hardware_data_dir=None to use random data."
+        )
+        raise FileNotFoundError(msg)
+
+    values = np.loadtxt(path, dtype=float).reshape(-1)
+    if values.size != num_modes:
+        msg = f"File '{path}' contains {values.size} values but {num_modes} were expected."
+        raise ValueError(msg)
+    return values
 
 
 def _build_hardware_cache(
     setups: list[Setup],
     base_seed: int,
     *,
-    input_losses: bool,
-    output_losses: bool,
+    consider_input_losses: bool,
+    consider_output_losses: bool,
     ideal_beam_splitters: bool,
     custom_bs_data: dict[int, np.ndarray] | None,
-    hardware_data_dir: pathlib.Path = _HARDWARE_DATA_DIR,
+    hardware_data_dir: pathlib.Path | None = _HARDWARE_DATA_DIR,
 ) -> dict[int, tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """Build per-num_modes hardware parameter cache.
 
@@ -154,13 +158,15 @@ def _build_hardware_cache(
         setups: All setups whose unique ``num_modes`` values are cached.
         base_seed: Base RNG seed; the seed for ``num_modes`` is
             ``base_seed + 10 * num_modes``.
-        input_losses: When ``True``, load the paper's exact input transmissions
-            for each ``num_modes``, falling back to random sampling (with a
-            warning) if no file is present.
-        output_losses: As ``input_losses`` but for the output transmissions.
+        consider_input_losses: When ``True``, model input transmission losses (loaded
+            from ``hardware_data_dir`` or sampled randomly when it is ``None``);
+            otherwise use lossless all-ones inputs.
+        consider_output_losses: As ``consider_input_losses`` but for the output transmissions.
         ideal_beam_splitters: Use ideal 50/50 beam splitters when ``True``.
         custom_bs_data: Pre-loaded reflectivity arrays keyed by ``num_modes``.
-        hardware_data_dir: Directory holding the transmission text files.
+        hardware_data_dir: Directory holding the transmission text files, or
+            ``None`` to sample random transmissions.  A set directory with a
+            missing file raises rather than falling back to random data.
 
     Returns:
         Mapping from ``num_modes`` to ``(bs, in_t, out_t)`` arrays.
@@ -174,12 +180,12 @@ def _build_hardware_cache(
         else:
             bs = generate_beam_splitter_matrix(chip_size=num_modes, ideal_bs=ideal_beam_splitters, rng=np_rng)
 
-        if input_losses:
+        if consider_input_losses:
             in_t: np.ndarray = _resolve_transmissions(num_modes, "input", hardware_data_dir, np_rng)
         else:
             in_t = np.ones(num_modes)
 
-        if output_losses:
+        if consider_output_losses:
             out_t: np.ndarray = _resolve_transmissions(num_modes, "output", hardware_data_dir, np_rng)
         else:
             out_t = np.ones(num_modes)
@@ -189,9 +195,9 @@ def _build_hardware_cache(
 
 
 def _run_repeats(
-    beam_splitter_reflectivities: np.ndarray,
-    input_transmissions: np.ndarray,
-    output_transmissions: np.ndarray,
+    beam_splitter_reflectivities: list[float],
+    input_transmissions: list[float],
+    output_transmissions: list[float],
     target_unitary: torch.Tensor,
     target_unitary_embedded: torch.Tensor,
     phase_error: float,
@@ -202,13 +208,13 @@ def _run_repeats(
     """Compile and evaluate ``repeats_per_unitary`` times and return mean metrics.
 
     Args:
-        beam_splitter_reflectivities: Chip beam-splitter reflectivity array.
+        beam_splitter_reflectivities: Chip beam-splitter reflectivity list.
         input_transmissions: Per-mode input transmission coefficients.
         output_transmissions: Per-mode output transmission coefficients.
         target_unitary: Target unitary tensor.
         target_unitary_embedded: Target unitary embedded into chip-sized identity.
         phase_error: Phase-noise standard deviation.
-        config: Optimisation hyperparameters.
+        config: Optimization hyperparameters.
         repeats_per_unitary: Number of independent runs to average over.
         unitary_seed: Seed used to derive per-repeat PyTorch and phase-noise seeds.
 
@@ -249,14 +255,14 @@ def _run_repeats(
             phase_noise_seed=unitary_seed * 1000 + repeat_idx,
         )
 
-        normal_coincidence_rates.append(float(result.performance["coincidence_rate"]))
-        normal_tvds.append(float(result.performance["tvd"]))
-        baseline_coincidence_rates.append(float(result.baseline_performance["coincidence_rate"]))
-        baseline_tvds.append(float(result.baseline_performance["tvd"]))
-        normal_losses.append(float(result.loss))
-        baseline_losses.append(float(result.baseline_loss))
-        normal_compute_times.append(float(result.compute_time))
-        baseline_compute_times.append(float(result.baseline_compute_time))
+        normal_coincidence_rates.append(float(result.proposed.performance["coincidence_rate"]))
+        normal_tvds.append(float(result.proposed.performance["tvd"]))
+        baseline_coincidence_rates.append(float(result.baseline.performance["coincidence_rate"]))
+        baseline_tvds.append(float(result.baseline.performance["tvd"]))
+        normal_losses.append(float(result.proposed.loss))
+        baseline_losses.append(float(result.baseline.loss))
+        normal_compute_times.append(float(result.proposed.compute_time))
+        baseline_compute_times.append(float(result.baseline.compute_time))
 
     return {
         "avg_coincidence_rate": _mean(normal_coincidence_rates),
@@ -278,16 +284,17 @@ def collect_pipeline_results(
     phase_errors: Iterable[float] = (0.01,),
     base_seed: int = 0,
     *,
-    input_losses: bool = False,
-    output_losses: bool = False,
+    consider_input_losses: bool = False,
+    consider_output_losses: bool = False,
     ideal_beam_splitters: bool = False,
     custom_bs_data: dict[int, np.ndarray] | None = None,
+    hardware_data_dir: pathlib.Path | None = _HARDWARE_DATA_DIR,
 ) -> pd.DataFrame:
     """Collect and aggregate TVD and coincidence-rate metrics over a parameter sweep.
 
     For each ``(setup, phase_error)`` combination the function averages over:
 
-    1. ``repeats_per_unitary`` independent runs (different phase initialisations).
+    1. ``repeats_per_unitary`` independent runs (different phase initializations).
     2. ``num_unitaries_per_setup`` random target unitaries.
 
     Hardware parameters (beam-splitter reflectivities and transmission
@@ -296,27 +303,30 @@ def collect_pipeline_results(
 
     Args:
         setups: List of :class:`Setup` instances to evaluate.
-        config: Optimisation hyperparameters shared across all runs.  Defaults
+        config: Optimization hyperparameters shared across all runs.  Defaults
             to :class:`OptimizationConfig` with all defaults when ``None``.
         num_unitaries_per_setup: Number of Haar-random target unitaries to
             sample per ``(setup, phase_error)`` combination.
-        repeats_per_unitary: Number of repeated optimisation runs per unitary.
-            Each run uses a different PyTorch random seed for initialisation.
+        repeats_per_unitary: Number of repeated optimization runs per unitary.
+            Each run uses a different PyTorch random seed for initialization.
         phase_errors: Phase-noise standard deviations to sweep over.
         base_seed: Base integer seed used to derive hardware-parameter RNG
             seeds per chip size (``base_seed + 10 * num_modes``).
-        input_losses: If ``True``, load the paper's exact per-mode input
-            transmissions from ``hardware_data/{num_modes}_mode_input_transmissions.txt``.
-            When no such file exists, per-mode transmissions are sampled from
-            ``Uniform(0.7, 1.0)`` (normalised to max 1.0) and a ``UserWarning``
-            is emitted.  If ``False``, use all-ones (lossless inputs).
-        output_losses: Analogous to ``input_losses`` for output modes, loaded
-            from ``hardware_data/{num_modes}_mode_output_transmissions.txt``.
+        consider_input_losses: If ``True``, model per-mode input transmission losses,
+            taking values from ``hardware_data_dir`` (or random samples when it
+            is ``None``).  If ``False``, use all-ones (lossless inputs).
+        consider_output_losses: Analogous to ``consider_input_losses`` for output modes.
         ideal_beam_splitters: If ``True``, use ideal 50/50 beam splitters
             instead of the statistically distributed model.
         custom_bs_data: Optional mapping from ``num_modes`` to a pre-loaded
             beam-splitter reflectivity array.  When a key is present it takes
             precedence over the generated distribution.
+        hardware_data_dir: Directory holding
+            ``{num_modes}_mode_{input,output}_transmissions.txt`` files, used
+            when ``consider_input_losses``/``consider_output_losses`` are ``True``.  Pass ``None``
+            to sample random transmissions instead.  When a directory is given
+            but the expected file is missing, a ``FileNotFoundError`` is raised
+            rather than silently falling back to random data.
 
     Returns:
         Aggregated :class:`pandas.DataFrame` with one row per
@@ -338,17 +348,23 @@ def collect_pipeline_results(
     hardware_cache = _build_hardware_cache(
         setups,
         base_seed,
-        input_losses=input_losses,
-        output_losses=output_losses,
+        consider_input_losses=consider_input_losses,
+        consider_output_losses=consider_output_losses,
         ideal_beam_splitters=ideal_beam_splitters,
         custom_bs_data=custom_bs_data,
+        hardware_data_dir=hardware_data_dir,
     )
 
     rows: list[dict] = []
     for setup in setups:
         num_modes = setup.num_modes
         target_dim = setup.target_dim
-        beam_splitter_reflectivities, input_transmissions, output_transmissions = hardware_cache[num_modes]
+        bs_array, in_t_array, out_t_array = hardware_cache[num_modes]
+        # hardware_cache holds NumPy arrays (built with vectorized statistics/normalization);
+        # convert once per setup to the plain lists compile_subcircuit/evaluate_subcircuit expect.
+        beam_splitter_reflectivities = bs_array.tolist()
+        input_transmissions = in_t_array.tolist()
+        output_transmissions = out_t_array.tolist()
 
         for phase_error in phase_errors_list:
             for unitary_index in range(num_unitaries_per_setup):
@@ -377,8 +393,8 @@ def collect_pipeline_results(
                 )
 
                 rows.append({
-                    "Input Losses": input_losses,
-                    "Output Losses": output_losses,
+                    "Input Losses": consider_input_losses,
+                    "Output Losses": consider_output_losses,
                     "Ideal Beam Splitters": ideal_beam_splitters,
                     "num_modes": num_modes,
                     "target_dim": target_dim,

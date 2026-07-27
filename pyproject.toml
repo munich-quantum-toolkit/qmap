@@ -417,8 +417,6 @@ docs = [
   "sphinxext-opengraph>=0.13.0",
   "walkerlayout>=1.0.2",
   "qiskit[qasm3-import,visualization]>=1.0.0",
-  # The photonic subcircuit compiler doc executes compile_subcircuit, which needs
-  # torch (but not the perceval/pandas simulation stack — those cells are not executed).
   "torch>=2.9.0",
 ]
 test = [

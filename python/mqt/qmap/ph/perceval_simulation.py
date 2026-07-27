@@ -19,9 +19,16 @@ from perceval.components import BS, PS
 if TYPE_CHECKING:
     import torch
 
+# Perceval simulation backend used throughout the pipeline. The lossy chip
+# simulation (simulate_with_loss) and the ideal ground-truth reference
+# (subcircuit_compilation._compute_ideal_distribution) must use the same
+# backend, so any TVD difference between them reflects real physical loss
+# rather than a backend-specific numerical discrepancy.
+SIMULATION_BACKEND = "SLOS"
+
 
 def create_mzi_chip(
-    bs_list: np.ndarray,
+    bs_list: list[float],
     ps_matrix: torch.Tensor | np.ndarray,
     phase_error: float | None,
     chip_size: int,
@@ -32,26 +39,27 @@ def create_mzi_chip(
 
     The chip alternates between full layers (MZIs on mode pairs 0-1, 2-3, …)
     and half layers (MZIs on pairs 1-2, 3-4, …), matching the layout
-    assumed by the unitary builder.  Gaussian phase noise is optionally
+    assumed by the unitary builder. Gaussian phase noise is optionally
     added to model fabrication imperfections.
 
     Args:
-        bs_list: 1D array of beam splitter reflectivities ordered MZI-by-MZI
-            as produced by :func:`graph.generate_beam_splitter_matrix`.
+        bs_list: List of beam splitter reflectivities ordered MZI-by-MZI
+            as produced by :func:`graph.generate_beam_splitter_matrix` (call
+            ``.tolist()`` on its NumPy array output).
         ps_matrix: 2D array of phase-shifter values with shape
-            ``(chip_size, chip_size)``.  Rows are spatial modes, columns are
+            ``(chip_size, chip_size)``. Rows are spatial modes, columns are
             MZI layers.
         phase_error: Standard deviation of zero-mean Gaussian noise added to
-            each phase-shifter value.  Pass ``None`` for a noiseless circuit.
+            each phase-shifter value. Pass ``None`` for a noiseless circuit.
         chip_size: Total number of spatial modes (equals the number of MZI
             layers).
         exclude_edge_phase_shifters: If ``True``, omit the phase shifters on
             modes 0 and ``chip_size - 1`` in the last odd layer.
-        rng: Source of randomness for the Gaussian phase noise.  Accepts a
+        rng: Source of randomness for the Gaussian phase noise. Accepts a
             :class:`numpy.random.Generator`, an integer seed, or ``None``
             (default) which draws fresh, non-reproducible noise from OS
-            entropy.  Pass a seeded generator or integer for reproducible
-            noise.  Ignored when ``phase_error`` is ``None``.
+            entropy. Pass a seeded generator or integer for reproducible
+            noise. Ignored when ``phase_error`` is ``None``.
 
     Returns:
         A :class:`perceval.Circuit` of size ``chip_size`` implementing the
@@ -62,8 +70,7 @@ def create_mzi_chip(
     bs_idx = 0
 
     if phase_error is not None:
-        # Copy so the in-place noise addition never mutates caller-owned storage
-        # (e.g. CompilationResult.phases, which shares memory with this array).
+        # Copy so the in-place noise addition never mutates caller-owned storage.
         ps_matrix = np.asarray(ps_matrix, dtype=np.float64).copy()
         noise = np.random.default_rng(rng).normal(loc=0.0, scale=phase_error, size=ps_matrix.shape)
         ps_matrix += noise
@@ -99,12 +106,12 @@ def simulate_with_loss(
     circuit: pcvl.Circuit,
     chip_dim: int,
     input_state: list[int],
-    input_transmissions: np.ndarray | list[float] | None = None,
-    output_transmissions: np.ndarray | list[float] | None = None,
+    input_transmissions: list[float] | None = None,
+    output_transmissions: list[float] | None = None,
 ) -> tuple[pcvl.Processor, dict]:
     """Simulate a circuit inside a lossy processor and return the output distribution.
 
-    Fibre-to-chip (input) and chip-to-detector (output) losses are modelled
+    Fiber-to-chip (input) and chip-to-detector (output) losses are modeled
     as per-mode loss channels wrapping the circuit.
 
     Args:
@@ -112,11 +119,13 @@ def simulate_with_loss(
         chip_dim: Total number of spatial modes.
         input_state: Binary occupancy list of length ``chip_dim`` used as the
             input :class:`perceval.BasicState`.
-        input_transmissions: Per-mode input transmission coefficients.  When
-            provided, a loss channel ``LC(1 - t)`` is prepended to each mode.
+        input_transmissions: Per-mode input transmission coefficients. When
+            provided, a loss channel ``LC(1 - t)`` is prepended to each mode
+            with ``t < 1``; lossless modes are skipped (``LC(0)`` is a no-op),
+            so an all-ones list adds no channels at all.
         output_transmissions: Per-mode output transmission coefficients.
-            When provided, a loss channel ``LC(1 - t)`` is appended to each
-            mode.
+            When provided, a loss channel ``LC(1 - t)`` is appended to each mode
+            with ``t < 1`` (lossless modes skipped).
 
     Returns:
         A tuple ``(processor, probability_distribution)`` where *processor*
@@ -124,17 +133,21 @@ def simulate_with_loss(
         *probability_distribution* is the raw BSDistribution mapping output
         states to probabilities.
     """
-    processor = pcvl.Processor("SLOS", chip_dim)
+    processor = pcvl.Processor(SIMULATION_BACKEND, chip_dim)
 
-    if isinstance(input_transmissions, (list, np.ndarray)):
+    if input_transmissions is not None:
         for mode in range(chip_dim):
-            processor.add(mode, pcvl.LC(1 - input_transmissions[mode]))
+            # LC(0) is a physical no-op; skip lossless modes so a fully lossless
+            # run adds no loss channels (and therefore no environment modes) at all.
+            if input_transmissions[mode] < 1.0:
+                processor.add(mode, pcvl.LC(1 - input_transmissions[mode]))
 
     processor.add(0, circuit)
 
-    if isinstance(output_transmissions, (list, np.ndarray)):
+    if output_transmissions is not None:
         for mode in range(chip_dim):
-            processor.add(mode, pcvl.LC(1 - output_transmissions[mode]))
+            if output_transmissions[mode] < 1.0:
+                processor.add(mode, pcvl.LC(1 - output_transmissions[mode]))
 
     processor.with_input(pcvl.BasicState(input_state))
     processor.min_detected_photons_filter(0)
@@ -148,14 +161,14 @@ def evaluate_chip_performance(
     ideal_baseline: dict,
     target_modes: list[int],
     required_photons: int,
-    output_transmissions: np.ndarray | list[float] | None = None,
+    output_transmissions: list[float] | None = None,
     apply_output_transmission_correction: bool = True,
 ) -> dict[str, Any]:
     """Evaluate coincidence rate and TVD of a simulated chip against the ideal distribution.
 
     Photon events are first filtered to those where all ``required_photons``
-    land in the computation zone (``target_modes``).  The surviving
-    probability mass gives the coincidence rate.  The conditional distribution
+    land in the computation zone (``target_modes``). The surviving
+    probability mass gives the coincidence rate. The conditional distribution
     is then compared to the ideal distribution via Total Variation Distance
     (TVD).
 
@@ -174,7 +187,7 @@ def evaluate_chip_performance(
         required_photons: Number of photons that must land in
             ``target_modes`` for an event to count as a success.
         output_transmissions: Per-mode output transmission coefficients used
-            for probability correction.  Ignored when
+            for probability correction. Ignored when
             ``apply_output_transmission_correction`` is ``False``.
         apply_output_transmission_correction: Whether to correct
             probabilities for detector losses before computing TVD.
@@ -190,7 +203,7 @@ def evaluate_chip_performance(
         * ``"mapped_distribution"`` — corrected conditional distribution
           keyed by computation-zone :class:`perceval.BasicState`.
         * ``"compensated_weight_sum"`` — total corrected probability mass
-          before normalisation.
+          before normalization.
     """
     coincidence_rate = 0.0
     mapped_dist: dict = {}
@@ -205,7 +218,7 @@ def evaluate_chip_performance(
         coincidence_rate += prob
         corrected_prob = prob
 
-        if apply_output_transmission_correction and isinstance(output_transmissions, (list, np.ndarray)):
+        if apply_output_transmission_correction and output_transmissions is not None:
             correction = 1.0
             for local_idx, mode in enumerate(target_modes):
                 t = float(output_transmissions[mode])
@@ -226,7 +239,7 @@ def evaluate_chip_performance(
     mapped_distribution = mapped_dist
     if compensated_weight_sum > 0:
         norm_sim = {s: p / compensated_weight_sum for s, p in mapped_dist.items()}
-        mapped_distribution = norm_sim  # normalised conditional distribution (sums to 1)
+        mapped_distribution = norm_sim  # normalized conditional distribution (sums to 1)
         baseline_total = sum(ideal_baseline.values())
         norm_ideal = {s: p / baseline_total for s, p in ideal_baseline.items()}
         all_states = set(norm_sim) | set(norm_ideal)

@@ -13,7 +13,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from mqt.qmap.ph.baseline import embed_target_unitary_into_chip, get_baseline_active_cols, get_baseline_input_ports
+from mqt.qmap.ph.baseline import embed_target_unitary_into_chip, get_baseline_active_cols
 
 
 class TestGetBaselineActiveCols:
@@ -88,31 +88,3 @@ class TestEmbedTargetUnitaryIntoChip:
         u = np.eye(2, dtype=complex)
         result = embed_target_unitary_into_chip(u, chip_dim=6, target_dim=2)
         assert result.shape == (6, 6)
-
-
-class TestGetBaselineInputPorts:
-    """Tests for get_baseline_input_ports."""
-
-    @staticmethod
-    def test_active_cols_zero_on_chip4() -> None:
-        """Test that active col 0 on a 4-mode chip gives [1, 0, 0, 0]."""
-        result = get_baseline_input_ports([0], chip_dim=4)
-        assert result == [1, 0, 0, 0]
-
-    @staticmethod
-    def test_active_cols_zero_and_two_on_chip4() -> None:
-        """Test that active cols [0, 2] on a 4-mode chip gives [1, 0, 1, 0]."""
-        result = get_baseline_input_ports([0, 2], chip_dim=4)
-        assert result == [1, 0, 1, 0]
-
-    @staticmethod
-    def test_length_equals_chip_dim() -> None:
-        """Test that the result length equals chip_dim."""
-        result = get_baseline_input_ports([0], chip_dim=6)
-        assert len(result) == 6
-
-    @staticmethod
-    def test_no_active_cols_returns_all_zeros() -> None:
-        """Test that no active columns yields an all-zero vector."""
-        result = get_baseline_input_ports([], chip_dim=4)
-        assert result == [0, 0, 0, 0]

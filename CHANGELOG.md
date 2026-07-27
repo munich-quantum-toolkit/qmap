@@ -12,14 +12,17 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Changed
+
+- 🎉 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
+  ([**@tobi-forster**])
+
 ## [3.8.0] - 2026-07-09
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#380)._
 
 ### Changed
 
-- 🚀 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
-  ([**@tobi-forster**])
 - ⬆️ Update `mqt-core` to version 3.7.0 ([#1069]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.13.0 ([#1069]) ([**@denialhaag**])
 - ♻️ Move auxiliary datastructures used in, e.g., NASP and NALAC from MQT Core

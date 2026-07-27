@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-"""Unitary-to-phase compilation via gradient-based optimisation."""
+"""Unitary-to-phase compilation via gradient-based optimization."""
 
 from __future__ import annotations
 
@@ -329,7 +329,7 @@ def fidelity_loss(
     active_cols_target: list[int] | None = None,
     baseline_outputs: list[int] | None = None,
 ) -> torch.Tensor:
-    """Compute the normalised fidelity loss between two unitaries.
+    """Compute the normalized fidelity loss between two unitaries.
 
     Loss is defined as ``1 - |Tr(U_tgt† @ U_eff)|² / N²``, where *N* is
     the number of compared columns.  A loss of 0.0 indicates a perfect match
@@ -430,9 +430,9 @@ def optimize_unitary_subcircuit_parameters(
     early_stop_patience: int = 50,
     min_improvement: float = 1e-4,
 ) -> dict[str, Any]:
-    """Optimise phase-shifter parameters to approximate a target unitary.
+    """Optimize phase-shifter parameters to approximate a target unitary.
 
-    Runs an Adam optimiser with optional learning-rate scheduling.
+    Runs an Adam optimizer with optional learning-rate scheduling.
 
     Args:
         target_unitary: Target unitary tensor of shape ``(target_dim, target_dim)``.
@@ -442,7 +442,7 @@ def optimize_unitary_subcircuit_parameters(
             encoding routing constraints.  When ``None``, the full chip is
             treated as a computation zone.
         lr: Initial Adam learning rate.
-        threshold: Loss value below which optimisation is considered
+        threshold: Loss value below which optimization is considered
             successful and terminates early.
         active_cols: Physical input column indices to inject photons into.
         active_cols_target: Column indices within the computation zone
@@ -459,7 +459,7 @@ def optimize_unitary_subcircuit_parameters(
         optimize_routing_parameters: If ``True``, routing cells contribute a
             single trainable degree of freedom.
         early_stop_patience: Number of consecutive steps without improvement
-            before optimisation is terminated early.
+            before optimization is terminated early.
         min_improvement: Minimum absolute loss decrease required to reset the
             patience counter.
 

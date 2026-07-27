@@ -257,9 +257,9 @@ class TestConstructGraph:
             construct_graph(
                 chip_dim=3,
                 target_dim=2,
-                input_transmission=np.ones(3),
-                output_transmission=np.ones(3),
-                beam_splitter_reflectivities=np.ones(3),
+                input_transmission=[1.0, 1.0, 1.0],
+                output_transmission=[1.0, 1.0, 1.0],
+                beam_splitter_reflectivities=[1.0, 1.0, 1.0],
             )
 
 

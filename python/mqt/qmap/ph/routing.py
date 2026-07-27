@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 class MaskState(IntEnum):
     """State codes for every (mode, layer) cell of the movement mask.
 
-    The movement mask guides the phase optimiser: cells in routing layers
+    The movement mask guides the phase optimizer: cells in routing layers
     are forced to implement bar or cross operations, while cells in the
-    computation zone are free optimisation parameters.
+    computation zone are free optimization parameters.
     """
 
     MZI = 0  # Compute: both phases are learnable
@@ -182,9 +182,10 @@ def infer_input_computation_and_output_ports(
 def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
     """Build a chip-wide binary input-state vector from dual-rail input port indices.
 
-    Each entry in ``input_ports`` represents the lower mode of a dual-rail
-    pair; the function emits ``[1, 0]`` for that pair and ``0`` for all
-    unused modes.
+    Each entry in ``input_ports`` is the lower mode of a dual-rail pair and
+    receives a single photon; every other mode stays empty.  The indices are
+    assumed valid (in range and distinct); callers using ports from an
+    untrusted source should validate them first.
 
     Args:
         input_ports: Physical mode indices where photons are injected (lower
@@ -194,21 +195,9 @@ def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
     Returns:
         A list of length ``chip_dim`` suitable for use as a
         :class:`perceval.BasicState`.
-
-    Raises:
-        ValueError: If a port is out of range, lacks a partner mode at
-            ``port + 1`` below ``chip_dim``, or overlaps another dual-rail pair.
     """
     converted = [0] * chip_dim
-    occupied: set[int] = set()
     for port in input_ports:
-        if not 0 <= port < chip_dim - 1:
-            msg = f"Input port {port} is out of range or lacks a dual-rail partner below chip_dim={chip_dim}."
-            raise ValueError(msg)
-        if port in occupied or port + 1 in occupied:
-            msg = f"Input port {port} overlaps an already-occupied dual-rail pair."
-            raise ValueError(msg)
-        occupied.update((port, port + 1))
         converted[port] = 1
     return converted
 
@@ -254,7 +243,7 @@ def route_to_movement_mask(
     chip_dim: int,
     target_dim: int,
 ) -> torch.Tensor:
-    """Convert a routing path to a movement mask for the phase optimiser.
+    """Convert a routing path to a movement mask for the phase optimizer.
 
     The mask encodes the state of each (mode, layer) cell on the chip using
     :class:`MaskState` values.

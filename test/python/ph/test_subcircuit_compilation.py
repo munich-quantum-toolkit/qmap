@@ -54,7 +54,7 @@ class _Scenario:
     chip_dim: int
     target_dim: int
     phase_error: float
-    t_low: float | None  # None → all-ones (lossless); otherwise Uniform[t_low, 1.0] normalised
+    t_low: float | None  # None → all-ones (lossless); otherwise Uniform[t_low, 1.0] normalized
     # Proposed compiler bounds
     coincidence_rate_min: float
     tvd_max: float
@@ -78,7 +78,7 @@ class _Scenario:
 #          cr_min, tvd_max,                   ← proposed compiler
 #          baseline_cr_min, baseline_tvd_max  ← baseline (no routing)
 #
-# t_low=None → perfect transmission (all ones); otherwise Uniform[t_low, 1.0], normalised.
+# t_low=None → perfect transmission (all ones); otherwise Uniform[t_low, 1.0], normalized.
 # Bounds calibrated against observed runs with NON-IDEAL (statistically distributed) beam
 # splitters and DETERMINISTIC phase noise (phase_noise_seed=0 in the fixture).  Because
 # every random input is now seeded, tvd_max/cr_min sit only a small margin beyond the
@@ -167,19 +167,25 @@ def scenario_result(request) -> ScenarioResult:
 
     torch.manual_seed(0)
 
+    # compile_subcircuit/evaluate_subcircuit take plain lists; the NumPy arrays above
+    # exist only to compute the statistics/normalization.
+    bs_list = bs.tolist()
+    input_t_list = input_t.tolist()
+    output_t_list = output_t.tolist()
+
     config = OptimizationConfig(max_iterations=300)
     compilation = compile_subcircuit(
-        beam_splitter_reflectivities=bs,
-        input_transmissions=input_t,
-        output_transmissions=output_t,
+        beam_splitter_reflectivities=bs_list,
+        input_transmissions=input_t_list,
+        output_transmissions=output_t_list,
         target_unitary=target_unitary,
         config=config,
     )
     run_result = evaluate_subcircuit(
         compilation,
-        beam_splitter_reflectivities=bs,
-        input_transmissions=input_t,
-        output_transmissions=output_t,
+        beam_splitter_reflectivities=bs_list,
+        input_transmissions=input_t_list,
+        output_transmissions=output_t_list,
         target_unitary=target_unitary,
         target_unitary_embedded=embedded,
         phase_error=s.phase_error,
@@ -201,20 +207,30 @@ class TestCompilationResult:
         assert isinstance(scenario_result.compilation, CompilationResult)
 
     @staticmethod
-    def test_phases_shape(scenario_result) -> None:
-        """Test that the phase matrix has shape (chip_dim, chip_dim)."""
+    def test_phases_is_column_major_list(scenario_result) -> None:
+        """Test that phases is a flat list of chip_dim**2 values."""
         chip_dim = scenario_result.scenario.chip_dim
-        assert tuple(scenario_result.compilation.phases.shape) == (chip_dim, chip_dim)
+        phases = scenario_result.compilation.phases
+        assert isinstance(phases, list)
+        assert len(phases) == chip_dim**2
 
     @staticmethod
     def test_phases_are_finite(scenario_result) -> None:
         """Test that all phase values are finite real numbers."""
-        assert bool(torch.isfinite(scenario_result.compilation.phases).all())
+        assert np.all(np.isfinite(scenario_result.compilation.phases))
 
     @staticmethod
-    def test_input_ports_length_matches_chip_dim(scenario_result) -> None:
-        """Test that the binary input-port vector has length chip_dim."""
-        assert len(scenario_result.compilation.input_ports) == scenario_result.scenario.chip_dim
+    def test_input_ports_are_valid_mode_indices(scenario_result) -> None:
+        """Test that input_ports is a list of distinct in-range mode indices.
+
+        One index per injected photon (``target_dim // 2``), consistent with the
+        index-based ``output_ports``.
+        """
+        input_ports = scenario_result.compilation.input_ports
+        chip_dim = scenario_result.scenario.chip_dim
+        assert len(input_ports) == scenario_result.scenario.target_dim // 2
+        assert all(0 <= p < chip_dim for p in input_ports)
+        assert len(set(input_ports)) == len(input_ports)
 
     @staticmethod
     def test_output_ports_length_matches_target_dim(scenario_result) -> None:
@@ -234,8 +250,8 @@ class TestCompilationResult:
     @staticmethod
     def test_run_result_reuses_compilation_loss_and_time(scenario_result) -> None:
         """Test that evaluate_subcircuit propagates the compilation loss and compute time."""
-        assert scenario_result.result.loss == scenario_result.compilation.loss
-        assert scenario_result.result.compute_time == scenario_result.compilation.compute_time
+        assert scenario_result.result.proposed.loss == scenario_result.compilation.loss
+        assert scenario_result.result.proposed.compute_time == scenario_result.compilation.compute_time
 
 
 class TestRunReturnStructure:
@@ -249,31 +265,31 @@ class TestRunReturnStructure:
     @staticmethod
     def test_performance_dict_has_required_keys(scenario_result) -> None:
         """Test that the performance dict contains all required metric keys."""
-        assert set(scenario_result.result.performance.keys()) >= _PERF_KEYS
+        assert set(scenario_result.result.proposed.performance.keys()) >= _PERF_KEYS
 
     @staticmethod
     def test_baseline_performance_dict_has_required_keys(scenario_result) -> None:
         """Test that the baseline performance dict contains all required metric keys."""
-        assert set(scenario_result.result.baseline_performance.keys()) >= _PERF_KEYS
+        assert set(scenario_result.result.baseline.performance.keys()) >= _PERF_KEYS
 
     @staticmethod
     def test_losses_is_float(scenario_result) -> None:
         """Test that loss and baseline_loss are convertible to float."""
-        assert isinstance(float(scenario_result.result.loss), float)
-        assert isinstance(float(scenario_result.result.baseline_loss), float)
+        assert isinstance(float(scenario_result.result.proposed.loss), float)
+        assert isinstance(float(scenario_result.result.baseline.loss), float)
 
     @staticmethod
     def test_compute_times_are_positive(scenario_result) -> None:
         """Test that compute_time and baseline_compute_time are strictly positive."""
-        assert scenario_result.result.compute_time > 0
-        assert scenario_result.result.baseline_compute_time > 0
+        assert scenario_result.result.proposed.compute_time > 0
+        assert scenario_result.result.baseline.compute_time > 0
 
     @staticmethod
     def test_coincidence_rate_in_unit_interval(scenario_result) -> None:
         """Test that coincidence_rate values lie in [0, 1] for both compiled and baseline."""
         for cr in (
-            float(scenario_result.result.performance["coincidence_rate"]),
-            float(scenario_result.result.baseline_performance["coincidence_rate"]),
+            float(scenario_result.result.proposed.performance["coincidence_rate"]),
+            float(scenario_result.result.baseline.performance["coincidence_rate"]),
         ):
             assert cr >= 0.0
             assert cr <= 1.0 or cr == pytest.approx(1.0)
@@ -282,8 +298,8 @@ class TestRunReturnStructure:
     def test_tvd_in_unit_interval(scenario_result) -> None:
         """Test that TVD values lie in [0, 1] for both compiled and baseline."""
         for tvd in (
-            float(scenario_result.result.performance["tvd"]),
-            float(scenario_result.result.baseline_performance["tvd"]),
+            float(scenario_result.result.proposed.performance["tvd"]),
+            float(scenario_result.result.baseline.performance["tvd"]),
         ):
             assert tvd >= 0.0
             assert tvd <= 1.0 or tvd == pytest.approx(1.0)
@@ -291,8 +307,8 @@ class TestRunReturnStructure:
     @staticmethod
     def test_losses_non_negative(scenario_result) -> None:
         """Test that loss and baseline_loss are non-negative."""
-        assert float(scenario_result.result.loss) >= 0.0
-        assert float(scenario_result.result.baseline_loss) >= 0.0
+        assert float(scenario_result.result.proposed.loss) >= 0.0
+        assert float(scenario_result.result.baseline.loss) >= 0.0
 
 
 class TestRunValueRanges:
@@ -302,7 +318,7 @@ class TestRunValueRanges:
     tvd_max grows with phase_error (about 0.008 at phase_error=0, up to 0.065-0.080 at 0.030).
     losses_max is uniform across all scenarios.
 
-    All random inputs are seeded (beam splitters, optimiser, and phase noise), so the
+    All random inputs are seeded (beam splitters, optimizer, and phase noise), so the
     bounds sit just above the observed values with headroom only for cross-platform and
     torch-version numerical variation.
     """
@@ -310,36 +326,36 @@ class TestRunValueRanges:
     @staticmethod
     def test_coincidence_rate_above_minimum(scenario_result) -> None:
         """Test that the compiled coincidence rate meets the scenario's minimum threshold."""
-        cr = float(scenario_result.result.performance["coincidence_rate"])
+        cr = float(scenario_result.result.proposed.performance["coincidence_rate"])
         assert cr >= scenario_result.scenario.coincidence_rate_min
 
     @staticmethod
     def test_baseline_coincidence_rate_above_minimum(scenario_result) -> None:
         """Test that the baseline coincidence rate meets the baseline's minimum threshold."""
-        cr = float(scenario_result.result.baseline_performance["coincidence_rate"])
+        cr = float(scenario_result.result.baseline.performance["coincidence_rate"])
         assert cr >= scenario_result.scenario.baseline_coincidence_rate_min
 
     @staticmethod
     def test_tvd_below_maximum(scenario_result) -> None:
         """Test that the compiled TVD is below the scenario's maximum threshold."""
-        tvd = float(scenario_result.result.performance["tvd"])
+        tvd = float(scenario_result.result.proposed.performance["tvd"])
         assert tvd <= scenario_result.scenario.tvd_max
 
     @staticmethod
     def test_baseline_tvd_below_maximum(scenario_result) -> None:
         """Test that the baseline TVD is below the baseline's maximum threshold."""
-        tvd = float(scenario_result.result.baseline_performance["tvd"])
+        tvd = float(scenario_result.result.baseline.performance["tvd"])
         assert tvd <= scenario_result.scenario.baseline_tvd_max
 
     @staticmethod
     def test_optimization_loss_below_maximum(scenario_result) -> None:
         """Test that the final optimization loss is below the convergence threshold."""
-        assert float(scenario_result.result.loss) <= scenario_result.scenario.losses_max
+        assert float(scenario_result.result.proposed.loss) <= scenario_result.scenario.losses_max
 
     @staticmethod
     def test_baseline_loss_below_maximum(scenario_result) -> None:
         """Test that the baseline loss is below the convergence threshold."""
-        assert float(scenario_result.result.baseline_loss) <= scenario_result.scenario.losses_max
+        assert float(scenario_result.result.baseline.loss) <= scenario_result.scenario.losses_max
 
 
 @pytest.mark.parametrize("scenario_result", _SCENARIOS_WITH_LOSS, indirect=True)
@@ -351,6 +367,6 @@ def test_proposed_coincidence_rate_exceeds_baseline(scenario_result) -> None:
     fixed-placement baseline.  With perfect transmission all paths are equivalent
     and no routing advantage is expected, so those scenarios are excluded entirely.
     """
-    assert float(scenario_result.result.performance["coincidence_rate"]) >= float(
-        scenario_result.result.baseline_performance["coincidence_rate"]
+    assert float(scenario_result.result.proposed.performance["coincidence_rate"]) >= float(
+        scenario_result.result.baseline.performance["coincidence_rate"]
     )

@@ -9,7 +9,7 @@
 """MQT QMAP photonics subcircuit compiler.
 
 Compiles a target unitary onto a physical MZI-mesh chip by finding the
-optimal photon routing and optimising phase-shifter parameters via gradient
+optimal photon routing and optimizing phase-shifter parameters via gradient
 descent.
 
 Typical usage::
