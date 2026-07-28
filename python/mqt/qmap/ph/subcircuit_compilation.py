@@ -26,7 +26,7 @@ from .routing import (
     infer_input_computation_and_output_ports,
     route_to_movement_mask,
 )
-from .routing_to_phases import get_effective_params_and_mask, reshape_flattened_params_to_grid
+from .routing_to_phases import get_effective_params_and_mask
 from .unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
 
 
@@ -62,7 +62,7 @@ class CompilationResult:
 
     Attributes:
         phases: Flat list of ``chip_dim ** 2`` phase-shifter angles in
-            column-major (layer-by-layer) order — every mode phase of layer 0,
+            column-major (layer-by-layer) order - every mode phase of layer 0,
             then every mode phase of layer 1, and so on. The value for spatial
             mode ``r`` in MZI layer ``c`` is at index ``c * chip_dim + r``.
             These are the values to program onto the chip.
@@ -246,14 +246,9 @@ def _run_proposed_optimization(
         min_improvement=1e-4,
     )
 
-    losses = result["best_loss"]
-    phase_shifter_params = result["phase_shifter_params"].detach()
-
-    phase_shifter_params_2d = reshape_flattened_params_to_grid(
-        phase_shifter_params,
-        chip_dim,
-        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
-    )
+    losses = result.best_loss
+    # phase_shifter_params is already the (chip_dim, chip_dim) grid the optimizer trains natively.
+    phase_shifter_params_2d = result.phase_shifter_params.detach()
 
     params_including_routing, _, _ = get_effective_params_and_mask(
         chip_dim,
@@ -269,17 +264,17 @@ def _run_baseline_optimization(
     target_unitary_embedded: torch.Tensor,
     beam_splitter_reflectivities: torch.Tensor,
     config: OptimizationConfig,
-    chip_dim: int,
     baseline_active_cols: list[int],
 ) -> tuple[float, torch.Tensor]:
     """Optimize phase-shifter parameters for the baseline dual-rail placement.
 
     Args:
         target_unitary_embedded: Target unitary embedded into a
-            ``(chip_dim, chip_dim)`` identity matrix.
+            ``(chip_dim, chip_dim)`` identity matrix.  Its own dimension
+            determines the optimizer's grid size (``chip_dim``), since no
+            ``movement_mask`` is passed for the baseline.
         beam_splitter_reflectivities: Chip beam-splitter reflectivities as a tensor.
         config: Optimization hyperparameters.
-        chip_dim: Total number of spatial modes on the chip.
         baseline_active_cols: Even-indexed dual-rail input columns of the fixed
             baseline placement.
 
@@ -304,14 +299,9 @@ def _run_baseline_optimization(
         min_improvement=1e-6,
     )
 
-    baseline_losses = baseline_result["best_loss"]
-    baseline_phase_shifter_params = baseline_result["phase_shifter_params"].detach()
-
-    baseline_phase_shifter_params_2d = reshape_flattened_params_to_grid(
-        baseline_phase_shifter_params,
-        chip_dim,
-        exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
-    )
+    baseline_losses = baseline_result.best_loss
+    # phase_shifter_params is already the (chip_dim, chip_dim) grid the optimizer trains natively.
+    baseline_phase_shifter_params_2d = baseline_result.phase_shifter_params.detach()
 
     return baseline_losses, baseline_phase_shifter_params_2d
 
@@ -512,7 +502,6 @@ def evaluate_subcircuit(
         target_unitary_embedded,
         beam_splitter_reflectivities_tensor,
         config,
-        chip_dim,
         baseline_active_cols,
     )
     baseline_compute_time = time.time() - baseline_start

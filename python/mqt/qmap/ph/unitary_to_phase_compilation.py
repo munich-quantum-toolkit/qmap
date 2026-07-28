@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import dataclass
 
 import torch
 
@@ -329,11 +329,12 @@ def fidelity_loss(
     active_cols_target: list[int] | None = None,
     baseline_outputs: list[int] | None = None,
 ) -> torch.Tensor:
-    """Compute the normalized fidelity loss between two unitaries.
+    r"""Compute the normalized fidelity loss between two unitaries.
 
-    Loss is defined as ``1 - |Tr(U_tgt† @ U_eff)|² / N²``, where *N* is
-    the number of compared columns.  A loss of 0.0 indicates a perfect match
-    (up to global phase).
+    Loss is defined as
+    :math:`1 - |\mathrm{Tr}(U_\mathrm{tgt}^\dagger U_\mathrm{eff})|^2 / N^2`,
+    where :math:`N` is the number of compared columns.  A loss of 0.0 indicates
+    a perfect match (up to global phase).
 
     Args:
         effective_unitary: Unitary produced by the chip, shape
@@ -413,6 +414,30 @@ def get_computation_zone(
     return all_bs_values[indices_tensor], indices_tensor
 
 
+@dataclass
+class OptimizationResult:
+    """Result of an :func:`optimize_unitary_subcircuit_parameters` run.
+
+    Attributes:
+        phase_shifter_params: Best ``(num_modes_opt, num_modes_opt)`` parameter
+            grid (mod 2pi), where ``num_modes_opt`` is ``target_dim`` when
+            ``movement_mask`` is ``None`` or ``movement_mask.shape[0]``
+            otherwise.  When ``exclude_edge_phase_shifters`` is ``True``, the
+            two excluded corner cells are frozen at their initial values.
+        best_loss: Loss of ``phase_shifter_params`` (the minimum over all
+            steps), matching the returned parameters rather than the final step.
+        losses: Per-step loss values.
+        lrs: Learning-rate history.
+        iterations: Number of gradient steps executed.
+    """
+
+    phase_shifter_params: torch.Tensor
+    best_loss: float
+    losses: list[float]
+    lrs: list[float]
+    iterations: int
+
+
 def optimize_unitary_subcircuit_parameters(
     target_unitary: torch.Tensor,
     beam_splitter_reflectivities: torch.Tensor,
@@ -429,7 +454,7 @@ def optimize_unitary_subcircuit_parameters(
     optimize_routing_parameters: bool = True,
     early_stop_patience: int = 50,
     min_improvement: float = 1e-4,
-) -> dict[str, Any]:
+) -> OptimizationResult:
     """Optimize phase-shifter parameters to approximate a target unitary.
 
     Runs an Adam optimizer with optional learning-rate scheduling.
@@ -464,18 +489,11 @@ def optimize_unitary_subcircuit_parameters(
             patience counter.
 
     Returns:
-        A dictionary with the following keys:
-
-        * ``"phase_shifter_params"`` — best flat parameter tensor (mod 2π).
-        * ``"best_loss"`` — loss of ``phase_shifter_params`` (the minimum over
-          all steps), matching the returned parameters rather than the final step.
-        * ``"beam_splitter_params"`` — ``beam_splitter_reflectivities``.
-        * ``"losses"`` — list of per-step loss values.
-        * ``"lrs"`` — learning-rate history.
-        * ``"iterations"`` — number of gradient steps executed.
+        An :class:`OptimizationResult` with the best parameter grid, its loss,
+        and the per-step optimization history.
     """
     # With a single iteration the loop would evaluate the initial parameters, take one
-    # optimizer step, and terminate before ever evaluating that step's result — leaving
+    # optimizer step, and terminate before ever evaluating that step's result - leaving
     # the step wasted and returning the initial parameters. Require at least two
     # iterations so at least one optimizer step is always evaluated before returning.
     max_iterations = max(2, max_iterations)
@@ -496,21 +514,27 @@ def optimize_unitary_subcircuit_parameters(
     default_output_rows = list(range(target_dim)) if baseline else None
     compared_rows = output_rows if output_rows is not None else default_output_rows
 
-    def flatten_grid_with_corner_policy(
-        grid_2d: torch.Tensor,
-        n_modes: int,
-        exclude_corners: bool,
-    ) -> torch.Tensor:
-        if not exclude_corners:
-            return grid_2d.flatten()
-        mask = torch.ones((n_modes, n_modes), dtype=torch.bool, device=grid_2d.device)
-        mask[0, -1] = False
-        mask[n_modes - 1, -1] = False
-        return grid_2d[mask]
-
-    phase_shifter_params = TWO_PI * torch.rand(param_count, dtype=torch.float64)
-    phase_shifter_params = torch.remainder(phase_shifter_params, TWO_PI)
+    # Draw the same random sequence as a flat, corner-excluded vector always would (so
+    # initial values are identical regardless of exclude_edge_phase_shifters), then scatter
+    # it into a native (num_modes_opt, num_modes_opt) grid once. The parameter is trained
+    # in this grid shape directly -- no per-iteration reshape is needed, since the unitary
+    # builders already accept a 2D grid unchanged and the excluded corners (when present)
+    # are permanently masked out below rather than physically absent from the tensor.
+    init_flat = TWO_PI * torch.rand(param_count, dtype=torch.float64)
+    init_flat = torch.remainder(init_flat, TWO_PI)
+    phase_shifter_params = reshape_flattened_params_to_grid(
+        init_flat, num_modes_opt, exclude_edge_phase_shifters=exclude_edge_phase_shifters
+    ).detach()
     phase_shifter_params.requires_grad_(True)
+
+    # Permanent gradient mask freezing the two excluded corners (row 0 / last row, last
+    # column) so they never move, mirroring the routing grad-masking mechanism below.
+    # Built once since it does not change across iterations.
+    corner_grad_mask: torch.Tensor | None = None
+    if exclude_edge_phase_shifters:
+        corner_grad_mask = torch.ones((num_modes_opt, num_modes_opt), dtype=torch.float32)
+        corner_grad_mask[0, -1] = 0.0
+        corner_grad_mask[num_modes_opt - 1, -1] = 0.0
 
     optimizer = torch.optim.Adam([phase_shifter_params], lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -532,26 +556,17 @@ def optimize_unitary_subcircuit_parameters(
 
     while loop_loss > threshold and index < max_iterations:
         ps_for_build = phase_shifter_params
-        grad_mask_flat: torch.Tensor | None = None
+        grad_mask = corner_grad_mask
 
         if movement_mask is not None:
-            phase_grid = reshape_flattened_params_to_grid(
-                phase_shifter_params,
-                num_modes_opt,
-                exclude_edge_phase_shifters=exclude_edge_phase_shifters,
-            )
-            effective_params, grad_mask_2d, _ = get_effective_params_and_mask(
+            effective_params, movement_grad_mask, _ = get_effective_params_and_mask(
                 num_modes_opt,
                 movement_mask,
-                phase_grid,
+                phase_shifter_params,
                 optimize_routing_parameters=optimize_routing_parameters,
             )
             ps_for_build = effective_params
-            grad_mask_flat = flatten_grid_with_corner_policy(
-                grad_mask_2d,
-                num_modes_opt,
-                exclude_edge_phase_shifters,
-            )
+            grad_mask = movement_grad_mask if grad_mask is None else grad_mask * movement_grad_mask.to(grad_mask.dtype)
 
         if active_cols is not None:
             u_model = build_unitary_selected_columns_from_components(
@@ -605,8 +620,8 @@ def optimize_unitary_subcircuit_parameters(
         optimizer.zero_grad()
         loss.backward()
 
-        if grad_mask_flat is not None and phase_shifter_params.grad is not None:
-            phase_shifter_params.grad.mul_(grad_mask_flat.to(phase_shifter_params.grad.dtype))
+        if grad_mask is not None and phase_shifter_params.grad is not None:
+            phase_shifter_params.grad.mul_(grad_mask.to(phase_shifter_params.grad.dtype))
 
         optimizer.step()
         scheduler.step(loop_loss)
@@ -615,11 +630,10 @@ def optimize_unitary_subcircuit_parameters(
         if early_stop_patience > 0 and no_improve_steps >= early_stop_patience:
             break
 
-    return {
-        "phase_shifter_params": torch.remainder(best_params, TWO_PI),
-        "best_loss": best_loss,
-        "beam_splitter_params": beam_splitter_reflectivities,
-        "losses": losses,
-        "lrs": lrs,
-        "iterations": index,
-    }
+    return OptimizationResult(
+        phase_shifter_params=torch.remainder(best_params, TWO_PI),
+        best_loss=best_loss,
+        losses=losses,
+        lrs=lrs,
+        iterations=index,
+    )

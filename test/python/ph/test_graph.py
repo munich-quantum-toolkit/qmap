@@ -33,19 +33,19 @@ class TestBarFidelity:
     @staticmethod
     def test_fully_reflective_gives_one() -> None:
         """Test that fully reflective beam splitters yield bar fidelity 1.0."""
-        # Both BSs reflect fully → bar state transmits all light
+        # Both BSs reflect fully -> bar state transmits all light
         assert bar_fidelity([1.0, 1.0]) == pytest.approx(1.0)
 
     @staticmethod
     def test_fully_transmissive_gives_one() -> None:
         """Test that fully transmissive beam splitters yield bar fidelity 1.0."""
-        # Both BSs transmit fully → bar state also reaches fidelity 1
+        # Both BSs transmit fully -> bar state also reaches fidelity 1
         assert bar_fidelity([0.0, 0.0]) == pytest.approx(1.0)
 
     @staticmethod
     def test_cross_reflectivities_gives_zero() -> None:
         """Test that cross-configured reflectivities yield bar fidelity 0.0."""
-        # r0=1, r1=0 → cross config → bar fidelity should be 0
+        # r0=1, r1=0 -> cross config -> bar fidelity should be 0
         assert bar_fidelity([1.0, 0.0]) == pytest.approx(0.0)
 
     @staticmethod
@@ -82,7 +82,7 @@ class TestCrossFidelity:
     @staticmethod
     def test_bar_reflectivities_gives_one() -> None:
         """Test that bar-configured reflectivities yield cross fidelity 1.0."""
-        # r0=1, r1=0 → cross state transmits all light
+        # r0=1, r1=0 -> cross state transmits all light
         assert cross_fidelity([1.0, 0.0]) == pytest.approx(1.0)
 
     @staticmethod
@@ -168,7 +168,7 @@ class TestDetermineRoutingFidelities:
     def test_nonideal_bs_bar_fidelities_match_correct_pairs(nonideal_bs_chip4) -> None:
         """Test that each bar fidelity is computed from the correct in/out pair.
 
-        The BS array has layout ``[in0, out0, in1, out1, …]``, so MZI k uses
+        The BS array has layout ``[in0, out0, in1, out1, ...]``, so MZI k uses
         indices ``[2k, 2k+1]``.  Any wrong pairing would produce a different
         fidelity value because the per-MZI reflectivities are all distinct.
         """

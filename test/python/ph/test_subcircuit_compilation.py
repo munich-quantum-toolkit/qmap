@@ -18,7 +18,7 @@ Setup: non-ideal (statistically distributed) beam splitters seeded per chip size
 
 Each scenario in _SCENARIOS carries its own bounds (cr_min, tvd_max, losses_max).
 Adjust any row's values directly in the _SCENARIOS table below the _Scenario class.
-Tighten them after observing typical results — they should catch semantic
+Tighten them after observing typical results - they should catch semantic
 regressions while tolerating minor numerical variation across runs.
 """
 
@@ -54,11 +54,11 @@ class _Scenario:
     chip_dim: int
     target_dim: int
     phase_error: float
-    t_low: float | None  # None → all-ones (lossless); otherwise Uniform[t_low, 1.0] normalized
+    t_low: float | None  # None -> all-ones (lossless); otherwise Uniform[t_low, 1.0] normalized
     # Proposed compiler bounds
     coincidence_rate_min: float
     tvd_max: float
-    # Baseline bounds (no routing — typically lower cr, similar tvd)
+    # Baseline bounds (no routing - typically lower cr, similar tvd)
     baseline_coincidence_rate_min: float
     baseline_tvd_max: float
     # Shared optimizer-convergence bound (independent of routing and transmission).
@@ -75,10 +75,10 @@ class _Scenario:
 # fmt: off
 # Each row is one scenario.
 # Columns: chip_dim, target_dim, phase_error, t_low,
-#          cr_min, tvd_max,                   ← proposed compiler
-#          baseline_cr_min, baseline_tvd_max  ← baseline (no routing)
+#          cr_min, tvd_max,                   <- proposed compiler
+#          baseline_cr_min, baseline_tvd_max  <- baseline (no routing)
 #
-# t_low=None → perfect transmission (all ones); otherwise Uniform[t_low, 1.0], normalized.
+# t_low=None -> perfect transmission (all ones); otherwise Uniform[t_low, 1.0], normalized.
 # Bounds calibrated against observed runs with NON-IDEAL (statistically distributed) beam
 # splitters and DETERMINISTIC phase noise (phase_noise_seed=0 in the fixture).  Because
 # every random input is now seeded, tvd_max/cr_min sit only a small margin beyond the
@@ -87,7 +87,7 @@ class _Scenario:
 # tvd grows with phase_error; cr is transmission-dominated and the proposed cr_min sits
 # above the baseline's, reflecting the routing advantage under transmission loss.
 _SCENARIOS = [
-    # ── chip_dim = 8 ──────────────────────────────────────────────────────────────────────
+    # -- chip_dim = 8 ----------------------------------------------------------------------
     # t = 1.0  (lossless)
     pytest.param(_Scenario(8,  4, 0.000, None, 0.97, 0.008, 0.97, 0.005), id="chip8-t1.0-pe0.000"),
     pytest.param(_Scenario(8,  4, 0.015, None, 0.97, 0.045, 0.97, 0.035), id="chip8-t1.0-pe0.015"),
@@ -104,7 +104,7 @@ _SCENARIOS = [
     pytest.param(_Scenario(8,  4, 0.000, 0.7, 0.71, 0.008, 0.59, 0.005), id="chip8-t0.7-pe0.000"),
     pytest.param(_Scenario(8,  4, 0.015, 0.7, 0.71, 0.035, 0.59, 0.035), id="chip8-t0.7-pe0.015"),
     pytest.param(_Scenario(8,  4, 0.030, 0.7, 0.71, 0.050, 0.59, 0.050), id="chip8-t0.7-pe0.030"),
-    # ── chip_dim = 16 ─────────────────────────────────────────────────────────────────────
+    # -- chip_dim = 16 ---------------------------------------------------------------------
     # t = 1.0  (lossless)
     pytest.param(_Scenario(16, 4, 0.000, None, 0.97, 0.008, 0.97, 0.005), id="chip16-t1.0-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, None, 0.97, 0.045, 0.97, 0.050), id="chip16-t1.0-pe0.015"),
@@ -190,7 +190,7 @@ def scenario_result(request) -> ScenarioResult:
         target_unitary_embedded=embedded,
         phase_error=s.phase_error,
         config=config,
-        # Fixed seed → deterministic phase noise, so the tvd bounds below can be
+        # Fixed seed -> deterministic phase noise, so the tvd bounds below can be
         # tight rather than padded ceilings.
         phase_noise_seed=0,
     )

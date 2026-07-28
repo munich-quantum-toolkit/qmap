@@ -47,7 +47,7 @@ def ideal_bs_chip4():
 def nonideal_bs_chip4():
     """Return a hand-crafted non-ideal BS list for a 4-mode chip.
 
-    Layout: ``[in0, out0, in1, out1, …]`` — 6 MZIs x 2 values = 12 entries.
+    Layout: ``[in0, out0, in1, out1, ...]`` - 6 MZIs x 2 values = 12 entries.
     Values are chosen so that each MZI pair is unique, making wrong pairings
     detectable in tests.
     """

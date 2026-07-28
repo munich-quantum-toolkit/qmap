@@ -38,12 +38,12 @@ def get_effective_params_and_mask(
        not affect the result in practice.
 
     Compute-zone MZI cells (``MaskState.MZI``) are always left as free,
-    trainable parameters — the compute/routing distinction comes solely from the
+    trainable parameters - the compute/routing distinction comes solely from the
     structural ``movement_mask``, never from the current phase magnitudes.
 
     When ``optimize_routing_parameters`` is ``True``, routing cells become
     trainable with a constrained offset so their relative phase relationship
-    is preserved (cross: equal phases; bar: phases differ by π).
+    is preserved (cross: equal phases; bar: phases differ by pi).
 
     Args:
         num_modes: Number of spatial modes on the chip.

@@ -79,7 +79,7 @@ class TestGetEffectiveParamsAndMask:
 
         eff, _grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
 
-        # Even layers: each MZI pair → (top=0, bot=pi)
+        # Even layers: each MZI pair -> (top=0, bot=pi)
         for layer in range(0, chip_dim, 2):
             for top in range(0, chip_dim - 1, 2):
                 assert eff[top, layer].item() == pytest.approx(0.0)

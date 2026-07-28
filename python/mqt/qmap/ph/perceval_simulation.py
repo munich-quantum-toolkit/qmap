@@ -37,8 +37,8 @@ def create_mzi_chip(
 ) -> pcvl.Circuit:
     """Build a Perceval circuit representing a staggered MZI mesh chip.
 
-    The chip alternates between full layers (MZIs on mode pairs 0-1, 2-3, …)
-    and half layers (MZIs on pairs 1-2, 3-4, …), matching the layout
+    The chip alternates between full layers (MZIs on mode pairs 0-1, 2-3, ...)
+    and half layers (MZIs on pairs 1-2, 3-4, ...), matching the layout
     assumed by the unitary builder. Gaussian phase noise is optionally
     added to model fabrication imperfections.
 
@@ -195,14 +195,14 @@ def evaluate_chip_performance(
     Returns:
         A dictionary with the following keys:
 
-        * ``"coincidence_rate"`` — fraction of events where all photons are in
+        * ``"coincidence_rate"`` - fraction of events where all photons are in
           the computation zone.
-        * ``"tvd"`` — Total Variation Distance between the corrected
+        * ``"tvd"`` - Total Variation Distance between the corrected
           conditional distribution and the ideal distribution (1.0 if no
           photons survive).
-        * ``"mapped_distribution"`` — corrected conditional distribution
+        * ``"mapped_distribution"`` - corrected conditional distribution
           keyed by computation-zone :class:`perceval.BasicState`.
-        * ``"compensated_weight_sum"`` — total corrected probability mass
+        * ``"compensated_weight_sum"`` - total corrected probability mass
           before normalization.
     """
     coincidence_rate = 0.0

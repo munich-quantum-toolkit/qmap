@@ -30,7 +30,7 @@ class TestInferInputComputationAndOutputPorts:
     @staticmethod
     def test_straight_route_first_position() -> None:
         """Test that a straight route through position 0 yields input port 0, output ports [0,1], and active col 0."""
-        # Source → input 0 → ... → compute 0 → sink
+        # Source -> input 0 -> ... -> compute 0 -> sink
         input_ports, output_ports, active_cols = infer_input_computation_and_output_ports([0, 0, 0, 0, 0], target_dim=2)
         assert input_ports == [0]
         assert output_ports == [0, 1]
@@ -39,7 +39,7 @@ class TestInferInputComputationAndOutputPorts:
     @staticmethod
     def test_route_at_second_input_position() -> None:
         """Test that a route through input position 1 yields input port 1, output ports [2,3], and active col 1."""
-        # Source → input 1 → intermediate nodes → compute at odd index → sink
+        # Source -> input 1 -> intermediate nodes -> compute at odd index -> sink
         input_ports, output_ports, active_cols = infer_input_computation_and_output_ports([0, 1, 1, 1, 0], target_dim=2)
         assert input_ports == [2]
         assert output_ports == [0, 1]
@@ -49,14 +49,14 @@ class TestInferInputComputationAndOutputPorts:
     def test_active_cols_even_for_even_computation_index() -> None:
         """Test that an even computation index yields only even active columns."""
         _, _, active_cols = infer_input_computation_and_output_ports([0, 0, 0, 0, 0], target_dim=4)
-        # computation_index=0, even → active_cols=[0, 2]
+        # computation_index=0, even -> active_cols=[0, 2]
         assert all(c % 2 == 0 for c in active_cols)
 
     @staticmethod
     def test_active_cols_odd_for_odd_computation_index() -> None:
         """Test that an odd computation index yields only odd active columns."""
         _, _, active_cols = infer_input_computation_and_output_ports([0, 0, 1, 1, 0], target_dim=4)
-        # computation_index=1, odd → active_cols=[1, 3]
+        # computation_index=1, odd -> active_cols=[1, 3]
         assert all(c % 2 == 1 for c in active_cols)
 
     @staticmethod

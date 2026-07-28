@@ -50,22 +50,29 @@ class Setup:
     target_dim: int
 
 
-def build_setup_grid(
+def build_valid_setups(
     num_modes_list: Iterable[int],
     target_dims_list: Iterable[int],
 ) -> list[Setup]:
-    """Build the Cartesian product of mode counts and target dimensions.
+    """Return the valid :class:`Setup` combinations from candidate axes.
 
-    Configurations are filtered to include only even values for both
-    ``num_modes`` and ``target_dim``, and only cases where
-    ``target_dim <= num_modes``.
+    Forms the Cartesian product of ``num_modes_list`` and ``target_dims_list``
+    and keeps only combinations that describe a buildable chip: both
+    ``num_modes`` and ``target_dim`` even, and ``target_dim <= num_modes``.
+
+    This is a sweep helper: it is meant to be handed *candidate* lists, so
+    invalid combinations are silently skipped rather than raised, and an empty
+    result simply means no candidate pair was valid (e.g. every target exceeded
+    every mode count).  Dimensions that are genuinely invalid only matter once
+    they reach the compiler, where :func:`graph.construct_graph` rejects them
+    with a clear error.
 
     Args:
         num_modes_list: Candidate chip mode counts.
         target_dims_list: Candidate target unitary dimensions.
 
     Returns:
-        List of valid :class:`Setup` instances.
+        List of valid :class:`Setup` instances (possibly empty).
     """
     setups = []
     for num_modes, target_dim in product(num_modes_list, target_dims_list):

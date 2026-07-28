@@ -57,14 +57,14 @@ def generate_beam_splitter_matrix(
     Values are generated with controlled global statistics and controlled
     intra-MZI differences.  The array is ordered MZI-by-MZI, strictly
     aligned with the spatial mapping of the unitary builder:
-    ``[MZI_0_in, MZI_0_out, MZI_1_in, MZI_1_out, …]``.
+    ``[MZI_0_in, MZI_0_out, MZI_1_in, MZI_1_out, ...]``.
 
     When ``ideal_bs`` is ``False`` the values are drawn so that
     (approximately, in finite samples):
 
-    * global mean ≈ 0.552
-    * global std ≈ 0.038
-    * average absolute difference within each MZI ≈ 0.019 (exponential distribution)
+    * global mean ~ 0.552
+    * global std ~ 0.038
+    * average absolute difference within each MZI ~ 0.019 (exponential distribution)
 
     Args:
         chip_size: Number of spatial modes on the chip.
@@ -83,7 +83,7 @@ def generate_beam_splitter_matrix(
     target_std = 0.038
     target_avg_abs_diff = 0.019
 
-    num_mzi_layers = chip_size  # 2 * chip_size physical layers → chip_size MZI layers
+    num_mzi_layers = chip_size  # 2 * chip_size physical layers -> chip_size MZI layers
 
     group_sizes = []
     for layer_idx in range(num_mzi_layers):
@@ -173,7 +173,7 @@ def determine_routing_fidelities(
     Returns:
         A tuple ``(bar_fidelities, cross_fidelities)`` where each element is
         a flat list of per-MZI fidelity values indexed as
-        ``[layer0_mzi0, layer0_mzi1, …, layer1_mzi0, …]``.
+        ``[layer0_mzi0, layer0_mzi1, ..., layer1_mzi0, ...]``.
     """
     bs_idx = 0
     bar_fidelities: list[float] = []
@@ -204,7 +204,7 @@ def _combined_fidelity_from_mzi_block(
 
     For node ``i``, the contiguous MZI block starts at ``floor((i-1) / 2)``.
     For ``target_dim=4`` (two photons) this reproduces the mapping
-    ``i=1,2 → [0, 1]``, ``i=3,4 → [1, 2]``, with a boundary fallback of 1.0.
+    ``i=1,2 -> [0, 1]``, ``i=3,4 -> [1, 2]``, with a boundary fallback of 1.0.
 
     Args:
         fidelity_list: Flat list of fidelities for all MZIs.
@@ -253,7 +253,7 @@ def get_edge_fidelity_even_graph_layer(
     """Compute the edge cost for an edge starting from an even graph layer.
 
     An edge leaving graph layer ``L`` traverses chip layer ``L - 1``, so the
-    even graph layers (2, 4, 6, …) map to the odd chip layers (1, 3, 5, …).
+    even graph layers (2, 4, 6, ...) map to the odd chip layers (1, 3, 5, ...).
     Odd chip layers have MZIs only on in-between mode pairs, excluding the
     first and last modes.
 
@@ -324,8 +324,8 @@ def get_edge_fidelity_odd_graph_layer(
 ) -> float:
     """Compute the edge cost for an edge starting from an odd graph layer.
 
-    Odd graph layers (1, 3, 5, …) correspond to even chip layers (0, 2, 4, …).
-    Even chip layers have MZIs on all mode pairs: (0-1), (2-3), (4-5), …
+    Odd graph layers (1, 3, 5, ...) correspond to even chip layers (0, 2, 4, ...).
+    Even chip layers have MZIs on all mode pairs: (0-1), (2-3), (4-5), ...
 
     Each graph edge routes ``target_dim // 2`` photons in parallel, using
     that many adjacent MZIs in the corresponding chip layer.
@@ -360,7 +360,7 @@ def get_edge_fidelity_odd_graph_layer(
         msg_0 = f"target_dim must be even, got {target_dim}"
         raise ValueError(msg_0)
 
-    chip_layer = graph_layer - 1  # odd graph layer → preceding even chip layer
+    chip_layer = graph_layer - 1  # odd graph layer -> preceding even chip layer
     mzis_per_even_chip_layer = chip_dim // 2
     mzis_per_odd_chip_layer = chip_dim // 2 - 1
 
@@ -394,7 +394,7 @@ def construct_graph(
 
     The graph encodes routing decisions as a shortest-path problem:
 
-    * Layer 0 → 1 edges encode input placement costs (source to candidate
+    * Layer 0 -> 1 edges encode input placement costs (source to candidate
       input positions).
     * Intermediate edges encode routing costs through the chip's MZI layers.
     * Final edges to the sink encode output transmission costs and implicitly

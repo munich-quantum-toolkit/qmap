@@ -27,7 +27,7 @@ class TestOptimizeMinimumIterations:
         """Test that ``max_iterations=1`` still evaluates the optimizer step's result.
 
         With a single raw iteration the loop would evaluate the initial parameters,
-        take one optimizer step, and terminate before ever evaluating that step —
+        take one optimizer step, and terminate before ever evaluating that step -
         returning the initial parameters.  The optimizer clamps ``max_iterations`` to
         a minimum of 2, so both the initial parameters and the step's result are
         evaluated (two recorded losses).
@@ -44,5 +44,5 @@ class TestOptimizeMinimumIterations:
         )
 
         # Clamped to 2 iterations: the initial params and the first step are both evaluated.
-        assert result["iterations"] == 2
-        assert len(result["losses"]) == 2
+        assert result.iterations == 2
+        assert len(result.losses) == 2

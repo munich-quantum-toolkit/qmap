@@ -27,44 +27,44 @@ torch = pytest.importorskip("torch")
 # exercising the full collection pipeline.
 sys.path.insert(0, str(pathlib.Path(__file__).parents[3] / "eval" / "ph"))
 
-from data_collection import Setup, build_setup_grid, collect_pipeline_results
+from data_collection import Setup, build_valid_setups, collect_pipeline_results
 
 from mqt.qmap.ph.subcircuit_compilation import OptimizationConfig
 
 
-class TestBuildSetupGrid:
-    """Tests for build_setup_grid."""
+class TestBuildValidSetups:
+    """Tests for build_valid_setups."""
 
     @staticmethod
     def test_filters_target_larger_than_chip() -> None:
         """Test that setups where target_dim > num_modes are excluded."""
-        setups = build_setup_grid([4], [6])
+        setups = build_valid_setups([4], [6])
         assert setups == []
 
     @staticmethod
     def test_filters_odd_chip_dim() -> None:
         """Test that odd chip dimensions are excluded."""
-        setups = build_setup_grid([5], [2])
+        setups = build_valid_setups([5], [2])
         assert setups == []
 
     @staticmethod
     def test_filters_odd_target_dim() -> None:
         """Test that odd target dimensions are excluded."""
-        setups = build_setup_grid([4], [3])
+        setups = build_valid_setups([4], [3])
         assert setups == []
 
     @staticmethod
     def test_valid_single_setup() -> None:
         """Test that a single valid (num_modes, target_dim) pair produces one Setup."""
-        setups = build_setup_grid([4], [2])
+        setups = build_valid_setups([4], [2])
         assert len(setups) == 1
         assert setups[0] == Setup(num_modes=4, target_dim=2)
 
     @staticmethod
     def test_valid_multiple_setups() -> None:
         """Test that the Cartesian product of valid inputs produces all expected setups."""
-        setups = build_setup_grid([4, 6], [2, 4])
-        # Cartesian product: (4,2), (4,4), (6,2), (6,4) — target_dims_list contains only 2 and 4, so 6 is never a candidate target dimension
+        setups = build_valid_setups([4, 6], [2, 4])
+        # Cartesian product: (4,2), (4,4), (6,2), (6,4) - target_dims_list contains only 2 and 4, so 6 is never a candidate target dimension
         assert Setup(num_modes=4, target_dim=2) in setups
         assert Setup(num_modes=4, target_dim=4) in setups
         assert Setup(num_modes=6, target_dim=2) in setups
@@ -73,7 +73,7 @@ class TestBuildSetupGrid:
     @staticmethod
     def test_produces_setup_dataclass_instances() -> None:
         """Test that all returned items are Setup dataclass instances."""
-        setups = build_setup_grid([4], [2])
+        setups = build_valid_setups([4], [2])
         assert all(isinstance(s, Setup) for s in setups)
 
 
@@ -86,7 +86,7 @@ class TestCollectPipelineResults:
         """Run a minimal pipeline sweep and return the aggregated DataFrame."""
         torch.manual_seed(0)
 
-        setups = build_setup_grid([4], [2])
+        setups = build_valid_setups([4], [2])
         return collect_pipeline_results(
             setups=setups,
             config=OptimizationConfig(max_iterations=50),

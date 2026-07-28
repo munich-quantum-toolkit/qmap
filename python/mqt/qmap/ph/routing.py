@@ -28,10 +28,10 @@ class MaskState(IntEnum):
     """
 
     MZI = 0  # Compute: both phases are learnable
-    BAR = 1  # Routing: passes light straight through (0, π)
+    BAR = 1  # Routing: passes light straight through (0, pi)
     CROSS = 2  # Routing: swaps ports (0, 0)
-    TOP_ONLY = 3  # Virtual PS: top is param, bottom is top + π
-    BOT_ONLY = 4  # Virtual PS: bottom is param, top is bottom + π
+    TOP_ONLY = 3  # Virtual PS: top is param, bottom is top + pi
+    BOT_ONLY = 4  # Virtual PS: bottom is param, top is bottom + pi
 
 
 def find_optimal_routing_dag(

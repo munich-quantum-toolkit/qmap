@@ -46,6 +46,6 @@ def get_baseline_active_cols(target_dim: int) -> list[int]:
         target_dim: Dimension of the target unitary.
 
     Returns:
-        List of even indices ``[0, 2, 4, …, target_dim - 2]``.
+        List of even indices ``[0, 2, 4, ..., target_dim - 2]``.
     """
     return [i for i in range(target_dim) if i % 2 == 0]
