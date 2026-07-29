@@ -96,7 +96,7 @@ def _run_tests(
     # restore the unconditional `"--extra", "photonics"` args below once torch
     # publishes macOS x86_64 wheels again or Intel macOS runners leave the matrix.
     photonics_optional_dependencies: tuple[str, ...] = ("--extra", "photonics")
-    if sys.platform == "darwin" and platform.machine() == "x86_64":
+    if platform.system() == "Darwin" and platform.machine() == "x86_64":
         session.warn("Skipping the 'photonics' extra on macOS x86_64 (no torch wheel available).")
         photonics_optional_dependencies = ()
     # === END TEMPORARY ===
