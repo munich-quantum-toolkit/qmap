@@ -321,10 +321,10 @@ def _compute_ideal_distribution(target_unitary: torch.Tensor, target_dim: int) -
         The ideal probability distribution over computation-zone states, keyed
         by :class:`perceval.BasicState`.
     """
-    import perceval as pcvl  # noqa: PLC0415 (optional dependency, only needed for evaluation)
-    from perceval import algorithm  # noqa: PLC0415
+    import perceval as pcvl  # ruff:ignore[import-outside-top-level] (optional dependency, only needed for evaluation)
+    from perceval import algorithm  # ruff:ignore[import-outside-top-level]
 
-    from .perceval_simulation import SIMULATION_BACKEND  # noqa: PLC0415
+    from .perceval_simulation import SIMULATION_BACKEND  # ruff:ignore[import-outside-top-level]
 
     pcvl_u = pcvl.Unitary(pcvl.MatrixN(target_unitary))
 
@@ -476,7 +476,7 @@ def evaluate_subcircuit(
     """
     # Perceval is only required for this simulation-based evaluation step, so it is
     # imported lazily: compiling a subcircuit (compile_subcircuit) needs only torch.
-    from .perceval_simulation import (  # noqa: PLC0415
+    from .perceval_simulation import (  # ruff:ignore[import-outside-top-level]
         create_mzi_chip,
         evaluate_chip_performance,
         simulate_with_loss,
