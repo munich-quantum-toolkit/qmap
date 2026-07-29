@@ -74,14 +74,17 @@ def build_valid_setups(
     Returns:
         List of valid :class:`Setup` instances (possibly empty).
     """
-    setups = []
-    for num_modes, target_dim in product(num_modes_list, target_dims_list):
-        if target_dim > num_modes:
-            continue
-        if num_modes % 2 != 0 or target_dim % 2 != 0:
-            continue
-        setups.append(Setup(num_modes=num_modes, target_dim=target_dim))
-    return setups
+    # Even-ness is a per-axis property, so restrict each candidate list up front
+    # (an odd chip/target dimension is never buildable in any pairing).  The
+    # target_dim <= num_modes constraint is pairwise, so it is checked on the
+    # formed combinations.
+    even_num_modes = [n for n in num_modes_list if n % 2 == 0]
+    even_target_dims = [t for t in target_dims_list if t % 2 == 0]
+    return [
+        Setup(num_modes=num_modes, target_dim=target_dim)
+        for num_modes, target_dim in product(even_num_modes, even_target_dims)
+        if target_dim <= num_modes
+    ]
 
 
 def _mean(values: list[float]) -> float:

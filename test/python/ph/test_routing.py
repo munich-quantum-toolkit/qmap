@@ -235,14 +235,14 @@ class TestGetBestRoute:
     @staticmethod
     def test_ideal_bs_returns_deterministic_route(ideal_bs_chip4, ones_transmissions_chip4) -> None:
         """Test that ideal beam splitters yield a valid route with zero cost."""
-        graph, _, layers = construct_graph(
+        routing_graph = construct_graph(
             chip_dim=4,
             target_dim=2,
             input_transmission=ones_transmissions_chip4,
             output_transmission=ones_transmissions_chip4,
             beam_splitter_reflectivities=ideal_bs_chip4,
         )
-        route, cost = get_best_route(graph, layers)
+        route, cost = get_best_route(routing_graph.graph, routing_graph.layers)
 
         # With all-ideal components: all paths have equal cost (0)
         assert isinstance(route, list)
@@ -252,14 +252,14 @@ class TestGetBestRoute:
     @staticmethod
     def test_route_starts_and_ends_at_zero(ideal_bs_chip4, ones_transmissions_chip4) -> None:
         """Test that the route begins and ends at node index 0 (source/sink)."""
-        graph, _, layers = construct_graph(
+        routing_graph = construct_graph(
             chip_dim=4,
             target_dim=2,
             input_transmission=ones_transmissions_chip4,
             output_transmission=ones_transmissions_chip4,
             beam_splitter_reflectivities=ideal_bs_chip4,
         )
-        route, _ = get_best_route(graph, layers)
+        route, _ = get_best_route(routing_graph.graph, routing_graph.layers)
 
         assert route[0] == 0  # source
         assert route[-1] == 0  # sink

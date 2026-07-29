@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -383,13 +384,31 @@ def get_edge_fidelity_odd_graph_layer(
     return _edge_cost_from_fidelity(combined_fidelity)
 
 
+@dataclass
+class RoutingGraph:
+    """Layered routing DAG produced by :func:`construct_graph`.
+
+    Attributes:
+        graph: Weighted directed acyclic graph encoding the routing decisions
+            as a shortest-path problem.
+        positions: Maps each node index to an ``(x, y)`` visualization
+            coordinate.  Not used by the routing itself -- retained for
+            plotting and debugging the graph.
+        layers: Per-layer node index arrays as returned by rustworkx.
+    """
+
+    graph: rx.PyDiGraph
+    positions: dict[int, tuple[float, float]]
+    layers: list
+
+
 def construct_graph(
     chip_dim: int,
     target_dim: int,
     input_transmission: list[float],
     output_transmission: list[float],
     beam_splitter_reflectivities: list[float],
-) -> tuple[rx.PyDiGraph, dict[int, tuple[float, float]], list]:
+) -> RoutingGraph:
     """Construct the routing DAG for photon placement optimization.
 
     The graph encodes routing decisions as a shortest-path problem:
@@ -398,7 +417,7 @@ def construct_graph(
       input positions).
     * Intermediate edges encode routing costs through the chip's MZI layers.
     * Final edges to the sink encode output transmission costs and implicitly
-      select the computation window.
+      select the computation zone.
 
     For ``chip_dim=8``, ``target_dim=4`` there are three candidate input
     positions, intermediate routing layers, and three output windows.
@@ -415,10 +434,9 @@ def construct_graph(
             ``.tolist()`` on its NumPy array output).
 
     Returns:
-        A tuple ``(graph, pos, layers)`` where *graph* is the weighted directed
-        acyclic graph, *pos* maps each node index to an ``(x, y)``
-        visualisation coordinate, and *layers* is the list of per-layer node
-        index arrays returned by rustworkx.
+        A :class:`RoutingGraph` bundling the weighted directed acyclic graph,
+        the per-node ``(x, y)`` visualization coordinates, and the per-layer
+        node index arrays.
 
     Raises:
         ValueError: If ``target_dim`` is not positive, ``chip_dim <= target_dim``,
@@ -580,4 +598,4 @@ def construct_graph(
             for i, node in enumerate(layers[layer]):
                 pos[node] = (layer, -i)
 
-    return graph, pos, layers
+    return RoutingGraph(graph=graph, positions=pos, layers=layers)

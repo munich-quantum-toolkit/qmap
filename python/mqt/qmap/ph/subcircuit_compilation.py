@@ -162,7 +162,7 @@ def _setup_routing(
         active_cols_computation_zone, target_unitary_opt)`` where ``input_ports``
         and ``output_ports`` are both physical mode-index lists.
     """
-    graph, _, layers = construct_graph(
+    routing_graph = construct_graph(
         chip_dim=chip_dim,
         target_dim=target_dim,
         input_transmission=input_transmissions,
@@ -170,7 +170,7 @@ def _setup_routing(
         output_transmission=output_transmissions,
     )
 
-    best_node_sequence, _ = get_best_route(graph, layers)
+    best_node_sequence, _ = get_best_route(routing_graph.graph, routing_graph.layers)
 
     movement_mask = route_to_movement_mask(best_node_sequence, chip_dim=chip_dim, target_dim=target_dim)
 

@@ -190,28 +190,28 @@ class TestConstructGraph:
     @staticmethod
     def test_graph_has_nodes_and_edges(ideal_bs_chip4, ones_transmissions_chip4) -> None:
         """Test that the constructed graph has at least one node and one edge."""
-        graph, _pos, _layers = construct_graph(
+        routing_graph = construct_graph(
             chip_dim=4,
             target_dim=2,
             input_transmission=ones_transmissions_chip4,
             output_transmission=ones_transmissions_chip4,
             beam_splitter_reflectivities=ideal_bs_chip4,
         )
-        assert graph.num_nodes() > 0
-        assert graph.num_edges() > 0
+        assert routing_graph.graph.num_nodes() > 0
+        assert routing_graph.graph.num_edges() > 0
 
     @staticmethod
     def test_number_of_layers_chip4_target2(ideal_bs_chip4, ones_transmissions_chip4) -> None:
         """Test that chip_dim=4, target_dim=2 yields 5 routing layers."""
         # number_of_layers = chip_dim - target_dim + 3 = 5
-        _, _, layers = construct_graph(
+        routing_graph = construct_graph(
             chip_dim=4,
             target_dim=2,
             input_transmission=ones_transmissions_chip4,
             output_transmission=ones_transmissions_chip4,
             beam_splitter_reflectivities=ideal_bs_chip4,
         )
-        assert len(layers) == 5
+        assert len(routing_graph.layers) == 5
 
     @staticmethod
     def test_chip_dim_equal_target_dim_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
