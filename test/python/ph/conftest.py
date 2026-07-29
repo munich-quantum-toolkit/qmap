@@ -64,7 +64,7 @@ def ones_transmissions_chip4():
 def haar_unitary_dim2():
     """Return a Haar-random 2x2 unitary with a fixed seed."""
     torch = pytest.importorskip("torch")
-    from mqt.qmap.ph.unitary_to_phase_compilation import (  # noqa: PLC0415
+    from mqt.qmap.ph.unitary_to_phase_compilation import (  # ruff:ignore[import-outside-top-level]
         get_haar_random_unitary,
     )
 
