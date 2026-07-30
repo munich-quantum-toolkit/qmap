@@ -263,3 +263,43 @@ class TestGetBestRoute:
 
         assert route[0] == 0  # source
         assert route[-1] == 0  # sink
+
+
+class TestRoutingLayerMappingRegression:
+    """Regression test that the router reads the correct chip layer for each graph layer.
+
+    Uses a chip with extreme, distinct beam-splitter reflectivities in the routing
+    region (each MZI near-perfect at exactly one of bar/cross) and an ideal
+    computation zone. The strong contrast forces a unique optimal route whose every
+    step matches a physically-perfect MZI operation, so the total cost is zero and
+    the computation window lands on modes [2, 3, 4, 5].
+
+    If the graph-layer -> chip-layer mapping in ``graph.py`` is off (for example the
+    sign of the offset in ``get_edge_fidelity_odd_graph_layer``), the router reads a
+    neighbouring chip layer's fidelities and returns a different route
+    (``[0, 1, 2, 2, 2, 1, 0]``, window [0, 1, 2, 3]). The near-0.5 beam splitters
+    used by the other routing tests cannot catch this because there every MZI is
+    near-perfect at both bar and cross, so the mapping barely affects the cost.
+    """
+
+    @staticmethod
+    def test_get_best_route_follows_extreme_routing(extreme_routing_chip) -> None:
+        """Test that the optimal route is the zero-cost path forced by the extreme routing values."""
+        chip = extreme_routing_chip
+        routing_graph = construct_graph(
+            chip_dim=chip.chip_dim,
+            target_dim=chip.target_dim,
+            input_transmission=[1.0] * chip.chip_dim,
+            output_transmission=[1.0] * chip.chip_dim,
+            beam_splitter_reflectivities=chip.bs,
+        )
+        route, cost = get_best_route(routing_graph.graph, routing_graph.layers)
+
+        # Bars through layers 0-1 and crosses through layers 2-3, all perfect -> cost 0.
+        assert route == [0, 0, 0, 0, 1, 2, 0]
+        assert cost == pytest.approx(0.0)
+
+        # The route places the computation window on modes [2, 3, 4, 5].
+        input_ports, output_ports, _ = infer_input_computation_and_output_ports(route, chip.target_dim)
+        assert input_ports == [0, 2]
+        assert output_ports == [2, 3, 4, 5]

@@ -370,3 +370,57 @@ def test_proposed_coincidence_rate_exceeds_baseline(scenario_result) -> None:
     assert float(scenario_result.result.proposed.performance["coincidence_rate"]) >= float(
         scenario_result.result.baseline.performance["coincidence_rate"]
     )
+
+
+def test_extreme_routing_coincidence_rate(extreme_routing_chip) -> None:
+    """End-to-end regression for the routing layer mapping, via the coincidence rate.
+
+    On a chip with extreme routing beam splitters and an ideal (universal)
+    computation zone, the correct graph-layer -> chip-layer mapping routes photons
+    cleanly into the computation window, so with perfect input/output ports and no
+    phase noise the coincidence rate is ~1.0 and the target is realized (tvd ~ 0).
+
+    A mapping error (for example the ``+1`` sign bug in
+    ``get_edge_fidelity_odd_graph_layer``) picks a route that, executed on the
+    extreme hardware, ejects photons clean out of the computation window; they are
+    not lost (the mesh is unitary) but land in undetected modes, so the coincidence
+    rate collapses (observed < 0.15). The near-0.5 beam splitters used by the other
+    scenarios cannot expose this: there every route realizes the target equally, so
+    the coincidence rate stays ~1.0 regardless of the mapping.
+    """
+    chip = extreme_routing_chip
+    perfect_transmissions = [1.0] * chip.chip_dim
+
+    rng = torch.Generator().manual_seed(10)
+    target_unitary = get_haar_random_unitary(chip.target_dim, rng, dtype=torch.complex128)
+    embedded = embed_target_unitary_into_chip(
+        target_unitary.cpu().numpy(), chip_dim=chip.chip_dim, target_dim=chip.target_dim
+    )
+
+    torch.manual_seed(0)
+    config = OptimizationConfig(max_iterations=300)
+    compilation = compile_subcircuit(
+        beam_splitter_reflectivities=chip.bs,
+        input_transmissions=perfect_transmissions,
+        output_transmissions=perfect_transmissions,
+        target_unitary=target_unitary,
+        config=config,
+    )
+    result = evaluate_subcircuit(
+        compilation,
+        beam_splitter_reflectivities=chip.bs,
+        input_transmissions=perfect_transmissions,
+        output_transmissions=perfect_transmissions,
+        target_unitary=target_unitary,
+        target_unitary_embedded=embedded,
+        phase_error=0.0,
+        config=config,
+        phase_noise_seed=0,
+    )
+
+    # Correct mapping -> window on modes [2, 3, 4, 5]; the +1 sign bug yields [0, 1, 2, 3].
+    assert compilation.output_ports == [2, 3, 4, 5]
+    # Photons stay in the computation window -> coincidence rate ~ 1.0 (the bug drops it < 0.15),
+    # and the universal computation zone realizes the target -> tvd ~ 0.
+    assert float(result.proposed.performance["coincidence_rate"]) >= 0.95
+    assert float(result.proposed.performance["tvd"]) <= 0.01
