@@ -17,18 +17,6 @@ import pytest
 
 from mqt.qmap.ph.graph import generate_beam_splitter_matrix
 
-# Imported at module top (never inside the fixture) so neither ruff's PLC0415
-# (import-outside-top-level) nor an in-editor auto-fix has anything to flag or
-# strip on this line. The module needs torch, so guard the import for
-# environments without it; the fixture below skips via ``importorskip`` before
-# the ``None`` fallback could ever be used.
-try:
-    from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
-except ImportError:
-    # None fallback for torch-free envs; the fixture skips before it is used.
-    # `ty: ignore` (not a ruff noqa) so ruff never strips or rewrites this line.
-    get_haar_random_unitary = None  # ty: ignore[invalid-assignment]
-
 
 @pytest.fixture
 def ideal_bs_chip4():
@@ -51,15 +39,6 @@ def nonideal_bs_chip4():
 def ones_transmissions_chip4():
     """Return all-ones transmission list for a 4-mode chip."""
     return [1.0, 1.0, 1.0, 1.0]
-
-
-@pytest.fixture
-def haar_unitary_dim2():
-    """Return a Haar-random 2x2 unitary with a fixed seed."""
-    torch = pytest.importorskip("torch")
-    assert get_haar_random_unitary is not None  # torch present => the guarded import above succeeded
-    rng = torch.Generator().manual_seed(7)
-    return get_haar_random_unitary(2, rng, dtype=torch.complex128)
 
 
 # Geometry for the routing-layer-mapping regression fixtures (chip_dim=8, target_dim=4).
