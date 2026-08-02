@@ -12,6 +12,10 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Changed
+
+- ⬆️ Update `mqt-core` to version 3.8.0 ([#1093]) ([**@denialhaag**])
+
 ## [3.8.0] - 2026-07-09
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#380)._
@@ -275,6 +279,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1093]: https://github.com/munich-quantum-toolkit/qmap/pull/1093
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
