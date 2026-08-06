@@ -12,6 +12,10 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- 🐍 Start building CPython 3.15 wheels ([#1096]) ([**@denialhaag**])
+
 ### Changed
 
 - ⬆️ Update `mqt-core` to version 3.8.0 ([#1093]) ([**@denialhaag**])
@@ -144,7 +148,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#330)._
 
 ### Added
 
-- 🐍 Build Python 3.14 wheels ([#717]) ([**@denialhaag**])
+- 🐍 Start building CPython 3.14 wheels ([#717]) ([**@denialhaag**])
 
 ### Changed
 
@@ -279,6 +283,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
 [#1093]: https://github.com/munich-quantum-toolkit/qmap/pull/1093
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
