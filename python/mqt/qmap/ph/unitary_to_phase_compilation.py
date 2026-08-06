@@ -10,11 +10,14 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 import torch
 
 from .routing_to_phases import get_effective_params_and_mask, reshape_flattened_params_to_grid
+
+logger = logging.getLogger(__name__)
 
 TWO_PI = 2 * torch.pi
 
@@ -472,7 +475,7 @@ def optimize_unitary_subcircuit_parameters(
         active_cols: Physical input column indices to inject photons into.
         active_cols_target: Column indices within the computation zone
             corresponding to ``active_cols``.
-        verbose: If ``True``, print progress every 100 iterations.
+        verbose: If ``True``, log progress (INFO level) every 100 iterations.
         max_iterations: Maximum number of gradient steps.  Clamped to a minimum
             of 2 so at least one optimizer step is evaluated before returning.
         baseline: If ``True``, restrict comparison to the first
@@ -613,7 +616,8 @@ def optimize_unitary_subcircuit_parameters(
         else:
             no_improve_steps += 1
 
-        verbose and index % 100 == 0
+        if verbose and index % 100 == 0:
+            logger.info("Iteration %d: loss=%.6e", index, loop_loss)
 
         lrs.append(optimizer.param_groups[0]["lr"])
 
