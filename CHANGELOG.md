@@ -18,6 +18,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
+- ⬆️ Update `nanobind` to version 2.14.0 ([#1105]) ([**@denialhaag**])
 - ⬆️ Update `mqt-core` to version 3.8.0 ([#1093]) ([**@denialhaag**])
 
 ## [3.8.0] - 2026-07-09
@@ -283,6 +284,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1105]: https://github.com/munich-quantum-toolkit/qmap/pull/1105
 [#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
 [#1093]: https://github.com/munich-quantum-toolkit/qmap/pull/1093
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
