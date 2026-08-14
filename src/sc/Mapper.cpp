@@ -27,8 +27,36 @@
 #include <limits>
 #include <optional>
 #include <set>
+#include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
+
+namespace {
+/**
+ * @brief Append measurements matching the circuit's output permutation.
+ */
+void appendMeasurementsAccordingToOutputPermutation(
+    qc::QuantumComputation& circuit) {
+  constexpr auto registerName = "c";
+  const auto numOutputs = circuit.outputPermutation.size();
+  const auto& classicalRegisters = circuit.getClassicalRegisters();
+  if (classicalRegisters.empty()) {
+    circuit.addClassicalRegister(numOutputs, registerName);
+  } else if (circuit.getNcbits() < numOutputs) {
+    if (classicalRegisters.contains(registerName)) {
+      throw std::runtime_error("Register c already exists but is too small");
+    }
+    circuit.addClassicalRegister(numOutputs - circuit.getNcbits(),
+                                 registerName);
+  }
+
+  circuit.barrier();
+  for (const auto& [qubit, clbit] : circuit.outputPermutation) {
+    circuit.measure(qubit, clbit);
+  }
+}
+} // namespace
 
 void Mapper::initResults() {
   countGates(qc, results.input);
@@ -475,7 +503,7 @@ void Mapper::finalizeMappedCircuit() {
 
   // append measurements according to output permutation
   if (results.config.addMeasurementsToMappedCircuit) {
-    qcMapped.appendMeasurementsAccordingToOutputPermutation();
+    appendMeasurementsAccordingToOutputPermutation(qcMapped);
   }
 }
 
