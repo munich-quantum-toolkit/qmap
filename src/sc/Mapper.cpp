@@ -27,8 +27,6 @@
 #include <limits>
 #include <optional>
 #include <set>
-#include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -40,16 +38,7 @@ void appendMeasurementsAccordingToOutputPermutation(
     qc::QuantumComputation& circuit) {
   constexpr auto registerName = "c";
   const auto numOutputs = circuit.outputPermutation.size();
-  const auto& classicalRegisters = circuit.getClassicalRegisters();
-  if (classicalRegisters.empty()) {
-    circuit.addClassicalRegister(numOutputs, registerName);
-  } else if (circuit.getNcbits() < numOutputs) {
-    if (classicalRegisters.contains(registerName)) {
-      throw std::runtime_error("Register c already exists but is too small");
-    }
-    circuit.addClassicalRegister(numOutputs - circuit.getNcbits(),
-                                 registerName);
-  }
+  circuit.addClassicalRegister(numOutputs, registerName);
 
   circuit.barrier();
   for (const auto& [qubit, clbit] : circuit.outputPermutation) {
