@@ -10,13 +10,13 @@
 
 #pragma once
 
+#include "hybridmap/AodOperation.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/computation/entities/Location.hpp"
 
