@@ -15,15 +15,15 @@
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/NAComputation.hpp"
-#include "na/entities/Atom.hpp"
+#include "na/computation/NAComputation.hpp"
+#include "na/computation/entities/Atom.hpp"
+#include "na/computation/operations/GlobalCZOp.hpp"
+#include "na/computation/operations/GlobalRYOp.hpp"
+#include "na/computation/operations/LoadOp.hpp"
+#include "na/computation/operations/LocalRZOp.hpp"
+#include "na/computation/operations/MoveOp.hpp"
+#include "na/computation/operations/StoreOp.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/operations/GlobalCZOp.hpp"
-#include "na/operations/GlobalRYOp.hpp"
-#include "na/operations/LoadOp.hpp"
-#include "na/operations/LocalRZOp.hpp"
-#include "na/operations/MoveOp.hpp"
-#include "na/operations/StoreOp.hpp"
 
 #include <algorithm>
 #include <cstddef>

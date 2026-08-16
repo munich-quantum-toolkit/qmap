@@ -17,7 +17,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/entities/Location.hpp"
+#include "na/computation/entities/Location.hpp"
 
 #include <array>
 #include <cassert>

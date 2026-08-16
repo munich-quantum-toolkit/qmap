@@ -6,6 +6,7 @@
 #
 # Licensed under the MIT License
 
+add_subdirectory(computation)
 add_subdirectory(nalac)
 if(Z3_FOUND)
   add_subdirectory(nasp)

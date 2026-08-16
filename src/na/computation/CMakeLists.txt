@@ -6,10 +6,10 @@
 #
 # Licensed under the MIT License
 
-set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-zoned)
+set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-computation)
 
 if(NOT TARGET ${TARGET_NAME})
-  file(GLOB_RECURSE HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/zoned/*.hpp)
+  file(GLOB_RECURSE HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/computation/*.hpp)
   file(GLOB_RECURSE SOURCES *.cpp)
 
   add_library(${TARGET_NAME} ${HEADERS} ${SOURCES})
@@ -18,8 +18,8 @@ if(NOT TARGET ${TARGET_NAME})
 
   target_link_libraries(
     ${TARGET_NAME}
-    PUBLIC MQT::CoreIR MQT::QMapNAComputation nlohmann_json::nlohmann_json spdlog::spdlog
+    PUBLIC MQT::CoreIR
     PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
-  add_library(MQT::QMapNAZoned ALIAS ${TARGET_NAME})
+  add_library(MQT::QMapNAComputation ALIAS ${TARGET_NAME})
 endif()
