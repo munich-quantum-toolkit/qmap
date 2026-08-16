@@ -13,4 +13,5 @@ endif()
 
 add_subdirectory(nalac)
 add_subdirectory(nasp)
+add_subdirectory(qdmi)
 add_subdirectory(zoned)
