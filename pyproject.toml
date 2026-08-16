@@ -295,7 +295,8 @@ files.extend-exclude = [
 default.extend-ignore-re = [
   '"id": ".*",',
   "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",  # ignore line
-  "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on" # ignore block
+  "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on", # ignore block
+  "FoMaC"
 ]
 [tool.typos.default.extend-words]
 wille = "wille"
