@@ -20,6 +20,10 @@ if(NOT TARGET ${TARGET_NAME})
     PUBLIC nlohmann_json::nlohmann_json
     PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
+  # The configuration schema uses the three-way comparison operator. Unlike the other targets, this
+  # one links no MQT::Core library to inherit the standard from.
+  target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
+
   add_library(MQT::QMapNAQDMIDeviceConfig ALIAS ${TARGET_NAME})
 
   # Place the library in the common output directories.
