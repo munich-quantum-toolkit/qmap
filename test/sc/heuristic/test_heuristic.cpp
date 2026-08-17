@@ -948,6 +948,31 @@ TEST(Functionality, NoMeasurementsAdded) {
   EXPECT_NE(qcMapped.back()->getType(), qc::Measure);
 }
 
+TEST(Functionality, MeasurementsFollowOutputPermutation) {
+  using namespace qc::literals;
+  qc::QuantumComputation qc{3U};
+  qc.cx(0_pc, 1);
+  qc.cx(1_pc, 2);
+
+  Architecture arch{3U, {{0, 1}, {1, 2}}};
+  HeuristicMapper mapper(qc, arch);
+  Configuration config{};
+  config.initialLayout = InitialLayout::Identity;
+  config.addMeasurementsToMappedCircuit = true;
+  mapper.map(config);
+
+  const auto mapped = mapper.moveMappedCircuit();
+  EXPECT_EQ(mapped.getNcbits(), mapped.outputPermutation.size());
+  EXPECT_EQ(
+      std::ranges::count_if(
+          mapped, [](const auto& op) { return op->getType() == qc::Measure; }),
+      mapped.outputPermutation.size());
+  ASSERT_GE(mapped.getNops(), mapped.outputPermutation.size() + 1U);
+  EXPECT_EQ(mapped.at(mapped.getNops() - mapped.outputPermutation.size() - 1U)
+                ->getType(),
+            qc::Barrier);
+}
+
 TEST(Functionality, InvalidCircuits) {
   Configuration config{};
   config.method = Method::Heuristic;

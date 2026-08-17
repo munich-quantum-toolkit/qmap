@@ -59,6 +59,7 @@ extensions = [
     "myst_nb",
     "sphinx_copybutton",
     "sphinx_design",
+    "sphinx_llm.txt",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
@@ -116,7 +117,7 @@ nb_execution_raise_on_error = True
 class CDAStyle(UnsrtStyle):
     """Custom style for including PDF links."""
 
-    def format_url(self, _e: Entry) -> HRef:  # noqa: PLR6301
+    def format_url(self, _e: Entry) -> HRef:  # ruff:ignore[no-self-use]
         """Format URL field as a link to the PDF.
 
         Returns:

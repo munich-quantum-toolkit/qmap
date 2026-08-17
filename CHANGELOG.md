@@ -12,10 +12,18 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- 🐍 Start building CPython 3.15 wheels ([#1096]) ([**@denialhaag**])
+
 ### Changed
 
 - 🎉 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
   ([**@tobi-forster**])
+- ♻️ Move output-permutation measurement construction from MQT Core into QMAP
+  ([#1106]) ([**@simon1hofmann**])
+- ⬆️ Update `nanobind` to version 2.14.0 ([#1105]) ([**@denialhaag**])
+- ⬆️ Update `mqt-core` to version 3.8.0 ([#1093]) ([**@denialhaag**])
 
 ## [3.8.0] - 2026-07-09
 
@@ -145,7 +153,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#330)._
 
 ### Added
 
-- 🐍 Build Python 3.14 wheels ([#717]) ([**@denialhaag**])
+- 🐍 Start building CPython 3.14 wheels ([#717]) ([**@denialhaag**])
 
 ### Changed
 
@@ -280,6 +288,10 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106
+[#1105]: https://github.com/munich-quantum-toolkit/qmap/pull/1105
+[#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
+[#1093]: https://github.com/munich-quantum-toolkit/qmap/pull/1093
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
 [#1059]: https://github.com/munich-quantum-toolkit/qmap/pull/1059
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
@@ -327,6 +339,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- Contributor -->
 
 [**@burgholzer**]: https://github.com/burgholzer
+[**@simon1hofmann**]: https://github.com/simon1hofmann
 [**@ystade**]: https://github.com/ystade
 [**@denialhaag**]: https://github.com/denialhaag
 [**@lsschmid**]: https://github.com/lsschmid
