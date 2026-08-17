@@ -336,6 +336,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- Contributor -->
 
 [**@burgholzer**]: https://github.com/burgholzer
+[**@simon1hofmann**]: https://github.com/simon1hofmann
 [**@ystade**]: https://github.com/ystade
 [**@denialhaag**]: https://github.com/denialhaag
 [**@lsschmid**]: https://github.com/lsschmid
