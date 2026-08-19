@@ -1982,8 +1982,8 @@ provides-extras = ["visualization"]
 build = [
     { name = "mqt-core", specifier = "~=3.8.0" },
     { name = "nanobind", specifier = "~=2.14.0" },
-    { name = "scikit-build-core", specifier = "~=1.0.3" },
-    { name = "vcs-versioning", specifier = "~=2.3.0" },
+    { name = "scikit-build-core", specifier = ">=1.0.3" },
+    { name = "vcs-versioning", specifier = ">=2.3.0" },
 ]
 dev = [
     { name = "distinctipy", specifier = ">=1.3.4" },
@@ -2000,8 +2000,8 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
     { name = "rustworkx", extras = ["all"], specifier = ">=0.16.0" },
-    { name = "scikit-build-core", specifier = "~=1.0.3" },
-    { name = "vcs-versioning", specifier = "~=2.3.0" },
+    { name = "scikit-build-core", specifier = ">=1.0.3" },
+    { name = "vcs-versioning", specifier = ">=2.3.0" },
     { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 docs = [
