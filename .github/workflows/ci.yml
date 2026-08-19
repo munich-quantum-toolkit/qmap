@@ -11,10 +11,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   change-detection:
     name: 🔍 Change
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@579203ef22082fa5d5483412f442e50d0c5ff4a7 # v2.2.2
+    permissions:
+      contents: read
 
   cpp-tests-ubuntu:
     name: 🇨 Test 🐧
@@ -36,6 +40,8 @@ jobs:
       compiler: ${{ matrix.compiler }}
       setup-z3: true
       preset-name: ${{ matrix.preset }}
+    permissions:
+      contents: read
 
   cpp-tests-macos:
     name: 🇨 Test 🍎
@@ -57,6 +63,8 @@ jobs:
       compiler: ${{ matrix.compiler }}
       setup-z3: true
       preset-name: ${{ matrix.preset }}
+    permissions:
+      contents: read
 
   cpp-tests-windows:
     name: 🇨 Test 🏁
@@ -78,6 +86,8 @@ jobs:
       compiler: ${{ matrix.compiler }}
       setup-z3: true
       preset-name: ${{ matrix.preset }}
+    permissions:
+      contents: read
 
   # run extensive C++ tests on PRs labeled with the `extensive-cpp-ci` label
   cpp-tests-extensive-ubuntu:
@@ -96,6 +106,8 @@ jobs:
       compiler: ${{ matrix.compiler }}
       setup-z3: true
       preset-name: ${{ matrix.preset }}
+    permissions:
+      contents: read
 
   # run extensive C++ tests on PRs labeled with the `extensive-cpp-ci` label
   cpp-tests-extensive-macos:
@@ -114,6 +126,8 @@ jobs:
       compiler: ${{ matrix.compiler }}
       setup-z3: true
       preset-name: ${{ matrix.preset }}
+    permissions:
+      contents: read
 
   # run extensive C++ tests on PRs labeled with the `extensive-cpp-ci` label
   cpp-tests-extensive-windows:
@@ -132,6 +146,8 @@ jobs:
       compiler: ${{ matrix.compiler }}
       setup-z3: true
       preset-name: ${{ matrix.preset }}
+    permissions:
+      contents: read
 
   cpp-coverage:
     name: 🇨 Coverage
@@ -156,6 +172,9 @@ jobs:
       setup-python: true
       setup-z3: true
       cpp-linter-extra-args: "-std=c++20"
+    permissions:
+      contents: read
+      pull-requests: write # Needed to post review comments
 
   python-tests:
     name: 🐍 Test
@@ -176,6 +195,8 @@ jobs:
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
+    permissions:
+      contents: read
 
   python-coverage:
     name: 🐍 Coverage
@@ -199,6 +220,8 @@ jobs:
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
+    permissions:
+      contents: read
 
   python-linter:
     name: 🐍 Lint
@@ -210,12 +233,16 @@ jobs:
       enable-mypy: false
       enable-ty: true
       setup-z3: true
+    permissions:
+      contents: read
 
   build-sdist:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-sdist.yml@579203ef22082fa5d5483412f442e50d0c5ff4a7 # v2.2.2
+    permissions:
+      contents: read
 
   build-wheel:
     name: 🚀 CD
@@ -239,6 +266,8 @@ jobs:
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
       z3-version: 4.12.6
+    permissions:
+      contents: read
 
   # this job does nothing and is only used for branch protection
   required-checks-pass:

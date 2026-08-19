@@ -1,8 +1,8 @@
 # References
 
-*MQT QMAP* has a strong foundation in peer‑reviewed research. Many of its
-built‑in algorithms are based on methods published in scientific journals and
-conferences. For an overview of *MQT QMAP* and its features, see
+MQT QMAP has a strong foundation in peer‑reviewed research. Many of its built‑in
+algorithms are based on methods published in scientific journals and
+conferences. For an overview of MQT QMAP and its features, see
 {cite:p}`wille2023qmap`. If you want to cite this article, please use the
 following BibTeX entry:
 
@@ -16,7 +16,7 @@ following BibTeX entry:
 }
 ```
 
-*MQT QMAP* is part of the Munich Quantum Toolkit, which is described in
+MQT QMAP is part of the Munich Quantum Toolkit, which is described in
 {cite:p}`mqt`. If you want to cite the Munich Quantum Toolkit, please use the
 following BibTeX entry:
 
@@ -34,7 +34,7 @@ following BibTeX entry:
 }
 ```
 
-If you use *MQT QMAP* in your work, we would appreciate if you cited
+If you use MQT QMAP in your work, we would appreciate if you cited
 
 - {cite:p}`zulehnerEfficientMethodologyMapping2019` when using the heuristic
   mapper,
