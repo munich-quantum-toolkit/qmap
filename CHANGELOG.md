@@ -18,10 +18,10 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
+- ⬆️ Update `mqt-core` to version 3.9.0 ([#1116]) ([**@denialhaag**])
+- ⬆️ Update `nanobind` to version 2.15.0 ([#1116]) ([**@denialhaag**])
 - ♻️ Move output-permutation measurement construction from MQT Core into QMAP
   ([#1106]) ([**@simon1hofmann**])
-- ⬆️ Update `nanobind` to version 2.14.0 ([#1105]) ([**@denialhaag**])
-- ⬆️ Update `mqt-core` to version 3.8.0 ([#1093]) ([**@denialhaag**])
 
 ## [3.8.0] - 2026-07-09
 
@@ -286,10 +286,9 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106
-[#1105]: https://github.com/munich-quantum-toolkit/qmap/pull/1105
 [#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
-[#1093]: https://github.com/munich-quantum-toolkit/qmap/pull/1093
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057

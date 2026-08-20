@@ -8,7 +8,7 @@
 
 file(GLOB_RECURSE NA_SOURCES **.cpp)
 
-add_mqt_python_binding_nanobind(
+add_mqt_python_binding(
   QMAP
   ${MQT_QMAP_TARGET_NAME}-na-bindings
   ${NA_SOURCES}
