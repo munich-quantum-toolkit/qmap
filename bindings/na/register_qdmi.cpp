@@ -38,7 +38,7 @@ void registerQdmi(nb::module_& m) {
 
   // The FoMaC device base class is registered by MQT Core. Importing the module
   // ensures the base type is known before the derived type is bound here.
-  nb::module_::import_("mqt.core.fomac");
+  nb::module_::import_("mqt.core.qdmi");
 
   auto device = nb::class_<na::Session::Device, fomac::Device>(
       m, "Device", "Represents a device with a lattice of traps.");
