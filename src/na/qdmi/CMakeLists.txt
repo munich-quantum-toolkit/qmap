@@ -27,10 +27,12 @@ if(NOT TARGET ${TARGET_NAME})
 
   add_library(MQT::QMapNAQDMIDeviceConfig ALIAS ${TARGET_NAME})
 
-  # Place the library in the common output directories.
+  # Place the library in the common output directories. The device is a shared module that links
+  # this static library, so it must contain position-independent code.
   set_target_properties(
     ${TARGET_NAME}
-    PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES POSITION_INDEPENDENT_CODE ON
+               LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
                ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 endif()
