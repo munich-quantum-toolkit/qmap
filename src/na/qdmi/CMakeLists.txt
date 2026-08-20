@@ -9,16 +9,17 @@
 set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-qdmi-device-config)
 
 if(NOT TARGET ${TARGET_NAME})
-  file(GLOB HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/Configuration.hpp)
+  file(GLOB HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/Configuration.hpp
+       ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/DeviceConfiguration.hpp)
 
-  add_library(${TARGET_NAME} ${HEADERS} Configuration.cpp)
+  add_library(${TARGET_NAME} ${HEADERS} Configuration.cpp DeviceConfiguration.cpp)
 
   target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
   target_link_libraries(
     ${TARGET_NAME}
-    PUBLIC nlohmann_json::nlohmann_json
-    PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
+    PUBLIC nlohmann_json::nlohmann_json qdmi::qdmi
+    PRIVATE spdlog::spdlog MQT::ProjectOptions MQT::ProjectWarnings)
 
   # The configuration schema uses the three-way comparison operator. Unlike the other targets, this
   # one links no MQT::Core library to inherit the standard from.
@@ -32,4 +33,54 @@ if(NOT TARGET ${TARGET_NAME})
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
                ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+endif()
+
+set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-qdmi-device)
+
+# MQT Core ships its own neutral-atom device under `mqt.na.default`, so this provider claims a
+# QMAP-owned identifier and prefix to keep both registrable side by side.
+set(QDMI_PREFIX "MQT_QMAP_NA")
+
+if(NOT TARGET ${TARGET_NAME})
+  add_library(${TARGET_NAME} SHARED Device.cpp)
+  set_target_properties(
+    ${TARGET_NAME}
+    PROPERTIES C_VISIBILITY_PRESET hidden
+               CXX_VISIBILITY_PRESET hidden
+               VISIBILITY_INLINES_HIDDEN 1
+               POSITION_INDEPENDENT_CODE ON)
+
+  generate_prefixed_qdmi_headers(${QDMI_PREFIX})
+  file(GLOB_RECURSE QDMI_HDRS ${CMAKE_CURRENT_BINARY_DIR}/include/mqt_qmap_na_qdmi/**.h)
+
+  target_include_directories(
+    ${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>
+                          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)
+
+  target_link_libraries(
+    ${TARGET_NAME} PRIVATE MQT::CoreQDMICommon MQT::QMapNAQDMIDeviceConfig spdlog::spdlog
+                           MQT::ProjectOptions MQT::ProjectWarnings)
+
+  # The device reports its own version. Wheel builds get it from scikit-build-core; plain CMake
+  # builds have no project version to report.
+  if(DEFINED SKBUILD_PROJECT_VERSION)
+    set(MQT_QMAP_DEVICE_VERSION "${SKBUILD_PROJECT_VERSION}")
+  else()
+    set(MQT_QMAP_DEVICE_VERSION "0.0.0")
+  endif()
+  target_compile_definitions(${TARGET_NAME} PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}")
+
+  mqt_configure_qdmi_device(${TARGET_NAME} ID mqt.qmap.na.default PREFIX ${QDMI_PREFIX})
+
+  # The device reads its bundled description from beside the shared module. MQT Core's helper only
+  # learned to copy runtime files after v3.9.0, so place the file here.
+  add_custom_command(
+    TARGET ${TARGET_NAME}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy_if_different
+      "${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json"
+      "$<TARGET_FILE_DIR:${TARGET_NAME}>/mqt-qmap-qdmi-na-device.json")
+
+  add_library(MQT::QMapNAQDMIDevice ALIAS ${TARGET_NAME})
 endif()
