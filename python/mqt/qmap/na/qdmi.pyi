@@ -8,9 +8,9 @@
 
 """Neutral-atom view of a QDMI device."""
 
-import mqt.core.fomac
+import mqt.core.qdmi
 
-class Device(mqt.core.fomac.Device):
+class Device(mqt.core.qdmi.Device):
     """Represents a device with a lattice of traps."""
 
     class Lattice:
@@ -94,7 +94,7 @@ class Device(mqt.core.fomac.Device):
         """The T2 time of the device."""
 
     @staticmethod
-    def try_create_from_device(device: mqt.core.fomac.Device) -> Device | None:
+    def try_create_from_device(device: mqt.core.qdmi.Device) -> Device | None:
         """Create a neutral-atom device from a generic QDMI device.
 
         Args:
