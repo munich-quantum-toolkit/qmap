@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-add_mqt_python_binding_nanobind(
+add_mqt_python_binding(
   QMAP
   ${MQT_QMAP_TARGET_NAME}-sc-bindings
   sc.cpp
