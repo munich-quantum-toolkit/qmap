@@ -1,6 +1,6 @@
 {
   "schema-version": 1,
-  "name": "MQT NA Default QDMI Device",
+  "name": "MQT QMAP NA Default QDMI Device",
   "numQubits": 100,
   "traps": [
     {

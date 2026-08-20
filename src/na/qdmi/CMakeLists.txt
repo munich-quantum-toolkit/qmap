@@ -85,4 +85,21 @@ if(NOT TARGET ${TARGET_NAME})
       "$<TARGET_FILE_DIR:${TARGET_NAME}>/mqt-qmap-qdmi-na-device.json")
 
   add_library(MQT::QMapNAQDMIDevice ALIAS ${TARGET_NAME})
+
+  # Ship the provider so that the Python package can register it. The device reads its bundled
+  # description from beside the module, so both land in the same directory. Windows treats a shared
+  # module as a runtime artifact and installs it under bin.
+  if(WIN32)
+    set(MQT_QMAP_NA_DEVICE_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+  else()
+    set(MQT_QMAP_NA_DEVICE_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+  endif()
+  install(
+    TARGETS ${TARGET_NAME}
+    LIBRARY DESTINATION ${MQT_QMAP_NA_DEVICE_INSTALL_DIR} COMPONENT ${MQT_QMAP_TARGET_NAME}_Python
+    RUNTIME DESTINATION ${MQT_QMAP_NA_DEVICE_INSTALL_DIR} COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
+  install(
+    FILES "${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json"
+    DESTINATION ${MQT_QMAP_NA_DEVICE_INSTALL_DIR}
+    COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
 endif()

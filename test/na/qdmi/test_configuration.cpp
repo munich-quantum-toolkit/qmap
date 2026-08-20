@@ -25,7 +25,7 @@ namespace na {
 TEST(NaConfigurationTest, ParsesBundledDeviceStrictly) {
   const auto device = readJSON(NA_DEVICE_JSON);
   EXPECT_EQ(device.schemaVersion, 1);
-  EXPECT_EQ(device.name, "MQT NA Default QDMI Device");
+  EXPECT_EQ(device.name, "MQT QMAP NA Default QDMI Device");
   EXPECT_EQ(device.numQubits, 100);
 }
 

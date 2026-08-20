@@ -294,7 +294,7 @@ TEST(NaRuntimeConfiguration, SelectsEnvironmentAndExplicitSources) {
             QDMI_SUCCESS);
   ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_init(explicitSession),
             QDMI_SUCCESS);
-  EXPECT_EQ(queryName(explicitSession), "MQT NA Default QDMI Device");
+  EXPECT_EQ(queryName(explicitSession), "MQT QMAP NA Default QDMI Device");
   MQT_QMAP_NA_QDMI_device_session_free(explicitSession);
 }
 

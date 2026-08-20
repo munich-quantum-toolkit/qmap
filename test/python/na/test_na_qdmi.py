@@ -15,8 +15,9 @@ from json import load
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from mqt.core.qdmi.driver import open_device, registered_device_ids
 
-from mqt.qmap.na.qdmi import devices
+from mqt.qmap.na.qdmi import DEVICE_ID, devices
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -30,6 +31,16 @@ def device_tuple() -> tuple[Device, Mapping[str, Any]]:
     with pathlib.Path("json/na/mqt-qmap-qdmi-na-device.json").open(encoding="utf-8") as f:
         device_dict = load(f)
     return next(iter(devices())), device_dict
+
+
+def test_device_is_registered() -> None:
+    """Importing the module registers the packaged device with the QDMI driver."""
+    assert DEVICE_ID in registered_device_ids()
+
+
+def test_device_is_the_packaged_one() -> None:
+    """The reported device is the one that this package ships, not another provider's."""
+    assert [device.name() for device in devices()] == [open_device(DEVICE_ID).name()]
 
 
 def test_name(device_tuple: tuple[Device, Mapping[str, Any]]) -> None:

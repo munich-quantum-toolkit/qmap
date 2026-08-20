@@ -10,6 +10,8 @@
 
 import mqt.core.qdmi
 
+DEVICE_ID: str = "mqt.qmap.na.default"
+
 class Device(mqt.core.qdmi.Device):
     """Represents a device with a lattice of traps."""
 

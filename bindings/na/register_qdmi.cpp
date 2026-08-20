@@ -18,6 +18,7 @@
 #include <nanobind/stl/string.h>   // NOLINT(misc-include-cleaner)
 #include <nanobind/stl/vector.h>   // NOLINT(misc-include-cleaner)
 #include <string>
+#include <vector>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -30,6 +31,29 @@ template <pyClass T> [[nodiscard]] auto repr(T c) -> std::string {
   return nb::repr(nb::cast(c)).c_str();
 }
 
+/**
+ * @brief Register the packaged neutral-atom device with the QDMI driver.
+ * @details The driver only discovers devices next to its own library, so a
+ * device shipped in this package is never found. Registering a definition does
+ * not load the library.
+ * @return The identifier of the registered device, empty if it is not
+ * installed.
+ */
+[[nodiscard]] auto registerPackagedDevice() -> std::string {
+  const auto paths = nb::module_::import_("mqt.qmap._qdmi_paths");
+  const auto library =
+      nb::cast<std::string>(paths.attr("NA_QDMI_DEVICE_LIBRARY_PATH"));
+  const auto id = nb::cast<std::string>(paths.attr("NA_QDMI_DEVICE_ID"));
+  if (library.empty()) {
+    return {};
+  }
+  const auto driver = nb::module_::import_("mqt.core.qdmi.driver");
+  const auto definition = driver.attr("DeviceDefinition")(
+      id, library, paths.attr("NA_QDMI_PREFIX"));
+  driver.attr("register_device_if_absent")(definition);
+  return id;
+}
+
 } // namespace
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -39,6 +63,9 @@ void registerQdmi(nb::module_& m) {
   // The FoMaC device base class is registered by MQT Core. Importing the module
   // ensures the base type is known before the derived type is bound here.
   nb::module_::import_("mqt.core.qdmi");
+
+  const auto deviceId = registerPackagedDevice();
+  m.attr("DEVICE_ID") = deviceId;
 
   auto device = nb::class_<na::Session::Device, fomac::Device>(
       m, "Device", "Represents a device with a lattice of traps.");
@@ -139,6 +166,23 @@ Returns:
   device.def(nb::self != nb::self,
              nb::sig("def __ne__(self, arg: object, /) -> bool"));
 
-  m.def("devices", &na::Session::getDevices, nb::rv_policy::reference_internal,
-        "Returns a list of available devices.");
+  // A device registered at runtime is reachable by its identifier but does not
+  // appear in the device list of a QDMI session, so the packaged device is
+  // opened by identifier.
+  m.def(
+      "devices",
+      [deviceId]() -> std::vector<na::Session::Device> {
+        if (deviceId.empty()) {
+          return {};
+        }
+        const auto driver = nb::module_::import_("mqt.core.qdmi.driver");
+        const auto opened = driver.attr("open_device")(deviceId);
+        auto device = na::Session::Device::tryCreateFromDevice(
+            nb::cast<fomac::Device>(opened));
+        if (!device.has_value()) {
+          return {};
+        }
+        return {*device};
+      },
+      "Returns a list of available devices.");
 }
