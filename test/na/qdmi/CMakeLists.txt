@@ -17,10 +17,11 @@ if(TARGET MQT::QMapNAQDMIDeviceConfig AND TARGET MQT::QMapNAQDMIDevice)
     set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
   endif()
 
-  package_add_test(${TARGET_NAME} MQT::QMapNAQDMIDevice test_configuration.cpp test_device.cpp)
+  package_add_test(${TARGET_NAME} MQT::QMapNAQDMIDevice test_client.cpp test_configuration.cpp
+                   test_device.cpp)
   add_dependencies(${TARGET_NAME} qdmi_test_mqt_qmap_na_device_defs)
-  target_link_libraries(${TARGET_NAME} PRIVATE MQT::QMapNAQDMIDeviceConfig
-                                               nlohmann_json::nlohmann_json)
+  target_link_libraries(${TARGET_NAME} PRIVATE MQT::QMapNAQDMIClient MQT::QMapNAQDMIDeviceConfig
+                                               MQT::CoreQDMIDriver nlohmann_json::nlohmann_json)
 
   if(DEFINED SKBUILD_PROJECT_VERSION)
     set(MQT_QMAP_DEVICE_VERSION "${SKBUILD_PROJECT_VERSION}")
@@ -30,6 +31,7 @@ if(TARGET MQT::QMapNAQDMIDeviceConfig AND TARGET MQT::QMapNAQDMIDevice)
   target_compile_definitions(
     ${TARGET_NAME}
     PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}"
+            NA_DEVICE_LIBRARY="$<TARGET_FILE:MQT::QMapNAQDMIDevice>"
             NA_DEVICE_JSON="${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json")
 
   # On Windows, copy the provider and its runtime assets beside the test executable.

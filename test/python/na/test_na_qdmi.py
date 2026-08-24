@@ -15,6 +15,8 @@ from json import load
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from mqt.core.plugins.qiskit import QDMIBackend
+from mqt.core.plugins.qiskit.exceptions import UnsupportedDeviceError
 from mqt.core.qdmi.driver import open_device, registered_device_ids
 
 from mqt.qmap.na.qdmi import DEVICE_ID, devices
@@ -41,6 +43,21 @@ def test_device_is_registered() -> None:
 def test_device_is_the_packaged_one() -> None:
     """The reported device is the one that this package ships, not another provider's."""
     assert [device.name() for device in devices()] == [open_device(DEVICE_ID).name()]
+
+
+def test_compiler_target_rejects_zone_model() -> None:
+    """Reject the packaged zoned device at the circuit-target boundary."""
+    compiler_target = pytest.importorskip("mqt.core.mlir").CompilerTarget
+    with pytest.raises(ValueError, match="only circuit-model devices"):
+        compiler_target.from_device_id(DEVICE_ID)
+    with pytest.raises(ValueError, match="only circuit-model devices"):
+        compiler_target.from_device(open_device(DEVICE_ID))
+
+
+def test_qiskit_backend_rejects_zone_model() -> None:
+    """Reject zoned operations that Qiskit's target model cannot represent."""
+    with pytest.raises(UnsupportedDeviceError, match="cannot be represented in Qiskit's Target model"):
+        QDMIBackend.from_device_id(DEVICE_ID)
 
 
 def test_name(device_tuple: tuple[Device, Mapping[str, Any]]) -> None:
