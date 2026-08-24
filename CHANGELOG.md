@@ -12,6 +12,10 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+## [3.9.0] - 2026-08-24
+
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
+
 ### Added
 
 - 🐍 Start building CPython 3.15 wheels ([#1096]) ([**@denialhaag**])
@@ -268,7 +272,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.8.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.9.0...HEAD
+[3.9.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.9.0
 [3.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.8.0
 [3.7.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.7.0
 [3.6.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.6.0
