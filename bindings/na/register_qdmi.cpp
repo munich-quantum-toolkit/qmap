@@ -43,7 +43,7 @@ template <pyClass T> [[nodiscard]] auto repr(T c) -> std::string {
   const auto paths = nb::module_::import_("mqt.qmap._qdmi_paths");
   const auto library =
       nb::cast<std::string>(paths.attr("NA_QDMI_DEVICE_LIBRARY_PATH"));
-  const auto id = nb::cast<std::string>(paths.attr("NA_QDMI_DEVICE_ID"));
+  auto id = nb::cast<std::string>(paths.attr("NA_QDMI_DEVICE_ID"));
   if (library.empty()) {
     return {};
   }
@@ -81,6 +81,8 @@ void registerQdmi(nb::module_& m) {
     return "<Vector x=" + std::to_string(v.x) + " y=" + std::to_string(v.y) +
            ">";
   });
+  // nanobind uses these intentionally self-comparative expressions to bind
+  // Python rich comparison. NOLINTBEGIN(misc-redundant-expression)
   vector.def(nb::self == nb::self,
              nb::sig("def __eq__(self, arg: object, /) -> bool"));
   vector.def(nb::self != nb::self,
@@ -165,6 +167,7 @@ Returns:
              nb::sig("def __eq__(self, arg: object, /) -> bool"));
   device.def(nb::self != nb::self,
              nb::sig("def __ne__(self, arg: object, /) -> bool"));
+  // NOLINTEND(misc-redundant-expression)
 
   // A device registered at runtime is reachable by its identifier but does not
   // appear in the device list of a QDMI session, so the packaged device is
