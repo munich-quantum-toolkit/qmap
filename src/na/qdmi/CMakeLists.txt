@@ -50,7 +50,8 @@ if(NOT TARGET ${TARGET_NAME})
     PROPERTIES C_VISIBILITY_PRESET hidden
                CXX_VISIBILITY_PRESET hidden
                VISIBILITY_INLINES_HIDDEN 1
-               POSITION_INDEPENDENT_CODE ON)
+               POSITION_INDEPENDENT_CODE ON
+               WINDOWS_EXPORT_ALL_SYMBOLS OFF)
 
   generate_prefixed_qdmi_headers(${QDMI_PREFIX})
   file(GLOB_RECURSE QDMI_HDRS ${CMAKE_CURRENT_BINARY_DIR}/include/mqt_qmap_na_qdmi/**.h)
