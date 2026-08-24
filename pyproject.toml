@@ -321,8 +321,7 @@ skip = ["*-musllinux_*"]
 archs = "auto64"
 test-groups = ["test"]
 test-sources = [
-  "test/python",
-  "test/cliffordsynthesis",
+  "test",
   "json",
 ]
 test-command = "pytest test/python"
