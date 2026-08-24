@@ -53,7 +53,6 @@ if(NOT TARGET ${TARGET_NAME})
                WINDOWS_EXPORT_ALL_SYMBOLS OFF)
 
   generate_prefixed_qdmi_headers(${QDMI_PREFIX})
-  file(GLOB_RECURSE QDMI_HDRS ${CMAKE_CURRENT_BINARY_DIR}/include/mqt_qmap_na_qdmi/**.h)
 
   target_include_directories(
     ${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>
@@ -100,5 +99,6 @@ if(NOT TARGET ${TARGET_NAME})
   install(
     FILES "${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json"
     DESTINATION ${MQT_QMAP_NA_DEVICE_INSTALL_DIR}
-    COMPONENT ${MQT_QMAP_TARGET_NAME}_Python)
+    COMPONENT ${MQT_QMAP_TARGET_NAME}_Python
+    EXCLUDE_FROM_ALL)
 endif()

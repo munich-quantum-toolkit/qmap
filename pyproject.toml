@@ -345,7 +345,6 @@ repair-wheel-command = [
 --exclude libmqt-core-circuit-optimizer.so.3.9 \
 --exclude libmqt-core-fomac.so.3.9 \
 --exclude libmqt-core-ir.so.3.9 \
---exclude libmqt-core-na.so.3.9 \
 --exclude libmqt-core-qdmi-common.so.3.9 \
 --exclude libmqt-core-qdmi-driver.so.3.9 \
 --exclude libmqt-core-qasm.so.3.9 \
@@ -361,7 +360,6 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-circuit-optimizer.dll \
 --exclude mqt-core-fomac.dll \
 --exclude mqt-core-ir.dll \
---exclude mqt-core-na.dll \
 --exclude mqt-core-qdmi-common.dll \
 --exclude mqt-core-qdmi-driver.dll \
 --exclude mqt-core-qasm.dll \
