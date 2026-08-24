@@ -13,6 +13,7 @@
 #include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 
@@ -69,25 +70,26 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
                                       qc::fp startTime) {
   std::string opString;
 
-  if (op->getType() == qc::OpType::AodActivate) {
+  if (hasNeutralAtomOperationKind(*op, NeutralAtomOperationKind::AodActivate)) {
     opString += "@" + std::to_string(startTime) + " load [\n";
     for (const auto& coordIdx : op->getTargets()) {
       const auto id = coordIdxToId.at(coordIdx);
       opString += "\t atom" + std::to_string(id) + "\n";
     }
     opString += "]\n";
-  } else if (op->getType() == qc::OpType::AodDeactivate) {
+  } else if (hasNeutralAtomOperationKind(
+                 *op, NeutralAtomOperationKind::AodDeactivate)) {
     opString += "@" + std::to_string(startTime) + " store [\n";
     for (const auto& coordIdx : op->getTargets()) {
       const auto id = coordIdxToId.at(coordIdx);
       opString += "\t atom" + std::to_string(id) + "\n";
     }
     opString += "]\n";
-  } else if (op->getType() == qc::OpType::AodMove) {
+  } else if (hasNeutralAtomOperationKind(*op,
+                                         NeutralAtomOperationKind::AodMove)) {
     // update atom coordinates
     const auto* aodOp = dynamic_cast<AodOperation*>(op.get());
-    assert(aodOp != nullptr &&
-           "OpType::AodMove must be backed by AodOperation");
+    assert(aodOp != nullptr && "An AOD move must be backed by AodOperation");
     const auto startsX = aodOp->getStarts(Dimension::X);
     const auto endsX = aodOp->getEnds(Dimension::X);
     const auto startsY = aodOp->getStarts(Dimension::Y);

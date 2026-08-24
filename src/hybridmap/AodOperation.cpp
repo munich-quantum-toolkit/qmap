@@ -10,9 +10,9 @@
 
 #include "hybridmap/AodOperation.hpp"
 
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
-#include "ir/operations/OpType.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -23,18 +23,20 @@
 #include <limits>
 #include <ostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
 namespace na {
-AodOperation::AodOperation(qc::OpType s, std::vector<qc::Qubit> qubits,
+AodOperation::AodOperation(const NeutralAtomOperationKind kind,
+                           std::vector<qc::Qubit> qubits,
                            const std::vector<uint32_t>& dirs,
                            const std::vector<qc::fp>& start,
                            const std::vector<qc::fp>& end)
-    : AodOperation(s, std::move(qubits), convertToDimension(dirs), start, end) {
-}
+    : AodOperation(kind, std::move(qubits), convertToDimension(dirs), start,
+                   end) {}
 
 std::string SingleOperation::toQASMString() const {
   std::stringstream ss;
@@ -51,14 +53,24 @@ AodOperation::convertToDimension(const std::vector<uint32_t>& dirs) {
   return dirsEnum;
 }
 
-AodOperation::AodOperation(const qc::OpType s, std::vector<qc::Qubit> qubits,
+NeutralAtomOperationKind
+AodOperation::validateKind(const NeutralAtomOperationKind kind) {
+  if (kind == NeutralAtomOperationKind::AodActivate ||
+      kind == NeutralAtomOperationKind::AodDeactivate ||
+      kind == NeutralAtomOperationKind::AodMove) {
+    return kind;
+  }
+  throw std::invalid_argument("An AOD operation requires an AOD kind.");
+}
+
+AodOperation::AodOperation(const NeutralAtomOperationKind kind,
+                           std::vector<qc::Qubit> qubits,
                            const std::vector<Dimension>& dirs,
                            const std::vector<qc::fp>& start,
-                           const std::vector<qc::fp>& end) {
+                           const std::vector<qc::fp>& end)
+    : NeutralAtomOperation(validateKind(kind), std::move(qubits),
+                           std::in_place) {
   assert(dirs.size() == start.size() && start.size() == end.size());
-  type = s;
-  targets = std::move(qubits);
-  name = toString(type);
 
   for (size_t i = 0; i < dirs.size(); ++i) {
     operations.emplace_back(dirs[i], start[i], end[i]);
@@ -70,28 +82,26 @@ AodOperation::AodOperation(const std::string& typeName,
                            const std::vector<uint32_t>& dirs,
                            const std::vector<qc::fp>& start,
                            const std::vector<qc::fp>& end)
-    : AodOperation(qc::opTypeFromString(typeName), std::move(qubits),
-                   convertToDimension(dirs), start, end) {}
+    : AodOperation(neutralAtomOperationKindFromString(typeName),
+                   std::move(qubits), convertToDimension(dirs), start, end) {}
 
 AodOperation::AodOperation(
-    const qc::OpType s, std::vector<qc::Qubit> qubits,
-    const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& ops) {
-  type = s;
-  targets = std::move(qubits);
-  name = toString(type);
+    const NeutralAtomOperationKind kind, std::vector<qc::Qubit> qubits,
+    const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& ops)
+    : NeutralAtomOperation(validateKind(kind), std::move(qubits),
+                           std::in_place) {
 
   for (const auto& [dir, index, param] : ops) {
     operations.emplace_back(dir, index, param);
   }
 }
 
-AodOperation::AodOperation(qc::OpType s, std::vector<qc::Qubit> t,
+AodOperation::AodOperation(const NeutralAtomOperationKind kind,
+                           std::vector<qc::Qubit> targets,
                            std::vector<SingleOperation> ops)
-    : operations(std::move(ops)) {
-  type = s;
-  targets = std::move(t);
-  name = toString(type);
-}
+    : NeutralAtomOperation(validateKind(kind), std::move(targets),
+                           std::in_place),
+      operations(std::move(ops)) {}
 
 std::vector<qc::fp> AodOperation::getEnds(const Dimension dir) const {
   std::vector<qc::fp> ends;
@@ -131,6 +141,12 @@ std::vector<qc::fp> AodOperation::getDistances(const Dimension dir) const {
   return params;
 }
 
+bool AodOperation::equals(const qc::Operation& operation) const {
+  const auto* other = dynamic_cast<const AodOperation*>(&operation);
+  return other != nullptr && NeutralAtomOperation::equals(operation) &&
+         operations == other->operations;
+}
+
 void AodOperation::dumpOpenQASM(
     std::ostream& of, const qc::QubitIndexToRegisterMap& qubitMap,
     [[maybe_unused]] const qc::BitIndexToRegisterMap& bitMap,
@@ -163,14 +179,14 @@ void AodOperation::dumpOpenQASM(
 }
 
 void AodOperation::invert() {
-  if (type == qc::OpType::AodMove) {
+  if (getKind() == NeutralAtomOperationKind::AodMove) {
     for (auto& op : operations) {
       std::swap(op.start, op.end);
     }
-  } else if (type == qc::OpType::AodActivate) {
-    type = qc::OpType::AodDeactivate;
-  } else if (type == qc::OpType::AodDeactivate) {
-    type = qc::OpType::AodActivate;
+  } else if (getKind() == NeutralAtomOperationKind::AodActivate) {
+    setKind(NeutralAtomOperationKind::AodDeactivate);
+  } else if (getKind() == NeutralAtomOperationKind::AodDeactivate) {
+    setKind(NeutralAtomOperationKind::AodActivate);
   }
 }
 } // namespace na

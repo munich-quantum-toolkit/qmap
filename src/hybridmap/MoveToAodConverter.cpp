@@ -13,6 +13,7 @@
 #include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -57,7 +58,8 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
         qcScheduled.emplace_back(std::make_unique<AodOperation>(aodOp));
       }
       ++groupIt;
-    } else if (op->getType() != qc::OpType::Move) {
+    } else if (!hasNeutralAtomOperationKind(*op,
+                                            NeutralAtomOperationKind::Move)) {
       qcScheduled.emplace_back(op->clone());
     }
     idx++;
@@ -110,8 +112,8 @@ void MoveToAodConverter::initFlyingAncillas() {
     starts.emplace_back(y);
     ends.emplace_back(y);
   }
-  const AodOperation aodInit(qc::OpType::AodActivate, coords, dirs, starts,
-                             ends);
+  const AodOperation aodInit(NeutralAtomOperationKind::AodActivate, coords,
+                             dirs, starts, ends);
   qcScheduled.emplace_back(std::make_unique<AodOperation>(aodInit));
 }
 
@@ -120,7 +122,7 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
   MoveGroup const lastMoveGroup;
   uint32_t idx = 0;
   for (auto& op : qc) {
-    if (op->getType() == qc::OpType::Move) {
+    if (hasNeutralAtomOperationKind(*op, NeutralAtomOperationKind::Move)) {
       const auto move = convertOpToMove(op.get());
       if (currentMoveGroup.canAddMove(move, arch)) {
         currentMoveGroup.addMove(move, idx);
@@ -398,10 +400,10 @@ void MoveToAodConverter::processMoveGroups() {
   // convert the moves from MoveGroup to AodOperations
   for (auto groupIt = moveGroups.begin(); groupIt != moveGroups.end();
        ++groupIt) {
-    AodActivationHelper aodActivationHelper{arch, qc::OpType::AodActivate,
-                                            (&ancillas)};
-    AodActivationHelper aodDeactivationHelper{arch, qc::OpType::AodDeactivate,
-                                              (&ancillas)};
+    AodActivationHelper aodActivationHelper{
+        arch, NeutralAtomOperationKind::AodActivate, (&ancillas)};
+    AodActivationHelper aodDeactivationHelper{
+        arch, NeutralAtomOperationKind::AodDeactivate, (&ancillas)};
 
     const auto resultMoves = processMoves(groupIt->moves, aodActivationHelper,
                                           aodDeactivationHelper);
@@ -565,7 +567,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
     }
   }
 
-  return {qc::OpType::AodMove, targetQubits, aodOperations};
+  return {NeutralAtomOperationKind::AodMove, targetQubits, aodOperations};
 }
 
 std::vector<std::shared_ptr<MoveToAodConverter::AodActivationHelper::AodMove>>
@@ -624,7 +626,7 @@ void MoveToAodConverter::AodActivationHelper::computeInitAndOffsetOperations(
 
   initOperations.emplace_back(dimension, static_cast<qc::fp>(aodMove->init) * d,
                               static_cast<qc::fp>(aodMove->init) * d);
-  if (type == qc::OpType::AodActivate) {
+  if (type == NeutralAtomOperationKind::AodActivate) {
     offsetOperations.emplace_back(
         dimension, static_cast<qc::fp>(aodMove->init) * d,
         static_cast<qc::fp>(aodMove->init) * d +
@@ -669,7 +671,7 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   CoordIndices qubitsActivation;
   qubitsActivation.reserve(activation.moves.size());
   for (const auto& move : activation.moves) {
-    if (type == qc::OpType::AodActivate) {
+    if (type == NeutralAtomOperationKind::AodActivate) {
       if (move.load1) {
         qubitsActivation.emplace_back(move.c1);
       }
@@ -706,7 +708,8 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   }
 
   return {AodOperation(type, qubitsActivation, initOperations),
-          AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
+          AodOperation(NeutralAtomOperationKind::AodMove, qubitsOffset,
+                       offsetOperations)};
 }
 
 std::vector<AodOperation>
@@ -718,7 +721,7 @@ MoveToAodConverter::AodActivationHelper::getAodOperations() const {
     aodOperations.insert(aodOperations.end(), operations.begin(),
                          operations.end());
   }
-  if (type == qc::OpType::AodActivate) {
+  if (type == NeutralAtomOperationKind::AodActivate) {
     return aodOperations;
   }
   std::ranges::reverse(aodOperations);

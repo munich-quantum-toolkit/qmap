@@ -12,6 +12,7 @@
 
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -168,8 +169,8 @@ class NeutralAtomArchitecture {
     CoordIndex nQubits = 0;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
-    std::map<qc::OpType, qc::fp> shuttlingTimes;
-    std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
+    std::map<NeutralAtomOperationKind, qc::fp> shuttlingTimes;
+    std::map<NeutralAtomOperationKind, qc::fp> shuttlingAverageFidelities;
     DecoherenceTimes decoherenceTimes;
   };
 
@@ -376,21 +377,22 @@ public:
   }
   /**
    * @brief Get the shuttling time of an operation type.
-   * @param shuttlingType Shuttling operation type (OpType).
+   * @param shuttlingType Shuttling operation kind.
    * @return Shuttling time for the given type.
    * @throw std::out_of_range If the operation type is unknown.
    */
-  [[nodiscard]] qc::fp getShuttlingTime(const qc::OpType shuttlingType) const {
+  [[nodiscard]] qc::fp
+  getShuttlingTime(const NeutralAtomOperationKind shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
    * @brief Get the average fidelity of a shuttling operation type.
-   * @param shuttlingType Shuttling operation type (OpType).
+   * @param shuttlingType Shuttling operation kind.
    * @return Average shuttling fidelity for the given type.
    * @throw std::out_of_range If the operation type is unknown.
    */
-  [[nodiscard]] qc::fp
-  getShuttlingAverageFidelity(const qc::OpType shuttlingType) const {
+  [[nodiscard]] qc::fp getShuttlingAverageFidelity(
+      const NeutralAtomOperationKind shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
@@ -572,7 +574,7 @@ public:
    */
   [[nodiscard]] qc::fp getVectorShuttlingTime(const MoveVector& v) const {
     return v.getLength() * getInterQubitDistance() /
-           getShuttlingTime(qc::OpType::Move);
+           getShuttlingTime(NeutralAtomOperationKind::Move);
   }
 
   /**

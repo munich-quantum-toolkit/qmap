@@ -12,6 +12,7 @@
 
 #include "hybridmap/HybridAnimation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
@@ -67,9 +68,11 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     if (verbose) {
       spdlog::info("{}", index);
     }
-    if (op->getType() == qc::AodActivate) {
+    if (hasNeutralAtomOperationKind(*op,
+                                    NeutralAtomOperationKind::AodActivate)) {
       nAodActivate++;
-    } else if (op->getType() == qc::AodMove) {
+    } else if (hasNeutralAtomOperationKind(*op,
+                                           NeutralAtomOperationKind::AodMove)) {
       nAodMove++;
     } else if (op->getType() == qc::OpType::Z && op->getNcontrols() == 1) {
       nCZs++;
@@ -77,8 +80,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     auto qubits = op->getUsedQubits();
     auto opTime = arch->getOpTime(op.get());
-    if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
-        op->getType() == qc::AodDeactivate) {
+    if (isAodOperation(*op)) {
       opTime *= shuttlingSpeedFactor;
     }
     const auto opFidelity = arch->getOpFidelity(op.get());
@@ -98,8 +100,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     }
 
     qc::fp maxTime = 0;
-    if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
-        op->getType() == qc::AodDeactivate) {
+    if (isAodOperation(*op)) {
       // AodBlocking
       maxTime = aodLastBlockedTime;
       for (const auto& qubit : qubits) {

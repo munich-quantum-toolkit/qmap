@@ -14,11 +14,10 @@
 
 #pragma once
 
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
-#include "ir/operations/OpType.hpp"
-#include "ir/operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -39,21 +38,27 @@ struct SingleOperation {
   SingleOperation(const Dimension d, const qc::fp s, const qc::fp e)
       : dir(d), start(s), end(e) {}
 
+  bool operator==(const SingleOperation&) const = default;
+
   [[nodiscard]] std::string toQASMString() const;
 };
-class AodOperation final : public qc::Operation {
+class AodOperation final : public NeutralAtomOperation {
   std::vector<SingleOperation> operations;
+
+  static NeutralAtomOperationKind validateKind(NeutralAtomOperationKind kind);
 
   static std::vector<Dimension>
   convertToDimension(const std::vector<uint32_t>& dirs);
 
 public:
-  AodOperation() = default;
-  AodOperation(qc::OpType s, std::vector<qc::Qubit> qubits,
+  AodOperation()
+      : NeutralAtomOperation(NeutralAtomOperationKind::AodMove, {},
+                             std::in_place) {}
+  AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> qubits,
                const std::vector<Dimension>& dirs,
                const std::vector<qc::fp>& starts,
                const std::vector<qc::fp>& ends);
-  AodOperation(qc::OpType s, std::vector<qc::Qubit> qubits,
+  AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> qubits,
                const std::vector<uint32_t>& dirs,
                const std::vector<qc::fp>& starts,
                const std::vector<qc::fp>& ends);
@@ -61,9 +66,9 @@ public:
                const std::vector<uint32_t>& dirs,
                const std::vector<qc::fp>& starts,
                const std::vector<qc::fp>& ends);
-  AodOperation(qc::OpType s, std::vector<qc::Qubit> qubits,
+  AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> qubits,
                const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& ops);
-  AodOperation(qc::OpType type, std::vector<qc::Qubit> targets,
+  AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> targets,
                std::vector<SingleOperation> operations);
 
   [[nodiscard]] std::unique_ptr<Operation> clone() const override {
@@ -85,6 +90,8 @@ public:
   [[nodiscard]] qc::fp getMaxDistance(Dimension dir) const;
 
   [[nodiscard]] std::vector<qc::fp> getDistances(Dimension dir) const;
+
+  [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
   void dumpOpenQASM(std::ostream& of,
                     const qc::QubitIndexToRegisterMap& qubitMap,

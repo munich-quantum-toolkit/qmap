@@ -134,7 +134,7 @@ protected:
     const NeutralAtomArchitecture* arch;
     std::vector<AodActivation> allActivations;
     // Differentiate between loading and unloading
-    qc::OpType type;
+    NeutralAtomOperationKind type;
     AncillaAtoms* ancillas;
 
     // Constructor
@@ -142,7 +142,8 @@ protected:
     AodActivationHelper(const AodActivationHelper&) = delete;
     AodActivationHelper(AodActivationHelper&&) = delete;
     AodActivationHelper(const NeutralAtomArchitecture& architecture,
-                        const qc::OpType opType, AncillaAtoms* ancillas)
+                        const NeutralAtomOperationKind opType,
+                        AncillaAtoms* ancillas)
         : arch(&architecture), type(opType), ancillas(ancillas) {}
 
     // Methods
