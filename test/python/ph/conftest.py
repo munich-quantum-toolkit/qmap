@@ -15,13 +15,12 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from mqt.qmap.ph.graph import generate_beam_splitter_matrix
-
 
 @pytest.fixture
 def ideal_bs_chip4():
     """Return ideal 50/50 beam-splitter reflectivities for a 4-mode chip."""
-    return generate_beam_splitter_matrix(chip_size=4, ideal_bs=True).tolist()
+    # chip_size=4: MZIs per layer [2, 1, 2, 1] -> 6 MZIs -> 12 in/out reflectivities.
+    return [0.5] * 12
 
 
 @pytest.fixture

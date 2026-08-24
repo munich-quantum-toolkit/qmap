@@ -114,8 +114,8 @@ def build_unitary_from_components(
 
     Args:
         num_modes: Number of spatial modes on the chip.
-        beam_splitter_params: 1D tensor of reflectivities ordered as produced
-            by :func:`graph.generate_beam_splitter_matrix`.
+        beam_splitter_params: 1D tensor of reflectivities ordered MZI-by-MZI
+            as in/out pairs, layer by layer.
         phase_shifter_params: Phase-shifter parameter array.  Accepted shapes
             are ``(N, N)``, ``(N**2,)``, or ``(N**2 - 2,)`` (corner-excluded).
         exclude_edge_phase_shifters: If ``True``, the top-right and bottom-

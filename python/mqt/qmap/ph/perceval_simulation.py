@@ -44,8 +44,7 @@ def create_mzi_chip(
 
     Args:
         bs_list: List of beam splitter reflectivities ordered MZI-by-MZI
-            as produced by :func:`graph.generate_beam_splitter_matrix` (call
-            ``.tolist()`` on its NumPy array output).
+            as in/out pairs, layer by layer.
         ps_matrix: 2D array of phase-shifter values with shape
             ``(chip_size, chip_size)``. Rows are spatial modes, columns are
             MZI layers.

@@ -12,7 +12,6 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from mqt.qmap.ph.graph import generate_beam_splitter_matrix
 from mqt.qmap.ph.unitary_to_phase_compilation import (
     get_haar_random_unitary,
     optimize_unitary_subcircuit_parameters,
@@ -34,7 +33,8 @@ class TestOptimizeMinimumIterations:
         """
         torch.manual_seed(0)
         chip_dim = 4
-        bs = torch.as_tensor(generate_beam_splitter_matrix(chip_size=chip_dim, ideal_bs=True), dtype=torch.float64)
+        # chip_dim=4: MZIs per layer [2, 1, 2, 1] -> 6 MZIs -> 12 ideal reflectivities.
+        bs = torch.as_tensor([0.5] * 12, dtype=torch.float64)
         target_unitary = get_haar_random_unitary(chip_dim, torch.Generator().manual_seed(1), dtype=torch.complex128)
 
         result = optimize_unitary_subcircuit_parameters(

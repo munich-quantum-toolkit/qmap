@@ -22,9 +22,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 import torch
+from hardware_model import generate_beam_splitter_matrix
 
 from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
-from mqt.qmap.ph.graph import generate_beam_splitter_matrix
 from mqt.qmap.ph.subcircuit_compilation import (
     OptimizationConfig,
     compile_subcircuit,

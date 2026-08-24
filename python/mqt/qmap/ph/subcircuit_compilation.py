@@ -353,10 +353,8 @@ def compile_subcircuit(
     placement.
 
     Args:
-        beam_splitter_reflectivities: List of chip beam-splitter
-            reflectivities as produced by
-            :func:`graph.generate_beam_splitter_matrix` (call ``.tolist()`` on
-            its NumPy array output).
+        beam_splitter_reflectivities: Flat list of measured chip beam-splitter
+            reflectivities ordered MZI-by-MZI as in/out pairs, layer by layer.
         input_transmissions: Per-mode input transmission coefficients, a list
             of length ``chip_dim``. Its length determines ``chip_dim``.
         output_transmissions: Per-mode output transmission coefficients, a
@@ -441,10 +439,8 @@ def evaluate_subcircuit(
     Args:
         compilation: The :class:`CompilationResult` returned by
             :func:`compile_subcircuit` for the same target unitary and chip.
-        beam_splitter_reflectivities: List of chip beam-splitter
-            reflectivities as produced by
-            :func:`graph.generate_beam_splitter_matrix` (call ``.tolist()`` on
-            its NumPy array output).
+        beam_splitter_reflectivities: Flat list of measured chip beam-splitter
+            reflectivities ordered MZI-by-MZI as in/out pairs, layer by layer.
         input_transmissions: Per-mode input transmission coefficients, a list
             of length ``chip_dim``. Its length determines ``chip_dim``.
         output_transmissions: Per-mode output transmission coefficients, a

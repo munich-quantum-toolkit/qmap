@@ -152,7 +152,7 @@ write_to = "python/mqt/qmap/_version.py"
 
 [tool.pytest]
 minversion = "9.0"
-testpaths = ["test/python"]
+testpaths = ["test/python", "eval/ph/tests"]
 strict = true
 addopts = [
   "-ra",

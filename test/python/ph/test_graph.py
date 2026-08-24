@@ -16,7 +16,6 @@ from mqt.qmap.ph.graph import (
     construct_graph,
     cross_fidelity,
     determine_routing_fidelities,
-    generate_beam_splitter_matrix,
     get_edge_fidelity_even_graph_layer,
     get_edge_fidelity_odd_graph_layer,
 )
@@ -102,43 +101,6 @@ class TestCrossFidelity:
         """Test that cross_fidelity returns a value in [0, 1]."""
         result = cross_fidelity([0.45, 0.55])
         assert 0.0 <= result <= 1.0
-
-
-class TestGenerateBeamSplitterMatrix:
-    """Tests for generate_beam_splitter_matrix."""
-
-    @staticmethod
-    def test_ideal_returns_all_half() -> None:
-        """Test that ideal mode returns all 0.5 reflectivities."""
-        bs = generate_beam_splitter_matrix(chip_size=4, ideal_bs=True)
-        assert np.allclose(bs, 0.5)
-
-    @staticmethod
-    def test_ideal_correct_size_chip4() -> None:
-        """Test that a 4-mode chip yields 12 beam-splitter values."""
-        # chip_size=4: MZIs per layer [2, 1, 2, 1] -> 6 total -> 12 BS values
-        bs = generate_beam_splitter_matrix(chip_size=4, ideal_bs=True)
-        assert len(bs) == 12
-
-    @staticmethod
-    def test_ideal_correct_size_chip6() -> None:
-        """Test that a 6-mode chip yields 30 beam-splitter values."""
-        # chip_size=6: MZIs per layer [3, 2, 3, 2, 3, 2] -> 15 total -> 30 BS values
-        bs = generate_beam_splitter_matrix(chip_size=6, ideal_bs=True)
-        assert len(bs) == 30
-
-    @staticmethod
-    def test_random_has_correct_size_chip4() -> None:
-        """Test that random mode also yields 12 values for a 4-mode chip."""
-        bs = generate_beam_splitter_matrix(chip_size=4, ideal_bs=False, rng=np.random.default_rng(0))
-        assert len(bs) == 12
-
-    @staticmethod
-    def test_random_values_in_unit_interval() -> None:
-        """Test that randomly sampled reflectivities lie in [0, 1]."""
-        bs = generate_beam_splitter_matrix(chip_size=4, ideal_bs=False, rng=np.random.default_rng(0))
-        assert np.all(bs >= 0.0)
-        assert np.all(bs <= 1.0)
 
 
 class TestDetermineRoutingFidelities:

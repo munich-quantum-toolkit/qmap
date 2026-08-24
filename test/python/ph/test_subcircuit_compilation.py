@@ -24,6 +24,8 @@ regressions while tolerating minor numerical variation across runs.
 
 from __future__ import annotations
 
+import pathlib
+import sys
 from dataclasses import dataclass, field
 from typing import cast
 
@@ -33,8 +35,13 @@ import pytest
 pytest.importorskip("perceval")
 torch = pytest.importorskip("torch")
 
+# generate_beam_splitter_matrix is the synthetic hardware model in eval/ph/
+# (paper-reproduction code, not part of the installable package).
+sys.path.insert(0, str(pathlib.Path(__file__).parents[3] / "eval" / "ph"))
+
+from hardware_model import generate_beam_splitter_matrix
+
 from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
-from mqt.qmap.ph.graph import generate_beam_splitter_matrix
 from mqt.qmap.ph.subcircuit_compilation import (
     CompilationResult,
     OptimizationConfig,
