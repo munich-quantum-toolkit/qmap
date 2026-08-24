@@ -7,7 +7,7 @@
 # Licensed under the MIT License
 
 add_subdirectory(computation)
-# The QDMI device configuration must be available before the FoMaC layer that builds on it.
+# The QDMI device configuration must be available before the client layer that builds on it.
 add_subdirectory(qdmi)
 add_subdirectory(fomac)
 add_subdirectory(nalac)

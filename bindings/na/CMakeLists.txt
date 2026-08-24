@@ -18,7 +18,7 @@ add_mqt_python_binding(
   .
   LINK_LIBS
   MQT::NASP
-  MQT::QMapNAFoMaC
+  MQT::QMapNAQDMIClient
   MQT::QMapNAZoned
   MQT::CoreQASM)
 

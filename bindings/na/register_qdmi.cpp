@@ -8,7 +8,6 @@
  * Licensed under the MIT License
  */
 
-#include "fomac/FoMaC.hpp"
 #include "na/fomac/Device.hpp"
 #include "na/qdmi/Configuration.hpp"
 
@@ -60,14 +59,14 @@ template <pyClass T> [[nodiscard]] auto repr(T c) -> std::string {
 void registerQdmi(nb::module_& m) {
   m.doc() = R"pb(Neutral-atom view of a QDMI device.)pb";
 
-  // The FoMaC device base class is registered by MQT Core. Importing the module
-  // ensures the base type is known before the derived type is bound here.
+  // The generic QDMI device base class is registered by MQT Core. Importing the
+  // module ensures the base type is known before the derived type is bound.
   nb::module_::import_("mqt.core.qdmi");
 
   const auto deviceId = registerPackagedDevice();
   m.attr("DEVICE_ID") = deviceId;
 
-  auto device = nb::class_<na::Session::Device, fomac::Device>(
+  auto device = nb::class_<na::Session::Device, na::qdmi_client::Device>(
       m, "Device", "Represents a device with a lattice of traps.");
 
   auto lattice = nb::class_<na::Device::Lattice>(
@@ -150,7 +149,7 @@ void registerQdmi(nb::module_& m) {
         return dev.getDecoherenceTimes().t2;
       },
       "The T2 time of the device.");
-  device.def("__repr__", [](const fomac::Device& dev) {
+  device.def("__repr__", [](const na::qdmi_client::Device& dev) {
     return "<Device name=\"" + dev.getName() + "\">";
   });
   device.def_static(
@@ -181,7 +180,7 @@ Returns:
         const auto driver = nb::module_::import_("mqt.core.qdmi.driver");
         const auto opened = driver.attr("open_device")(deviceId);
         auto device = na::Session::Device::tryCreateFromDevice(
-            nb::cast<fomac::Device>(opened));
+            nb::cast<na::qdmi_client::Device>(opened));
         if (!device.has_value()) {
           return {};
         }

@@ -9,13 +9,18 @@
  */
 
 /** @file Device.hpp
- * @brief Neutral-atom FoMaC device session implementation.
+ * @brief Neutral-atom QDMI device session implementation.
  */
 
 #pragma once
 
-#include "fomac/FoMaC.hpp"
 #include "na/qdmi/Configuration.hpp"
+
+#if __has_include("qdmi/Client.hpp")
+#include "qdmi/Client.hpp"
+#else
+#include "fomac/FoMaC.hpp"
+#endif
 
 // NOLINTNEXTLINE(misc-include-cleaner)
 #include <nlohmann/json.hpp>
@@ -23,19 +28,25 @@
 #include <vector>
 
 namespace na {
+#if __has_include("qdmi/Client.hpp")
+namespace qdmi_client = ::qdmi;
+#else
+namespace qdmi_client = ::fomac;
+#endif
+
 /**
- * @brief Class representing the Session library with neutral atom extensions.
- * @see fomac::Session
+ * @brief Class representing the QDMI client with neutral-atom extensions.
+ * @see qdmi_client::Session
  */
 class Session {
 public:
   /**
    * @brief Class representing a quantum device with neutral atom extensions.
-   * @see fomac::Session::Device
+   * @see qdmi_client::Device
    * @note Since it inherits from @ref na::Device, Device objects can be
    * converted to `nlohmann::json` objects.
    */
-  class Device : public fomac::Device, na::Device {
+  class Device : public qdmi_client::Device, na::Device {
 
     /**
      * @brief Initializes the name from the underlying QDMI device.
@@ -83,14 +94,15 @@ public:
     auto initOperationsFromDevice() -> bool;
 
     /**
-     * @brief Constructs a Device object from a fomac::Session::Device object.
-     * @param device The fomac::Session::Device object to wrap.
+     * @brief Constructs a Device object from a qdmi_client::Session::Device
+     * object.
+     * @param device The qdmi_client::Session::Device object to wrap.
      * @note The constructor does not initialize the additional fields of this
      * class. For their initialization, the corresponding `init*FromDevice`
      * methods must be called, see @ref tryCreateFromDevice.
      */
-    explicit Device(const fomac::Device& device)
-        : fomac::Device(device), na::Device() {};
+    explicit Device(const qdmi_client::Device& device)
+        : qdmi_client::Device(device), na::Device() {};
 
   public:
     /// @returns the length unit of the device.
@@ -114,17 +126,18 @@ public:
     }
 
     /**
-     * @brief Try to create a Device object from a fomac::Session::Device
+     * @brief Try to create a Device object from a qdmi_client::Session::Device
      * object.
      * @details This method attempts to create a Device object by initializing
-     * all necessary fields from the provided fomac::Session::Device object. If
-     * any required information is missing or invalid, the method returns
-     * `std::nullopt`.
-     * @param device is the fomac::Session::Device object to wrap.
+     * all necessary fields from the provided qdmi_client::Session::Device
+     * object. If any required information is missing or invalid, the method
+     * returns `std::nullopt`.
+     * @param device is the qdmi_client::Session::Device object to wrap.
      * @return An optional containing the instantiated device if compatible,
      * std::nullopt otherwise.
      */
-    [[nodiscard]] static auto tryCreateFromDevice(const fomac::Device& device)
+    [[nodiscard]] static auto
+    tryCreateFromDevice(const qdmi_client::Device& device)
         -> std::optional<Device> {
       Device d(device);
       // The sequence of the following method calls does not matter.
