@@ -16,8 +16,8 @@
 
 #include "mqt_qmap_na_qdmi/device.h"
 #include "na/qdmi/Configuration.hpp"
-#include "na/qdmi/DeviceConfiguration.hpp"
 #include "qdmi/common/Common.hpp"
+#include "qdmi/common/DeviceConfiguration.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -77,7 +77,7 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
     return QDMI_ERROR_BADSTATE;
   }
   int loadStatus = QDMI_SUCCESS;
-  const auto loaded = na::qdmi::detail::loadDeviceConfiguration(
+  const auto loaded = ::qdmi::detail::loadDeviceConfiguration(
       inlineConfiguration_, fileConfiguration_, "MQT_QMAP_QDMI_NA_CONFIG_JSON",
       "MQT_QMAP_QDMI_NA_CONFIG_FILE", "mqt-qmap-qdmi-na-device.json",
       reinterpret_cast<const void*>(&MQT_QMAP_NA_QDMI_device_initialize),
@@ -239,7 +239,7 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
   if (status_ != Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  return na::qdmi::detail::setDeviceConfigurationParameter(
+  return ::qdmi::detail::setDeviceConfigurationParameter(
       param, size, value, inlineConfiguration_, fileConfiguration_);
 }
 auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::createDeviceJob(

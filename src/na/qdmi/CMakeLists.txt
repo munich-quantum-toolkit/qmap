@@ -9,10 +9,9 @@
 set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-qdmi-device-config)
 
 if(NOT TARGET ${TARGET_NAME})
-  file(GLOB HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/Configuration.hpp
-       ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/DeviceConfiguration.hpp)
+  file(GLOB HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/Configuration.hpp)
 
-  add_library(${TARGET_NAME} ${HEADERS} Configuration.cpp DeviceConfiguration.cpp)
+  add_library(${TARGET_NAME} ${HEADERS} Configuration.cpp)
 
   target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
