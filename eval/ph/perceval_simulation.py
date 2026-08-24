@@ -21,9 +21,9 @@ if TYPE_CHECKING:
 
 # Perceval simulation backend used throughout the pipeline. The lossy chip
 # simulation (simulate_with_loss) and the ideal ground-truth reference
-# (subcircuit_compilation._compute_ideal_distribution) must use the same
-# backend, so any TVD difference between them reflects real physical loss
-# rather than a backend-specific numerical discrepancy.
+# (evaluation._compute_ideal_distribution) must use the same backend, so any
+# TVD difference between them reflects real physical loss rather than a
+# backend-specific numerical discrepancy.
 SIMULATION_BACKEND = "SLOS"
 
 

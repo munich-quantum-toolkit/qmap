@@ -22,15 +22,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 import torch
+from baseline import embed_target_unitary_into_chip
+from evaluation import evaluate_subcircuit
 from hardware_model import generate_beam_splitter_matrix
+from random_unitary import get_haar_random_unitary
 
-from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
-from mqt.qmap.ph.subcircuit_compilation import (
-    OptimizationConfig,
-    compile_subcircuit,
-    evaluate_subcircuit,
-)
-from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
+from mqt.qmap.ph.subcircuit_compilation import OptimizationConfig, compile_subcircuit
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

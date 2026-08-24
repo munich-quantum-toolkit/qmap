@@ -12,10 +12,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from mqt.qmap.ph.unitary_to_phase_compilation import (
-    get_haar_random_unitary,
-    optimize_unitary_subcircuit_parameters,
-)
+from mqt.qmap.ph.unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
 
 
 class TestOptimizeMinimumIterations:
@@ -35,7 +32,10 @@ class TestOptimizeMinimumIterations:
         chip_dim = 4
         # chip_dim=4: MZIs per layer [2, 1, 2, 1] -> 6 MZIs -> 12 ideal reflectivities.
         bs = torch.as_tensor([0.5] * 12, dtype=torch.float64)
-        target_unitary = get_haar_random_unitary(chip_dim, torch.Generator().manual_seed(1), dtype=torch.complex128)
+        # A generic, reproducible unitary target: the Q factor of a seeded complex
+        # Gaussian is unitary, which is all the optimizer needs for this guard test.
+        z = torch.randn(chip_dim, chip_dim, generator=torch.Generator().manual_seed(1), dtype=torch.complex128)
+        target_unitary, _ = torch.linalg.qr(z)
 
         result = optimize_unitary_subcircuit_parameters(
             target_unitary=target_unitary,

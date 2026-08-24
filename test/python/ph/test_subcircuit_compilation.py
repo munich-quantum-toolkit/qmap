@@ -35,21 +35,19 @@ import pytest
 pytest.importorskip("perceval")
 torch = pytest.importorskip("torch")
 
-# generate_beam_splitter_matrix is the synthetic hardware model in eval/ph/
-# (paper-reproduction code, not part of the installable package).
+# The Perceval-based evaluation, the baseline, the synthetic hardware model, and
+# Haar-random unitary generation live in eval/ph/ (paper-reproduction code, not
+# part of the installable package). Put eval/ph on the path so they import by
+# bare name. This whole file is evaluation-flavored and relocates to
+# eval/ph/tests/ in Milestone 4.
 sys.path.insert(0, str(pathlib.Path(__file__).parents[3] / "eval" / "ph"))
 
+from baseline import embed_target_unitary_into_chip
+from evaluation import RunResult, evaluate_subcircuit
 from hardware_model import generate_beam_splitter_matrix
+from random_unitary import get_haar_random_unitary
 
-from mqt.qmap.ph.baseline import embed_target_unitary_into_chip
-from mqt.qmap.ph.subcircuit_compilation import (
-    CompilationResult,
-    OptimizationConfig,
-    RunResult,
-    compile_subcircuit,
-    evaluate_subcircuit,
-)
-from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
+from mqt.qmap.ph.subcircuit_compilation import CompilationResult, OptimizationConfig, compile_subcircuit
 
 _PERF_KEYS = {"compensated_weight_sum", "mapped_distribution", "coincidence_rate", "tvd"}
 

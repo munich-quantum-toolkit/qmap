@@ -22,33 +22,6 @@ logger = logging.getLogger(__name__)
 TWO_PI = 2 * torch.pi
 
 
-def get_haar_random_unitary(
-    num_modes: int,
-    generator: torch.Generator | None = None,
-    dtype: torch.dtype = torch.complex128,
-) -> torch.Tensor:
-    """Generate a Haar-random unitary matrix.
-
-    Uses the QR decomposition method: draw a complex Gaussian matrix, QR-
-    decompose it, and correct the phases of the diagonal of R to ensure
-    uniformity over the Haar measure.
-
-    Args:
-        num_modes: Dimension of the unitary matrix.
-        generator: Optional :class:`torch.Generator` for reproducible results.
-        dtype: Complex dtype of the output tensor.
-
-    Returns:
-        Complex tensor of shape ``(num_modes, num_modes)`` representing a
-        Haar-random unitary.
-    """
-    z = torch.randn(num_modes, num_modes, generator=generator, dtype=dtype)
-    q, r = torch.linalg.qr(z)
-    r_diag = torch.diagonal(r)
-    lambda_diag = r_diag / torch.abs(r_diag)
-    return q * lambda_diag.unsqueeze(0)
-
-
 def unitary_individual_phase_shifter(
     num_modes: int,
     mode: int,

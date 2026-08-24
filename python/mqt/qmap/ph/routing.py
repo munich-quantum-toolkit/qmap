@@ -193,8 +193,8 @@ def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
         chip_dim: Total number of spatial modes on the chip.
 
     Returns:
-        A list of length ``chip_dim`` suitable for use as a
-        :class:`perceval.BasicState`.
+        A binary occupancy list of length ``chip_dim`` - ``1`` on each injected
+        mode and ``0`` elsewhere.
     """
     converted = [0] * chip_dim
     for port in input_ports:
