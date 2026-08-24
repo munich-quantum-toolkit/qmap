@@ -32,16 +32,8 @@ if(TARGET MQT::QMapNAQDMIDeviceConfig AND TARGET MQT::QMapNAQDMIDevice)
     PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}"
             NA_DEVICE_JSON="${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json")
 
-  # On Windows, copy the provider and its runtime assets beside the test executable. The device
-  # reads its bundled description from beside the copied module, so the description follows it.
+  # On Windows, copy the provider and its runtime assets beside the test executable.
   if(WIN32)
     mqt_copy_qdmi_runtime(${TARGET_NAME} MQT::QMapNAQDMIDevice)
-    add_custom_command(
-      TARGET ${TARGET_NAME}
-      POST_BUILD
-      COMMAND
-        ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json"
-        "$<TARGET_FILE_DIR:${TARGET_NAME}>/mqt-qmap-qdmi-na-device.json")
   endif()
 endif()

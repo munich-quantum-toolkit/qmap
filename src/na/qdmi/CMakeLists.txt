@@ -72,17 +72,16 @@ if(NOT TARGET ${TARGET_NAME})
   endif()
   target_compile_definitions(${TARGET_NAME} PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}")
 
-  mqt_configure_qdmi_device(${TARGET_NAME} ID mqt.qmap.na.default PREFIX ${QDMI_PREFIX})
-
-  # The device reads its bundled description from beside the shared module. MQT Core's helper only
-  # learned to copy runtime files after v3.9.0, so place the file here.
-  add_custom_command(
-    TARGET ${TARGET_NAME}
-    POST_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy_if_different
-      "${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json"
-      "$<TARGET_FILE_DIR:${TARGET_NAME}>/mqt-qmap-qdmi-na-device.json")
+  # The device reads its bundled description from beside the shared module. MQT Core v3.9.0 copies
+  # runtime files into the build tree and exposes them to `mqt_copy_qdmi_runtime` consumers.
+  mqt_configure_qdmi_device(
+    ${TARGET_NAME}
+    ID
+    mqt.qmap.na.default
+    PREFIX
+    ${QDMI_PREFIX}
+    RUNTIME_FILES
+    "${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json")
 
   add_library(MQT::QMapNAQDMIDevice ALIAS ${TARGET_NAME})
 
