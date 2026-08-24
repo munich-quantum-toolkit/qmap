@@ -94,7 +94,7 @@ auto calculateExtentFromSites(
  * @return the hash value
  */
 struct DeviceVectorHash {
-  size_t operator()(const Device::Vector& v) const {
+  auto operator()(const Device::Vector& v) const -> size_t {
     return qc::combineHash(std::hash<int64_t>{}(v.x),
                            std::hash<int64_t>{}(v.y));
   }

@@ -33,14 +33,15 @@
 
 namespace testing {
 namespace {
-std::string stringConcat5(const std::string& a, const std::string& b,
-                          const std::string& c, const std::string& d,
-                          const std::string& e) {
+auto stringConcat5(const std::string& a, const std::string& b,
+                   const std::string& c, const std::string& d,
+                   const std::string& e) -> std::string {
   std::stringstream ss;
   ss << a << b << c << d << e;
   return ss.str();
 }
 // NOLINTBEGIN(readability-identifier-naming,cppcoreguidelines-avoid-const-or-ref-data-members)
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 MATCHER_P2(IsBetween, a, b,
            stringConcat5(negation ? "isn't" : "is", " between ",
                          PrintToString(a), " and ", PrintToString(b))) {
@@ -55,7 +56,7 @@ namespace {
 /// Hash function for a pair
 struct PairHash {
   template <class T, class U>
-  std::size_t operator()(const std::pair<T, U>& p) const noexcept {
+  auto operator()(const std::pair<T, U>& p) const noexcept -> std::size_t {
     // Use the hash of the first and second element of the pair
     return std::hash<T>{}(p.first) ^ std::hash<U>{}(p.second);
   }
@@ -63,7 +64,8 @@ struct PairHash {
 
 using mqt::test::ScopedEnvironmentVariable;
 
-[[nodiscard]] std::string queryName(MQT_QMAP_NA_QDMI_Device_Session session) {
+[[nodiscard]] auto queryName(MQT_QMAP_NA_QDMI_Device_Session session)
+    -> std::string {
   size_t size = 0;
   if (MQT_QMAP_NA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_NAME, 0, nullptr, &size) !=
@@ -80,8 +82,8 @@ using mqt::test::ScopedEnvironmentVariable;
   return name;
 }
 
-[[nodiscard]] std::vector<MQT_QMAP_NA_QDMI_Site>
-querySites(MQT_QMAP_NA_QDMI_Device_Session session) {
+[[nodiscard]] auto querySites(MQT_QMAP_NA_QDMI_Device_Session session)
+    -> std::vector<MQT_QMAP_NA_QDMI_Site> {
   size_t size = 0;
   if (MQT_QMAP_NA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_SITES, 0, nullptr, &size) !=
@@ -100,8 +102,8 @@ querySites(MQT_QMAP_NA_QDMI_Device_Session session) {
   }
   return sites;
 }
-[[nodiscard]] std::vector<MQT_QMAP_NA_QDMI_Operation>
-queryOperations(MQT_QMAP_NA_QDMI_Device_Session session) {
+[[nodiscard]] auto queryOperations(MQT_QMAP_NA_QDMI_Device_Session session)
+    -> std::vector<MQT_QMAP_NA_QDMI_Operation> {
   size_t size = 0;
   if (MQT_QMAP_NA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_OPERATIONS, 0, nullptr, &size) !=

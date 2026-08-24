@@ -39,22 +39,22 @@
 #include <vector>
 
 namespace {
-[[nodiscard]] bool inside(const na::Device::Region& region, const int64_t x,
-                          const int64_t y) {
+[[nodiscard]] auto inside(const na::Device::Region& region, const int64_t x,
+                          const int64_t y) -> bool {
   return region.origin.x <= x &&
          x <= region.origin.x + static_cast<int64_t>(region.size.width) &&
          region.origin.y <= y &&
          y <= region.origin.y + static_cast<int64_t>(region.size.height);
 }
 
-[[nodiscard]] uint64_t magnitude(const int64_t value) {
+[[nodiscard]] auto magnitude(const int64_t value) -> uint64_t {
   return value >= 0
              ? static_cast<uint64_t>(value)
              : static_cast<uint64_t>(-(value + 1)) + static_cast<uint64_t>(1);
 }
 
-[[nodiscard]] uint64_t coordinateDistance(const int64_t first,
-                                          const int64_t second) {
+[[nodiscard]] auto coordinateDistance(const int64_t first, const int64_t second)
+    -> uint64_t {
   if ((first < 0) == (second < 0)) {
     return first >= second ? static_cast<uint64_t>(first - second)
                            : static_cast<uint64_t>(second - first);
@@ -62,9 +62,9 @@ namespace {
   return magnitude(first) + magnitude(second);
 }
 
-[[nodiscard]] bool withinRadius(const int64_t firstX, const int64_t firstY,
+[[nodiscard]] auto withinRadius(const int64_t firstX, const int64_t firstY,
                                 const int64_t secondX, const int64_t secondY,
-                                const uint64_t radius) {
+                                const uint64_t radius) -> bool {
   const auto deltaX = coordinateDistance(firstX, secondX);
   const auto deltaY = coordinateDistance(firstY, secondY);
   return std::hypot(static_cast<double>(deltaX), static_cast<double>(deltaY)) <=
@@ -72,7 +72,7 @@ namespace {
 }
 } // namespace
 
-int MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() {
+auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
   if (status_ != Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
@@ -229,8 +229,9 @@ int MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() {
     return QDMI_ERROR_FATAL;
   }
 }
-int MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
-    QDMI_Device_Session_Parameter param, const size_t size, const void* value) {
+auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
+    QDMI_Device_Session_Parameter param, const size_t size, const void* value)
+    -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(param, QDMI_DEVICE_SESSION_PARAMETER)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -241,9 +242,9 @@ int MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
   return na::qdmi::detail::setDeviceConfigurationParameter(
       param, size, value, inlineConfiguration_, fileConfiguration_);
 }
-int MQT_QMAP_NA_QDMI_Device_Session_impl_d::createDeviceJob(
+auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::createDeviceJob(
     // NOLINTNEXTLINE(readability-non-const-parameter)
-    MQT_QMAP_NA_QDMI_Device_Job* job) {
+    MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
@@ -260,9 +261,9 @@ void MQT_QMAP_NA_QDMI_Device_Session_impl_d::freeDeviceJob(
     jobs_.erase(job);
   }
 }
-int MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryDeviceProperty(
+auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryDeviceProperty(
     const QDMI_Device_Property prop, const size_t size, void* value,
-    size_t* sizeRet) const {
+    size_t* sizeRet) const -> int {
   if (status_ != Status::INITIALIZED) {
     return QDMI_ERROR_BADSTATE;
   }
@@ -311,9 +312,9 @@ int MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryDeviceProperty(
   }
   return QDMI_ERROR_NOTSUPPORTED;
 }
-int MQT_QMAP_NA_QDMI_Device_Session_impl_d::querySiteProperty(
+auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::querySiteProperty(
     MQT_QMAP_NA_QDMI_Site site, const QDMI_Site_Property prop,
-    const size_t size, void* value, size_t* sizeRet) const {
+    const size_t size, void* value, size_t* sizeRet) const -> int {
   if (site == nullptr || std::ranges::find(sites_, site) == sites_.end() ||
       !site->ownedBy(this)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -323,11 +324,11 @@ int MQT_QMAP_NA_QDMI_Device_Session_impl_d::querySiteProperty(
   }
   return site->queryProperty(prop, size, value, sizeRet);
 }
-int MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryOperationProperty(
+auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryOperationProperty(
     MQT_QMAP_NA_QDMI_Operation operation, const size_t numSites,
     const MQT_QMAP_NA_QDMI_Site* sites, const size_t numParams,
     const double* params, const QDMI_Operation_Property prop, const size_t size,
-    void* value, size_t* sizeRet) const {
+    void* value, size_t* sizeRet) const -> int {
   if (operation == nullptr ||
       std::ranges::find(operations_, operation) == operations_.end() ||
       !operation->ownedBy(this)) {
@@ -351,9 +352,9 @@ void MQT_QMAP_NA_QDMI_Device_Job_impl_d::free() {
   session_->freeDeviceJob(this);
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::setParameter(
-    const QDMI_Device_Job_Parameter param, const size_t size,
-    const void* value) {
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::setParameter(
+    const QDMI_Device_Job_Parameter param, const size_t size, const void* value)
+    -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(param, QDMI_DEVICE_JOB_PARAMETER)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -361,10 +362,10 @@ int MQT_QMAP_NA_QDMI_Device_Job_impl_d::setParameter(
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::queryProperty(
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::queryProperty(
     // NOLINTNEXTLINE(readability-non-const-parameter)
     const QDMI_Device_Job_Property prop, const size_t size, void* value,
-    [[maybe_unused]] size_t* sizeRet) {
+    [[maybe_unused]] size_t* sizeRet) -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(prop, QDMI_DEVICE_JOB_PROPERTY)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -372,30 +373,30 @@ int MQT_QMAP_NA_QDMI_Device_Job_impl_d::queryProperty(
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::submit() {
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::submit() -> int {
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::cancel() {
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::cancel() -> int {
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-non-const-parameter,readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::check(QDMI_Job_Status* status) {
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::check(QDMI_Job_Status* status) -> int {
   if (status == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::wait(
-    [[maybe_unused]] const size_t timeout) {
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::wait(
+    [[maybe_unused]] const size_t timeout) -> int {
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-int MQT_QMAP_NA_QDMI_Device_Job_impl_d::getResults(
+auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::getResults(
     QDMI_Job_Result result,
     // NOLINTNEXTLINE(readability-non-const-parameter)
-    const size_t size, void* data, [[maybe_unused]] size_t* sizeRet) {
+    const size_t size, void* data, [[maybe_unused]] size_t* sizeRet) -> int {
   if ((data != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(result, QDMI_JOB_RESULT)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -414,9 +415,9 @@ MQT_QMAP_NA_QDMI_Site_impl_d::MQT_QMAP_NA_QDMI_Site_impl_d(
     const uint64_t height, const uint64_t t1, const uint64_t t2)
     : owner_(owner), id_(id), x_(x), y_(y), xExtent_(width), yExtent_(height),
       decoherenceTimes_{.t1_ = t1, .t2_ = t2}, isZone(true) {}
-int MQT_QMAP_NA_QDMI_Site_impl_d::queryProperty(const QDMI_Site_Property prop,
-                                                const size_t size, void* value,
-                                                size_t* sizeRet) const {
+auto MQT_QMAP_NA_QDMI_Site_impl_d::queryProperty(const QDMI_Site_Property prop,
+                                                 const size_t size, void* value,
+                                                 size_t* sizeRet) const -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(prop, QDMI_SITE_PROPERTY)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -527,11 +528,11 @@ void MQT_QMAP_NA_QDMI_Operation_impl_d::sortSites() {
       },
       supportedSites_);
 }
-int MQT_QMAP_NA_QDMI_Operation_impl_d::queryProperty(
+auto MQT_QMAP_NA_QDMI_Operation_impl_d::queryProperty(
     const size_t numSites, const MQT_QMAP_NA_QDMI_Site* sites,
     const size_t numParams, const double* params,
     const QDMI_Operation_Property prop, const size_t size, void* value,
-    size_t* sizeRet) const {
+    size_t* sizeRet) const -> int {
   if ((sites != nullptr && numSites == 0) ||
       (params != nullptr && numParams == 0) ||
       (value != nullptr && size == 0) ||
@@ -660,12 +661,12 @@ int MQT_QMAP_NA_QDMI_Operation_impl_d::queryProperty(
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
-int MQT_QMAP_NA_QDMI_device_initialize() { return QDMI_SUCCESS; }
+auto MQT_QMAP_NA_QDMI_device_initialize() -> int { return QDMI_SUCCESS; }
 
-int MQT_QMAP_NA_QDMI_device_finalize() { return QDMI_SUCCESS; }
+auto MQT_QMAP_NA_QDMI_device_finalize() -> int { return QDMI_SUCCESS; }
 
-int MQT_QMAP_NA_QDMI_device_session_alloc(
-    MQT_QMAP_NA_QDMI_Device_Session* session) {
+auto MQT_QMAP_NA_QDMI_device_session_alloc(
+    MQT_QMAP_NA_QDMI_Device_Session* session) -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
@@ -675,8 +676,8 @@ int MQT_QMAP_NA_QDMI_device_session_alloc(
   return *session == nullptr ? QDMI_ERROR_OUTOFMEM : QDMI_SUCCESS;
 }
 
-int MQT_QMAP_NA_QDMI_device_session_init(
-    MQT_QMAP_NA_QDMI_Device_Session session) {
+auto MQT_QMAP_NA_QDMI_device_session_init(
+    MQT_QMAP_NA_QDMI_Device_Session session) -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
@@ -689,27 +690,29 @@ void MQT_QMAP_NA_QDMI_device_session_free(
   delete session;
 }
 
-int MQT_QMAP_NA_QDMI_device_session_set_parameter(
+auto MQT_QMAP_NA_QDMI_device_session_set_parameter(
     MQT_QMAP_NA_QDMI_Device_Session session,
-    QDMI_Device_Session_Parameter param, const size_t size, const void* value) {
+    QDMI_Device_Session_Parameter param, const size_t size, const void* value)
+    -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return session->setParameter(param, size, value);
 }
 
-int MQT_QMAP_NA_QDMI_device_session_create_device_job(
-    MQT_QMAP_NA_QDMI_Device_Session session, MQT_QMAP_NA_QDMI_Device_Job* job) {
+auto MQT_QMAP_NA_QDMI_device_session_create_device_job(
+    MQT_QMAP_NA_QDMI_Device_Session session, MQT_QMAP_NA_QDMI_Device_Job* job)
+    -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return session->createDeviceJob(job);
 }
 
-int MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+auto MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
     [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Session session,
     [[maybe_unused]] const char* jobId,
-    [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Job* job) {
+    [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
@@ -719,25 +722,26 @@ void MQT_QMAP_NA_QDMI_device_job_free(MQT_QMAP_NA_QDMI_Device_Job job) {
   }
 }
 
-int MQT_QMAP_NA_QDMI_device_job_set_parameter(
+auto MQT_QMAP_NA_QDMI_device_job_set_parameter(
     MQT_QMAP_NA_QDMI_Device_Job job, const QDMI_Device_Job_Parameter param,
-    const size_t size, const void* value) {
+    const size_t size, const void* value) -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return job->setParameter(param, size, value);
 }
 
-int MQT_QMAP_NA_QDMI_device_job_query_property(
+auto MQT_QMAP_NA_QDMI_device_job_query_property(
     MQT_QMAP_NA_QDMI_Device_Job job, const QDMI_Device_Job_Property prop,
-    const size_t size, void* value, size_t* sizeRet) {
+    const size_t size, void* value, size_t* sizeRet) -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return job->queryProperty(prop, size, value, sizeRet);
 }
 
-int MQT_QMAP_NA_QDMI_device_job_submit(MQT_QMAP_NA_QDMI_Device_Job job) {
+auto MQT_QMAP_NA_QDMI_device_job_submit(MQT_QMAP_NA_QDMI_Device_Job job)
+    -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
@@ -745,64 +749,65 @@ int MQT_QMAP_NA_QDMI_device_job_submit(MQT_QMAP_NA_QDMI_Device_Job job) {
   return job->submit();
 }
 
-int MQT_QMAP_NA_QDMI_device_job_cancel(MQT_QMAP_NA_QDMI_Device_Job job) {
+auto MQT_QMAP_NA_QDMI_device_job_cancel(MQT_QMAP_NA_QDMI_Device_Job job)
+    -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return job->cancel();
 }
 
-int MQT_QMAP_NA_QDMI_device_job_check(MQT_QMAP_NA_QDMI_Device_Job job,
-                                      QDMI_Job_Status* status) {
+auto MQT_QMAP_NA_QDMI_device_job_check(MQT_QMAP_NA_QDMI_Device_Job job,
+                                       QDMI_Job_Status* status) -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return job->check(status);
 }
 
-int MQT_QMAP_NA_QDMI_device_job_wait(MQT_QMAP_NA_QDMI_Device_Job job,
-                                     const size_t timeout) {
+auto MQT_QMAP_NA_QDMI_device_job_wait(MQT_QMAP_NA_QDMI_Device_Job job,
+                                      const size_t timeout) -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return job->wait(timeout);
 }
 
-int MQT_QMAP_NA_QDMI_device_job_get_results(MQT_QMAP_NA_QDMI_Device_Job job,
-                                            QDMI_Job_Result result,
-                                            const size_t size, void* data,
-                                            size_t* sizeRet) {
+auto MQT_QMAP_NA_QDMI_device_job_get_results(MQT_QMAP_NA_QDMI_Device_Job job,
+                                             QDMI_Job_Result result,
+                                             const size_t size, void* data,
+                                             size_t* sizeRet) -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return job->getResults(result, size, data, sizeRet);
 }
 
-int MQT_QMAP_NA_QDMI_device_session_query_device_property(
+auto MQT_QMAP_NA_QDMI_device_session_query_device_property(
     MQT_QMAP_NA_QDMI_Device_Session session, const QDMI_Device_Property prop,
-    const size_t size, void* value, size_t* sizeRet) {
+    const size_t size, void* value, size_t* sizeRet) -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return session->queryDeviceProperty(prop, size, value, sizeRet);
 }
 
-int MQT_QMAP_NA_QDMI_device_session_query_site_property(
+auto MQT_QMAP_NA_QDMI_device_session_query_site_property(
     MQT_QMAP_NA_QDMI_Device_Session session, MQT_QMAP_NA_QDMI_Site site,
     const QDMI_Site_Property prop, const size_t size, void* value,
-    size_t* sizeRet) {
+    size_t* sizeRet) -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   return session->querySiteProperty(site, prop, size, value, sizeRet);
 }
 
-int MQT_QMAP_NA_QDMI_device_session_query_operation_property(
+auto MQT_QMAP_NA_QDMI_device_session_query_operation_property(
     MQT_QMAP_NA_QDMI_Device_Session session,
     MQT_QMAP_NA_QDMI_Operation operation, const size_t numSites,
     const MQT_QMAP_NA_QDMI_Site* sites, const size_t numParams,
     const double* params, const QDMI_Operation_Property prop, const size_t size,
-    void* value, size_t* sizeRet) {
+    void* value, size_t* sizeRet) -> int {
   if (session == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }

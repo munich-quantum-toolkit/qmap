@@ -48,10 +48,11 @@ public:
   }
 
   ScopedEnvironmentVariable(const ScopedEnvironmentVariable&) = delete;
-  ScopedEnvironmentVariable&
-  operator=(const ScopedEnvironmentVariable&) = delete;
+  auto operator=(const ScopedEnvironmentVariable&)
+      -> ScopedEnvironmentVariable& = delete;
   ScopedEnvironmentVariable(ScopedEnvironmentVariable&&) = delete;
-  ScopedEnvironmentVariable& operator=(ScopedEnvironmentVariable&&) = delete;
+  auto operator=(ScopedEnvironmentVariable&&)
+      -> ScopedEnvironmentVariable& = delete;
 
 private:
   void set(const std::string& value) const {
@@ -60,7 +61,8 @@ private:
     }
   }
 
-  [[nodiscard]] bool setWithoutChecking(const std::string& value) const {
+  [[nodiscard]] auto setWithoutChecking(const std::string& value) const
+      -> bool {
 #ifdef _WIN32
     return _putenv_s(name_.c_str(), value.c_str()) == 0;
 #else

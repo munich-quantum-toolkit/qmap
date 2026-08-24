@@ -263,8 +263,8 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
   requireString(json.at("durationUnit"), "unit", source, "$/durationUnit");
 }
 
-[[nodiscard]] Device parseAndValidate(const Json& json,
-                                      const std::string_view source) {
+[[nodiscard]] auto parseAndValidate(const Json& json,
+                                    const std::string_view source) -> Device {
   if (!json.is_object()) {
     validationError(source, "$", "must be an object");
   }
@@ -307,18 +307,18 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
                     "requires a non-empty name, positive numQubits, and "
                     "positive minAtomDistance");
   }
-  const auto validUnit = [](const Device::Unit& unit) {
+  const auto validUnit = [](const Device::Unit& unit) -> bool {
     return std::isfinite(unit.scaleFactor) && unit.scaleFactor > 0.;
   };
   if (!validUnit(device.lengthUnit) || !validUnit(device.durationUnit)) {
     validationError(source, "$/*Unit",
                     "scaleFactor must be positive and finite");
   }
-  const auto validFidelity = [](const double fidelity) {
+  const auto validFidelity = [](const double fidelity) -> bool {
     return std::isfinite(fidelity) && fidelity >= 0. && fidelity <= 1.;
   };
   const auto validateOperations = [&](const auto& operations,
-                                      const std::string_view pointer) {
+                                      const std::string_view pointer) -> void {
     std::set<std::string> names;
     for (const auto& operation : operations) {
       if (operation.name.empty() || operation.duration == 0 ||
@@ -426,12 +426,13 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
  * @returns A pair containing the solution (i, j).
  * @throws std::runtime_error if the system has no unique solution.
  */
-[[noreturn]] void arithmeticOverflow() {
+[[noreturn]] auto arithmeticOverflow() -> void {
   throw std::overflow_error(
       "lattice arithmetic exceeds the signed 64-bit range");
 }
 
-[[nodiscard]] int64_t checkedAdd(const int64_t left, const int64_t right) {
+[[nodiscard]] auto checkedAdd(const int64_t left, const int64_t right)
+    -> int64_t {
   if ((right > 0 && left > std::numeric_limits<int64_t>::max() - right) ||
       (right < 0 && left < std::numeric_limits<int64_t>::min() - right)) {
     arithmeticOverflow();
@@ -439,7 +440,8 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
   return left + right;
 }
 
-[[nodiscard]] int64_t checkedSubtract(const int64_t left, const int64_t right) {
+[[nodiscard]] auto checkedSubtract(const int64_t left, const int64_t right)
+    -> int64_t {
   if ((right > 0 && left < std::numeric_limits<int64_t>::min() + right) ||
       (right < 0 && left > std::numeric_limits<int64_t>::max() + right)) {
     arithmeticOverflow();
@@ -447,7 +449,8 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
   return left - right;
 }
 
-[[nodiscard]] int64_t checkedMultiply(const int64_t left, const int64_t right) {
+[[nodiscard]] auto checkedMultiply(const int64_t left, const int64_t right)
+    -> int64_t {
   if (left == 0 || right == 0) {
     return 0;
   }
@@ -472,15 +475,16 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
 // Preserve the extended precision offered by platforms where it is available.
 using LatticeFloat = long double; // NOLINT(google-runtime-float)
 
-[[nodiscard]] std::pair<double, double>
-solve2DLinearEquation(const int64_t x1, const int64_t x2, const int64_t y1,
-                      const int64_t y2, const int64_t x0, const int64_t y0) {
+[[nodiscard]] auto solve2DLinearEquation(const int64_t x1, const int64_t x2,
+                                         const int64_t y1, const int64_t y2,
+                                         const int64_t x0, const int64_t y0)
+    -> std::pair<double, double> {
   const auto asLatticeFloat = [](const int64_t value) {
     return static_cast<LatticeFloat>(value);
   };
   const auto det = (asLatticeFloat(x1) * asLatticeFloat(y2)) -
                    (asLatticeFloat(x2) * asLatticeFloat(y1));
-  if (constexpr auto epsilon = 1e-10; std::abs(det) < epsilon) {
+  if (constexpr auto epsilon = 1e-10L; std::abs(det) < epsilon) {
     throw std::runtime_error("The system of equations has no unique solution.");
   }
   const auto detX = (asLatticeFloat(x0) * asLatticeFloat(y2)) -
@@ -490,7 +494,7 @@ solve2DLinearEquation(const int64_t x1, const int64_t x2, const int64_t y1,
   return {static_cast<double>(detX / det), static_cast<double>(detY / det)};
 }
 
-[[nodiscard]] int64_t floorToInt64(const double value) {
+[[nodiscard]] auto floorToInt64(const double value) -> int64_t {
   const auto floored = std::floor(value);
   constexpr auto minInt64 = -0x1p63;
   constexpr auto maxInt64Exclusive = 0x1p63;
@@ -501,11 +505,11 @@ solve2DLinearEquation(const int64_t x1, const int64_t x2, const int64_t y1,
   return static_cast<int64_t>(floored);
 }
 
-[[nodiscard]] int64_t coordinate(const int64_t origin, const int64_t offset,
-                                 const int64_t firstIndex,
-                                 const int64_t firstVector,
-                                 const int64_t secondIndex,
-                                 const int64_t secondVector) {
+[[nodiscard]] auto coordinate(const int64_t origin, const int64_t offset,
+                              const int64_t firstIndex,
+                              const int64_t firstVector,
+                              const int64_t secondIndex,
+                              const int64_t secondVector) -> int64_t {
   return checkedAdd(checkedAdd(origin, offset),
                     checkedAdd(checkedMultiply(firstIndex, firstVector),
                                checkedMultiply(secondIndex, secondVector)));
@@ -521,9 +525,9 @@ solve2DLinearEquation(const int64_t x1, const int64_t x2, const int64_t y1,
  * @returns true if the increment was successful, false if all indices have
  * reached their limits.
  */
-[[nodiscard]] bool increment(std::vector<int64_t>& indices,
+[[nodiscard]] auto increment(std::vector<int64_t>& indices,
                              const std::vector<int64_t>& minima,
-                             const std::vector<int64_t>& limits) {
+                             const std::vector<int64_t>& limits) -> bool {
   size_t i = 0;
   for (; i < indices.size() && indices[i] == limits[i]; ++i) {
   }
@@ -539,7 +543,7 @@ solve2DLinearEquation(const int64_t x1, const int64_t x2, const int64_t y1,
 }
 } // namespace
 
-[[nodiscard]] Device readJSON(std::istream& is) {
+[[nodiscard]] auto readJSON(std::istream& is) -> Device {
   // Read the device configuration from the input stream
   nlohmann::json json;
   try {
@@ -553,7 +557,8 @@ solve2DLinearEquation(const int64_t x1, const int64_t x2, const int64_t y1,
   return parseAndValidate(json, "input");
 }
 
-Device readJSON(const std::string_view json, const std::string_view source) {
+auto readJSON(const std::string_view json, const std::string_view source)
+    -> Device {
   try {
     return parseAndValidate(Json::parse(json), source);
   } catch (const Json::parse_error& error) {
@@ -562,7 +567,7 @@ Device readJSON(const std::string_view json, const std::string_view source) {
   }
 }
 
-[[nodiscard]] Device readJSON(const std::string& path) {
+[[nodiscard]] auto readJSON(const std::string& path) -> Device {
   // Read the device configuration from a JSON file
   std::ifstream ifs(path);
   if (!ifs.good()) {
