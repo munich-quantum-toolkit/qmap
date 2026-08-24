@@ -47,6 +47,7 @@ synthesis
 na_state_prep
 na_zoned_compiler
 na_hybrid
+na_qdmi_device
 references
 CHANGELOG
 UPGRADING

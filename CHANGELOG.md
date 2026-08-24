@@ -18,6 +18,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
 
 ### Added
 
+- ✨ Move the neutral-atom QDMI provider from MQT Core to QMAP ([#1111])
+  ([**@denialhaag**])
 - 🐍 Start building CPython 3.15 wheels ([#1096]) ([**@denialhaag**])
 
 ### Changed
@@ -291,6 +293,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
 [#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106
 [#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
