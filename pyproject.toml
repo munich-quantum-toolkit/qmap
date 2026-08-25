@@ -68,8 +68,6 @@ visualization = [
 ]
 photonics = [
     "numpy>=1.26.0",
-    "perceval-quandela>=1.1.0",
-    "pandas>=2.3.3",
     "torch>=2.9.0",
 ]
 
@@ -386,8 +384,8 @@ exclude = [
 ]
 
 [[tool.ty.overrides]]
-# torch, perceval-quandela, and pandas are optional photonics deps absent from the
-# lint environment; suppress only import resolution for ph/, all other checks apply.
+# The ph compiler imports torch/numpy and the ph tests also import perceval; none
+# are in the lint environment, so suppress only import resolution for these paths.
 include = ["python/mqt/qmap/ph/**", "test/python/ph/**"]
 rules.unresolved-import = "ignore"
 
@@ -432,6 +430,12 @@ test = [
   "qiskit[qasm3-import]>=1.0.0",
   "rustworkx[all]>=0.16.0",
   "walkerlayout>=1.0.2",
+]
+evaluation = [
+  "numpy>=1.26.0",
+  "pandas>=2.3.3",
+  "perceval-quandela>=1.1.0",
+  "torch>=2.9.0",
 ]
 dev = [
   {include-group = "build"},
