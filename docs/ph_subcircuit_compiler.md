@@ -46,8 +46,8 @@ phase shifters of the chip that implement the desired target unitary and the
 routing.
 
 :::{note}
-Compiling a subcircuit with `compile_subcircuit` needs `torch`, provided by the
-optional `photonics` dependency group. Install it with:
+Compiling a subcircuit with `compile_subcircuit` needs `torch` and `numpy`,
+provided by the optional `photonics` extra. Install it with:
 
 ```console
 pip install "mqt.qmap[photonics]"

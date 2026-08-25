@@ -16,9 +16,9 @@ Typical usage::
 
     from mqt.qmap.ph.subcircuit_compilation import OptimizationConfig, compile_subcircuit
 
-Optional dependencies: the ``photonics`` extra installs ``torch``,
-``perceval-quandela``, and ``pandas``.  Install it via
-``pip install mqt.qmap[photonics]``.
+Optional dependencies: the ``photonics`` extra installs ``numpy`` and ``torch``.
+Install it via ``pip install mqt.qmap[photonics]``.  The Perceval-based paper
+evaluation lives under ``eval/ph`` and is not part of the installed package.
 """
 
 from __future__ import annotations
