@@ -11,6 +11,7 @@
 #include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomOperation.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
 
@@ -49,10 +50,11 @@ TEST(NeutralAtomOperation, Qasm) {
   const NeutralAtomOperation bridge(NeutralAtomOperationKind::Bridge,
                                     {0, 1, 2});
   std::stringstream stream;
-  const qc::QuantumRegister register_(0, 3, "q");
+  const qc::QuantumRegister quantumRegister(0, 3, "q");
   qc::QubitIndexToRegisterMap qubitMap{};
   for (qc::Qubit qubit = 0; qubit < 3; ++qubit) {
-    qubitMap.try_emplace(qubit, register_, register_.toString(qubit));
+    qubitMap.try_emplace(qubit, quantumRegister,
+                         quantumRegister.toString(qubit));
   }
 
   bridge.dumpOpenQASM(stream, qubitMap, {}, 0, false);

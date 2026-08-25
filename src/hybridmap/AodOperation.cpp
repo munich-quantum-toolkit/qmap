@@ -13,6 +13,7 @@
 #include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <algorithm>
 #include <cassert>

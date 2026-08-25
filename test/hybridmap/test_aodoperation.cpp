@@ -9,9 +9,9 @@
  */
 
 #include "hybridmap/AodOperation.hpp"
+#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
-#include "ir/operations/OpType.hpp"
 
 #include <cstdint>
 #include <gtest/gtest.h>

@@ -32,8 +32,11 @@ void canonicallyOrderLatticeVectors(nlohmann::json& device) {
 
 TEST(NaQdmiClient, FullJsonRoundTrip) {
   constexpr auto deviceId = "mqt.qmap.na.test";
-  static_cast<void>(qdmi::Driver::get().registerDeviceIfAbsent(
-      {.id = deviceId, .library = NA_DEVICE_LIBRARY, .prefix = "MQT_QMAP_NA"}));
+  static_cast<void>(
+      qdmi::Driver::get().registerDeviceIfAbsent({.id = deviceId,
+                                                  .library = NA_DEVICE_LIBRARY,
+                                                  .prefix = "MQT_QMAP_NA",
+                                                  .session = {}}));
 
   const auto genericDevice = qdmi_client::Session::openDevice(deviceId);
   const auto device = Session::Device::tryCreateFromDevice(genericDevice);

@@ -15,7 +15,6 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/operations/OpType.hpp"
 
 #include <cassert>
 #include <cmath>

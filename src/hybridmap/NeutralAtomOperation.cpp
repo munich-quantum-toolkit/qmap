@@ -10,11 +10,17 @@
 
 #include "hybridmap/NeutralAtomOperation.hpp"
 
+#include "ir/Definitions.hpp"
+#include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
-#include <typeinfo>
+#include <string_view>
 #include <utility>
 
 namespace na {
@@ -89,8 +95,9 @@ bool NeutralAtomOperation::equals(const qc::Operation& operation) const {
   if (typeid(*this) != typeid(operation)) {
     return false;
   }
-  const auto& other = static_cast<const NeutralAtomOperation&>(operation);
-  return kind == other.kind && qc::Operation::equals(operation);
+  const auto* other = dynamic_cast<const NeutralAtomOperation*>(&operation);
+  return other != nullptr && kind == other->kind &&
+         qc::Operation::equals(operation);
 }
 
 void NeutralAtomOperation::dumpOpenQASM(

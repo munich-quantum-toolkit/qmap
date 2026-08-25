@@ -322,6 +322,9 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
 }
 
 qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
+  if (op == nullptr) {
+    throw std::invalid_argument("Operation must not be null.");
+  }
   const auto* neutralAtomOperation =
       dynamic_cast<const NeutralAtomOperation*>(op);
   if (neutralAtomOperation != nullptr &&
@@ -364,6 +367,9 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
 }
 
 qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
+  if (op == nullptr) {
+    throw std::invalid_argument("Operation must not be null.");
+  }
   const auto* neutralAtomOperation =
       dynamic_cast<const NeutralAtomOperation*>(op);
   if (neutralAtomOperation != nullptr &&

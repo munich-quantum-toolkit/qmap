@@ -11,6 +11,12 @@
 #include "na/fomac/Device.hpp"
 #include "na/qdmi/Configuration.hpp"
 
+#if __has_include("qdmi/Client.hpp")
+#include "qdmi/Client.hpp"
+#else
+#include "fomac/FoMaC.hpp"
+#endif
+
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/optional.h> // NOLINT(misc-include-cleaner)
