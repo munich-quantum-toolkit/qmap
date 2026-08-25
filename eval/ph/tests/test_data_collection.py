@@ -13,19 +13,11 @@ collect_pipeline_results is kept intentionally small (1 setup, 1 unitary,
 minutes.
 """
 
-import pathlib
-import sys
-
 import pytest
 
 pd = pytest.importorskip("pandas")
 pytest.importorskip("perceval")
 torch = pytest.importorskip("torch")
-
-# data_collection.py lives in eval/ph/ (paper-reproduction code, not part of the
-# installable package).  Add that directory to sys.path so this smoke test keeps
-# exercising the full collection pipeline.
-sys.path.insert(0, str(pathlib.Path(__file__).parents[3] / "eval" / "ph"))
 
 from data_collection import Setup, build_valid_setups, collect_pipeline_results
 

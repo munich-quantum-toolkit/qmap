@@ -8,18 +8,10 @@
 
 """Tests for the photonic evaluation baseline module."""
 
-import pathlib
-import sys
-
 import numpy as np
 import pytest
 
 torch = pytest.importorskip("torch")
-
-# The baseline strategy lives in eval/ph/ (paper-reproduction code, not part of
-# the installable package). Put eval/ph on the path so it imports by bare name.
-# This file relocates to eval/ph/tests/ in Milestone 4.
-sys.path.insert(0, str(pathlib.Path(__file__).parents[3] / "eval" / "ph"))
 
 from baseline import embed_target_unitary_into_chip, get_baseline_active_cols
 

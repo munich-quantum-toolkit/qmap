@@ -24,8 +24,6 @@ regressions while tolerating minor numerical variation across runs.
 
 from __future__ import annotations
 
-import pathlib
-import sys
 from dataclasses import dataclass, field
 from typing import cast
 
@@ -34,13 +32,6 @@ import pytest
 
 pytest.importorskip("perceval")
 torch = pytest.importorskip("torch")
-
-# The Perceval-based evaluation, the baseline, the synthetic hardware model, and
-# Haar-random unitary generation live in eval/ph/ (paper-reproduction code, not
-# part of the installable package). Put eval/ph on the path so they import by
-# bare name. This whole file is evaluation-flavored and relocates to
-# eval/ph/tests/ in Milestone 4.
-sys.path.insert(0, str(pathlib.Path(__file__).parents[3] / "eval" / "ph"))
 
 from baseline import embed_target_unitary_into_chip
 from evaluation import RunResult, evaluate_subcircuit

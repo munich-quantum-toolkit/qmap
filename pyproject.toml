@@ -150,7 +150,7 @@ write_to = "python/mqt/qmap/_version.py"
 
 [tool.pytest]
 minversion = "9.0"
-testpaths = ["test/python", "eval/ph/tests"]
+testpaths = ["test/python"]
 strict = true
 addopts = [
   "-ra",
@@ -271,6 +271,7 @@ known-first-party = ["mqt.qmap"]
 "test/python/**" = ["T20", "ANN"]
 "docs/**" = ["T20"]
 "eval/**" = ["T20"]
+"eval/ph/tests/**" = ["ANN"]
 "noxfile.py" = ["T20", "TID251"]
 "*.pyi" = ["D418", "E501", "PYI021"]
 "*.ipynb" = [

@@ -42,6 +42,9 @@ def ones_transmissions_chip4():
 
 # Geometry for the routing-layer-mapping regression fixtures (chip_dim=8, target_dim=4).
 # The routing region spans chip layers 0-3; the computation zone spans chip layers 4-7.
+# This chip is intentionally mirrored in eval/ph/tests/conftest.py, which drives the
+# end-to-end version of the same regression: the compiler suite must stay self-contained
+# (no eval import), so the synthetic chip is defined in each suite rather than shared.
 _EXTREME_CHIP_DIM = 8
 _EXTREME_TARGET_DIM = 4
 # Operation each MZI in a given routing chip layer performs perfectly. "bar" ->
