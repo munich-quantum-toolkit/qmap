@@ -120,6 +120,22 @@ TEST(CancelCNOTs, IdenticalCNOTs) {
   EXPECT_TRUE(circuit.empty());
 }
 
+TEST(CancelCNOTs, CompoundOperationBlocksCancellation) {
+  qc::QuantumComputation compound(2);
+  compound.h(0);
+  compound.h(1);
+
+  qc::QuantumComputation circuit(2);
+  circuit.cx(0, 1);
+  circuit.emplace_back(compound.asCompoundOperation());
+  circuit.cx(0, 1);
+
+  cancelCNOTs(circuit);
+
+  ASSERT_EQ(circuit.size(), 3U);
+  EXPECT_TRUE(circuit.at(1)->isCompoundOperation());
+}
+
 TEST(CancelCNOTs, IdenticalSWAPs) {
   qc::QuantumComputation circuit(2);
   circuit.swap(0, 1);
@@ -176,6 +192,45 @@ TEST(CancelCNOTs, ThreeCNOTsBecomeSWAP) {
   EXPECT_EQ(circuit.front()->getTargets().back(), 1U);
 }
 
+TEST(CancelCNOTs, ThreeCNOTsBecomeSWAPInReverseOrientation) {
+  qc::QuantumComputation circuit(2);
+  circuit.cx(0, 1);
+  circuit.cx(1, 0);
+  circuit.cx(0, 1);
+
+  cancelCNOTs(circuit);
+
+  ASSERT_EQ(circuit.size(), 1U);
+  EXPECT_EQ(circuit.front()->getType(), qc::SWAP);
+  EXPECT_EQ(circuit.front()->getTargets().front(), 0U);
+  EXPECT_EQ(circuit.front()->getTargets().back(), 1U);
+}
+
+TEST(CancelCNOTs, NegativeControlledXDoesNotCancelPositiveCNOT) {
+  qc::QuantumComputation circuit(2);
+  circuit.cx(qc::Control{0, qc::Control::Type::Neg}, 1);
+  circuit.cx(0, 1);
+
+  cancelCNOTs(circuit);
+
+  ASSERT_EQ(circuit.size(), 2U);
+  EXPECT_EQ(circuit.front()->getControls().begin()->type,
+            qc::Control::Type::Neg);
+}
+
+TEST(CancelCNOTs, NegativeControlledXDoesNotBecomeSWAP) {
+  qc::QuantumComputation circuit(2);
+  circuit.cx(qc::Control{0, qc::Control::Type::Neg}, 1);
+  circuit.cx(1, 0);
+  circuit.cx(0, 1);
+
+  cancelCNOTs(circuit);
+
+  ASSERT_EQ(circuit.size(), 3U);
+  EXPECT_EQ(circuit.front()->getControls().begin()->type,
+            qc::Control::Type::Neg);
+}
+
 TEST(ReplaceMCXWithMCZ, CX) {
   qc::QuantumComputation circuit(2U);
   circuit.cx(0, 1);
@@ -211,11 +266,13 @@ TEST(ReplaceMCXWithMCZ, CCX) {
   EXPECT_EQ(circuit.at(2)->getTargets()[0], target);
 }
 
-TEST(ReplaceMCXWithMCZ, CompoundOperation) {
+TEST(ReplaceMCXWithMCZ, NestedCompoundOperation) {
   qc::QuantumComputation operation(2U);
   operation.cx(0, 1);
+  qc::QuantumComputation nestedOperation(2U);
+  nestedOperation.emplace_back(operation.asCompoundOperation());
   qc::QuantumComputation circuit(2U);
-  circuit.emplace_back(operation.asCompoundOperation());
+  circuit.emplace_back(nestedOperation.asCompoundOperation());
 
   replaceMCXWithMCZ(circuit);
   qc::CircuitOptimizer::flattenOperations(circuit);
