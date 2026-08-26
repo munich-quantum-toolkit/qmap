@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <deque>
 #include <iterator>
 #include <memory>
@@ -38,10 +37,10 @@ void addToDAG(DAG& dag, std::unique_ptr<qc::Operation>* op) {
 }
 
 void removeIdentities(qc::QuantumComputation& qc) {
-  qc.erase(
-      std::remove_if(qc.begin(), qc.end(),
-                     [](const auto& op) { return op->getType() == qc::I; }),
-      qc.end());
+  qc.erase(std::ranges::remove_if(
+               qc, [](const auto& op) { return op->getType() == qc::I; })
+               .begin(),
+           qc.end());
 }
 
 template <class Container> void replaceMCXWithMCZIn(Container& operations) {
