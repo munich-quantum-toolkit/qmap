@@ -12,6 +12,12 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- ♻️ Move the mapping-specific `decomposeSWAP`, `cancelCNOTs`, and
+  `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP
+  ([#1125]) ([**@simon1hofmann**])
+
 ## [3.9.0] - 2026-08-24
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
@@ -339,6 +345,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [#609]: https://github.com/munich-quantum-toolkit/qmap/pull/609
 [#608]: https://github.com/munich-quantum-toolkit/qmap/pull/608
 [#418]: https://github.com/munich-quantum-toolkit/qmap/pull/418
+[#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
 
 <!-- Contributor -->
 

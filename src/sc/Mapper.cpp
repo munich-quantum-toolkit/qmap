@@ -11,6 +11,7 @@
 #include "sc/Mapper.hpp"
 
 #include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "datastructures/CircuitOptimizations.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
@@ -540,7 +541,7 @@ void Mapper::postMappingOptimizations(const Configuration& config) {
   }
 
   // try to cancel adjacent CNOT gates
-  qc::CircuitOptimizer::cancelCNOTs(qcMapped);
+  qmap::cancelCNOTs(qcMapped);
 }
 
 void Mapper::countGates(decltype(qcMapped.cbegin()) it,

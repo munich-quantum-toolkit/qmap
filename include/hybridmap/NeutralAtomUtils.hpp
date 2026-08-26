@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "ir/Definitions.hpp"

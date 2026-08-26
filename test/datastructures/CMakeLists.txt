@@ -9,4 +9,5 @@
 if(TARGET MQT::QMapDS)
   file(GLOB_RECURSE DS_TEST_SOURCES *.cpp)
   package_add_test(mqt-qmap-ds-test MQT::QMapDS ${DS_TEST_SOURCES})
+  target_link_libraries(mqt-qmap-ds-test PRIVATE MQT::CoreCircuitOptimizer)
 endif()
