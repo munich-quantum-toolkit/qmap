@@ -11,13 +11,18 @@
 #include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomOperation.hpp"
+#include "hybridmap/OpenQASMSerializer.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
+#include "ir/operations/StandardOperation.hpp"
 
 #include <gtest/gtest.h>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 namespace na {
 
@@ -47,19 +52,78 @@ TEST(NeutralAtomOperation, Bridge) {
 }
 
 TEST(NeutralAtomOperation, Qasm) {
-  const NeutralAtomOperation bridge(NeutralAtomOperationKind::Bridge,
-                                    {0, 1, 2});
+  qc::QuantumComputation computation(3);
+  auto compound = std::make_unique<qc::CompoundOperation>();
+  compound->emplace_back(makeBridgeOperation({0, 1, 2}));
+  compound->emplace_back<qc::StandardOperation>(1, qc::H);
+  computation.emplace_back(std::move(compound));
   std::stringstream stream;
-  const qc::QuantumRegister quantumRegister(0, 3, "q");
-  qc::QubitIndexToRegisterMap qubitMap{};
-  for (qc::Qubit qubit = 0; qubit < 3; ++qubit) {
-    qubitMap.try_emplace(qubit, quantumRegister,
-                         quantumRegister.toString(qubit));
-  }
+  serializeOpenQASM(computation, stream);
 
-  bridge.dumpOpenQASM(stream, qubitMap, {}, 0, false);
+  EXPECT_EQ(stream.str(), "// i 0 1 2\n"
+                          "// o 0 1 2\n"
+                          "OPENQASM 2.0;\n"
+                          "include \"qelib1.inc\";\n"
+                          "qreg q[3];\n"
+                          "bridge q[0], q[1], q[2];\n"
+                          "h q[1];\n");
+}
 
-  EXPECT_EQ(stream.str(), "bridge q[0], q[1], q[2];\n");
+TEST(NeutralAtomOperation, ConditionalQasm) {
+  qc::QuantumComputation computation(3);
+  const auto& controlRegister = computation.addClassicalRegister(1);
+  auto thenOperation = std::make_unique<qc::CompoundOperation>();
+  thenOperation->emplace_back(makeBridgeOperation({0, 1, 2}));
+  thenOperation->emplace_back<qc::StandardOperation>(1, qc::H);
+  computation.ifElse(
+      std::move(thenOperation),
+      std::make_unique<AodOperation>(NeutralAtomOperationKind::AodMove,
+                                     qc::Targets{0}, std::vector{Dimension::X},
+                                     std::vector{0.}, std::vector{1.}),
+      controlRegister);
+
+  std::stringstream stream;
+  serializeOpenQASM(computation, stream);
+
+  EXPECT_EQ(stream.str(), "// i 0 1 2\n"
+                          "// o 0 1 2\n"
+                          "OPENQASM 2.0;\n"
+                          "include \"qelib1.inc\";\n"
+                          "qreg q[3];\n"
+                          "creg c[1];\n"
+                          "if (c == 1) {\n"
+                          "  bridge q[0], q[1], q[2];\n"
+                          "  h q[1];\n"
+                          "}\n"
+                          "if (c != 1) {\n"
+                          "  aod_move (0, 0, 1) q[0];\n"
+                          "}\n");
+}
+
+TEST(NeutralAtomOperation, ConditionalOnBitQasm) {
+  qc::QuantumComputation computation(3, 1);
+  computation.ifElse(
+      makeBridgeOperation({0, 1, 2}),
+      std::make_unique<AodOperation>(NeutralAtomOperationKind::AodMove,
+                                     qc::Targets{0}, std::vector{Dimension::X},
+                                     std::vector{0.}, std::vector{1.}),
+      0);
+
+  std::stringstream stream;
+  serializeOpenQASM(computation, stream);
+
+  EXPECT_EQ(stream.str(), "// i 0 1 2\n"
+                          "// o 0 1 2\n"
+                          "OPENQASM 2.0;\n"
+                          "include \"qelib1.inc\";\n"
+                          "qreg q[3];\n"
+                          "creg c[1];\n"
+                          "if (c[0]) {\n"
+                          "  bridge q[0], q[1], q[2];\n"
+                          "}\n"
+                          "if (!c[0]) {\n"
+                          "  aod_move (0, 0, 1) q[0];\n"
+                          "}\n");
 }
 
 TEST(NeutralAtomOperation, Parsing) {

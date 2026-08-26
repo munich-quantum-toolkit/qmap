@@ -16,13 +16,10 @@
 
 #include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <ostream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -93,10 +90,10 @@ public:
 
   [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
-  void dumpOpenQASM(std::ostream& of,
-                    const qc::QubitIndexToRegisterMap& qubitMap,
-                    const qc::BitIndexToRegisterMap& bitMap, std::size_t indent,
-                    bool openQASM3) const override;
+  /// @brief Get the elementary AOD movements.
+  [[nodiscard]] const std::vector<SingleOperation>& getOperations() const {
+    return operations;
+  }
 
   void invert() override;
 };

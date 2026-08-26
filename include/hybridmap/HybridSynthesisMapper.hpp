@@ -20,6 +20,7 @@
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
+#include "hybridmap/OpenQASMSerializer.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
@@ -190,7 +191,7 @@ public:
   [[nodiscard]] [[maybe_unused]] std::string getSynthesizedQcQASM() const {
     std::stringstream ss;
     const auto copyQC = getSynthesizedQc();
-    copyQC.dumpOpenQASM(ss, false);
+    serializeOpenQASM(copyQC, ss);
     return ss.str();
   }
 
@@ -204,7 +205,7 @@ public:
   [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) const {
     std::ofstream ofs(filename);
     const auto copyQC = getSynthesizedQc();
-    copyQC.dumpOpenQASM(ofs, false);
+    serializeOpenQASM(copyQC, ofs);
     ofs.close();
   }
 

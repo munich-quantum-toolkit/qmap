@@ -18,6 +18,7 @@
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "hybridmap/OpenQASMSerializer.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
@@ -601,7 +602,7 @@ public:
    */
   [[nodiscard]] [[maybe_unused]] std::string getMappedQcQasm() const {
     std::stringstream ss;
-    mappedQc.dumpOpenQASM(ss, false);
+    serializeOpenQASM(mappedQc, ss);
     return ss.str();
   }
 
@@ -611,7 +612,7 @@ public:
    */
   [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) const {
     std::ofstream ofs(filename);
-    mappedQc.dumpOpenQASM(ofs, false);
+    serializeOpenQASM(mappedQc, ofs);
   }
 
   /**
@@ -623,7 +624,7 @@ public:
       convertToAod();
     }
     std::stringstream ss;
-    mappedQcAOD.dumpOpenQASM(ss, false);
+    serializeOpenQASM(mappedQcAOD, ss);
     return ss.str();
   }
 
@@ -639,7 +640,7 @@ public:
     if (!ofs) {
       throw std::runtime_error("Failed to open file: " + filename);
     }
-    mappedQcAOD.dumpOpenQASM(ofs, false);
+    serializeOpenQASM(mappedQcAOD, ofs);
   }
 
   /**

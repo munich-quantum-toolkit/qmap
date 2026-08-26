@@ -10,6 +10,7 @@
 
 #include "sc/DataLogger.hpp"
 
+#include "ir/OpenQASMSerializer.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "sc/Architecture.hpp"
@@ -129,7 +130,7 @@ void DataLogger::logFinalizeLayer(
   }
   nlohmann::basic_json json;
   std::stringstream qasmStream;
-  ops.dumpOpenQASM3(qasmStream, qregs, cregs);
+  qc::OpenQASMSerializer(qasmStream).serialize(ops, qregs, cregs);
   json["qasm"] = qasmStream.str();
   if (twoQubitMultiplicity.empty()) {
     json["two_qubit_multiplicity"] = nlohmann::basic_json<>::array();
