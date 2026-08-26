@@ -135,7 +135,7 @@ def _edge_cost_from_fidelity(fidelity: float) -> float:
     return -np.log(fidelity)
 
 
-def get_edge_fidelity_even_graph_layer(
+def get_edge_cost_for_graph_layer(
     graph_layer: int,
     source_node_idx: int,
     target_node_idx: int,
@@ -144,18 +144,21 @@ def get_edge_fidelity_even_graph_layer(
     chip_dim: int,
     target_dim: int = 4,
 ) -> float:
-    """Compute the edge cost for an edge starting from an even graph layer.
+    """Compute the routing-graph edge cost for an edge leaving ``graph_layer``.
 
-    An edge leaving graph layer ``L`` traverses chip layer ``L - 1``, so the
-    even graph layers (2, 4, 6, ...) map to the odd chip layers (1, 3, 5, ...).
-    Odd chip layers have MZIs only on in-between mode pairs, excluding the
-    first and last modes.
+    An edge leaving graph layer ``L`` traverses chip layer ``L - 1``. The two
+    chip-layer parities differ only in how many MZIs the layer has: even chip
+    layers (0, 2, 4, ...) couple every mode pair and have ``chip_dim // 2`` MZIs,
+    while odd chip layers (1, 3, 5, ...) leave the two edge modes uncoupled and
+    have ``chip_dim // 2 - 1`` MZIs.  Odd graph layers (1, 3, 5, ...) therefore
+    map to even chip layers and even graph layers (2, 4, 6, ...) to odd chip
+    layers; the MZI count is derived from the chip-layer parity below.
 
     Each graph edge routes ``target_dim // 2`` photons in parallel, using
     that many adjacent MZIs in the corresponding chip layer.
 
     Args:
-        graph_layer: Even layer index in the routing graph.
+        graph_layer: Layer index in the routing graph that the edge leaves.
         source_node_idx: Index of the source node within its graph layer.
         target_node_idx: Index of the target node within its graph layer.
         bar_fidelities: Bar fidelities ordered sequentially by chip layer
@@ -184,9 +187,11 @@ def get_edge_fidelity_even_graph_layer(
         msg_0 = f"target_dim must be even, got {target_dim}"
         raise ValueError(msg_0)
 
-    chip_layer = graph_layer - 1  # edge leaving graph layer L traverses chip layer L-1
+    chip_layer = graph_layer - 1  # an edge leaving graph layer L traverses chip layer L-1
     mzis_per_even_chip_layer = chip_dim // 2
     mzis_per_odd_chip_layer = chip_dim // 2 - 1
+    # Even chip layers couple every mode pair; odd chip layers skip the two edge modes.
+    mzi_count_in_layer = mzis_per_even_chip_layer if chip_layer % 2 == 0 else mzis_per_odd_chip_layer
 
     fidelity_offset = 0
     for chip_layer_idx in range(chip_layer):
@@ -201,77 +206,7 @@ def get_edge_fidelity_even_graph_layer(
         fidelity_list=fidelity_list,
         fidelity_offset=fidelity_offset,
         source_node_idx=source_node_idx,
-        mzi_count_in_layer=mzis_per_odd_chip_layer,
-        num_parallel_photons=target_dim // 2,
-    )
-    return _edge_cost_from_fidelity(combined_fidelity)
-
-
-def get_edge_fidelity_odd_graph_layer(
-    graph_layer: int,
-    source_node_idx: int,
-    target_node_idx: int,
-    bar_fidelities: list[float],
-    cross_fidelities: list[float],
-    chip_dim: int,
-    target_dim: int = 4,
-) -> float:
-    """Compute the edge cost for an edge starting from an odd graph layer.
-
-    Odd graph layers (1, 3, 5, ...) correspond to even chip layers (0, 2, 4, ...).
-    Even chip layers have MZIs on all mode pairs: (0-1), (2-3), (4-5), ...
-
-    Each graph edge routes ``target_dim // 2`` photons in parallel, using
-    that many adjacent MZIs in the corresponding chip layer.
-
-    Args:
-        graph_layer: Odd layer index in the routing graph.
-        source_node_idx: Index of the source node within its graph layer.
-        target_node_idx: Index of the target node within its graph layer.
-        bar_fidelities: Bar fidelities ordered sequentially by chip layer
-            then MZI index.
-        cross_fidelities: Cross fidelities ordered sequentially by chip layer
-            then MZI index.
-        chip_dim: Number of spatial modes on the chip.
-        target_dim: Dimension of the target unitary; must be even.
-
-    Returns:
-        Non-negative edge cost ``-log(combined_fidelity)``.
-
-    Raises:
-        ValueError: If ``source_node_idx`` and ``target_node_idx`` are neither
-            equal nor adjacent, or if ``target_dim`` is odd.
-    """
-    if source_node_idx == target_node_idx:
-        edge_type = "bar"
-    elif abs(source_node_idx - target_node_idx) == 1:
-        edge_type = "cross"
-    else:
-        msg = f"Invalid edge: nodes {source_node_idx} and {target_node_idx} must be identical or adjacent"
-        raise ValueError(msg)
-
-    if target_dim % 2 != 0:
-        msg_0 = f"target_dim must be even, got {target_dim}"
-        raise ValueError(msg_0)
-
-    chip_layer = graph_layer - 1  # odd graph layer -> preceding even chip layer
-    mzis_per_even_chip_layer = chip_dim // 2
-    mzis_per_odd_chip_layer = chip_dim // 2 - 1
-
-    fidelity_offset = 0
-    for chip_layer_idx in range(chip_layer):
-        if chip_layer_idx % 2 == 0:
-            fidelity_offset += mzis_per_even_chip_layer
-        else:
-            fidelity_offset += mzis_per_odd_chip_layer
-
-    fidelity_list = bar_fidelities if edge_type == "bar" else cross_fidelities
-
-    combined_fidelity = _combined_fidelity_from_mzi_block(
-        fidelity_list=fidelity_list,
-        fidelity_offset=fidelity_offset,
-        source_node_idx=source_node_idx,
-        mzi_count_in_layer=mzis_per_even_chip_layer,
+        mzi_count_in_layer=mzi_count_in_layer,
         num_parallel_photons=target_dim // 2,
     )
     return _edge_cost_from_fidelity(combined_fidelity)
@@ -408,9 +343,7 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i],
-                    get_edge_fidelity_odd_graph_layer(
-                        layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim
-                    ),
+                    get_edge_cost_for_graph_layer(layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim),
                 )
                 for i in range(n)
             ]
@@ -418,7 +351,7 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i + 1],
-                    get_edge_fidelity_odd_graph_layer(
+                    get_edge_cost_for_graph_layer(
                         layer, i, i + 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
                     ),
                 )
@@ -428,7 +361,7 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i - 1],
-                    get_edge_fidelity_odd_graph_layer(
+                    get_edge_cost_for_graph_layer(
                         layer, i, i - 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
                     ),
                 )
@@ -441,9 +374,7 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i],
-                    get_edge_fidelity_even_graph_layer(
-                        layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim
-                    ),
+                    get_edge_cost_for_graph_layer(layer, i, i, bar_fidelities, cross_fidelities, chip_dim, target_dim),
                 )
                 for i in range(n)
             ]
@@ -451,7 +382,7 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i + 1],
-                    get_edge_fidelity_even_graph_layer(
+                    get_edge_cost_for_graph_layer(
                         layer, i, i + 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
                     ),
                 )
@@ -461,7 +392,7 @@ def construct_graph(
                 (
                     layers[layer][i],
                     layers[layer + 1][i - 1],
-                    get_edge_fidelity_even_graph_layer(
+                    get_edge_cost_for_graph_layer(
                         layer, i, i - 1, bar_fidelities, cross_fidelities, chip_dim, target_dim
                     ),
                 )

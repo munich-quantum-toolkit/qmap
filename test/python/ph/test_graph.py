@@ -16,8 +16,7 @@ from mqt.qmap.ph.graph import (
     construct_graph,
     cross_fidelity,
     determine_routing_fidelities,
-    get_edge_fidelity_even_graph_layer,
-    get_edge_fidelity_odd_graph_layer,
+    get_edge_cost_for_graph_layer,
 )
 
 
@@ -251,7 +250,7 @@ class TestEdgeFidelityLayerMapping:
         # Chip layer 1 is the correct (preceding) layer; chip layer 3 is the wrong one.
         bar = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {1: 0.8, 3: 0.5})
         cross = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {})
-        cost = get_edge_fidelity_even_graph_layer(2, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
+        cost = get_edge_cost_for_graph_layer(2, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
         # target_dim // 2 = 2 photons traverse two MZIs of chip layer 1 (fidelity 0.8 each).
         assert cost == pytest.approx(float(-np.log(0.8 * 0.8)))
 
@@ -261,5 +260,5 @@ class TestEdgeFidelityLayerMapping:
         chip_dim, target_dim = 8, 4
         bar = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {2: 0.7, 4: 0.3})
         cross = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {})
-        cost = get_edge_fidelity_odd_graph_layer(3, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
+        cost = get_edge_cost_for_graph_layer(3, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
         assert cost == pytest.approx(float(-np.log(0.7 * 0.7)))
