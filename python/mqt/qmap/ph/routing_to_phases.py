@@ -31,11 +31,11 @@ def get_effective_params_and_mask(
        assigns these structurally from the compute-zone geometry, so genuine
        compute MZI pairs stay trainable regardless of their current phase
        magnitudes.
-    2. Resolve each MZI pair to a single routing state via ``priority_map``
-       (``BOT_ONLY`` > ``TOP_ONLY`` > ``CROSS`` > ``BAR`` > ``MZI``).  Masks
-       produced by the routing pipeline always assign both modes of a pair the
-       same state, so this ordering only acts as a defensive tiebreak and does
-       not affect the result in practice.
+    2. Resolve each MZI pair to a single routing state by priority
+       (``BOT_ONLY`` > ``TOP_ONLY`` > ``CROSS`` > ``BAR`` > ``MZI``, i.e. the
+       larger ``MaskState`` code).  Masks produced by the routing pipeline always
+       assign both modes of a pair the same state, so this ordering only acts as
+       a defensive tiebreak and does not affect the result in practice.
 
     Compute-zone MZI cells (``MaskState.MZI``) are always left as free,
     trainable parameters - the compute/routing distinction comes solely from the
@@ -61,68 +61,67 @@ def get_effective_params_and_mask(
         *grad_mask* indicates which entries contribute gradients (1.0) or
         are frozen (0.0), and *refined_mask* is the updated movement mask.
     """
-    priority_map = {
-        MaskState.MZI: 0,
-        MaskState.BAR: 1,
-        MaskState.CROSS: 2,
-        MaskState.TOP_ONLY: 3,
-        MaskState.BOT_ONLY: 4,
-    }
-
     refined_mask = movement_mask.clone()
     effective_params = raw_params.clone()
     grad_mask = torch.ones_like(raw_params, dtype=torch.float32)
     num_layers = raw_params.shape[1]
 
-    for layer in range(num_layers):
-        if layer % 2 == 0:
-            mzi_pairs = [(i, i + 1) for i in range(0, num_modes - 1, 2)]
-            single_edges: list[int] = []
-        else:
-            mzi_pairs = [(i, i + 1) for i in range(1, num_modes - 1, 2)]
-            single_edges = [0, num_modes - 1]
+    device = raw_params.device
+    mask_used = movement_mask[:, :num_layers]
 
-        for mode in single_edges:
-            if refined_mask[mode, layer].item() in {MaskState.CROSS, MaskState.BAR}:
-                effective_params[mode, layer] = 0.0
-                grad_mask[mode, layer] = 0.0
+    # Per-cell geometry (broadcast to (num_modes, num_layers)).
+    mode_col = torch.arange(num_modes, device=device).view(num_modes, 1)
+    layer_row = torch.arange(num_layers, device=device).view(1, num_layers)
+    even_layer = layer_row % 2 == 0
+    even_mode = mode_col % 2 == 0
+    first_mode = mode_col == 0
+    last_mode = mode_col == num_modes - 1
 
-        for top, bot in mzi_pairs:
-            s_top = refined_mask[top, layer].item()
-            s_bot = refined_mask[bot, layer].item()
-            state = s_top if priority_map[s_top] >= priority_map[s_bot] else s_bot
+    # Layer parity sets the pairing: even layers pair (0,1),(2,3),...; odd layers pair
+    # (1,2),(3,4),... and leave the two edge modes (0 and num_modes-1) as single edges.
+    is_single = (~even_layer) & (first_mode | last_mode)
+    is_top = torch.where(even_layer, even_mode, (~even_mode) & (~last_mode))
+    is_bot = torch.where(even_layer, ~even_mode, even_mode & (~first_mode))
+    is_pair = is_top | is_bot
 
-            if state == MaskState.CROSS:
-                if optimize_routing_parameters:
-                    effective_params[top, layer] = raw_params[top, layer]
-                    effective_params[bot, layer] = raw_params[top, layer]
-                    grad_mask[top, layer] = 1.0
-                    grad_mask[bot, layer] = 0.0
-                else:
-                    effective_params[top, layer] = 0.0
-                    effective_params[bot, layer] = 0.0
-                    grad_mask[top, layer] = 0.0
-                    grad_mask[bot, layer] = 0.0
+    # Each pair cell resolves to the higher-priority state of its two modes.  The MaskState
+    # codes ARE the priority order (MZI=0 < BAR=1 < CROSS=2 < TOP_ONLY=3 < BOT_ONLY=4), so
+    # "higher priority" is just the larger code.  A top cell's partner is mode+1, a bot cell's
+    # is mode-1 (singles partner with themselves; harmless, since they are never read as a pair).
+    partner_mode = mode_col.expand(num_modes, num_layers) + is_top.long() - is_bot.long()
+    mask_partner = torch.gather(mask_used, 0, partner_mode)
+    raw_partner = torch.gather(raw_params, 0, partner_mode)
+    pair_state = torch.maximum(mask_used, mask_partner)
 
-            elif state == MaskState.BAR:
-                if optimize_routing_parameters:
-                    effective_params[top, layer] = raw_params[top, layer]
-                    effective_params[bot, layer] = raw_params[top, layer] + np.pi
-                    grad_mask[top, layer] = 1.0
-                    grad_mask[bot, layer] = 0.0
-                else:
-                    effective_params[top, layer] = 0.0
-                    effective_params[bot, layer] = np.pi
-                    grad_mask[top, layer] = 0.0
-                    grad_mask[bot, layer] = 0.0
+    st_cross = is_pair & (pair_state == MaskState.CROSS)
+    st_bar = is_pair & (pair_state == MaskState.BAR)
+    st_top_only = is_pair & (pair_state == MaskState.TOP_ONLY)
+    st_bot_only = is_pair & (pair_state == MaskState.BOT_ONLY)
+    single_active = is_single & ((mask_used == MaskState.CROSS) | (mask_used == MaskState.BAR))
 
-            elif state == MaskState.TOP_ONLY:
-                effective_params[bot, layer] = raw_params[top, layer] + np.pi
-                grad_mask[bot, layer] = 0.0
+    # effective_params: overwrite only the constrained cells; compute cells (MZI) and the
+    # top-of-pair BAR/CROSS cells under optimization keep their raw value (the initial clone).
+    set_partner_pi = (is_bot & st_top_only) | (is_top & st_bot_only)  # -> raw of the partner mode + pi
+    if optimize_routing_parameters:
+        set_zero = single_active
+        set_pi = torch.zeros_like(is_single)
+        set_partner = is_bot & st_cross  # -> raw of the partner (top) mode
+        set_partner_pi |= is_bot & st_bar
+    else:
+        set_zero = single_active | (is_top & (st_cross | st_bar)) | (is_bot & st_cross)
+        set_pi = is_bot & st_bar  # -> pi
+        set_partner = torch.zeros_like(is_single)
 
-            elif state == MaskState.BOT_ONLY:
-                effective_params[top, layer] = raw_params[bot, layer] + np.pi
-                grad_mask[top, layer] = 0.0
+    effective_params = torch.where(set_zero, torch.zeros_like(raw_params), effective_params)
+    effective_params = torch.where(set_pi, torch.full_like(raw_params, np.pi), effective_params)
+    effective_params = torch.where(set_partner, raw_partner, effective_params)
+    effective_params = torch.where(set_partner_pi, raw_partner + np.pi, effective_params)
+
+    # grad_mask: freeze (0.0) the derived and fixed-routing cells; free cells keep 1.0.
+    grad_zero = single_active | (is_top & st_bot_only) | (is_bot & (st_cross | st_bar)) | (is_bot & st_top_only)
+    if not optimize_routing_parameters:
+        grad_zero |= is_top & (st_cross | st_bar)
+    grad_mask = torch.where(grad_zero, torch.zeros_like(grad_mask), grad_mask)
 
     return effective_params, grad_mask, refined_mask
 
