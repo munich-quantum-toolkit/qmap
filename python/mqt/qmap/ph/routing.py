@@ -254,46 +254,31 @@ def route_to_movement_mask(
     if len(route) < 2:
         return movement_mask
 
-    for i, node in enumerate(route):
-        if i == 0 or i == len(route) - 1 or i == 1:
-            continue
-        if i == 2:
-            if int(route[i - 1] * 2) == node:
-                continue
-            if int(route[i - 1] * 2) + 1 == node:
-                movement_mask[int(route[i - 1] * 2) : int(route[i - 1] * 2 + target_dim), 0] = MaskState.CROSS
-            else:
-                msg = (
-                    f"Invalid edge from input_node_{route[i - 1]} to node_{node}. "
-                    f"Must be {2 * route[i - 1]} (bar) or {2 * route[i - 1] + 1} (cross)"
-                )
-                raise ValueError(msg)
-        elif i % 2 == 0:
-            if int(route[i - 1]) == node:
-                continue
-            if abs(int(route[i - 1]) - int(node)) == 1:
-                movement_mask[int(route[i - 1] // 2 * 2) : int(route[i - 1] // 2 * 2 + target_dim), i - 2] = (
-                    MaskState.CROSS
-                )
-            else:
-                msg = (
-                    f"Invalid edge from node_{route[i - 1]} to node_{node}. "
-                    f"Must be {int(route[i - 1])} (bar) or {int(route[i - 1]) - 1}/{int(route[i - 1]) + 1} (cross)."
-                )
-                raise ValueError(msg)
-        elif i % 2 == 1:
-            if int(route[i - 1]) == node:
-                continue
-            if abs(int(route[i - 1]) - int(node)) == 1:
-                movement_mask[
-                    int((route[i - 1] - 1) // 2 * 2 + 1) : int((route[i - 1] - 1) // 2 * 2 + target_dim + 1), i - 2
-                ] = MaskState.CROSS
-            else:
-                msg = (
-                    f"Invalid edge from node_{route[i - 1]} to node_{node}. "
-                    f"Must be {int(route[i - 1])} (bar) or {int(route[i - 1]) - 1}/{int(route[i - 1]) + 1} (cross)."
-                )
-                raise ValueError(msg)
+    # Each transition is realized in one chip layer (chip_layer = i - 2). A single rule covers
+    # every layer: a "bar" step (mode unchanged) leaves the column as BAR, while a "cross" step
+    # (a move to an immediate neighbour) marks a target_dim-wide CROSS run.
+    for i in range(2, len(route) - 1):
+        chip_layer = i - 2
+        # The node being left. The input-layer node (i == 2) is half-indexed - node n sits on
+        # physical mode 2n - whereas every later node is already a physical mode index.
+        prev_mode = int(route[i - 1]) * 2 if i == 2 else int(route[i - 1])
+        node = int(route[i])
+
+        if prev_mode == node:
+            continue  # bar: photons pass straight through; the column stays BAR
+
+        if abs(prev_mode - node) != 1:
+            msg = (
+                f"Invalid edge from node_{route[i - 1]} to node_{node} at chip layer {chip_layer}: a routing "
+                f"transition must be straight-through (bar) or a move to an immediate neighbour (cross)."
+            )
+            raise ValueError(msg)
+
+        # cross: the run starts at the top mode of the MZI pair (in this chip layer) that contains
+        # prev_mode. Even chip layers pair modes (0,1),(2,3),...; odd chip layers pair (1,2),(3,4),...
+        # - so rounding prev_mode down to the layer's parity gives that pair's top mode.
+        row_start = prev_mode - ((prev_mode - chip_layer % 2) % 2)
+        movement_mask[row_start : row_start + target_dim, chip_layer] = MaskState.CROSS
 
     output_index = route[-2]
     mode_start = int((output_index // 2) * 2)
