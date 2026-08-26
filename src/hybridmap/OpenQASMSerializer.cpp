@@ -29,10 +29,11 @@ namespace {
 
 constexpr std::size_t OUTPUT_INDENT_SIZE = 2U;
 
-bool serializeOperation(std::ostream& output, const qc::Operation& operation,
-                        const qc::QubitIndexToRegisterMap& qubitMap,
-                        const qc::BitIndexToRegisterMap&,
-                        const std::size_t indent) {
+bool serializeOperation(
+    std::ostream& output, const qc::Operation& operation,
+    const qc::QubitIndexToRegisterMap& qubitMap,
+    [[maybe_unused]] const qc::BitIndexToRegisterMap& bitMap,
+    const std::size_t indent) {
   const auto indentation = std::string(indent * OUTPUT_INDENT_SIZE, ' ');
   if (const auto* aod = dynamic_cast<const AodOperation*>(&operation);
       aod != nullptr) {

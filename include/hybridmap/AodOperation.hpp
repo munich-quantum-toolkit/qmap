@@ -66,7 +66,7 @@ public:
   AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> qubits,
                const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& ops);
   AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> targets,
-               std::vector<SingleOperation> operations);
+               std::vector<SingleOperation> ops);
 
   [[nodiscard]] std::unique_ptr<Operation> clone() const override {
     return std::make_unique<AodOperation>(*this);

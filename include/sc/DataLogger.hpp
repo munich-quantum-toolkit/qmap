@@ -13,6 +13,7 @@
 #include "Architecture.hpp"
 #include "MappingResults.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/OpenQASMSerializer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "utils.hpp"
