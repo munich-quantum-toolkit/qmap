@@ -90,7 +90,7 @@ public:
 
   [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
-  /// @brief Get the elementary AOD movements.
+  /// Get the elementary AOD movements.
   [[nodiscard]] const std::vector<SingleOperation>& getOperations() const {
     return operations;
   }
