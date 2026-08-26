@@ -22,56 +22,6 @@ logger = logging.getLogger(__name__)
 TWO_PI = 2 * torch.pi
 
 
-def unitary_individual_phase_shifter(
-    num_modes: int,
-    mode: int,
-    phase: torch.Tensor,
-) -> torch.Tensor:
-    """Build a diagonal unitary for a single phase shifter.
-
-    Args:
-        num_modes: Total number of spatial modes.
-        mode: Index of the mode carrying the phase shifter.
-        phase: Phase value in radians.
-
-    Returns:
-        Complex tensor of shape ``(num_modes, num_modes)`` representing the
-        diagonal phase-shifter unitary.
-    """
-    d = torch.eye(num_modes, dtype=torch.complex128)
-    d[mode, mode] = torch.exp(1j * phase)
-    return d
-
-
-def unitary_individual_beam_splitter(
-    num_modes: int,
-    mode: int,
-    reflectivity: float | torch.Tensor,
-) -> torch.Tensor:
-    """Build a 2x2 beam-splitter unitary embedded in the full mode space.
-
-    The beam splitter couples ``mode`` and ``mode + 1`` with the standard
-    symmetric convention: diagonal elements are ``sqrt(r)`` and
-    off-diagonal elements are ``i * sqrt(1 - r)``.
-
-    Args:
-        num_modes: Total number of spatial modes.
-        mode: Index of the top mode (couples ``mode`` and ``mode + 1``).
-        reflectivity: Power reflectivity in ``[0, 1]``.
-
-    Returns:
-        Complex tensor of shape ``(num_modes, num_modes)`` representing the
-        beam-splitter unitary.
-    """
-    mat = torch.eye(num_modes, dtype=torch.complex128)
-    r = torch.as_tensor(reflectivity, dtype=torch.float64, device=mat.device)
-    mat[mode, mode] = torch.sqrt(r)
-    mat[mode, mode + 1] = 1j * torch.sqrt(1 - r)
-    mat[mode + 1, mode] = 1j * torch.sqrt(1 - r)
-    mat[mode + 1, mode + 1] = torch.sqrt(r)
-    return mat
-
-
 def build_unitary_from_components(
     num_modes: int,
     beam_splitter_params: torch.Tensor,
@@ -81,9 +31,11 @@ def build_unitary_from_components(
 ) -> torch.Tensor:
     """Build the full-chip unitary matrix from physical component parameters.
 
-    Constructs the unitary by multiplying individual beam-splitter and
-    phase-shifter unitaries layer by layer over the specified range of
-    physical layers.
+    This is the special case of
+    :func:`build_unitary_selected_columns_from_components` that selects every
+    column, so the full ``(num_modes, num_modes)`` unitary is produced by the
+    same efficient row-wise propagation (avoiding a full ``N x N`` matrix
+    multiplication for every individual component).
 
     Args:
         num_modes: Number of spatial modes on the chip.
@@ -100,80 +52,14 @@ def build_unitary_from_components(
         Complex tensor of shape ``(num_modes, num_modes)`` representing the
         chip unitary.
     """
-    n = num_modes
-    n2 = n * n
-
-    def to_grid(tensor: torch.Tensor, fill_value: float = 0.0) -> torch.Tensor:
-        if tensor.shape == (n, n):
-            return tensor
-        flat = tensor.flatten()
-        if flat.numel() == n2:
-            return flat.reshape(n, n)
-        if flat.numel() == n2 - 2:
-            grid = torch.zeros((n, n), dtype=tensor.dtype, device=tensor.device)
-            if fill_value:
-                grid.fill_(fill_value)
-            mask = torch.ones((n, n), dtype=torch.bool, device=tensor.device)
-            mask[0, -1] = False
-            mask[n - 1, -1] = False
-            grid[mask] = flat
-            return grid
-        msg = f"Invalid parameter size: {flat.numel()}. Expected {n2}."
-        raise ValueError(msg)
-
-    ps_grid = to_grid(phase_shifter_params, fill_value=0.0)
-
-    start_layer = 0 if layer_range is None else layer_range[0]
-    end_layer = n if layer_range is None else layer_range[1]
-
-    bs_idx = 0
-    for layer in range(start_layer):
-        mzis_in_layer = n // 2 if layer % 2 == 0 else n // 2 - 1
-        bs_idx += mzis_in_layer * 2
-
-    u = torch.eye(num_modes, dtype=torch.complex128)
-
-    for layer in range(start_layer, end_layer):
-        if layer % 2 == 0:
-            for i in range(0, num_modes - 1, 2):
-                theta_in = beam_splitter_params[bs_idx]
-                theta_out = beam_splitter_params[bs_idx + 1]
-                phi1 = ps_grid[i, layer]
-                phi2 = ps_grid[i + 1, layer]
-                u = (
-                    unitary_individual_beam_splitter(num_modes, i, theta_out)
-                    @ unitary_individual_phase_shifter(num_modes, i + 1, phi2)
-                    @ unitary_individual_phase_shifter(num_modes, i, phi1)
-                    @ unitary_individual_beam_splitter(num_modes, i, theta_in)
-                    @ u
-                )
-                bs_idx += 2
-        else:
-            is_last_layer = exclude_edge_phase_shifters and layer == n - 1
-
-            if not is_last_layer:
-                phi = ps_grid[0, layer]
-                u = unitary_individual_phase_shifter(num_modes, 0, phi) @ u
-
-            for j in range(1, num_modes - 1, 2):
-                theta_in = beam_splitter_params[bs_idx]
-                theta_out = beam_splitter_params[bs_idx + 1]
-                phi1 = ps_grid[j, layer]
-                phi2 = ps_grid[j + 1, layer]
-                u = (
-                    unitary_individual_beam_splitter(num_modes, j, theta_out)
-                    @ unitary_individual_phase_shifter(num_modes, j + 1, phi2)
-                    @ unitary_individual_phase_shifter(num_modes, j, phi1)
-                    @ unitary_individual_beam_splitter(num_modes, j, theta_in)
-                    @ u
-                )
-                bs_idx += 2
-
-            if not is_last_layer:
-                phi = ps_grid[num_modes - 1, layer]
-                u = unitary_individual_phase_shifter(num_modes, num_modes - 1, phi) @ u
-
-    return u
+    return build_unitary_selected_columns_from_components(
+        num_modes,
+        beam_splitter_params,
+        phase_shifter_params,
+        column_indices=list(range(num_modes)),
+        exclude_edge_phase_shifters=exclude_edge_phase_shifters,
+        layer_range=layer_range,
+    )
 
 
 def build_unitary_selected_columns_from_components(
@@ -186,10 +72,10 @@ def build_unitary_selected_columns_from_components(
 ) -> torch.Tensor:
     """Build selected columns of the chip unitary without constructing the full matrix.
 
-    Mathematically equivalent to :func:`build_unitary_from_components`
-    followed by column slicing, but faster when
-    ``len(column_indices) << num_modes`` because only the selected state
-    vectors are propagated.
+    Propagates only the selected input state vectors through the MZI mesh, so it
+    is faster when ``len(column_indices) << num_modes`` and never forms an
+    ``N x N`` component matrix.  Selecting every column yields the full unitary;
+    :func:`build_unitary_from_components` is that special case.
 
     Args:
         num_modes: Number of spatial modes on the chip.
