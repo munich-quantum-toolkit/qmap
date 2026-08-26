@@ -284,14 +284,10 @@ class RoutingGraph:
     Attributes:
         graph: Weighted directed acyclic graph encoding the routing decisions
             as a shortest-path problem.
-        positions: Maps each node index to an ``(x, y)`` visualization
-            coordinate.  Not used by the routing itself -- retained for
-            plotting and debugging the graph.
         layers: Per-layer node index arrays as returned by rustworkx.
     """
 
     graph: rx.PyDiGraph
-    positions: dict[int, tuple[float, float]]
     layers: list
 
 
@@ -326,9 +322,8 @@ def construct_graph(
             reflectivities ordered MZI-by-MZI as in/out pairs, layer by layer.
 
     Returns:
-        A :class:`RoutingGraph` bundling the weighted directed acyclic graph,
-        the per-node ``(x, y)`` visualization coordinates, and the per-layer
-        node index arrays.
+        A :class:`RoutingGraph` bundling the weighted directed acyclic graph
+        and the per-layer node index arrays.
 
     Raises:
         ValueError: If ``target_dim`` is not positive, ``chip_dim <= target_dim``,
@@ -477,17 +472,4 @@ def construct_graph(
     for edges_of_a_layer in edges:
         graph.add_edges_from(edges_of_a_layer)
 
-    pos: dict[int, tuple[float, float]] = {}
-    for layer in range(number_of_layers):
-        if layer == 0:
-            pos[layers[layer][0]] = (layer, -number_nodes_first_layer / 2 - 1)
-        elif layer == 1:
-            for i, node in enumerate(layers[layer]):
-                pos[node] = (layer, -(i * 2))
-        elif layer == number_of_layers - 1:
-            pos[layers[layer][0]] = (layer, -number_nodes_first_layer / 2 - 1)
-        else:
-            for i, node in enumerate(layers[layer]):
-                pos[node] = (layer, -i)
-
-    return RoutingGraph(graph=graph, positions=pos, layers=layers)
+    return RoutingGraph(graph=graph, layers=layers)

@@ -342,54 +342,6 @@ def fidelity_loss(
     return 1.0 - fidelity
 
 
-def get_computation_zone(
-    all_bs_values: torch.Tensor,
-    target_modes: list[int],
-    chip_size: int,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Extract beam-splitter reflectivities belonging to the computation zone.
-
-    The computation zone occupies the last ``len(target_modes)`` MZI layers
-    of the chip and is restricted to MZIs whose mode pairs both lie in
-    ``target_modes``.
-
-    Args:
-        all_bs_values: 1D tensor of all chip beam-splitter reflectivities.
-        target_modes: Spatial mode indices of the computation zone.
-        chip_size: Total number of spatial modes on the chip.
-
-    Returns:
-        A tuple ``(values_tensor, indices_tensor)`` where *values_tensor*
-        contains the extracted reflectivities and *indices_tensor* contains
-        their positions within ``all_bs_values``.
-    """
-    if not isinstance(all_bs_values, torch.Tensor):
-        all_bs_values = torch.tensor(all_bs_values, dtype=torch.float64)
-
-    target_dim = len(target_modes)
-    mzi_layers = chip_size
-    start_mzi_layer = mzi_layers - target_dim
-
-    computation_bs_indices: list[int] = []
-    current_bs_idx = 0
-
-    for layer in range(mzi_layers):
-        is_full_layer = layer % 2 == 0
-        mzi_count = chip_size // 2 if is_full_layer else chip_size // 2 - 1
-
-        for mzi in range(mzi_count):
-            top_mode = mzi * 2 if is_full_layer else mzi * 2 + 1
-            bottom_mode = top_mode + 1
-
-            if layer >= start_mzi_layer and top_mode in target_modes and bottom_mode in target_modes:
-                computation_bs_indices.extend((current_bs_idx, current_bs_idx + 1))
-
-            current_bs_idx += 2
-
-    indices_tensor = torch.tensor(computation_bs_indices, dtype=torch.long)
-    return all_bs_values[indices_tensor], indices_tensor
-
-
 @dataclass
 class OptimizationResult:
     """Result of an :func:`optimize_unitary_subcircuit_parameters` run.
@@ -402,16 +354,10 @@ class OptimizationResult:
             two excluded corner cells are frozen at their initial values.
         best_loss: Loss of ``phase_shifter_params`` (the minimum over all
             steps), matching the returned parameters rather than the final step.
-        losses: Per-step loss values.
-        lrs: Learning-rate history.
-        iterations: Number of gradient steps executed.
     """
 
     phase_shifter_params: torch.Tensor
     best_loss: float
-    losses: list[float]
-    lrs: list[float]
-    iterations: int
 
 
 def optimize_unitary_subcircuit_parameters(
@@ -465,8 +411,7 @@ def optimize_unitary_subcircuit_parameters(
             patience counter.
 
     Returns:
-        An :class:`OptimizationResult` with the best parameter grid, its loss,
-        and the per-step optimization history.
+        An :class:`OptimizationResult` with the best parameter grid and its loss.
     """
     # With a single iteration the loop would evaluate the initial parameters, take one
     # optimizer step, and terminate before ever evaluating that step's result - leaving
@@ -521,8 +466,6 @@ def optimize_unitary_subcircuit_parameters(
         min_lr=1e-7,
     )
 
-    lrs: list[float] = []
-    losses: list[float] = []
     loop_loss = float("inf")
     index = 0
     best_loss = float("inf")
@@ -577,7 +520,6 @@ def optimize_unitary_subcircuit_parameters(
             )
 
         loop_loss = loss.item()
-        losses.append(loop_loss)
 
         if loop_loss < best_loss:
             best_loss = loop_loss
@@ -591,8 +533,6 @@ def optimize_unitary_subcircuit_parameters(
 
         if verbose and index % 100 == 0:
             logger.info("Iteration %d: loss=%.6e", index, loop_loss)
-
-        lrs.append(optimizer.param_groups[0]["lr"])
 
         optimizer.zero_grad()
         loss.backward()
@@ -610,7 +550,4 @@ def optimize_unitary_subcircuit_parameters(
     return OptimizationResult(
         phase_shifter_params=torch.remainder(best_params, TWO_PI),
         best_loss=best_loss,
-        losses=losses,
-        lrs=lrs,
-        iterations=index,
     )

@@ -202,20 +202,6 @@ def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
     return converted
 
 
-def convert_output_ports(output_ports: list[int], chip_dim: int) -> list[int]:
-    """Build a chip-wide binary output-port mask from computation-zone mode indices.
-
-    Args:
-        output_ports: Physical mode indices belonging to the computation zone.
-        chip_dim: Total number of spatial modes on the chip.
-
-    Returns:
-        A list of length ``chip_dim`` with ``1`` at each output port and
-        ``0`` elsewhere.
-    """
-    return [1 if i in output_ports else 0 for i in range(chip_dim)]
-
-
 def get_input_ports_for_computation_zone(
     active_columns: list[int],
     target_dim: int,

@@ -16,7 +16,6 @@ from mqt.qmap.ph.graph import construct_graph
 from mqt.qmap.ph.routing import (
     MaskState,
     convert_input_ports,
-    convert_output_ports,
     get_best_route,
     get_input_ports_for_computation_zone,
     infer_input_computation_and_output_ports,
@@ -93,34 +92,6 @@ class TestConvertInputPorts:
     def test_total_length_matches_chip_dim() -> None:
         """Test that the result length equals chip_dim."""
         result = convert_input_ports([0], chip_dim=6)
-        assert len(result) == 6
-
-
-class TestConvertOutputPorts:
-    """Tests for convert_output_ports."""
-
-    @staticmethod
-    def test_first_window() -> None:
-        """Test that output ports [0, 1] on a 4-mode chip gives [1, 1, 0, 0]."""
-        result = convert_output_ports([0, 1], chip_dim=4)
-        assert result == [1, 1, 0, 0]
-
-    @staticmethod
-    def test_second_window() -> None:
-        """Test that output ports [2, 3] on a 4-mode chip gives [0, 0, 1, 1]."""
-        result = convert_output_ports([2, 3], chip_dim=4)
-        assert result == [0, 0, 1, 1]
-
-    @staticmethod
-    def test_empty_output_ports() -> None:
-        """Test that no output ports yields an all-zero vector."""
-        result = convert_output_ports([], chip_dim=4)
-        assert result == [0, 0, 0, 0]
-
-    @staticmethod
-    def test_length_matches_chip_dim() -> None:
-        """Test that the result length equals chip_dim."""
-        result = convert_output_ports([0, 1], chip_dim=6)
         assert len(result) == 6
 
 
