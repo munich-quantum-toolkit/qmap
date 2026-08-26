@@ -16,13 +16,10 @@
 
 #include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <ostream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -69,7 +66,7 @@ public:
   AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> qubits,
                const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& ops);
   AodOperation(NeutralAtomOperationKind kind, std::vector<qc::Qubit> targets,
-               std::vector<SingleOperation> operations);
+               std::vector<SingleOperation> ops);
 
   [[nodiscard]] std::unique_ptr<Operation> clone() const override {
     return std::make_unique<AodOperation>(*this);
@@ -93,10 +90,10 @@ public:
 
   [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
-  void dumpOpenQASM(std::ostream& of,
-                    const qc::QubitIndexToRegisterMap& qubitMap,
-                    const qc::BitIndexToRegisterMap& bitMap, std::size_t indent,
-                    bool openQASM3) const override;
+  /// Get the elementary AOD movements.
+  [[nodiscard]] const std::vector<SingleOperation>& getOperations() const {
+    return operations;
+  }
 
   void invert() override;
 };

@@ -10,13 +10,16 @@
 
 #include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomOperation.hpp"
-#include "ir/Register.hpp"
+#include "hybridmap/OpenQASMSerializer.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
 
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <memory>
 #include <sstream>
 #include <tuple>
+#include <vector>
 
 TEST(AodOperation, Activate) {
   // activate at position 0, dimension X, start 0.0, end 1.0
@@ -58,17 +61,20 @@ TEST(AodOperation, Distances) {
 }
 
 TEST(AodOperation, Qasm) {
-  const na::AodOperation move(na::NeutralAtomOperationKind::AodMove, {0, 1},
-                              {na::Dimension::X, na::Dimension::Y}, {0.0, 1.0},
-                              {1.0, 3.0});
+  qc::QuantumComputation computation(2);
+  computation.emplace_back(std::make_unique<na::AodOperation>(
+      na::NeutralAtomOperationKind::AodMove, qc::Targets{0, 1},
+      std::vector{na::Dimension::X, na::Dimension::Y}, std::vector{0.0, 1.0},
+      std::vector{1.0, 3.0}));
   std::stringstream ss;
-  qc::QuantumRegister qreg(0, 2, "q");
-  qc::QubitIndexToRegisterMap qubitToReg{};
-  qubitToReg.try_emplace(0, qreg, qreg.toString(0));
-  qubitToReg.try_emplace(1, qreg, qreg.toString(1));
-  move.dumpOpenQASM(ss, qubitToReg, {}, 0, false);
+  na::serializeOpenQASM(computation, ss);
 
-  EXPECT_EQ(ss.str(), "aod_move (0, 0, 1; 1, 1, 3) q[0], q[1];\n");
+  EXPECT_EQ(ss.str(), "// i 0 1\n"
+                      "// o 0 1\n"
+                      "OPENQASM 2.0;\n"
+                      "include \"qelib1.inc\";\n"
+                      "qreg q[2];\n"
+                      "aod_move (0, 0, 1; 1, 1, 3) q[0], q[1];\n");
 }
 
 TEST(AodOperation, Constructors) {

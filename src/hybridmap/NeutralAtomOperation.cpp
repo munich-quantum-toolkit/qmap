@@ -11,13 +11,10 @@
 #include "hybridmap/NeutralAtomOperation.hpp"
 
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 
-#include <cstddef>
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -98,17 +95,6 @@ bool NeutralAtomOperation::equals(const qc::Operation& operation) const {
   const auto* other = dynamic_cast<const NeutralAtomOperation*>(&operation);
   return other != nullptr && kind == other->kind &&
          qc::Operation::equals(operation);
-}
-
-void NeutralAtomOperation::dumpOpenQASM(
-    std::ostream& of, const qc::QubitIndexToRegisterMap& qubitMap,
-    [[maybe_unused]] const qc::BitIndexToRegisterMap& bitMap,
-    const std::size_t indent, [[maybe_unused]] const bool openQASM3) const {
-  of << std::string(indent * OUTPUT_INDENT_SIZE, ' ') << name;
-  for (std::size_t i = 0; i < targets.size(); ++i) {
-    of << (i == 0 ? " " : ", ") << qubitMap.at(targets[i]).second;
-  }
-  of << ";\n";
 }
 
 void NeutralAtomOperation::invert() {

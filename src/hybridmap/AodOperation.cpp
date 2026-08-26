@@ -12,7 +12,6 @@
 
 #include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/Operation.hpp"
 
 #include <algorithm>
@@ -20,9 +19,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iomanip>
-#include <limits>
-#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -146,37 +142,6 @@ bool AodOperation::equals(const qc::Operation& operation) const {
   const auto* other = dynamic_cast<const AodOperation*>(&operation);
   return other != nullptr && NeutralAtomOperation::equals(operation) &&
          operations == other->operations;
-}
-
-void AodOperation::dumpOpenQASM(
-    std::ostream& of, const qc::QubitIndexToRegisterMap& qubitMap,
-    [[maybe_unused]] const qc::BitIndexToRegisterMap& bitMap,
-    const size_t indent, bool /*openQASM3*/) const {
-  of << std::setprecision(std::numeric_limits<qc::fp>::digits10);
-  of << std::string(indent * OUTPUT_INDENT_SIZE, ' ') << name << " (";
-
-  // Write AOD operations with separator logic
-  bool first = true;
-  for (const auto& op : operations) {
-    if (!first) {
-      of << "; ";
-    }
-    first = false;
-    of << static_cast<std::size_t>(op.dir) << ", " << op.start << ", "
-       << op.end;
-  }
-  of << ")";
-
-  // Write qubits with separator logic
-  bool firstQubit = true;
-  for (const auto& qubit : targets) {
-    if (!firstQubit) {
-      of << ",";
-    }
-    firstQubit = false;
-    of << " " << qubitMap.at(qubit).second;
-  }
-  of << ";\n";
 }
 
 void AodOperation::invert() {
