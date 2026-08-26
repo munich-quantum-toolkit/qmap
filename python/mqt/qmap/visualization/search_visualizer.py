@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Self
 
 from .visualize_search_graph import visualize_search_graph
 
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
     from ipywidgets import Widget
 
-    from .._compat.typing import Self
     from .visualize_search_graph import SearchNode
 
 
