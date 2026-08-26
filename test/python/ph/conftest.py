@@ -92,7 +92,7 @@ def extreme_routing_chip():
     """A chip_dim=8 chip with extreme routing beam splitters and an ideal computation zone.
 
     Used to regression-test the graph-layer -> chip-layer routing mapping (see
-    ``get_edge_fidelity_odd_graph_layer`` in ``graph.py``): the extreme contrast
+    ``get_edge_cost_for_graph_layer`` in ``graph.py``): the extreme contrast
     forces a unique optimal route, so a mapping error changes the route and, end to
     end, ejects photons out of the computation window. The near-0.5 beam splitters
     used by the other scenarios cannot catch this -- there every MZI is near-perfect

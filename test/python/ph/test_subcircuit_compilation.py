@@ -132,7 +132,7 @@ def test_output_ports_follow_extreme_routing(extreme_routing_chip) -> None:
     On the extreme-routing chip the strong bar/cross contrast forces a unique
     optimal route that lands the computation window on modes [2, 3, 4, 5]. A
     graph-layer -> chip-layer mapping error (for example the ``+1`` sign bug in
-    ``get_edge_fidelity_odd_graph_layer`` in ``graph.py``) would instead route to
+    ``get_edge_cost_for_graph_layer`` in ``graph.py``) would instead route to
     window [0, 1, 2, 3]. This mirrors
     ``test_routing.TestRoutingLayerMappingRegression`` but exercises the whole
     public pipeline. Only a few optimizer iterations are needed because the

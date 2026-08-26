@@ -246,7 +246,7 @@ class TestRoutingLayerMappingRegression:
     the computation window lands on modes [2, 3, 4, 5].
 
     If the graph-layer -> chip-layer mapping in ``graph.py`` is off (for example the
-    sign of the offset in ``get_edge_fidelity_odd_graph_layer``), the router reads a
+    sign of the offset in ``get_edge_cost_for_graph_layer``), the router reads a
     neighbouring chip layer's fidelities and returns a different route
     (``[0, 1, 2, 2, 2, 1, 0]``, window [0, 1, 2, 3]). The near-0.5 beam splitters
     used by the other routing tests cannot catch this because there every MZI is

@@ -377,7 +377,7 @@ def test_extreme_routing_coincidence_rate(extreme_routing_chip) -> None:
     phase noise the coincidence rate is ~1.0 and the target is realized (tvd ~ 0).
 
     A mapping error (for example the ``+1`` sign bug in
-    ``get_edge_fidelity_odd_graph_layer``) picks a route that, executed on the
+    ``get_edge_cost_for_graph_layer``) picks a route that, executed on the
     extreme hardware, ejects photons clean out of the computation window; they are
     not lost (the mesh is unitary) but land in undetected modes, so the coincidence
     rate collapses (observed < 0.15). The near-0.5 beam splitters used by the other
