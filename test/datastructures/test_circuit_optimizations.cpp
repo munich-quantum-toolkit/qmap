@@ -14,9 +14,11 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
+#include "ir/operations/StandardOperation.hpp"
 
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <vector>
 
 namespace qmap {
 
@@ -337,6 +339,17 @@ TEST(SingleQubitGateFusion, PreservesOperationCounts) {
   EXPECT_EQ(circuit.getNops(), 4U);
   EXPECT_EQ(circuit.getNindividualOps(), 5U);
   EXPECT_EQ(circuit.getNsingleQubitOps(), 3U);
+}
+
+TEST(SingleQubitGateFusion, PreservesZeroTargetOperation) {
+  qc::QuantumComputation circuit(1U);
+  circuit.emplace_back<qc::StandardOperation>(qc::Targets{}, qc::GPhase,
+                                              std::vector{0.5});
+
+  singleQubitGateFusion(circuit);
+
+  ASSERT_EQ(circuit.size(), 1U);
+  EXPECT_EQ(circuit.front()->getType(), qc::GPhase);
 }
 
 TEST(ReplaceMCXWithMCZ, CX) {

@@ -122,33 +122,37 @@ auto CodeGenerator::generate(const QuantumComputation& input,
   }
   const auto ops = layer.getExecutablesOfType(H, 0);
   std::unordered_set<Qubit> affectedQubits;
-  std::transform(
-      ops.cbegin(), ops.cend(),
-      std::inserter(affectedQubits, affectedQubits.end()),
-      [](const auto& v) { return v->getOperation()->getTargets().front(); });
+  std::transform(ops.cbegin(), ops.cend(),
+                 std::inserter(affectedQubits, affectedQubits.end()),
+                 [](const auto& v) -> auto {
+                   return v->getOperation()->getTargets().front();
+                 });
   if (affectedQubits.size() != flattened.getNqubits() ||
       ops.size() != affectedQubits.size()) {
     throw std::invalid_argument("Not all atoms are initialized to plus state.");
   }
   // initialize atoms in to |+> state starting in |0> state
   code.emplaceBack<GlobalRYOp>(globalZone, PI_2);
-  std::for_each(ops.cbegin(), ops.cend(), [](const auto& v) { v->execute(); });
+  std::for_each(ops.cbegin(), ops.cend(),
+                [](const auto& v) -> void { v->execute(); });
   // Reference to the executable set of the input circuit
   const auto& executableSet = layer.getExecutableSet();
   if (result.stages.front().rydberg) {
     code.emplaceBack<GlobalCZOp>(interactionZone);
     // find and execute corresponding gates in input circuit
     for (const auto& g : result.stages.front().gates) {
-      const auto& it = std::find_if(
-          executableSet.begin(), executableSet.end(), [g](const auto& v) {
-            if (v->getOperation()->getType() == Z &&
-                v->getOperation()->getNcontrols() == 1) {
-              const auto& usedQubits = v->getOperation()->getUsedQubits();
-              const auto [first, second] = g.qubits;
-              return std::set{first, second} == usedQubits;
-            }
-            return false;
-          });
+      const auto& it =
+          std::find_if(executableSet.begin(), executableSet.end(),
+                       [g](const auto& v) -> bool {
+                         if (v->getOperation()->getType() == Z &&
+                             v->getOperation()->getNcontrols() == 1) {
+                           const auto& usedQubits =
+                               v->getOperation()->getUsedQubits();
+                           const auto [first, second] = g.qubits;
+                           return std::set{first, second} == usedQubits;
+                         }
+                         return false;
+                       });
       if (it == executableSet.end()) {
         throw std::invalid_argument(
             "Gate in input circuit has no correspondence in solution.");
@@ -193,16 +197,18 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     }
     // find and execute corresponding gates in input circuit
     for (const auto& g : result.stages.at(t).gates) {
-      const auto& it = std::find_if(
-          executableSet.begin(), executableSet.end(), [g](const auto& v) {
-            if (v->getOperation()->getType() == Z &&
-                v->getOperation()->getNcontrols() == 1) {
-              const auto& usedQubits = v->getOperation()->getUsedQubits();
-              const auto [first, second] = g.qubits;
-              return std::set{first, second} == usedQubits;
-            }
-            return false;
-          });
+      const auto& it =
+          std::find_if(executableSet.begin(), executableSet.end(),
+                       [g](const auto& v) -> bool {
+                         if (v->getOperation()->getType() == Z &&
+                             v->getOperation()->getNcontrols() == 1) {
+                           const auto& usedQubits =
+                               v->getOperation()->getUsedQubits();
+                           const auto [first, second] = g.qubits;
+                           return std::set{first, second} == usedQubits;
+                         }
+                         return false;
+                       });
       if (it == executableSet.end()) {
         throw std::invalid_argument(
             "Gate in input circuit has no correspondence in solution.");

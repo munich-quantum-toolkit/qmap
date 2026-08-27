@@ -290,7 +290,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
 }
 
 void singleQubitGateFusion(qc::QuantumComputation& qc) {
-  static const std::map<qc::OpType, qc::OpType> inverseMap = {
+  static const std::map<qc::OpType, qc::OpType> INVERSE_MAP = {
       {qc::I, qc::I},     {qc::X, qc::X},     {qc::Y, qc::Y},
       {qc::Z, qc::Z},     {qc::H, qc::H},     {qc::S, qc::Sdg},
       {qc::Sdg, qc::S},   {qc::T, qc::Tdg},   {qc::Tdg, qc::T},
@@ -300,7 +300,7 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
   for (auto& operation : qc) {
     if (!operation->isStandardOperation() ||
         !operation->getControls().empty() ||
-        operation->getTargets().size() > 1U) {
+        operation->getTargets().size() != 1U) {
       addToDAG(dag, &operation);
       continue;
     }
@@ -314,20 +314,14 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
     auto* previous = dag.at(target).back();
     if (!(*previous)->isCompoundOperation() &&
         (!(*previous)->getControls().empty() ||
-         (*previous)->getTargets().size() > 1U)) {
+         (*previous)->getTargets().size() != 1U)) {
       addToDAG(dag, &operation);
       continue;
     }
 
     if ((*previous)->isCompoundOperation()) {
       auto* compound = dynamic_cast<qc::CompoundOperation*>(previous->get());
-      std::size_t involvedQubits = 0;
-      for (std::size_t qubit = 0; qubit < dag.size(); ++qubit) {
-        if (compound->actsOn(static_cast<qc::Qubit>(qubit))) {
-          ++involvedQubits;
-        }
-      }
-      if (involvedQubits > 1U) {
+      if (compound->getUsedQubits().size() > 1U) {
         addToDAG(dag, &operation);
         continue;
       }
@@ -339,8 +333,8 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
       }
 
       const auto last = --compound->end();
-      const auto inverse = inverseMap.find((*last)->getType());
-      if (inverse != inverseMap.end() &&
+      const auto inverse = INVERSE_MAP.find((*last)->getType());
+      if (inverse != INVERSE_MAP.end() &&
           operation->getType() == inverse->second) {
         compound->pop_back();
         operation->setGate(qc::I);
@@ -353,8 +347,8 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
       continue;
     }
 
-    const auto inverse = inverseMap.find((*previous)->getType());
-    if (inverse != inverseMap.end() &&
+    const auto inverse = INVERSE_MAP.find((*previous)->getType());
+    if (inverse != INVERSE_MAP.end() &&
         operation->getType() == inverse->second) {
       (*previous)->setGate(qc::I);
       operation->setGate(qc::I);

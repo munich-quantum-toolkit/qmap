@@ -171,7 +171,7 @@ constexpr std::string_view fastRelaxedRoutingAwareConfiguration = R"({
       test_name##TestWithCircuits,      /* Custom instantiation name */        \
       test_name##Test,                  /* Test suite name */                  \
       ::testing::Values(TEST_CIRCUITS), /* Parameters to test with */          \
-      [](const ::testing::TestParamInfo<std::string>& pinfo) {                 \
+      [](const ::testing::TestParamInfo<std::string>& pinfo) -> auto {         \
         const std::filesystem::path path(pinfo.param);                         \
         return path.stem().string();                                           \
       })
