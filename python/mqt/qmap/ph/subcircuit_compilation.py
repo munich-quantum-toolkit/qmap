@@ -19,7 +19,6 @@ import torch
 from .graph import construct_graph
 from .routing import (
     get_best_route,
-    get_input_ports_for_computation_zone,
     infer_input_computation_and_output_ports,
     route_to_movement_mask,
 )
@@ -145,11 +144,10 @@ def _setup_routing(
         best_node_sequence, target_dim
     )
     _validate_input_ports(input_ports, chip_dim)
-    input_ports_for_computation_zone = get_input_ports_for_computation_zone(active_cols_computation_zone, target_dim)
 
-    # When photons enter on odd columns, apply a swap permutation to the target
-    # so the optimizer sees the correct column ordering.
-    if input_ports_for_computation_zone[0] == 0:
+    # When photons enter on odd columns (mode 0 is not an active input), apply a swap
+    # permutation to the target so the optimizer sees the correct column ordering.
+    if 0 not in active_cols_computation_zone:
         permutation_matrix = torch.zeros((target_dim, target_dim), dtype=torch.complex128)
         for i in range(target_dim):
             if i % 2 == 0:

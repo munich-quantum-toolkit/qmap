@@ -15,9 +15,7 @@ torch = pytest.importorskip("torch")
 from mqt.qmap.ph.graph import construct_graph
 from mqt.qmap.ph.routing import (
     MaskState,
-    convert_input_ports,
     get_best_route,
-    get_input_ports_for_computation_zone,
     infer_input_computation_and_output_ports,
     route_to_movement_mask,
 )
@@ -63,58 +61,6 @@ class TestInferInputComputationAndOutputPorts:
         """Test that a route with fewer than 2 nodes raises ValueError."""
         with pytest.raises(ValueError, match="at least 2 nodes"):
             infer_input_computation_and_output_ports([0], target_dim=2)
-
-
-class TestConvertInputPorts:
-    """Tests for convert_input_ports."""
-
-    @staticmethod
-    def test_first_mode_active() -> None:
-        """Test that active port 0 on a 4-mode chip gives [1, 0, 0, 0]."""
-        # input_ports=[0] on a 4-mode chip: mode 0 gets photon, mode 1 skipped
-        result = convert_input_ports([0], chip_dim=4)
-        assert result == [1, 0, 0, 0]
-
-    @staticmethod
-    def test_third_mode_active() -> None:
-        """Test that active port 2 on a 4-mode chip gives [0, 0, 1, 0]."""
-        # input_ports=[2]: mode 2 gets photon, mode 3 skipped
-        result = convert_input_ports([2], chip_dim=4)
-        assert result == [0, 0, 1, 0]
-
-    @staticmethod
-    def test_no_active_modes() -> None:
-        """Test that no active ports yields an all-zero vector."""
-        result = convert_input_ports([], chip_dim=4)
-        assert result == [0, 0, 0, 0]
-
-    @staticmethod
-    def test_total_length_matches_chip_dim() -> None:
-        """Test that the result length equals chip_dim."""
-        result = convert_input_ports([0], chip_dim=6)
-        assert len(result) == 6
-
-
-class TestGetInputPortsForComputationZone:
-    """Tests for get_input_ports_for_computation_zone."""
-
-    @staticmethod
-    def test_first_active_col() -> None:
-        """Test that active col 0 with target_dim=2 gives [1, 0]."""
-        result = get_input_ports_for_computation_zone([0], target_dim=2)
-        assert result == [1, 0]
-
-    @staticmethod
-    def test_second_active_col() -> None:
-        """Test that active col 1 with target_dim=2 gives [0, 1]."""
-        result = get_input_ports_for_computation_zone([1], target_dim=2)
-        assert result == [0, 1]
-
-    @staticmethod
-    def test_multiple_active_cols() -> None:
-        """Test that active cols [0, 2] with target_dim=4 gives [1, 0, 1, 0]."""
-        result = get_input_ports_for_computation_zone([0, 2], target_dim=4)
-        assert result == [1, 0, 1, 0]
 
 
 class TestRouteToMovementMask:
@@ -247,7 +193,7 @@ class TestRoutingLayerMappingRegression:
 
     If the graph-layer -> chip-layer mapping in ``graph.py`` is off (for example the
     sign of the offset in ``get_edge_cost_for_graph_layer``), the router reads a
-    neighbouring chip layer's fidelities and returns a different route
+    neighboring chip layer's fidelities and returns a different route
     (``[0, 1, 2, 2, 2, 1, 0]``, window [0, 1, 2, 3]). The near-0.5 beam splitters
     used by the other routing tests cannot catch this because there every MZI is
     near-perfect at both bar and cross, so the mapping barely affects the cost.

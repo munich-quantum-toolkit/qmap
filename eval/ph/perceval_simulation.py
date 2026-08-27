@@ -27,6 +27,30 @@ if TYPE_CHECKING:
 SIMULATION_BACKEND = "SLOS"
 
 
+def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
+    """Build a chip-wide binary occupancy vector from dual-rail input port indices.
+
+    Perceval's :class:`~perceval.utils.BasicState` takes an occupancy vector, not a
+    list of mode indices, so the compiler's index-based ports are converted here at
+    the simulation boundary. Each entry in ``input_ports`` is the lower mode of a
+    dual-rail pair and receives a single photon; every other mode stays empty. The
+    indices are assumed valid (in range and distinct).
+
+    Args:
+        input_ports: Physical mode indices where photons are injected (lower
+            mode of each dual-rail pair).
+        chip_dim: Total number of spatial modes on the chip.
+
+    Returns:
+        A binary occupancy list of length ``chip_dim`` - ``1`` on each injected
+        mode and ``0`` elsewhere.
+    """
+    converted = [0] * chip_dim
+    for port in input_ports:
+        converted[port] = 1
+    return converted
+
+
 def create_mzi_chip(
     bs_list: list[float],
     ps_matrix: torch.Tensor | np.ndarray,

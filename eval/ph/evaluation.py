@@ -28,12 +28,12 @@ from baseline import get_baseline_active_cols
 from perceval import algorithm
 from perceval_simulation import (
     SIMULATION_BACKEND,
+    convert_input_ports,
     create_mzi_chip,
     evaluate_chip_performance,
     simulate_with_loss,
 )
 
-from mqt.qmap.ph.routing import convert_input_ports
 from mqt.qmap.ph.subcircuit_compilation import CompilationResult, OptimizationConfig
 from mqt.qmap.ph.unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
 

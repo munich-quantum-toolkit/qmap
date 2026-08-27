@@ -179,51 +179,6 @@ def infer_input_computation_and_output_ports(
     return input_ports, output_ports, active_cols
 
 
-def convert_input_ports(input_ports: list[int], chip_dim: int) -> list[int]:
-    """Build a chip-wide binary input-state vector from dual-rail input port indices.
-
-    Each entry in ``input_ports`` is the lower mode of a dual-rail pair and
-    receives a single photon; every other mode stays empty.  The indices are
-    assumed valid (in range and distinct); callers using ports from an
-    untrusted source should validate them first.
-
-    Args:
-        input_ports: Physical mode indices where photons are injected (lower
-            mode of each dual-rail pair).
-        chip_dim: Total number of spatial modes on the chip.
-
-    Returns:
-        A binary occupancy list of length ``chip_dim`` - ``1`` on each injected
-        mode and ``0`` elsewhere.
-    """
-    converted = [0] * chip_dim
-    for port in input_ports:
-        converted[port] = 1
-    return converted
-
-
-def get_input_ports_for_computation_zone(
-    active_columns: list[int],
-    target_dim: int,
-) -> list[int]:
-    """Build a binary input vector for the computation zone from active column indices.
-
-    Args:
-        active_columns: Column indices within the computation zone that carry
-            a photon.
-        target_dim: Dimension of the target unitary (size of the computation
-            zone).
-
-    Returns:
-        A list of length ``target_dim`` with ``1`` at each active column and
-        ``0`` elsewhere.
-    """
-    result = [0] * target_dim
-    for col in active_columns:
-        result[col] = 1
-    return result
-
-
 def route_to_movement_mask(
     route: list[int],
     chip_dim: int,
@@ -246,7 +201,7 @@ def route_to_movement_mask(
     Raises:
         ValueError: If the route contains a non-adjacent transition between
             consecutive layers (a step that is neither straight-through nor a
-            move to an immediate neighbour), which cannot correspond to a valid
+            move to an immediate neighbor), which cannot correspond to a valid
             routing-graph edge.
     """
     movement_mask = torch.ones((chip_dim, chip_dim), dtype=torch.int)
@@ -256,7 +211,7 @@ def route_to_movement_mask(
 
     # Each transition is realized in one chip layer (chip_layer = i - 2). A single rule covers
     # every layer: a "bar" step (mode unchanged) leaves the column as BAR, while a "cross" step
-    # (a move to an immediate neighbour) marks a target_dim-wide CROSS run.
+    # (a move to an immediate neighbor) marks a target_dim-wide CROSS run.
     for i in range(2, len(route) - 1):
         chip_layer = i - 2
         # The node being left. The input-layer node (i == 2) is half-indexed - node n sits on
@@ -270,7 +225,7 @@ def route_to_movement_mask(
         if abs(prev_mode - node) != 1:
             msg = (
                 f"Invalid edge from node_{route[i - 1]} to node_{node} at chip layer {chip_layer}: a routing "
-                f"transition must be straight-through (bar) or a move to an immediate neighbour (cross)."
+                f"transition must be straight-through (bar) or a move to an immediate neighbor (cross)."
             )
             raise ValueError(msg)
 
