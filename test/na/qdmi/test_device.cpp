@@ -267,6 +267,54 @@ TEST(NaRuntimeConfiguration, ValidatesRawParameterStringsAndRetry) {
   MQT_QMAP_NA_QDMI_device_session_free(session);
 }
 
+TEST(NaRuntimeConfiguration, ReportsInvalidModelDiagnosticsToStderr) {
+  MQT_QMAP_NA_QDMI_Device_Session session = nullptr;
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_alloc(&session), QDMI_SUCCESS);
+  constexpr auto invalidConfiguration = std::to_array("{}");
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_set_parameter(
+                session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1,
+                invalidConfiguration.size(), invalidConfiguration.data()),
+            QDMI_SUCCESS);
+
+  ::testing::internal::CaptureStderr();
+  const auto status = MQT_QMAP_NA_QDMI_device_session_init(session);
+  const auto diagnostic = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_EQ(status, QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_THAT(diagnostic,
+              ::testing::AllOf(
+                  ::testing::HasSubstr("[mqt-qmap] [error]"),
+                  ::testing::HasSubstr(
+                      "Invalid NA device configuration from inline session "
+                      "configuration"),
+                  ::testing::HasSubstr("$/schema-version is required")));
+  MQT_QMAP_NA_QDMI_device_session_free(session);
+}
+
+TEST(NaRuntimeConfiguration, ReportsInitializationFailuresToStderr) {
+  MQT_QMAP_NA_QDMI_Device_Session session = nullptr;
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_alloc(&session), QDMI_SUCCESS);
+  constexpr auto overflowingNumber = std::to_array("1e1000");
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_set_parameter(
+                session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1,
+                overflowingNumber.size(), overflowingNumber.data()),
+            QDMI_SUCCESS);
+
+  ::testing::internal::CaptureStderr();
+  const auto status = MQT_QMAP_NA_QDMI_device_session_init(session);
+  const auto diagnostic = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_EQ(status, QDMI_ERROR_FATAL);
+  EXPECT_THAT(
+      diagnostic,
+      ::testing::AllOf(::testing::HasSubstr("[mqt-qmap] [error]"),
+                       ::testing::HasSubstr(
+                           "Failed to initialize NA device from inline session "
+                           "configuration"),
+                       ::testing::HasSubstr("number overflow")));
+  MQT_QMAP_NA_QDMI_device_session_free(session);
+}
+
 TEST(NaRuntimeConfiguration, SelectsEnvironmentAndExplicitSources) {
   std::ifstream input(NA_DEVICE_JSON);
   ASSERT_TRUE(input);

@@ -23,22 +23,61 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <new>
+#include <optional>
 #include <span>
-#include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <stdio.h>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
 
 namespace {
+/// Writes one best-effort diagnostic to the process standard error stream.
+///
+/// The writer does not allocate memory. This property lets exception handlers
+/// report allocation failures without throwing another exception.
+void emitDiagnostic(
+    const std::initializer_list<std::string_view> parts) noexcept {
+#ifdef _WIN32
+  _lock_file(stderr);
+#else
+  flockfile(stderr);
+#endif
+  const auto write = [](const std::string_view part) noexcept {
+    if (!part.empty()) {
+#ifdef _WIN32
+      _fwrite_nolock(part.data(), sizeof(char), part.size(), stderr);
+#else
+      std::fwrite(part.data(), sizeof(char), part.size(), stderr);
+#endif
+    }
+  };
+  write("[mqt-qmap] [error] ");
+  for (const auto part : parts) {
+    write(part);
+  }
+#ifdef _WIN32
+  _fputc_nolock('\n', stderr);
+  _fflush_nolock(stderr);
+  _unlock_file(stderr);
+#else
+  std::fputc('\n', stderr);
+  std::fflush(stderr);
+  funlockfile(stderr);
+#endif
+}
+
 [[nodiscard]] auto inside(const na::Device::Region& region, const int64_t x,
                           const int64_t y) -> bool {
   return region.origin.x <= x &&
@@ -76,16 +115,18 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
   if (status_ != Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  int loadStatus = QDMI_SUCCESS;
-  const auto loaded = ::qdmi::detail::loadDeviceConfiguration(
-      inlineConfiguration_, fileConfiguration_, "MQT_QMAP_QDMI_NA_CONFIG_JSON",
-      "MQT_QMAP_QDMI_NA_CONFIG_FILE", "mqt-qmap-qdmi-na-device.json",
-      reinterpret_cast<const void*>(&MQT_QMAP_NA_QDMI_device_initialize),
-      loadStatus);
-  if (!loaded) {
-    return loadStatus;
-  }
+  std::optional<::qdmi::detail::LoadedDeviceConfiguration> loaded;
   try {
+    int loadStatus = QDMI_SUCCESS;
+    loaded = ::qdmi::detail::loadDeviceConfiguration(
+        inlineConfiguration_, fileConfiguration_,
+        "MQT_QMAP_QDMI_NA_CONFIG_JSON", "MQT_QMAP_QDMI_NA_CONFIG_FILE",
+        "mqt-qmap-qdmi-na-device.json",
+        reinterpret_cast<const void*>(&MQT_QMAP_NA_QDMI_device_initialize),
+        loadStatus);
+    if (!loaded) {
+      return loadStatus;
+    }
     const auto configuration = na::readJSON(loaded->json, loaded->source);
     std::vector<std::unique_ptr<MQT_QMAP_NA_QDMI_Site_impl_d>> newSiteStorage;
     std::vector<MQT_QMAP_NA_QDMI_Site> newSites;
@@ -216,16 +257,25 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
     status_ = Status::INITIALIZED;
     return QDMI_SUCCESS;
   } catch (const std::bad_alloc&) {
-    SPDLOG_ERROR("Out of memory while initializing NA device from {}",
-                 loaded->source);
+    const std::string_view source =
+        loaded ? std::string_view(loaded->source)
+               : std::string_view("selected configuration");
+    emitDiagnostic(
+        {"Out of memory while initializing NA device from ", source});
     return QDMI_ERROR_OUTOFMEM;
   } catch (const std::invalid_argument& error) {
-    SPDLOG_ERROR("Invalid NA device configuration from {}: {}", loaded->source,
-                 error.what());
+    const std::string_view source =
+        loaded ? std::string_view(loaded->source)
+               : std::string_view("selected configuration");
+    emitDiagnostic(
+        {"Invalid NA device configuration from ", source, ": ", error.what()});
     return QDMI_ERROR_INVALIDARGUMENT;
   } catch (const std::exception& error) {
-    SPDLOG_ERROR("Failed to initialize NA device from {}: {}", loaded->source,
-                 error.what());
+    const std::string_view source =
+        loaded ? std::string_view(loaded->source)
+               : std::string_view("selected configuration");
+    emitDiagnostic(
+        {"Failed to initialize NA device from ", source, ": ", error.what()});
     return QDMI_ERROR_FATAL;
   }
 }

@@ -18,7 +18,7 @@ if(NOT TARGET ${TARGET_NAME})
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC nlohmann_json::nlohmann_json
-    PRIVATE spdlog::spdlog MQT::ProjectOptions MQT::ProjectWarnings)
+    PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
   # The configuration schema uses the three-way comparison operator. Unlike the other targets, this
   # one links no MQT::Core library to inherit the standard from.
@@ -58,9 +58,8 @@ if(NOT TARGET ${TARGET_NAME})
     ${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>
                           $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)
 
-  target_link_libraries(
-    ${TARGET_NAME} PRIVATE MQT::CoreQDMICommon MQT::QMapNAQDMIDeviceConfig spdlog::spdlog
-                           MQT::ProjectOptions MQT::ProjectWarnings)
+  target_link_libraries(${TARGET_NAME} PRIVATE MQT::CoreQDMICommon MQT::QMapNAQDMIDeviceConfig
+                                               MQT::ProjectOptions MQT::ProjectWarnings)
 
   # The device reports its own version. Wheel builds get it from scikit-build-core; plain CMake
   # builds have no project version to report.
