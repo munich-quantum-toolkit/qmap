@@ -14,25 +14,27 @@
 
 #pragma once
 
-#include "na/computation/entities/Zone.hpp"
-#include "na/computation/operations/GlobalOp.hpp"
+#include "na/ir/entities/Zone.hpp"
+#include "na/ir/operations/NAComputationGlobalOperation.hpp"
 
 #include <utility>
 #include <vector>
 
 namespace na {
 /// Represents a global CZ operation in the NAComputation.
-class GlobalCZOp final : public GlobalOp {
+class NAComputationGlobalCZOperation final
+    : public NAComputationGlobalOperation {
 public:
   /// Creates a new CZ operation in the given zones.
   /// @param zones The zones the operation is applied to.
-  explicit GlobalCZOp(std::vector<const Zone*> zones)
-      : GlobalOp(std::move(zones), {}) {
+  explicit NAComputationGlobalCZOperation(std::vector<const Zone*> zones)
+      : NAComputationGlobalOperation(std::move(zones), {}) {
     name_ = "cz";
   }
 
   /// Creates a new CZ operation in the given zone.
   /// @param zone The zone the operation is applied to.
-  explicit GlobalCZOp(const Zone& zone) : GlobalCZOp({&zone}) {}
+  explicit NAComputationGlobalCZOperation(const Zone& zone)
+      : NAComputationGlobalCZOperation({&zone}) {}
 };
 } // namespace na

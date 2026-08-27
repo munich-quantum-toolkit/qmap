@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/computation/operations/GlobalOp.hpp"
+#include "na/ir/operations/NAComputationGlobalOperation.hpp"
 
 #include "ir/Definitions.hpp"
 
@@ -30,7 +30,7 @@ auto printGlobalParams(const std::vector<qc::fp>& params,
 }
 } // namespace
 
-auto GlobalOp::toString() const -> std::string {
+auto NAComputationGlobalOperation::toString() const -> std::string {
   std::ostringstream ss;
   ss << std::setprecision(5) << std::fixed;
   ss << "@+ " << name_ << " ";
@@ -40,10 +40,10 @@ auto GlobalOp::toString() const -> std::string {
     return ss.str();
   }
   ss << "[\n";
-  for (const auto& atom : zones_) {
+  for (const auto& zone : zones_) {
     ss << "    ";
     printGlobalParams(params_, ss);
-    ss << *atom << "\n";
+    ss << *zone << "\n";
   }
   ss << "]";
   return ss.str();

@@ -8,10 +8,10 @@
  * Licensed under the MIT License
  */
 
-#include "na/computation/operations/LocalOp.hpp"
+#include "na/ir/operations/NAComputationLocalOperation.hpp"
 
 #include "ir/Definitions.hpp"
-#include "na/computation/entities/Atom.hpp"
+#include "na/ir/entities/Atom.hpp"
 
 #include <iomanip>
 #include <ios>
@@ -31,7 +31,7 @@ auto printLocalParams(const std::vector<qc::fp>& params, std::ostringstream& os)
 }
 } // namespace
 
-auto LocalOp::toString() const -> std::string {
+auto NAComputationLocalOperation::toString() const -> std::string {
   std::ostringstream ss;
   ss << std::setprecision(5) << std::fixed;
   ss << "@+ " << name_ << " ";

@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/operations/Op.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/NAComputationOperation.hpp"
 
 #include <utility>
 #include <vector>
@@ -25,18 +25,18 @@ namespace na {
 /// Represents a shuttling operation in the NAComputation.
 /// @details A shuttling operation is the super class for all shuttling-related
 /// operations, i.e., load, store, and move operations.
-class ShuttlingOp : public Op {
+class NAComputationShuttlingOperation : public NAComputationOperation {
 protected:
   /// The atoms the operation is applied to.
   std::vector<const Atom*> atoms_;
 
   /// Creates a new shuttling operation with the given atoms.
   /// @param atoms The atoms the operation is applied to.
-  explicit ShuttlingOp(std::vector<const Atom*> atoms)
+  explicit NAComputationShuttlingOperation(std::vector<const Atom*> atoms)
       : atoms_(std::move(atoms)) {}
 
 public:
-  ShuttlingOp() = delete;
+  NAComputationShuttlingOperation() = delete;
 
   /// Returns the atoms the operation is applied to.
   [[nodiscard]] auto getAtoms() const -> auto& { return atoms_; }

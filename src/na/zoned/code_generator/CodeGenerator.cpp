@@ -14,17 +14,17 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/computation/NAComputation.hpp"
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/entities/Zone.hpp"
-#include "na/computation/operations/GlobalCZOp.hpp"
-#include "na/computation/operations/GlobalRYOp.hpp"
-#include "na/computation/operations/LoadOp.hpp"
-#include "na/computation/operations/LocalRZOp.hpp"
-#include "na/computation/operations/LocalUOp.hpp"
-#include "na/computation/operations/MoveOp.hpp"
-#include "na/computation/operations/StoreOp.hpp"
+#include "na/ir/NAComputation.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/entities/Zone.hpp"
+#include "na/ir/operations/NAComputationGlobalCZOperation.hpp"
+#include "na/ir/operations/NAComputationGlobalRYOperation.hpp"
+#include "na/ir/operations/NAComputationLoadOperation.hpp"
+#include "na/ir/operations/NAComputationLocalRZOperation.hpp"
+#include "na/ir/operations/NAComputationLocalUOperation.hpp"
+#include "na/ir/operations/NAComputationMoveOperation.hpp"
+#include "na/ir/operations/NAComputationStoreOperation.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
 
@@ -69,10 +69,10 @@ auto CodeGenerator::appendSingleQubitGates(
         const auto& compOp = dynamic_cast<const qc::CompoundOperation&>(*op);
         const auto opType = compOp.front()->getType();
         if (opType == qc::RY) {
-          code.emplaceBack<GlobalRYOp>(globalZone,
-                                       compOp.front()->getParameter().front());
+          code.emplaceBack<NAComputationGlobalRYOperation>(
+              globalZone, compOp.front()->getParameter().front());
         } else if (opType == qc::Y) {
-          code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
+          code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, qc::PI);
         } else {
           // this case should never occur since the scheduler should filter out
           // other global gates that are not supported already.
@@ -80,9 +80,10 @@ auto CodeGenerator::appendSingleQubitGates(
         }
       } else {
         if (const auto opType = op->getType(); opType == qc::RY) {
-          code.emplaceBack<GlobalRYOp>(globalZone, op->getParameter().front());
+          code.emplaceBack<NAComputationGlobalRYOperation>(
+              globalZone, op->getParameter().front());
         } else if (opType == qc::Y) {
-          code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
+          code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, qc::PI);
         } else if (nQubits == 1) {
           // special case for one qubit, fall through to local gates
           singleQubitGate = true;
@@ -103,17 +104,20 @@ auto CodeGenerator::appendSingleQubitGates(
       const qc::Qubit qubit = op->getTargets().front();
       // By default, all variants of rotational z-gates are supported
       if (op->getType() == qc::RZ || op->getType() == qc::P) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit], op->getParameter().front());
+        code.emplaceBack<NAComputationLocalRZOperation>(
+            atoms[qubit], op->getParameter().front());
       } else if (op->getType() == qc::Z) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI);
+        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit], qc::PI);
       } else if (op->getType() == qc::S) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_2);
+        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit], qc::PI_2);
       } else if (op->getType() == qc::Sdg) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_2);
+        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit],
+                                                        -qc::PI_2);
       } else if (op->getType() == qc::T) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_4);
+        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit], qc::PI_4);
       } else if (op->getType() == qc::Tdg) {
-        code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_4);
+        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit],
+                                                        -qc::PI_4);
       } else {
         // in this case, the gate is not any variant of a rotational z-gate.
         // depending on the settings, a warning is printed.
@@ -123,34 +127,37 @@ auto CodeGenerator::appendSingleQubitGates(
               qc::toString(op->getType()));
         }
         if (op->getType() == qc::U) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], op->getParameter().front(),
-                                     op->getParameter().at(1),
-                                     op->getParameter().at(2));
+          code.emplaceBack<NAComputationLocalUOperation>(
+              atoms[qubit], op->getParameter().front(),
+              op->getParameter().at(1), op->getParameter().at(2));
         } else if (op->getType() == qc::U2) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2,
-                                     op->getParameter().front(),
-                                     op->getParameter().at(1));
+          code.emplaceBack<NAComputationLocalUOperation>(
+              atoms[qubit], qc::PI_2, op->getParameter().front(),
+              op->getParameter().at(1));
         } else if (op->getType() == qc::RX) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], op->getParameter().front(),
-                                     -qc::PI_2, qc::PI_2);
+          code.emplaceBack<NAComputationLocalUOperation>(
+              atoms[qubit], op->getParameter().front(), -qc::PI_2, qc::PI_2);
         } else if (op->getType() == qc::RY) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], op->getParameter().front(),
-                                     0, 0);
+          code.emplaceBack<NAComputationLocalUOperation>(
+              atoms[qubit], op->getParameter().front(), 0, 0);
         } else if (op->getType() == qc::H) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, 0, qc::PI);
+          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI_2,
+                                                         0, qc::PI);
         } else if (op->getType() == qc::X) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, 0, qc::PI);
+          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI,
+                                                         0, qc::PI);
         } else if (op->getType() == qc::Y) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, qc::PI_2, qc::PI_2);
+          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI,
+                                                         qc::PI_2, qc::PI_2);
         } else if (op->getType() == qc::Vdg) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, qc::PI_2,
-                                     -qc::PI_2);
+          code.emplaceBack<NAComputationLocalUOperation>(
+              atoms[qubit], -qc::PI_2, qc::PI_2, -qc::PI_2);
         } else if (op->getType() == qc::SX) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, -qc::PI_2,
-                                     qc::PI_2);
+          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI_2,
+                                                         -qc::PI_2, qc::PI_2);
         } else if (op->getType() == qc::SXdg || op->getType() == qc::V) {
-          code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
-                                     qc::PI_2);
+          code.emplaceBack<NAComputationLocalUOperation>(
+              atoms[qubit], -qc::PI_2, -qc::PI_2, qc::PI_2);
         } else {
           // if the gate type is not recognized, an error is printed and the
           // gate is not included in the output.
@@ -176,7 +183,7 @@ auto CodeGenerator::appendTwoQubitGates(
   zonePtrs.reserve(zones.size());
   std::transform(zones.begin(), zones.end(), std::back_inserter(zonePtrs),
                  [](const auto& zone) { return &zone.get(); });
-  code.emplaceBack<GlobalCZOp>(zonePtrs);
+  code.emplaceBack<NAComputationGlobalCZOperation>(zonePtrs);
   appendRearrangement(executionPlacement, targetRouting, targetPlacement, atoms,
                       code);
 }
@@ -244,7 +251,8 @@ auto CodeGenerator::RearrangementGenerator::addSourceMove(
     }
   }
   if (!atomsToOffset.empty()) {
-    code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    code.emplaceBack<NAComputationMoveOperation>(atomsToOffset,
+                                                 offsetTargetLocations);
   }
 }
 auto CodeGenerator::RearrangementGenerator::addTargetMove(
@@ -268,7 +276,8 @@ auto CodeGenerator::RearrangementGenerator::addTargetMove(
     }
   }
   if (!atomsToOffset.empty()) {
-    code.emplaceBack<MoveOp>(atomsToOffset, offsetTargetLocations);
+    code.emplaceBack<NAComputationMoveOperation>(atomsToOffset,
+                                                 offsetTargetLocations);
   }
 }
 auto CodeGenerator::RearrangementGenerator::loadRowByRow(
@@ -393,7 +402,7 @@ auto CodeGenerator::RearrangementGenerator::loadRowByRow(
         }
       }
     }
-    code.emplaceBack<LoadOp>(atomsToLoad);
+    code.emplaceBack<NAComputationLoadOperation>(atomsToLoad);
     addSourceMove(sourceXToAodCol, sourceYToAodRow, atoms, code);
   }
 }
@@ -572,7 +581,7 @@ auto CodeGenerator::RearrangementGenerator::loadColumnByColumn(
       const auto aodRow = sourceYToAodRow.at(qubitMovement.sourceY);
       aodRowsToY_[aodRow] = qubitMovement.sourceY + (sign * sourceDy_ / 2);
     }
-    code.emplaceBack<LoadOp>(atomsToLoad);
+    code.emplaceBack<NAComputationLoadOperation>(atomsToLoad);
     addSourceMove(sourceXToAodCol, sourceYToAodRow, atoms, code);
   }
 }
@@ -742,7 +751,7 @@ auto CodeGenerator::RearrangementGenerator::storeRowByRow(
         aodColsToX_[aodCol] = qubitMovement.targetX + (targetDx_ / 4);
       }
     }
-    code.emplaceBack<StoreOp>(atomsToStore);
+    code.emplaceBack<NAComputationStoreOperation>(atomsToStore);
     for (const auto row : rowsToStore | std::views::keys) {
       aodRowsToY_.erase(row);
     }
@@ -1023,7 +1032,7 @@ auto CodeGenerator::RearrangementGenerator::storeColumnByColumn(
       const auto aodRow = targetYToAodRow.at(qubitMovement.targetY);
       aodRowsToY_[aodRow] = qubitMovement.targetY + (sign * targetDy_ / 2);
     }
-    code.emplaceBack<StoreOp>(atomsToStore);
+    code.emplaceBack<NAComputationStoreOperation>(atomsToStore);
     for (const auto col : colsToStore | std::views::keys) {
       aodColsToX_.erase(col);
     }

@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/operations/ShuttlingOp.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/NAComputationShuttlingOperation.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -28,7 +28,8 @@ namespace na {
 /// Represents a load operation in the NAComputation.
 /// @details Before an atom can be moved, it must be loaded, i.e., transferred
 /// from a static SLM to an adjustable AOD trap.
-class LoadOp final : public ShuttlingOp {
+class NAComputationLoadOperation final
+    : public NAComputationShuttlingOperation {
 protected:
   /// The target locations to load the atoms to.
   std::optional<std::vector<Location>> targetLocations_ = std::nullopt;
@@ -39,8 +40,9 @@ public:
   /// a certain offset.
   /// @param atoms The atoms to load.
   /// @param targetLocations The target locations to load the atoms to.
-  LoadOp(std::vector<const Atom*> atoms, std::vector<Location> targetLocations)
-      : ShuttlingOp(std::move(atoms)),
+  NAComputationLoadOperation(std::vector<const Atom*> atoms,
+                             std::vector<Location> targetLocations)
+      : NAComputationShuttlingOperation(std::move(atoms)),
         targetLocations_(std::move(targetLocations)) {
     if (atoms_.size() != targetLocations_->size()) {
       throw std::invalid_argument(
@@ -52,22 +54,23 @@ public:
   /// @details This constructor is used if the target locations are not set,
   /// i.e., the load operation does not incorporate any offset.
   /// @param atoms The atoms to load.
-  explicit LoadOp(std::vector<const Atom*> atoms)
-      : ShuttlingOp(std::move(atoms)) {}
+  explicit NAComputationLoadOperation(std::vector<const Atom*> atoms)
+      : NAComputationShuttlingOperation(std::move(atoms)) {}
 
   /// Creates a new load operation with the given atom and target location.
   /// @details The target locations can be set if the loading operation contains
   /// a certain offset.
   /// @param atom The atom to load.
   /// @param targetLocation The target location to load the atom to.
-  LoadOp(const Atom& atom, const Location& targetLocation)
-      : LoadOp({&atom}, {targetLocation}) {}
+  NAComputationLoadOperation(const Atom& atom, const Location& targetLocation)
+      : NAComputationLoadOperation({&atom}, {targetLocation}) {}
 
   /// Creates a new load operation with the given atom.
   /// @details This constructor is used if the target locations are not set,
   /// i.e., the load operation does not incorporate any offset.
   /// @param atom The atom to load.
-  explicit LoadOp(const Atom& atom) : LoadOp({&atom}) {}
+  explicit NAComputationLoadOperation(const Atom& atom)
+      : NAComputationLoadOperation({&atom}) {}
 
   /// Returns whether the load operation has target locations set.
   [[nodiscard]] auto hasTargetLocations() const -> bool override {

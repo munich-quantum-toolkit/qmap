@@ -18,7 +18,7 @@ if(NOT TARGET ${TARGET_NAME})
 
   target_link_libraries(
     ${TARGET_NAME}
-    PUBLIC MQT::CoreIR MQT::QMapNAComputation nlohmann_json::nlohmann_json spdlog::spdlog
+    PUBLIC MQT::CoreIR MQT::QMapNAIR nlohmann_json::nlohmann_json spdlog::spdlog
     PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
   add_library(MQT::QMapNAZoned ALIAS ${TARGET_NAME})

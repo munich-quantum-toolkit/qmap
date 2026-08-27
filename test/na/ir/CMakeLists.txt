@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT License
 
-if(TARGET MQT::QMapNAComputation)
+if(TARGET MQT::QMapNAIR)
   file(GLOB SOURCES *.cpp)
-  package_add_test(mqt-qmap-na-computation-test MQT::QMapNAComputation ${SOURCES})
+  package_add_test(mqt-qmap-na-ir-test MQT::QMapNAIR ${SOURCES})
 endif()

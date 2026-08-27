@@ -8,16 +8,16 @@
  * Licensed under the MIT License
  */
 
-#include "na/computation/operations/LoadOp.hpp"
+#include "na/ir/operations/NAComputationStoreOperation.hpp"
 
 #include <cstddef>
 #include <sstream>
 #include <string>
 
 namespace na {
-auto LoadOp::toString() const -> std::string {
+auto NAComputationStoreOperation::toString() const -> std::string {
   std::stringstream ss;
-  ss << "@+ load";
+  ss << "@+ store";
   if (atoms_.size() == 1) {
     if (targetLocations_) {
       ss << " " << targetLocations_->front();

@@ -6,10 +6,10 @@
 #
 # Licensed under the MIT License
 
-set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-computation)
+set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-ir)
 
 if(NOT TARGET ${TARGET_NAME})
-  file(GLOB_RECURSE HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/computation/*.hpp)
+  file(GLOB_RECURSE HEADERS ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/ir/*.hpp)
   file(GLOB_RECURSE SOURCES *.cpp)
 
   add_library(${TARGET_NAME} ${HEADERS} ${SOURCES})
@@ -21,5 +21,5 @@ if(NOT TARGET ${TARGET_NAME})
     PUBLIC MQT::CoreIR
     PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
-  add_library(MQT::QMapNAComputation ALIAS ${TARGET_NAME})
+  add_library(MQT::QMapNAIR ALIAS ${TARGET_NAME})
 endif()

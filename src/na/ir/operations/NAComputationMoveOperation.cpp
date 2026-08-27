@@ -8,30 +8,23 @@
  * Licensed under the MIT License
  */
 
-#include "na/computation/operations/StoreOp.hpp"
+#include "na/ir/operations/NAComputationMoveOperation.hpp"
 
 #include <cstddef>
 #include <sstream>
 #include <string>
 
 namespace na {
-auto StoreOp::toString() const -> std::string {
+auto NAComputationMoveOperation::toString() const -> std::string {
   std::stringstream ss;
-  ss << "@+ store";
+  ss << "@+ move";
   if (atoms_.size() == 1) {
-    if (targetLocations_) {
-      ss << " " << targetLocations_->front();
-    }
-    ss << " " << *(atoms_.front());
+    ss << " " << targetLocations_.front() << " " << *(atoms_.front());
     return ss.str();
   }
   ss << " [\n";
   for (std::size_t i = 0; i < atoms_.size(); ++i) {
-    ss << "    ";
-    if (targetLocations_) {
-      ss << (*targetLocations_)[i] << " ";
-    }
-    ss << *(atoms_[i]) << "\n";
+    ss << "    " << targetLocations_[i] << " " << *(atoms_[i]) << "\n";
   }
   ss << "]";
   return ss.str();

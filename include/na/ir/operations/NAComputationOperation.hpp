@@ -19,13 +19,13 @@
 
 namespace na {
 /// This is the base class for all operations in the NAComputation.
-class Op {
+class NAComputationOperation {
 public:
   /// Default constructor.
-  Op() = default;
+  NAComputationOperation() = default;
 
   /// Virtual destructor.
-  virtual ~Op() = default;
+  virtual ~NAComputationOperation() = default;
 
   /// Returns a string representation of the operation.
   [[nodiscard]] virtual auto toString() const -> std::string = 0;
@@ -34,7 +34,8 @@ public:
   /// @param os The output stream to print the operation to.
   /// @param obj The operation to print.
   /// @return The output stream after printing the operation.
-  friend auto operator<<(std::ostream& os, const Op& obj) -> std::ostream& {
+  friend auto operator<<(std::ostream& os, const NAComputationOperation& obj)
+      -> std::ostream& {
     return os << obj.toString(); // Using toString() method
   }
 

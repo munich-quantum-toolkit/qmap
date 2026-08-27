@@ -112,7 +112,7 @@ struct Location final {
   /// @param other The location to compare with.
   /// @return True if this location is less than or equal to the other location,
   [[nodiscard]] auto operator<=(const Location& other) const -> bool {
-    return *this >= other;
+    return !(other < *this);
   }
 
   /// Computes the Euclidean distance between this location and the given

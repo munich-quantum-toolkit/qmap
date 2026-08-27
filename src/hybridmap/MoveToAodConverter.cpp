@@ -17,7 +17,7 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "na/computation/entities/Location.hpp"
+#include "na/ir/entities/Location.hpp"
 
 #include <algorithm>
 #include <array>

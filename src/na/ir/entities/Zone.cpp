@@ -8,9 +8,9 @@
  * Licensed under the MIT License
  */
 
-#include "na/computation/entities/Zone.hpp"
+#include "na/ir/entities/Zone.hpp"
 
-#include "na/computation/entities/Location.hpp"
+#include "na/ir/entities/Location.hpp"
 
 #include <stdexcept>
 

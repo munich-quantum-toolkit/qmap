@@ -15,28 +15,30 @@
 #pragma once
 
 #include "ir/Definitions.hpp"
-#include "na/computation/entities/Zone.hpp"
-#include "na/computation/operations/GlobalOp.hpp"
+#include "na/ir/entities/Zone.hpp"
+#include "na/ir/operations/NAComputationGlobalOperation.hpp"
 
 #include <utility>
 #include <vector>
 
 namespace na {
 /// Represents a global RY operation in the NAComputation.
-class GlobalRYOp final : public GlobalOp {
+class NAComputationGlobalRYOperation final
+    : public NAComputationGlobalOperation {
 public:
   /// Creates a new RY operation in the given zones with the given angle.
   /// @param zones The zones the operation is applied to.
   /// @param angle The angle of the operation.
-  GlobalRYOp(std::vector<const Zone*> zones, const qc::fp angle)
-      : GlobalOp(std::move(zones), {angle}) {
+  NAComputationGlobalRYOperation(std::vector<const Zone*> zones,
+                                 const qc::fp angle)
+      : NAComputationGlobalOperation(std::move(zones), {angle}) {
     name_ = "ry";
   }
 
   /// Creates a new RY operation in the given zone with the given angle.
   /// @param zone The zone the operation is applied to.
   /// @param angle The angle of the operation.
-  GlobalRYOp(const Zone& zone, const qc::fp angle)
-      : GlobalRYOp({&zone}, angle) {}
+  NAComputationGlobalRYOperation(const Zone& zone, const qc::fp angle)
+      : NAComputationGlobalRYOperation({&zone}, angle) {}
 };
 } // namespace na

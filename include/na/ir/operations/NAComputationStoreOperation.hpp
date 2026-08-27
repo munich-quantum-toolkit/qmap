@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/operations/ShuttlingOp.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/NAComputationShuttlingOperation.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -26,7 +26,8 @@
 
 namespace na {
 /// Represents a store operation in the NAComputation.
-class StoreOp final : public ShuttlingOp {
+class NAComputationStoreOperation final
+    : public NAComputationShuttlingOperation {
 protected:
   /// The target locations to store the atoms to.
   std::optional<std::vector<Location>> targetLocations_ = std::nullopt;
@@ -37,8 +38,9 @@ public:
   /// incorporates some offset.
   /// @param atoms The atoms to store.
   /// @param targetLocations The target locations to store the atoms to.
-  StoreOp(std::vector<const Atom*> atoms, std::vector<Location> targetLocations)
-      : ShuttlingOp(std::move(atoms)),
+  NAComputationStoreOperation(std::vector<const Atom*> atoms,
+                              std::vector<Location> targetLocations)
+      : NAComputationShuttlingOperation(std::move(atoms)),
         targetLocations_(std::move(targetLocations)) {
     if (atoms_.size() != targetLocations_->size()) {
       throw std::invalid_argument(
@@ -50,22 +52,23 @@ public:
   /// @details Here, the target locations are not used, i.e., this store does
   /// not contain any offset.
   /// @param atoms The atoms to store.
-  explicit StoreOp(std::vector<const Atom*> atoms)
-      : ShuttlingOp(std::move(atoms)) {}
+  explicit NAComputationStoreOperation(std::vector<const Atom*> atoms)
+      : NAComputationShuttlingOperation(std::move(atoms)) {}
 
   /// Creates a new store operation with the given atom and target location.
   /// @details The target location can be used if the store operation
   /// incorporates some offset.
   /// @param atom The atom to store.
   /// @param targetLocation The target location to store the atom to.
-  StoreOp(const Atom& atom, const Location& targetLocation)
-      : StoreOp({&atom}, {targetLocation}) {}
+  NAComputationStoreOperation(const Atom& atom, const Location& targetLocation)
+      : NAComputationStoreOperation({&atom}, {targetLocation}) {}
 
   /// Creates a new store operation with the given atom and target locations.
   /// @details Here, the target locations are not used, i.e., this store does
   /// not contain any offset.
   /// @param atom The atom to store.
-  explicit StoreOp(const Atom& atom) : StoreOp({&atom}) {}
+  explicit NAComputationStoreOperation(const Atom& atom)
+      : NAComputationStoreOperation({&atom}) {}
 
   /// Returns whether the store operation has target locations set.
   [[nodiscard]] auto hasTargetLocations() const -> bool override {

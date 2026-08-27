@@ -8,15 +8,15 @@
  * Licensed under the MIT License
  */
 
-#include "na/computation/NAComputation.hpp"
+#include "na/ir/NAComputation.hpp"
 
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/operations/LoadOp.hpp"
-#include "na/computation/operations/LocalOp.hpp"
-#include "na/computation/operations/Op.hpp"
-#include "na/computation/operations/ShuttlingOp.hpp"
-#include "na/computation/operations/StoreOp.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/NAComputationLoadOperation.hpp"
+#include "na/ir/operations/NAComputationLocalOperation.hpp"
+#include "na/ir/operations/NAComputationOperation.hpp"
+#include "na/ir/operations/NAComputationShuttlingOperation.hpp"
+#include "na/ir/operations/NAComputationStoreOperation.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -29,13 +29,13 @@
 #include <utility>
 #include <vector>
 namespace na {
-auto NAComputation::getLocationOfAtomAfterOperation(const Atom& atom,
-                                                    const Op& op) const
-    -> Location {
+auto NAComputation::getLocationOfAtomAfterOperation(
+    const Atom& atom, const NAComputationOperation& op) const -> Location {
   auto currentLocation = initialLocations_.at(&atom);
   for (const auto& opUniquePtr : operations_) {
-    if (opUniquePtr->is<ShuttlingOp>()) {
-      if (const auto& shuttlingOp = opUniquePtr->as<ShuttlingOp>();
+    if (opUniquePtr->is<NAComputationShuttlingOperation>()) {
+      if (const auto& shuttlingOp =
+              opUniquePtr->as<NAComputationShuttlingOperation>();
           shuttlingOp.hasTargetLocations()) {
         const auto& opAtoms = shuttlingOp.getAtoms();
         const auto& targetLocations = shuttlingOp.getTargetLocations();
@@ -89,13 +89,13 @@ auto NAComputation::validate() const -> std::pair<bool, std::string> {
   std::unordered_set<const Atom*> currentlyShuttling{};
   for (const auto& op : operations_) {
     ++counter;
-    if (op->is<ShuttlingOp>()) {
+    if (op->is<NAComputationShuttlingOperation>()) {
       //===----------------------------------------------------------------===//
       // Shuttling Operations
       //===----------------------------------------------------------------===//
-      const auto& shuttlingOp = op->as<ShuttlingOp>();
+      const auto& shuttlingOp = op->as<NAComputationShuttlingOperation>();
       const auto& opAtoms = shuttlingOp.getAtoms();
-      if (shuttlingOp.is<LoadOp>()) {
+      if (shuttlingOp.is<NAComputationLoadOperation>()) {
         //===-----------------------------------------------------------------//
         // Load Operations
         //-----------------------------------------------------------------===//
@@ -238,7 +238,7 @@ auto NAComputation::validate() const -> std::pair<bool, std::string> {
           currentLocations.at(opAtoms.at(i)) = targetLocations.at(i);
         }
       }
-      if (shuttlingOp.is<StoreOp>()) {
+      if (shuttlingOp.is<NAComputationStoreOperation>()) {
         //===-----------------------------------------------------------------//
         // Store Operations
         //-----------------------------------------------------------------===//
@@ -246,11 +246,11 @@ auto NAComputation::validate() const -> std::pair<bool, std::string> {
           currentlyShuttling.erase(atom);
         }
       }
-    } else if (op->is<LocalOp>()) {
+    } else if (op->is<NAComputationLocalOperation>()) {
       //===----------------------------------------------------------------===//
       // Local Operations
       //===----------------------------------------------------------------===//
-      const auto& opAtoms = op->as<LocalOp>().getAtoms();
+      const auto& opAtoms = op->as<NAComputationLocalOperation>().getAtoms();
       std::unordered_set<const Atom*> usedAtoms;
       for (const auto* const atom : opAtoms) {
         if (!usedAtoms.emplace(atom).second) {

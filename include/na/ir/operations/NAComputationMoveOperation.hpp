@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/operations/ShuttlingOp.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/NAComputationShuttlingOperation.hpp"
 
 #include <stdexcept>
 #include <string>
@@ -25,7 +25,8 @@
 
 namespace na {
 /// Represents a move operation in the NAComputation.
-class MoveOp final : public ShuttlingOp {
+class NAComputationMoveOperation final
+    : public NAComputationShuttlingOperation {
 protected:
   /// The target locations to move the atoms to.
   std::vector<Location> targetLocations_;
@@ -34,8 +35,9 @@ public:
   /// Creates a new move operation with the given atoms and target locations.
   /// @param atoms The atoms to move.
   /// @param targetLocations The target locations to move the atoms to.
-  MoveOp(std::vector<const Atom*> atoms, std::vector<Location> targetLocations)
-      : ShuttlingOp(std::move(atoms)),
+  NAComputationMoveOperation(std::vector<const Atom*> atoms,
+                             std::vector<Location> targetLocations)
+      : NAComputationShuttlingOperation(std::move(atoms)),
         targetLocations_(std::move(targetLocations)) {
     if (atoms_.size() != targetLocations_.size()) {
       throw std::invalid_argument(
@@ -46,8 +48,8 @@ public:
   /// Creates a new move operation with the given atom and target location.
   /// @param atom The atom to move.
   /// @param targetLocation The target location to move the atom to.
-  MoveOp(const Atom& atom, const Location& targetLocation)
-      : MoveOp({&atom}, {targetLocation}) {}
+  NAComputationMoveOperation(const Atom& atom, const Location& targetLocation)
+      : NAComputationMoveOperation({&atom}, {targetLocation}) {}
 
   /// Returns whether the move operation has target locations set.
   [[nodiscard]] auto hasTargetLocations() const -> bool override {

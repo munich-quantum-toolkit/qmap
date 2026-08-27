@@ -15,8 +15,8 @@
 #pragma once
 
 #include "ir/Definitions.hpp"
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/operations/LocalOp.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/operations/NAComputationLocalOperation.hpp"
 
 #include <string>
 #include <utility>
@@ -24,16 +24,17 @@
 
 namespace na {
 /// Represents a local U3 operation in the NAComputation.
-class LocalUOp final : public LocalOp {
+class NAComputationLocalUOperation final : public NAComputationLocalOperation {
 public:
   /// Creates a new U3 operation with the given atoms and angles.
   /// @param atoms The atoms the operation is applied to.
   /// @param theta The first parameter of the operation.
   /// @param phi The second parameter of the operation.
   /// @param lambda The third parameter of the operation.
-  LocalUOp(std::vector<const Atom*> atoms, const qc::fp theta, const qc::fp phi,
-           const qc::fp lambda)
-      : LocalOp(std::move(atoms), {theta, phi, lambda}) {
+  NAComputationLocalUOperation(std::vector<const Atom*> atoms,
+                               const qc::fp theta, const qc::fp phi,
+                               const qc::fp lambda)
+      : NAComputationLocalOperation(std::move(atoms), {theta, phi, lambda}) {
     name_ = "u";
   }
 
@@ -42,8 +43,8 @@ public:
   /// @param theta The first parameter of the operation.
   /// @param phi The second parameter of the operation.
   /// @param lambda The third parameter of the operation.
-  LocalUOp(const Atom& atom, const qc::fp theta, const qc::fp phi,
-           const qc::fp lambda)
-      : LocalUOp({&atom}, theta, phi, lambda) {}
+  NAComputationLocalUOperation(const Atom& atom, const qc::fp theta,
+                               const qc::fp phi, const qc::fp lambda)
+      : NAComputationLocalUOperation({&atom}, theta, phi, lambda) {}
 };
 } // namespace na

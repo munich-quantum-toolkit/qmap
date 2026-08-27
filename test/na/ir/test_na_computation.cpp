@@ -9,17 +9,17 @@
  */
 
 #include "ir/Definitions.hpp"
-#include "na/computation/NAComputation.hpp"
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/entities/Zone.hpp"
-#include "na/computation/operations/GlobalCZOp.hpp"
-#include "na/computation/operations/GlobalRYOp.hpp"
-#include "na/computation/operations/LoadOp.hpp"
-#include "na/computation/operations/LocalRZOp.hpp"
-#include "na/computation/operations/LocalUOp.hpp"
-#include "na/computation/operations/MoveOp.hpp"
-#include "na/computation/operations/StoreOp.hpp"
+#include "na/ir/NAComputation.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/entities/Zone.hpp"
+#include "na/ir/operations/NAComputationGlobalCZOperation.hpp"
+#include "na/ir/operations/NAComputationGlobalRYOperation.hpp"
+#include "na/ir/operations/NAComputationLoadOperation.hpp"
+#include "na/ir/operations/NAComputationLocalRZOperation.hpp"
+#include "na/ir/operations/NAComputationLocalUOperation.hpp"
+#include "na/ir/operations/NAComputationMoveOperation.hpp"
+#include "na/ir/operations/NAComputationStoreOperation.hpp"
 
 #include <gtest/gtest.h>
 #include <sstream>
@@ -54,6 +54,9 @@ TEST(NAComputation, ZonesExtent) {
 TEST(NAComputation, Location) {
   constexpr Location loc{.x = 3, .y = 4};
   EXPECT_EQ(loc, (Location{3, 4}));
+  EXPECT_LE((Location{2, 4}), loc);
+  EXPECT_LE(loc, loc);
+  EXPECT_FALSE((Location{4, 3}) <= loc);
   std::stringstream ss;
   ss << loc;
   EXPECT_EQ(ss.str(), "(3.000, 4.000)");
@@ -62,15 +65,15 @@ TEST(NAComputation, Location) {
   EXPECT_DOUBLE_EQ((Location{0, 0}).getManhattanDistanceY(loc), 4);
 }
 
-TEST(NAComputation, LocalRXOp) {
+TEST(NAComputation, LocalUOperation) {
   const Atom atom("atom");
-  const LocalUOp op(atom, 0.0, 0.0, 0.0);
+  const NAComputationLocalUOperation op(atom, 0.0, 0.0, 0.0);
   EXPECT_EQ(op.toString(), "@+ u 0.00000 0.00000 0.00000 atom");
 }
 
-TEST(NAComputation, LocalRZOp) {
+TEST(NAComputation, LocalRZOperation) {
   const Atom atom("atom");
-  const LocalRZOp op(atom, 0.0);
+  const NAComputationLocalRZOperation op(atom, 0.0);
   EXPECT_EQ(op.toString(), "@+ rz 0.00000 atom");
 }
 
@@ -83,19 +86,20 @@ TEST(NAComputation, General) {
   qc.emplaceInitialLocation(atom0, 0, 0);
   qc.emplaceInitialLocation(atom1, 1, 0);
   qc.emplaceInitialLocation(atom2, 2, 0);
-  qc.emplaceBack<LocalRZOp>(atom0, qc::PI_2);
-  qc.emplaceBack<LocalRZOp>(std::vector{&atom1, &atom2}, qc::PI_2);
-  qc.emplaceBack<GlobalRYOp>(globalZone, qc::PI_2);
-  qc.emplaceBack<LoadOp>(
+  qc.emplaceBack<NAComputationLocalRZOperation>(atom0, qc::PI_2);
+  qc.emplaceBack<NAComputationLocalRZOperation>(std::vector{&atom1, &atom2},
+                                                qc::PI_2);
+  qc.emplaceBack<NAComputationGlobalRYOperation>(globalZone, qc::PI_2);
+  qc.emplaceBack<NAComputationLoadOperation>(
       std::vector{&atom0, &atom1},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 1, .y = 1}});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{&atom0, &atom1},
       std::vector{Location{.x = 4, .y = 1}, Location{.x = 5, .y = 1}});
-  qc.emplaceBack<StoreOp>(
+  qc.emplaceBack<NAComputationStoreOperation>(
       std::vector{&atom0, &atom1},
       std::vector{Location{.x = 4, .y = 0}, Location{.x = 5, .y = 0}});
-  qc.emplaceBack(GlobalCZOp(globalZone));
+  qc.emplaceBack(NAComputationGlobalCZOperation(globalZone));
   std::stringstream ss;
   ss << qc;
   EXPECT_EQ(ss.str(), "atom (0.000, 0.000) atom0\n"
@@ -154,94 +158,95 @@ protected:
 } // namespace
 
 TEST_F(NAComputationValidateAODConstraints, AtomAlreadyLoaded) {
-  qc.emplaceBack<LoadOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(
       std::vector{atom0, atom2},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 1, .y = 1}});
   EXPECT_TRUE(qc.validate().first);
-  qc.emplaceBack<LoadOp>(*atom0, Location{.x = 0, .y = 1});
+  qc.emplaceBack<NAComputationLoadOperation>(*atom0, Location{.x = 0, .y = 1});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, AtomNotLoaded) {
-  qc.emplaceBack<MoveOp>(*atom0, Location{.x = 0, .y = 1});
+  qc.emplaceBack<NAComputationMoveOperation>(*atom0, Location{.x = 0, .y = 1});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, DuplicateAtomsInShuttle) {
-  qc.emplaceBack<LoadOp>(std::vector{atom0, atom0});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom0, atom0});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom0, atom0},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 1, .y = 1}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, DuplicateEndPoints) {
-  qc.emplaceBack<LoadOp>(std::vector{atom0, atom2});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom0, atom2});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom0, atom2},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 0, .y = 1}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, ColumnPreserving1) {
-  qc.emplaceBack<LoadOp>(std::vector{atom2, atom1});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom2, atom1});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom2, atom1},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 2, .y = 2}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, RowPreserving1) {
-  qc.emplaceBack<LoadOp>(std::vector{atom0, atom2});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom0, atom2});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom0, atom2},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 1, .y = -1}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, ColumnPreserving2) {
-  qc.emplaceBack<LoadOp>(std::vector{atom0, atom1});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom0, atom1});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom0, atom1},
       std::vector{Location{.x = 1, .y = 1}, Location{.x = 0, .y = 1}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, RowPreserving2) {
   // row order not preserved
-  qc.emplaceBack<LoadOp>(std::vector{atom0, atom1});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom0, atom1});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom0, atom1},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 2, .y = 0}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, ColumnPreserving3) {
-  qc.emplaceBack<LoadOp>(std::vector{atom3, atom2});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom3, atom2});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom2, atom3},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 1, .y = 3}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, RowPreserving3) {
-  qc.emplaceBack<LoadOp>(std::vector{atom3, atom2});
-  qc.emplaceBack<MoveOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom3, atom2});
+  qc.emplaceBack<NAComputationMoveOperation>(
       std::vector{atom3, atom2},
       std::vector{Location{.x = 0, .y = 1}, Location{.x = 2, .y = 2}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, DuplicateAtomsInRz) {
-  qc.emplaceBack<LocalRZOp>(std::vector{atom0, atom0}, qc::PI_2);
+  qc.emplaceBack<NAComputationLocalRZOperation>(std::vector{atom0, atom0},
+                                                qc::PI_2);
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, DuplicateAtoms) {
   // store unloaded atom
-  qc.emplaceBack<StoreOp>(*atom0);
+  qc.emplaceBack<NAComputationStoreOperation>(*atom0);
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, RowPreserving4) {
-  qc.emplaceBack<LoadOp>(std::vector{atom2, atom3});
-  qc.emplaceBack<StoreOp>(
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{atom2, atom3});
+  qc.emplaceBack<NAComputationStoreOperation>(
       std::vector{atom2, atom3},
       std::vector{Location{.x = 1, .y = 3}, Location{.x = 0, .y = 2}});
   EXPECT_FALSE(qc.validate().first);
 }
 TEST_F(NAComputationValidateAODConstraints, StoreStoredAtom) {
-  qc.emplaceBack<LoadOp>(*atom2);
-  qc.emplaceBack<StoreOp>(*atom2);
-  qc.emplaceBack<StoreOp>(*atom2);
+  qc.emplaceBack<NAComputationLoadOperation>(*atom2);
+  qc.emplaceBack<NAComputationStoreOperation>(*atom2);
+  qc.emplaceBack<NAComputationStoreOperation>(*atom2);
   EXPECT_FALSE(qc.validate().first);
 }
 
@@ -249,9 +254,9 @@ TEST(NAComputation, GetPositionOfAtomAfterOperation) {
   auto qc = NAComputation();
   const auto& atom0 = qc.emplaceBackAtom("atom0");
   qc.emplaceInitialLocation(atom0, 0, 0);
-  qc.emplaceBack<LoadOp>(atom0);
-  qc.emplaceBack<MoveOp>(atom0, Location{.x = 1, .y = 1});
-  qc.emplaceBack<StoreOp>(atom0);
+  qc.emplaceBack<NAComputationLoadOperation>(atom0);
+  qc.emplaceBack<NAComputationMoveOperation>(atom0, Location{.x = 1, .y = 1});
+  qc.emplaceBack<NAComputationStoreOperation>(atom0);
   EXPECT_EQ(qc.getLocationOfAtomAfterOperation(atom0, qc[0]), (Location{0, 0}));
   EXPECT_EQ(qc.getLocationOfAtomAfterOperation(atom0, qc[2]), (Location{1, 1}));
 }
@@ -262,9 +267,9 @@ TEST(NAComputation, NonMovingAtomsViolateRowOrderConstraint) {
   qc.emplaceInitialLocation(atom0, 0, 0);
   const auto& atom1 = qc.emplaceBackAtom("atom1");
   qc.emplaceInitialLocation(atom1, 3, 0);
-  qc.emplaceBack<LoadOp>(std::vector{&atom0, &atom1});
-  qc.emplaceBack<MoveOp>(atom0, Location{.x = 4, .y = 4});
-  qc.emplaceBack<StoreOp>(std::vector{&atom0, &atom1});
+  qc.emplaceBack<NAComputationLoadOperation>(std::vector{&atom0, &atom1});
+  qc.emplaceBack<NAComputationMoveOperation>(atom0, Location{.x = 4, .y = 4});
+  qc.emplaceBack<NAComputationStoreOperation>(std::vector{&atom0, &atom1});
   const auto [ok, msg] = qc.validate();
   EXPECT_FALSE(ok);
   // Optional: verify row-preservation is the cause triggered here

@@ -18,7 +18,7 @@
 #include "ir/Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/computation/entities/Location.hpp"
+#include "na/ir/entities/Location.hpp"
 
 #include <algorithm>
 #include <cmath>

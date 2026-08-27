@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Location.hpp"
-#include "na/computation/entities/Zone.hpp"
-#include "na/computation/operations/Op.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/entities/Zone.hpp"
+#include "na/ir/operations/NAComputationOperation.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -32,7 +32,7 @@ namespace na {
 class NAComputation final {
 protected:
   /// The operations in the NA computation.
-  std::vector<std::unique_ptr<Op>> operations_;
+  std::vector<std::unique_ptr<NAComputationOperation>> operations_;
   /// The atoms used in the NA computation.
   std::vector<std::unique_ptr<Atom>> atoms_;
   /// The zones used in the NA computation.
@@ -59,14 +59,16 @@ public:
   /// Returns a reference to the operation at the given index.
   /// @param i The index of the operation.
   /// @return A reference to the operation at the given index.
-  [[nodiscard]] auto operator[](const std::size_t i) -> Op& {
+  [[nodiscard]] auto operator[](const std::size_t i)
+      -> NAComputationOperation& {
     return *operations_[i];
   }
 
   /// Returns a const reference to the operation at the given index.
   /// @param i The index of the operation.
   /// @return A const reference to the operation at the given index.
-  [[nodiscard]] auto operator[](const std::size_t i) const -> const Op& {
+  [[nodiscard]] auto operator[](const std::size_t i) const
+      -> const NAComputationOperation& {
     return *operations_[i];
   }
 
@@ -93,9 +95,8 @@ public:
   /// @param atom The atom to get the location for.
   /// @param op The operation to get the location after.
   /// @return The location of the atom after the operation.
-  [[nodiscard]] auto getLocationOfAtomAfterOperation(const Atom& atom,
-                                                     const Op& op) const
-      -> Location;
+  [[nodiscard]] auto getLocationOfAtomAfterOperation(
+      const Atom& atom, const NAComputationOperation& op) const -> Location;
 
   /// Emplaces a new atom with the given name and returns a reference to the
   /// newly created atom.
@@ -144,7 +145,7 @@ public:
   /// @tparam T The concrete type of the operation.
   /// @param op The operation to emplace.
   /// @return A reference to the newly created operation.
-  template <class T> auto emplaceBack(T&& op) -> const Op& {
+  template <class T> auto emplaceBack(T&& op) -> const NAComputationOperation& {
     return *operations_.emplace_back(std::make_unique<T>(std::forward<T>(op)));
   }
 
@@ -154,7 +155,7 @@ public:
   /// @param args The arguments for the operation.
   /// @return A reference to the newly created operation.
   template <class T, typename... Args>
-  auto emplaceBack(Args&&... args) -> const Op& {
+  auto emplaceBack(Args&&... args) -> const NAComputationOperation& {
     return *operations_.emplace_back(
         std::make_unique<T>(std::forward<Args>(args)...));
   }
@@ -164,11 +165,11 @@ public:
   /// Outputs the NAComputation to the given output stream, i.e., the string
   /// returned by toString().
   /// @param os The output stream to print the NAComputation to.
-  /// @param qc The NAComputation to print.
+  /// @param computation The NAComputation to print.
   /// @return The output stream after printing the NAComputation.
-  friend auto operator<<(std::ostream& os, const NAComputation& qc)
+  friend auto operator<<(std::ostream& os, const NAComputation& computation)
       -> std::ostream& {
-    return os << qc.toString();
+    return os << computation.toString();
   }
 
   /// Validates the NAComputation and checks whether all AOD constraints are

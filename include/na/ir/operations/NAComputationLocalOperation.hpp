@@ -16,8 +16,8 @@
 #pragma once
 
 #include "ir/Definitions.hpp"
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/operations/Op.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/operations/NAComputationOperation.hpp"
 
 #include <string>
 #include <utility>
@@ -26,7 +26,7 @@
 namespace na {
 /// Represents a local operation in the NAComputation.
 /// @details A local operation is applied to individual atoms.
-class LocalOp : public Op {
+class NAComputationLocalOperation : public NAComputationOperation {
 protected:
   /// The name of the operation.
   std::string name_;
@@ -38,11 +38,12 @@ protected:
   /// Creates a new local operation with the given atoms and parameters.
   /// @param atoms The atoms the operation is applied to.
   /// @param params The parameters of the operation.
-  LocalOp(std::vector<const Atom*> atoms, std::vector<qc::fp> params)
+  NAComputationLocalOperation(std::vector<const Atom*> atoms,
+                              std::vector<qc::fp> params)
       : params_(std::move(params)), atoms_(std::move(atoms)) {}
 
 public:
-  LocalOp() = delete;
+  NAComputationLocalOperation() = delete;
 
   /// Returns the atoms the operation is applied to.
   [[nodiscard]] auto getAtoms() const -> auto& { return atoms_; }
