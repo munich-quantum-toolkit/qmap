@@ -18,12 +18,12 @@
 #include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <deque>
 #include <iterator>
 #include <memory>
 #include <set>
+#include <utility>
 #include <vector>
 
 namespace qmap {
@@ -37,10 +37,32 @@ void addToDAG(DAG& dag, std::unique_ptr<qc::Operation>* op) {
 }
 
 void removeIdentities(qc::QuantumComputation& qc) {
-  qc.erase(std::ranges::remove_if(
-               qc, [](const auto& op) { return op->getType() == qc::I; })
-               .begin(),
-           qc.end());
+  auto it = qc.begin();
+  while (it != qc.end()) {
+    if ((*it)->getType() == qc::I) {
+      it = qc.erase(it);
+    } else if ((*it)->isCompoundOperation()) {
+      auto& compound = dynamic_cast<qc::CompoundOperation&>(**it);
+      auto compoundIt = compound.cbegin();
+      while (compoundIt != compound.cend()) {
+        if ((*compoundIt)->getType() == qc::I) {
+          compoundIt = compound.erase(compoundIt);
+        } else {
+          ++compoundIt;
+        }
+      }
+      if (compound.empty()) {
+        it = qc.erase(it);
+      } else {
+        if (compound.size() == 1U) {
+          *it = std::move(*compound.begin());
+        }
+        ++it;
+      }
+    } else {
+      ++it;
+    }
+  }
 }
 
 template <class Container> void replaceMCXWithMCZIn(Container& operations) {

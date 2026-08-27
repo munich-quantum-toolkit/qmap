@@ -136,6 +136,30 @@ TEST(CancelCNOTs, CompoundOperationBlocksCancellation) {
   EXPECT_TRUE(circuit.at(1)->isCompoundOperation());
 }
 
+TEST(CancelCNOTs, RemovesIdentityCompoundOperation) {
+  qc::QuantumComputation compound(1);
+  compound.i(0);
+  qc::QuantumComputation circuit(1);
+  circuit.emplace_back(compound.asCompoundOperation());
+
+  cancelCNOTs(circuit);
+
+  EXPECT_TRUE(circuit.empty());
+}
+
+TEST(CancelCNOTs, UnwrapsSingletonCompoundOperation) {
+  qc::QuantumComputation compound(1);
+  compound.h(0);
+  qc::QuantumComputation circuit(1);
+  circuit.emplace_back(compound.asCompoundOperation());
+
+  cancelCNOTs(circuit);
+
+  ASSERT_EQ(circuit.size(), 1U);
+  EXPECT_FALSE(circuit.front()->isCompoundOperation());
+  EXPECT_EQ(circuit.front()->getType(), qc::H);
+}
+
 TEST(CancelCNOTs, IdenticalSWAPs) {
   qc::QuantumComputation circuit(2);
   circuit.swap(0, 1);
