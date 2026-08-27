@@ -189,13 +189,13 @@ read out. The router chose these to minimize photon loss.
 
 {py:class}`~mqt.qmap.ph.subcircuit_compilation.CompilationResult` bundles:
 
-| Field | Meaning |
-| --- | --- |
-| `phases` | `(chip_dim, chip_dim)` tensor of phase-shifter angles to program (rows = modes, columns = MZI layers) |
-| `input_ports` | the `target_dim // 2` physical modes to inject photons into (lower mode of each dual-rail pair) |
-| `output_ports` | the `target_dim` physical modes of the computation zone, where the output is measured |
-| `loss` | final fidelity loss of the optimization (see below) |
-| `compute_time` | wall-clock seconds for routing + optimization |
+| Field          | Meaning                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `phases`       | `(chip_dim, chip_dim)` tensor of phase-shifter angles to program (rows = modes, columns = MZI layers) |
+| `input_ports`  | the `target_dim // 2` physical modes to inject photons into (lower mode of each dual-rail pair)       |
+| `output_ports` | the `target_dim` physical modes of the computation zone, where the output is measured                 |
+| `loss`         | final fidelity loss of the optimization (see below)                                                   |
+| `compute_time` | wall-clock seconds for routing + optimization                                                         |
 
 ### Fidelity loss
 
@@ -224,13 +224,13 @@ config = OptimizationConfig(
 )
 ```
 
-| Parameter | Default | Effect |
-| --- | --- | --- |
-| `lr` | `0.05` | Initial Adam learning rate; a scheduler halves it on plateau |
-| `threshold` | `1e-6` | Early exit once fidelity loss falls below this value |
-| `max_iterations` | `10000` | Maximum gradient steps regardless of convergence |
-| `exclude_edge_phase_shifters` | `False` | Drop the phase shifters at the two chip corners (reduces parameter count by 2) |
-| `optimize_routing_parameters` | `True` | Give each routing MZI one free parameter to compensate small reflectivity errors |
+| Parameter                     | Default | Effect                                                                           |
+| ----------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `lr`                          | `0.05`  | Initial Adam learning rate; a scheduler halves it on plateau                     |
+| `threshold`                   | `1e-6`  | Early exit once fidelity loss falls below this value                             |
+| `max_iterations`              | `10000` | Maximum gradient steps regardless of convergence                                 |
+| `exclude_edge_phase_shifters` | `False` | Drop the phase shifters at the two chip corners (reduces parameter count by 2)   |
+| `optimize_routing_parameters` | `True`  | Give each routing MZI one free parameter to compensate small reflectivity errors |
 
 In practice, 300–500 iterations are sufficient for `chip_dim = 8` and
 `target_dim = 4` with a good initial learning rate. For larger chips or noisier

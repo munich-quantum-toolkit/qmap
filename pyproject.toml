@@ -8,10 +8,10 @@
 
 [build-system]
 requires = [
-  "nanobind~=2.13.0",
+  "nanobind~=2.14.0",
   "setuptools-scm>=9.2.2",
-  "scikit-build-core~=0.12",
-  "mqt.core~=3.7.0",
+  "scikit-build-core~=1.0.3",
+  "mqt.core~=3.8.0",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -46,12 +46,13 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     "Typing :: Typed",
 ]
 requires-python = ">=3.10, != 3.14.1"
 dependencies = [
-    "mqt.core~=3.7.0",
+    "mqt.core~=3.8.0",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "typing_extensions>=4.6; python_version < '3.11'",
@@ -176,6 +177,8 @@ filterwarnings = [
 
 [tool.coverage]
 run.source = ["mqt.qmap"]
+run.core = "sysmon"
+run.parallel = true
 run.omit = [
   "*/visualization/*",
   "*/_compat/*",
@@ -315,7 +318,7 @@ PC170 = "We do not use rST files anymore"
 
 [tool.cibuildwheel]
 build = "cp3*"
-skip = ["*-musllinux_*", "cp313t-*"]
+skip = ["*-musllinux_*"]
 archs = "auto64"
 test-groups = ["test"]
 test-command = "pytest {project}/test/python"
@@ -323,6 +326,7 @@ build-frontend = "uv"
 test-skip = [
   "cp3??t-*", # no freethreading qiskit wheels
   "cp*-win_arm64", # no numpy, qiskit, ... wheels
+  "cp315*", # no 3.15 wheels yet
 ]
 
 # The mqt-core shared libraries are provided by the mqt-core Python package.
@@ -335,11 +339,11 @@ before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
     """auditwheel repair -w {dest_dir} {wheel} \
---exclude libmqt-core-ir.so.3.7 \
---exclude libmqt-core-qasm.so.3.7 \
---exclude libmqt-core-circuit-optimizer.so.3.7 \
---exclude libmqt-core-ds.so.3.7 \
---exclude libmqt-core-na.so.3.7 \
+--exclude libmqt-core-ir.so.3.8 \
+--exclude libmqt-core-qasm.so.3.8 \
+--exclude libmqt-core-circuit-optimizer.so.3.8 \
+--exclude libmqt-core-ds.so.3.8 \
+--exclude libmqt-core-na.so.3.8 \
 --exclude libspdlog.so.1.17""",
 ]
 
@@ -355,12 +359,6 @@ repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pk
 --exclude mqt-core-ds.dll \
 --exclude mqt-core-na.dll \
 --exclude spdlog.dll"""
-
-[[tool.cibuildwheel.overrides]]
-select = "cp312-*"
-inherit.repair-wheel-command = "append"
-repair-wheel-command = "uvx abi3audit --strict --report {wheel}"
-
 
 [tool.uv]
 required-version = ">=0.5.20"
@@ -393,10 +391,10 @@ rules.unresolved-import = "ignore"
 
 [dependency-groups]
 build = [
-  "nanobind~=2.13.0",
+  "nanobind~=2.14.0",
   "setuptools-scm>=9.2.2",
-  "scikit-build-core~=0.12",
-  "mqt.core~=3.7.0",
+  "scikit-build-core~=1.0.3",
+  "mqt.core~=3.8.0",
 ]
 docs = [
   "distinctipy>=1.3.4",
@@ -411,6 +409,7 @@ docs = [
   "sphinx-autoapi>=3.6.0",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
+  "sphinx-llm",
   "sphinxcontrib-bibtex>=2.6.5",
   "sphinxcontrib-svg2pdfconverter>=1.3.0",
   "sphinxext-opengraph>=0.13.0",
@@ -420,10 +419,10 @@ docs = [
 ]
 test = [
   "pytest>=9.0.1",
-  "pytest-cov>=7.0.0",
+  "pytest-cov>=7.1.0",
   "pytest-sugar>=1.1.1",
   "pytest-xdist>=3.8.0",
-  "mqt.qcec>=3.7.0",
+  "mqt.qcec>=3.8.0",
   "distinctipy>=1.3.4",
   "ipywidgets>=8.1.7",
   "networkx>=3.2.1",

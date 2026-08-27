@@ -21,7 +21,7 @@ jobs:
         with:
           client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-      - uses: munich-quantum-toolkit/templates@6b796f4c0404f74be469f32a3dcac05ef61d7b72 # v1.3.3
+      - uses: munich-quantum-toolkit/templates@d0c5adb86d19a5095f871cb6184cfdab298e943c # v1.4.2
         with:
           token: ${{ steps.create-token.outputs.token }}
           name: QMAP

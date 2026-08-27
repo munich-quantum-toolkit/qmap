@@ -94,8 +94,14 @@ quality and licensing compliance.
 Please carefully read and follow our dedicated {doc}`ai_usage` before submitting
 any AI-assisted contribution. In short:
 **You are responsible for every line of code you submit**, and a
-**human must always be in the loop**. We require disclosure of AI tool usage in
-your PR description.
+**human must always be in the loop**. Agents may perform coding and GitHub tasks
+within an explicitly authorized scope, but you must review their work and remain
+accountable for the result. Every agent-authored or agent-edited public text
+body must begin with `🤖 *AI text below* 🤖`; issue and pull request titles are
+exempt. AI assistance must be disclosed in the PR description. Commit-level
+`Assisted-by: [Model Name] via [Tool Name]` trailers are recommended for commits
+prepared with AI assistance. AI assistance must not be used for contributions to
+issues labeled "good first issue".
 
 If you use an agent, it will automatically read the provided {code}`AGENTS.md`,
 which contains context and instructions to help the agent work on MQT QMAP. For
@@ -592,7 +598,7 @@ The docs can then be found in the {code}`docs/_build` directory.
 If something goes wrong, the CI pipeline will notify you. Here are some tips for
 finding the cause of certain failures:
 
-- If any of the {code}`CI / 🇨‌ Test` checks fail, this indicates build errors or
+- If any of the {code}`CI / 🇨 Test` checks fail, this indicates build errors or
   test failures in the C++ part of the code base. Look through the respective
   logs on GitHub for any error or failure messages.
 
@@ -609,7 +615,7 @@ finding the cause of certain failures:
   been raised by {code}`clang-tidy` when checking the C++ part of your changes
   for warnings or style guideline violations. The individual messages frequently
   provide helpful suggestions on how to fix the warnings. If you don't see any
-  messages, but the {code}`🇨‌ Lint / 🚨 Lint` check is red, click on the
+  messages, but the {code}`🇨 Lint / 🚨 Lint` check is red, click on the
   {code}`Details` link to see the full log of the check and a step summary.
 
 - If the {code}`pre-commit.ci` check fails, some of the {code}`prek` checks

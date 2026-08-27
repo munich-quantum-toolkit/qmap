@@ -185,7 +185,7 @@ def main() -> int:
         print(f"Database not found: {db_path}")
         return 1
 
-    try:  # noqa: PLW0717
+    try:  # ruff:ignore[too-many-statements-in-try-clause]
         while True:
             if not db_path.exists():
                 clear_screen()
@@ -201,7 +201,7 @@ def main() -> int:
             with Session(engine) as session:
                 try:
                     table = build_progress_table(session)
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:  # ruff:ignore[blind-except]
                     table = f"Error while reading progress: {e!r}"
 
             timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")

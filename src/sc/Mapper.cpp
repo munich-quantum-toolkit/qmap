@@ -30,6 +30,23 @@
 #include <utility>
 #include <vector>
 
+namespace {
+/**
+ * @brief Append measurements matching the circuit's output permutation.
+ */
+void appendMeasurementsAccordingToOutputPermutation(
+    qc::QuantumComputation& circuit) {
+  constexpr auto registerName = "c";
+  const auto numOutputs = circuit.outputPermutation.size();
+  circuit.addClassicalRegister(numOutputs, registerName);
+
+  circuit.barrier();
+  for (const auto& [qubit, clbit] : circuit.outputPermutation) {
+    circuit.measure(qubit, clbit);
+  }
+}
+} // namespace
+
 void Mapper::initResults() {
   countGates(qc, results.input);
   results.input.name = qc.getName();
@@ -475,7 +492,7 @@ void Mapper::finalizeMappedCircuit() {
 
   // append measurements according to output permutation
   if (results.config.addMeasurementsToMappedCircuit) {
-    qcMapped.appendMeasurementsAccordingToOutputPermutation();
+    appendMeasurementsAccordingToOutputPermutation(qcMapped);
   }
 }
 
