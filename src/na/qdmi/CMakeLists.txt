@@ -17,7 +17,7 @@ if(NOT TARGET ${TARGET_NAME})
 
   target_link_libraries(
     ${TARGET_NAME}
-    PUBLIC nlohmann_json::nlohmann_json qdmi::qdmi
+    PUBLIC nlohmann_json::nlohmann_json
     PRIVATE spdlog::spdlog MQT::ProjectOptions MQT::ProjectWarnings)
 
   # The configuration schema uses the three-way comparison operator. Unlike the other targets, this

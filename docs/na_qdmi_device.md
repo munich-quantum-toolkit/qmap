@@ -30,8 +30,8 @@ clients use CUSTOM1 and CUSTOM2.
 
 Every description is a strict JSON object with `"schema-version": 1`. The
 bundled example is `json/na/mqt-qmap-qdmi-na-device.json`, and the C++ value
-model is {cpp-api:class}`na::Device`. Required top-level and nested fields
-cannot be omitted, unknown fields are rejected, and validation covers:
+model is {cpp:class}`na::Device`. Required top-level and nested fields cannot be
+omitted, unknown fields are rejected, and validation covers:
 
 - non-empty names and positive device capacity;
 - finite positive unit scales and supported units;

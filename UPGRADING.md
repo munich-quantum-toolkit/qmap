@@ -17,19 +17,18 @@ The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
 `origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
 `load1`, and `load2`, respectively.
 
+MQT QMAP now ships and registers the neutral-atom QDMI device and exposes its
+client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
+`mqt.qmap.na.default`; this keeps it distinct from MQT Core 3.9.0's
+`mqt.na.default` provider while both packages are installed. The provider reads
+its bundled description automatically and can be configured through the
+`MQT_QMAP_QDMI_NA_CONFIG_JSON` and `MQT_QMAP_QDMI_NA_CONFIG_FILE` environment
+variables.
+
 ## [3.9.0]
 
 This release updates the minimum required `mqt-core` version to 3.9.0 and
 `nanobind` to 2.15.0.
-
-### Neutral-atom QDMI provider
-
-MQT QMAP now ships and registers the neutral-atom QDMI provider as
-`mqt.qmap.na.qdmi`. Its stable device ID is `mqt.qmap.na.default`; this keeps it
-distinct from MQT Core 3.9.0's `mqt.na.default` provider while both packages are
-installed. The provider reads its bundled description automatically and can be
-configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
-`MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables.
 
 ## [3.8.0]
 

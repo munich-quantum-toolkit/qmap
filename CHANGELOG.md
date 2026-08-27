@@ -12,6 +12,11 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- ✨ Provide the neutral-atom QDMI device and client integration transferred
+  from MQT Core ([#1111]) ([**@denialhaag**])
+
 ### Changed
 
 - ♻️ Move the neutral-atom computation IR and circuit operations from MQT Core
@@ -23,8 +28,6 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
 
 ### Added
 
-- ✨ Move the neutral-atom QDMI provider from MQT Core to QMAP ([#1111])
-  ([**@denialhaag**])
 - 🐍 Start building CPython 3.15 wheels ([#1096]) ([**@denialhaag**])
 
 ### Changed

@@ -38,7 +38,7 @@ TEST(NaQdmiClient, FullJsonRoundTrip) {
                                                   .prefix = "MQT_QMAP_NA",
                                                   .session = {}}));
 
-  const auto genericDevice = qdmi_client::Session::openDevice(deviceId);
+  const auto genericDevice = fomac::Session::openDevice(deviceId);
   const auto device = Session::Device::tryCreateFromDevice(genericDevice);
   ASSERT_TRUE(device.has_value());
 
