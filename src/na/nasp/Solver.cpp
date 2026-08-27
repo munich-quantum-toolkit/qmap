@@ -10,7 +10,6 @@
 
 #include "na/nasp/Solver.hpp"
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
@@ -789,7 +788,7 @@ auto NASolver::getOpsForSolver(const qc::QuantumComputation& circ,
                                const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
   auto flattened = circ;
-  qc::CircuitOptimizer::flattenOperations(flattened);
+  flattened.flattenOperations();
   std::vector<std::pair<unsigned int, unsigned int>> ops;
   ops.reserve(flattened.size());
   for (const auto& op : flattened) {

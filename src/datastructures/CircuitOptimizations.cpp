@@ -21,6 +21,7 @@
 #include <cassert>
 #include <deque>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <set>
 #include <utility>
@@ -282,6 +283,92 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
       operation->setControls({qc::Control{previousQ1}});
       addToDAG(dag, &operation);
       continue;
+    }
+  }
+
+  removeIdentities(qc);
+}
+
+void singleQubitGateFusion(qc::QuantumComputation& qc) {
+  static const std::map<qc::OpType, qc::OpType> inverseMap = {
+      {qc::I, qc::I},     {qc::X, qc::X},     {qc::Y, qc::Y},
+      {qc::Z, qc::Z},     {qc::H, qc::H},     {qc::S, qc::Sdg},
+      {qc::Sdg, qc::S},   {qc::T, qc::Tdg},   {qc::Tdg, qc::T},
+      {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX}, {qc::Barrier, qc::Barrier}};
+
+  auto dag = DAG(qc.getHighestPhysicalQubitIndex() + 1U);
+  for (auto& operation : qc) {
+    if (!operation->isStandardOperation() ||
+        !operation->getControls().empty() ||
+        operation->getTargets().size() > 1U) {
+      addToDAG(dag, &operation);
+      continue;
+    }
+
+    const auto target = operation->getTargets().at(0);
+    if (dag.at(target).empty()) {
+      addToDAG(dag, &operation);
+      continue;
+    }
+
+    auto* previous = dag.at(target).back();
+    if (!(*previous)->isCompoundOperation() &&
+        (!(*previous)->getControls().empty() ||
+         (*previous)->getTargets().size() > 1U)) {
+      addToDAG(dag, &operation);
+      continue;
+    }
+
+    if ((*previous)->isCompoundOperation()) {
+      auto* compound = dynamic_cast<qc::CompoundOperation*>(previous->get());
+      std::size_t involvedQubits = 0;
+      for (std::size_t qubit = 0; qubit < dag.size(); ++qubit) {
+        if (compound->actsOn(static_cast<qc::Qubit>(qubit))) {
+          ++involvedQubits;
+        }
+      }
+      if (involvedQubits > 1U) {
+        addToDAG(dag, &operation);
+        continue;
+      }
+
+      if (compound->empty()) {
+        compound->emplace_back(operation->clone());
+        operation->setGate(qc::I);
+        continue;
+      }
+
+      const auto last = --compound->end();
+      const auto inverse = inverseMap.find((*last)->getType());
+      if (inverse != inverseMap.end() &&
+          operation->getType() == inverse->second) {
+        compound->pop_back();
+        operation->setGate(qc::I);
+      } else {
+        compound->emplace_back<qc::StandardOperation>(
+            operation->getTargets().at(0), operation->getType(),
+            operation->getParameter());
+        operation->setGate(qc::I);
+      }
+      continue;
+    }
+
+    const auto inverse = inverseMap.find((*previous)->getType());
+    if (inverse != inverseMap.end() &&
+        operation->getType() == inverse->second) {
+      (*previous)->setGate(qc::I);
+      operation->setGate(qc::I);
+    } else {
+      auto compound = std::make_unique<qc::CompoundOperation>();
+      compound->emplace_back<qc::StandardOperation>(
+          (*previous)->getTargets().at(0), (*previous)->getType(),
+          (*previous)->getParameter());
+      compound->emplace_back<qc::StandardOperation>(
+          operation->getTargets().at(0), operation->getType(),
+          operation->getParameter());
+      operation->setGate(qc::I);
+      *previous = std::move(compound);
+      dag.at(target).push_back(previous);
     }
   }
 

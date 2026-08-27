@@ -14,7 +14,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
-- ♻️ Move the mapping-specific `decomposeSWAP`, `cancelCNOTs`, and
+- ♻️ Move the `singleQubitGateFusion`, `decomposeSWAP`, `cancelCNOTs`, and
   `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP
   ([#1125]) ([**@simon1hofmann**])
 

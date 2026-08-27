@@ -8,7 +8,6 @@
  * Licensed under the MIT License
  */
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "datastructures/CircuitOptimizations.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -255,6 +254,91 @@ TEST(CancelCNOTs, NegativeControlledXDoesNotBecomeSWAP) {
             qc::Control::Type::Neg);
 }
 
+TEST(SingleQubitGateFusion, CollapseCompoundOperationToStandard) {
+  qc::QuantumComputation circuit(1);
+  circuit.x(0);
+  circuit.i(0);
+
+  singleQubitGateFusion(circuit);
+
+  ASSERT_EQ(circuit.getNops(), 1U);
+  EXPECT_TRUE(circuit.front()->isStandardOperation());
+}
+
+TEST(SingleQubitGateFusion, EliminateCompoundOperation) {
+  qc::QuantumComputation circuit(1);
+  circuit.i(0);
+  circuit.i(0);
+
+  singleQubitGateFusion(circuit);
+
+  EXPECT_TRUE(circuit.empty());
+}
+
+TEST(SingleQubitGateFusion, EliminateInverseInCompoundOperation) {
+  qc::QuantumComputation circuit(1);
+  circuit.s(0);
+  circuit.sdg(0);
+
+  singleQubitGateFusion(circuit);
+
+  EXPECT_TRUE(circuit.empty());
+}
+
+TEST(SingleQubitGateFusion, UnknownInverseInCompoundOperation) {
+  qc::QuantumComputation circuit(1);
+  circuit.p(1., 0);
+  circuit.p(-1., 0);
+
+  singleQubitGateFusion(circuit);
+
+  EXPECT_EQ(circuit.getNops(), 1U);
+}
+
+TEST(SingleQubitGateFusion, RepeatedCancellation) {
+  qc::QuantumComputation circuit(1);
+  circuit.x(0);
+  circuit.h(0);
+  circuit.h(0);
+  circuit.x(0);
+  circuit.z(0);
+
+  singleQubitGateFusion(circuit);
+
+  EXPECT_EQ(circuit.getNops(), 1U);
+}
+
+TEST(SingleQubitGateFusion, RemovesEmptyCompoundOperation) {
+  qc::QuantumComputation circuit(1);
+  circuit.x(0);
+  circuit.h(0);
+  circuit.h(0);
+  circuit.x(0);
+
+  singleQubitGateFusion(circuit);
+
+  EXPECT_TRUE(circuit.empty());
+}
+
+TEST(SingleQubitGateFusion, PreservesOperationCounts) {
+  qc::QuantumComputation circuit(2U, 2U);
+  circuit.x(0);
+  circuit.h(0);
+  circuit.cx(1, 0);
+  circuit.z(0);
+  circuit.measure(0, 0);
+
+  ASSERT_EQ(circuit.getNops(), 5U);
+  ASSERT_EQ(circuit.getNindividualOps(), 5U);
+  ASSERT_EQ(circuit.getNsingleQubitOps(), 3U);
+
+  singleQubitGateFusion(circuit);
+
+  EXPECT_EQ(circuit.getNops(), 4U);
+  EXPECT_EQ(circuit.getNindividualOps(), 5U);
+  EXPECT_EQ(circuit.getNsingleQubitOps(), 3U);
+}
+
 TEST(ReplaceMCXWithMCZ, CX) {
   qc::QuantumComputation circuit(2U);
   circuit.cx(0, 1);
@@ -299,7 +383,7 @@ TEST(ReplaceMCXWithMCZ, NestedCompoundOperation) {
   circuit.emplace_back(nestedOperation.asCompoundOperation());
 
   replaceMCXWithMCZ(circuit);
-  qc::CircuitOptimizer::flattenOperations(circuit);
+  circuit.flattenOperations();
 
   ASSERT_EQ(circuit.getNops(), 3U);
   EXPECT_EQ(circuit.at(0)->getType(), qc::H);
@@ -316,8 +400,8 @@ TEST(ReplaceMCXWithMCZ, ToffoliSequenceSimplification) {
   circuit.mcx(controls, target);
 
   replaceMCXWithMCZ(circuit);
-  qc::CircuitOptimizer::singleQubitGateFusion(circuit);
-  qc::CircuitOptimizer::flattenOperations(circuit);
+  singleQubitGateFusion(circuit);
+  circuit.flattenOperations();
 
   qc::QuantumComputation reference(nqubits);
   reference.h(target);

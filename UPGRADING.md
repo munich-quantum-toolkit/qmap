@@ -6,17 +6,24 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
-### Mapping-specific circuit transformations
+### Circuit transformations
 
-MQT QMAP now owns the mapping-specific circuit transformations that MQT Core
-removed from `qc::CircuitOptimizer`. Apply these C++ replacements:
+MQT QMAP now owns circuit transformations that MQT Core removed from
+`qc::CircuitOptimizer`. Apply these C++ replacements:
 
+- Replace `qc::CircuitOptimizer::singleQubitGateFusion` with
+  `qmap::singleQubitGateFusion`.
 - Replace `qc::CircuitOptimizer::decomposeSWAP` with `qmap::decomposeSWAP`.
 - Replace `qc::CircuitOptimizer::cancelCNOTs` with `qmap::cancelCNOTs`.
 - Replace `qc::CircuitOptimizer::replaceMCXWithMCZ` with
   `qmap::replaceMCXWithMCZ`.
+- Replace `qc::CircuitOptimizer::flattenOperations(qc)` with
+  `qc.flattenOperations()`.
+- Replace `qc::CircuitOptimizer::removeFinalMeasurements(qc)` with
+  `qc.removeFinalMeasurements()`.
 
-Include `datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
+For the QMAP-owned replacements, include
+`datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
 
 ## [3.9.0]
 

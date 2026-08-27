@@ -29,7 +29,7 @@ if(NOT TARGET ${MQT_QMAP_HYBRIDMAP_TARGET_NAME})
   target_link_libraries(
     ${MQT_QMAP_HYBRIDMAP_TARGET_NAME}
     PUBLIC MQT::CoreIR MQT::QMapNAComputation nlohmann_json::nlohmann_json spdlog::spdlog
-    PRIVATE MQT::ProjectWarnings MQT::ProjectOptions MQT::CoreCircuitOptimizer MQT::QMapDS)
+    PRIVATE MQT::ProjectWarnings MQT::ProjectOptions MQT::QMapDS)
 
   # add MQT alias
   add_library(MQT::QMapHybrid ALIAS ${MQT_QMAP_HYBRIDMAP_TARGET_NAME})

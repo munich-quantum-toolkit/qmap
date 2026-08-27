@@ -10,7 +10,6 @@
 
 #include "hybridmap/NeutralAtomUtils.hpp"
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "datastructures/CircuitOptimizations.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -144,7 +143,7 @@ void BridgeCircuits::computeBridgeCircuit(const size_t length) {
                                         qcBridge.getNqubits() - 1, qc::H));
 
   qmap::replaceMCXWithMCZ(qcBridge);
-  qc::CircuitOptimizer::singleQubitGateFusion(qcBridge);
+  qmap::singleQubitGateFusion(qcBridge);
   bridgeCircuits[length] = qcBridge;
 }
 

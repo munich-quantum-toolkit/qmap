@@ -30,6 +30,12 @@ void decomposeSWAP(qc::QuantumComputation& qc, bool isDirectedArchitecture);
 void cancelCNOTs(qc::QuantumComputation& qc);
 
 /**
+ * @brief Fuse adjacent single-qubit gates.
+ * @param qc Quantum circuit to transform.
+ */
+void singleQubitGateFusion(qc::QuantumComputation& qc);
+
+/**
  * @brief Replace controlled X gates by controlled Z gates surrounded by H
  * gates on the target.
  * @param qc Quantum circuit to transform.

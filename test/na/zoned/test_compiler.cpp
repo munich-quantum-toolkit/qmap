@@ -8,7 +8,6 @@
  * Licensed under the MIT License
  */
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/zoned/Compiler.hpp"
 #include "qasm3/Importer.hpp"
