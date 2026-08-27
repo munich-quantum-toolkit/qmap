@@ -105,7 +105,7 @@ struct Location final {
   /// @param other The location to compare with.
   /// @return True if this location is greater than or equal to the other
   [[nodiscard]] auto operator>=(const Location& other) const -> bool {
-    return !(other < *this);
+    return !(*this < other);
   }
 
   /// Compares two locations for less than or equal.

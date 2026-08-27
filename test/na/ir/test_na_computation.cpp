@@ -57,6 +57,9 @@ TEST(NAComputation, Location) {
   EXPECT_LE((Location{2, 4}), loc);
   EXPECT_LE(loc, loc);
   EXPECT_FALSE((Location{4, 3}) <= loc);
+  EXPECT_GE((Location{4, 3}), loc);
+  EXPECT_GE(loc, loc);
+  EXPECT_FALSE((Location{2, 4}) >= loc);
   std::stringstream ss;
   ss << loc;
   EXPECT_EQ(ss.str(), "(3.000, 4.000)");
