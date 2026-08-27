@@ -111,8 +111,9 @@ TEST(AodOperation, Constructors) {
   EXPECT_TRUE(moveBase.equals(
       na::AodOperation(na::NeutralAtomOpType::AodMove, {1}, {segment}),
       qc::Permutation{{0, 1}}, {}));
-  EXPECT_THROW(static_cast<void>(na::AodOperation(na::NeutralAtomOpType::Move,
-                                                  {0}, {dir1}, {0.0}, {1.0})),
+  EXPECT_THROW(static_cast<void>(na::AodOperation(
+                   na::NeutralAtomOpType::Move, {0},
+                   std::vector<std::uint32_t>{dir1}, {0.0}, {1.0})),
                std::invalid_argument);
   EXPECT_THROW(static_cast<void>(
                    na::AodOperation(na::NeutralAtomOpType::AodMove, {0},
