@@ -11,6 +11,7 @@
 #include "TestUtils.hpp"
 #include "mqt_qmap_na_qdmi/device.h"
 #include "na/qdmi/Configuration.hpp"
+#include "na/qdmi/Device.hpp"
 
 #include <algorithm>
 #include <array>
@@ -63,6 +64,12 @@ struct PairHash {
 };
 
 using mqt::test::ScopedEnvironmentVariable;
+
+static_assert(noexcept(std::declval<MQT_QMAP_NA_QDMI_Device_Session_impl_d&>()
+                           .setParameter(QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1,
+                                         0, nullptr)));
+static_assert(noexcept(std::declval<MQT_QMAP_NA_QDMI_Device_Session_impl_d&>()
+                           .createDeviceJob(nullptr)));
 
 [[nodiscard]] auto queryName(MQT_QMAP_NA_QDMI_Device_Session session)
     -> std::string {

@@ -78,6 +78,24 @@ void emitDiagnostic(
 #endif
 }
 
+/// Maps exceptions from an allocation-capable device call to QDMI status codes.
+template <class Callable>
+[[nodiscard]] auto guardDeviceCall(const std::string_view action,
+                                   Callable&& callable) noexcept -> int {
+  try {
+    return std::invoke(std::forward<Callable>(callable));
+  } catch (const std::bad_alloc&) {
+    emitDiagnostic({"Out of memory while ", action});
+    return QDMI_ERROR_OUTOFMEM;
+  } catch (const std::exception& error) {
+    emitDiagnostic({"Failed while ", action, ": ", error.what()});
+    return QDMI_ERROR_FATAL;
+  } catch (...) {
+    emitDiagnostic({"Failed while ", action, ": unknown exception"});
+    return QDMI_ERROR_FATAL;
+  }
+}
+
 [[nodiscard]] auto inside(const na::Device::Region& region, const int64_t x,
                           const int64_t y) -> bool {
   return region.origin.x <= x &&
@@ -280,8 +298,8 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
   }
 }
 auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
-    QDMI_Device_Session_Parameter param, const size_t size, const void* value)
-    -> int {
+    QDMI_Device_Session_Parameter param, const size_t size,
+    const void* value) noexcept -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(param, QDMI_DEVICE_SESSION_PARAMETER)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -289,21 +307,26 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
   if (status_ != Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  return ::qdmi::detail::setDeviceConfigurationParameter(
-      param, size, value, inlineConfiguration_, fileConfiguration_);
+  return guardDeviceCall("setting an NA device session parameter", [&] {
+    return ::qdmi::detail::setDeviceConfigurationParameter(
+        param, size, value, inlineConfiguration_, fileConfiguration_);
+  });
 }
 auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::createDeviceJob(
     // NOLINTNEXTLINE(readability-non-const-parameter)
-    MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
+    MQT_QMAP_NA_QDMI_Device_Job* job) noexcept -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   if (status_ == Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  auto uniqueJob = std::make_unique<MQT_QMAP_NA_QDMI_Device_Job_impl_d>(this);
-  *job = jobs_.emplace(uniqueJob.get(), std::move(uniqueJob)).first->first;
-  return QDMI_SUCCESS;
+  *job = nullptr;
+  return guardDeviceCall("creating an NA device job", [&] {
+    auto uniqueJob = std::make_unique<MQT_QMAP_NA_QDMI_Device_Job_impl_d>(this);
+    *job = jobs_.emplace(uniqueJob.get(), std::move(uniqueJob)).first->first;
+    return QDMI_SUCCESS;
+  });
 }
 void MQT_QMAP_NA_QDMI_Device_Session_impl_d::freeDeviceJob(
     MQT_QMAP_NA_QDMI_Device_Job job) {
