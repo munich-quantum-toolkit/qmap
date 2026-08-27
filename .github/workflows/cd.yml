@@ -1,5 +1,4 @@
 name: CD 🚀
-# Temporary: exercise the wheel repair for the packaged neutral-atom QDMI device. Remove again.
 on:
   release:
     types: [published]
