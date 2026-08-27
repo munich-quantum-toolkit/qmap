@@ -12,6 +12,13 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- ♻️ Move the `singleQubitGateFusion`, `decomposeSWAP`, `cancelCNOTs`, and
+  `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP while
+  preserving controlled SWAPs and recursively decomposing uncontrolled SWAPs in
+  nested compound operations ([#1125]) ([**@simon1hofmann**])
+
 ## [3.9.0] - 2026-08-24
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
@@ -293,6 +300,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
 [#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
 [#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106

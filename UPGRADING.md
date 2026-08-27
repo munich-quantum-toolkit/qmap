@@ -6,6 +6,27 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+### Circuit transformations
+
+MQT QMAP now owns circuit transformations that MQT Core removed from
+`qc::CircuitOptimizer`. Apply these C++ replacements:
+
+- Replace `qc::CircuitOptimizer::singleQubitGateFusion` with
+  `qmap::singleQubitGateFusion`.
+- Replace `qc::CircuitOptimizer::decomposeSWAP` with `qmap::decomposeSWAP`. The
+  QMAP function recursively decomposes uncontrolled SWAPs and preserves
+  controlled SWAPs.
+- Replace `qc::CircuitOptimizer::cancelCNOTs` with `qmap::cancelCNOTs`.
+- Replace `qc::CircuitOptimizer::replaceMCXWithMCZ` with
+  `qmap::replaceMCXWithMCZ`.
+- Replace `qc::CircuitOptimizer::flattenOperations(qc)` with
+  `qc.flattenOperations()`.
+- Replace `qc::CircuitOptimizer::removeFinalMeasurements(qc)` with
+  `qc.removeFinalMeasurements()`.
+
+For the QMAP-owned replacements, include
+`datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
+
 ## [3.9.0]
 
 This release updates the minimum required `mqt-core` version to 3.9.0 and

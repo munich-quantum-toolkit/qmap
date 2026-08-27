@@ -30,7 +30,7 @@ if(NOT TARGET ${MQT_QMAP_SC_TARGET_NAME})
   target_link_libraries(
     ${MQT_QMAP_SC_TARGET_NAME}
     PUBLIC MQT::CoreIR nlohmann_json::nlohmann_json
-    PRIVATE MQT::CoreCircuitOptimizer MQT::ProjectWarnings MQT::ProjectOptions)
+    PRIVATE MQT::ProjectWarnings MQT::ProjectOptions MQT::QMapDS)
 
   # add MQT alias
   add_library(MQT::QMapSC ALIAS ${MQT_QMAP_SC_TARGET_NAME})

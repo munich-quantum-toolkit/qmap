@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"

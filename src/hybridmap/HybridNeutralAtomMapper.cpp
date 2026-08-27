@@ -10,7 +10,7 @@
 
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "datastructures/CircuitOptimizations.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
@@ -46,7 +46,7 @@ namespace na {
 void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
                                   const Mapping& initialMapping) {
   // remove barriers and measurements
-  qc::CircuitOptimizer::removeFinalMeasurements(qc);
+  qc.removeFinalMeasurements();
   // check if multi-qubit gates are present
   multiQubitGates = false;
   for (const auto& op : qc) {
@@ -68,12 +68,12 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     mappedQc.addAncillaryRegister(this->arch->getNpositions(), "fa");
   }
 
-  qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
-  qc::CircuitOptimizer::singleQubitGateFusion(qc);
-  qc::CircuitOptimizer::flattenOperations(qc);
-  qc::CircuitOptimizer::removeFinalMeasurements(qc);
+  qmap::replaceMCXWithMCZ(qc);
+  qmap::singleQubitGateFusion(qc);
+  qc.flattenOperations();
+  qc.removeFinalMeasurements();
 
-  const auto dag = qc::CircuitOptimizer::constructDAG(qc);
+  const auto dag = constructDAG(qc);
 
   mapping = initialMapping;
 
@@ -168,12 +168,12 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
 
 qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   // decompose SWAP gates
-  qc::CircuitOptimizer::decomposeSWAP(mappedQc, false);
+  qmap::decomposeSWAP(mappedQc, false);
   // decompose bridge gates
   decomposeBridgeGates(mappedQc);
-  qc::CircuitOptimizer::replaceMCXWithMCZ(mappedQc);
-  qc::CircuitOptimizer::singleQubitGateFusion(mappedQc);
-  qc::CircuitOptimizer::flattenOperations(mappedQc);
+  qmap::replaceMCXWithMCZ(mappedQc);
+  qmap::singleQubitGateFusion(mappedQc);
+  mappedQc.flattenOperations();
   // decompose AOD moves
   MoveToAodConverter aodScheduler(*arch, hardwareQubits, flyingAncillas);
   mappedQcAOD = aodScheduler.schedule(mappedQc);

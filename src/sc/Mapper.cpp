@@ -10,7 +10,7 @@
 
 #include "sc/Mapper.hpp"
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "datastructures/CircuitOptimizations.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
@@ -66,7 +66,7 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
   // strip away qubits that are not used in the circuit
   qc.stripIdleQubits(true);
   // strip away final measurement gates
-  qc::CircuitOptimizer::removeFinalMeasurements(qc);
+  qc.removeFinalMeasurements();
 }
 
 void Mapper::processDisjointQubitLayer(
@@ -540,7 +540,7 @@ void Mapper::postMappingOptimizations(const Configuration& config) {
   }
 
   // try to cancel adjacent CNOT gates
-  qc::CircuitOptimizer::cancelCNOTs(qcMapped);
+  qmap::cancelCNOTs(qcMapped);
 }
 
 void Mapper::countGates(decltype(qcMapped.cbegin()) it,
