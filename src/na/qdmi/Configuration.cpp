@@ -339,11 +339,11 @@ void validateNestedSchema(const Json& json, const std::string_view source) {
   validateOperations(device.localMultiQubitOperations,
                      "$/localMultiQubitOperations");
   for (const auto& operation : device.globalMultiQubitOperations) {
-    if (!validFidelity(operation.idlingFidelity) || operation.numQubits == 0 ||
+    if (!validFidelity(operation.idlingFidelity) || operation.numQubits <= 1 ||
         operation.interactionRadius == 0 || operation.blockingRadius == 0) {
       validationError(source, "$/globalMultiQubitOperations",
-                      "requires positive arity and radii and valid "
-                      "idlingFidelity");
+                      "requires arity greater than one, positive radii, and "
+                      "valid idlingFidelity");
     }
   }
   for (const auto& operation : device.localMultiQubitOperations) {

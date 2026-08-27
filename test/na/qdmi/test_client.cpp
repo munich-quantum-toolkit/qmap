@@ -52,4 +52,30 @@ TEST(NaQdmiClient, FullJsonRoundTrip) {
   EXPECT_EQ(actual, expected);
 }
 
+TEST(NaQdmiClient, ThreeQubitGlobalOperationRoundTrip) {
+  constexpr auto deviceId = "mqt.qmap.na.test.three-qubit-global";
+  static_cast<void>(
+      qdmi::Driver::get().registerDeviceIfAbsent({.id = deviceId,
+                                                  .library = NA_DEVICE_LIBRARY,
+                                                  .prefix = "MQT_QMAP_NA",
+                                                  .session = {}}));
+
+  std::ifstream input(NA_DEVICE_JSON);
+  ASSERT_TRUE(input.is_open()) << "Failed to open " NA_DEVICE_JSON;
+  auto expected = nlohmann::json::parse(input);
+  expected["globalMultiQubitOperations"][0]["numQubits"] = 3;
+
+  qdmi::DeviceSessionConfig overrides;
+  overrides.deviceConfiguration =
+      qdmi::InlineDeviceConfiguration{.json = expected.dump()};
+  const auto genericDevice = fomac::Session::openDevice(deviceId, overrides);
+  const auto device = Session::Device::tryCreateFromDevice(genericDevice);
+  ASSERT_TRUE(device.has_value());
+
+  nlohmann::json actual = *device;
+  canonicallyOrderLatticeVectors(expected);
+  canonicallyOrderLatticeVectors(actual);
+  EXPECT_EQ(actual, expected);
+}
+
 } // namespace na

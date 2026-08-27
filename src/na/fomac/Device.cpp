@@ -471,21 +471,21 @@ auto Session::Device::initOperationsFromDevice() -> bool {
                .duration = *d,
                .fidelity = *f,
                .numParameters = op.getParametersNum()}});
-        } else if (*nq == 2) {
-          // zoned two-qubit operations
+        } else if (*nq > 1) {
+          // zoned multi-qubit operations
           const auto& ir = op.getInteractionRadius();
           if (!ir.has_value()) {
-            SPDLOG_INFO("Two-qubit Operation missing interaction radius");
+            SPDLOG_INFO("Multi-qubit operation missing interaction radius");
             return false;
           }
           const auto& br = op.getBlockingRadius();
           if (!br.has_value()) {
-            SPDLOG_INFO("Two-qubit Operation missing blocking radius");
+            SPDLOG_INFO("Multi-qubit operation missing blocking radius");
             return false;
           }
           const auto& fi = op.getIdlingFidelity();
           if (!fi.has_value()) {
-            SPDLOG_INFO("Two-qubit Operation missing idling fidelity");
+            SPDLOG_INFO("Multi-qubit operation missing idling fidelity");
             return false;
           }
           globalMultiQubitOperations.emplace_back(GlobalMultiQubitOperation{
@@ -499,7 +499,8 @@ auto Session::Device::initOperationsFromDevice() -> bool {
               *fi,
               *nq});
         } else {
-          SPDLOG_INFO("Number of Qubits must be 1 or 2");
+          SPDLOG_INFO("Number of qubits must be positive");
+          return false;
         }
       }
     } else {
