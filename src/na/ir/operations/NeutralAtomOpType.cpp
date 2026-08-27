@@ -24,7 +24,7 @@
 
 namespace na {
 
-std::string_view toString(const NeutralAtomOpType type) {
+auto toString(const NeutralAtomOpType type) -> std::string_view {
   switch (type) {
   case NeutralAtomOpType::None:
     return "none";
@@ -42,7 +42,8 @@ std::string_view toString(const NeutralAtomOpType type) {
   throw std::invalid_argument("Unknown neutral-atom operation type.");
 }
 
-NeutralAtomOpType neutralAtomOpTypeFromString(const std::string_view name) {
+auto neutralAtomOpTypeFromString(const std::string_view name)
+    -> NeutralAtomOpType {
   if (name == "none") {
     return NeutralAtomOpType::None;
   }
@@ -65,8 +66,8 @@ NeutralAtomOpType neutralAtomOpTypeFromString(const std::string_view name) {
                               std::string(name));
 }
 
-std::optional<NeutralAtomOpType>
-getNeutralAtomOpType(const qc::Operation& operation) {
+auto getNeutralAtomOpType(const qc::Operation& operation)
+    -> std::optional<NeutralAtomOpType> {
   if (const auto* standardOperation =
           dynamic_cast<const NAStandardOperation*>(&operation)) {
     if (standardOperation->getNeutralAtomOpType() != NeutralAtomOpType::None) {
@@ -83,20 +84,21 @@ getNeutralAtomOpType(const qc::Operation& operation) {
   return std::nullopt;
 }
 
-bool hasNeutralAtomOpType(const qc::Operation& operation,
-                          const NeutralAtomOpType type) {
+auto hasNeutralAtomOpType(const qc::Operation& operation,
+                          const NeutralAtomOpType type) -> bool {
   const auto operationType = getNeutralAtomOpType(operation);
   return operationType.has_value() && *operationType == type;
 }
 
-bool isAodOperation(const qc::Operation& operation) {
+auto isAodOperation(const qc::Operation& operation) -> bool {
   return dynamic_cast<const AodOperation*>(&operation) != nullptr;
 }
 
-std::ostream& detail::printNeutralAtomOperation(
+auto detail::printNeutralAtomOperation(
     const qc::Operation& operation, const NeutralAtomOpType operationType,
     std::ostream& os, const qc::Permutation& permutation,
-    [[maybe_unused]] const std::size_t prefixWidth, const std::size_t nQubits) {
+    [[maybe_unused]] const std::size_t prefixWidth, const std::size_t nQubits)
+    -> std::ostream& {
   const auto precisionBefore = os.precision(20);
   const auto& actualControls = permutation.apply(operation.getControls());
   const auto& actualTargets = permutation.apply(operation.getTargets());

@@ -32,8 +32,8 @@ NAStandardOperation::NAStandardOperation(
   name = toString(neutralAtomOpType);
 }
 
-NeutralAtomOpType NAStandardOperation::validateType(
-    const NeutralAtomOpType candidateNeutralAtomOpType) {
+auto NAStandardOperation::validateType(
+    const NeutralAtomOpType candidateNeutralAtomOpType) -> NeutralAtomOpType {
   if (candidateNeutralAtomOpType == NeutralAtomOpType::Move ||
       candidateNeutralAtomOpType == NeutralAtomOpType::Bridge) {
     return candidateNeutralAtomOpType;
@@ -42,15 +42,16 @@ NeutralAtomOpType NAStandardOperation::validateType(
       "A standard neutral-atom operation must be a move or bridge.");
 }
 
-bool NAStandardOperation::equals(const qc::Operation& operation,
+auto NAStandardOperation::equals(const qc::Operation& operation,
                                  const qc::Permutation& permutation1,
-                                 const qc::Permutation& permutation2) const {
+                                 const qc::Permutation& permutation2) const
+    -> bool {
   const auto* other = dynamic_cast<const NAStandardOperation*>(&operation);
   return other != nullptr && neutralAtomOpType == other->neutralAtomOpType &&
          qc::StandardOperation::equals(operation, permutation1, permutation2);
 }
 
-bool NAStandardOperation::equals(const qc::Operation& operation) const {
+auto NAStandardOperation::equals(const qc::Operation& operation) const -> bool {
   return equals(operation, {}, {});
 }
 
@@ -91,10 +92,11 @@ auto NAStandardOperation::commutesAtQubit(const qc::Operation& other,
   return parameter.size() <= 1 || parameter == other.getParameter();
 }
 
-std::ostream& NAStandardOperation::print(std::ostream& os,
-                                         const qc::Permutation& permutation,
-                                         const std::size_t prefixWidth,
-                                         const std::size_t nQubits) const {
+auto NAStandardOperation::print(std::ostream& os,
+                                const qc::Permutation& permutation,
+                                const std::size_t prefixWidth,
+                                const std::size_t nQubits) const
+    -> std::ostream& {
   return detail::printNeutralAtomOperation(*this, neutralAtomOpType, os,
                                            permutation, prefixWidth, nQubits);
 }
@@ -119,13 +121,14 @@ void NAStandardOperation::invert() {
   }
 }
 
-std::unique_ptr<qc::Operation> makeMoveOperation(const qc::Qubit origin,
-                                                 const qc::Qubit target) {
+auto makeMoveOperation(const qc::Qubit origin, const qc::Qubit target)
+    -> std::unique_ptr<qc::Operation> {
   return std::make_unique<NAStandardOperation>(NeutralAtomOpType::Move,
                                                qc::Targets{origin, target});
 }
 
-std::unique_ptr<qc::Operation> makeBridgeOperation(qc::Targets targets) {
+auto makeBridgeOperation(qc::Targets targets)
+    -> std::unique_ptr<qc::Operation> {
   return std::make_unique<NAStandardOperation>(NeutralAtomOpType::Bridge,
                                                std::move(targets));
 }

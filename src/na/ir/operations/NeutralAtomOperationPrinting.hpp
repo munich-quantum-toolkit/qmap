@@ -20,11 +20,11 @@
 namespace na::detail {
 
 /// Prints a neutral-atom operation in MQT Core's circuit-diagram format.
-std::ostream& printNeutralAtomOperation(const qc::Operation& operation,
-                                        NeutralAtomOpType operationType,
-                                        std::ostream& os,
-                                        const qc::Permutation& permutation,
-                                        std::size_t prefixWidth,
-                                        std::size_t nQubits);
+auto printNeutralAtomOperation(const qc::Operation& operation,
+                               NeutralAtomOpType operationType,
+                               std::ostream& os,
+                               const qc::Permutation& permutation,
+                               std::size_t prefixWidth, std::size_t nQubits)
+    -> std::ostream&;
 
 } // namespace na::detail

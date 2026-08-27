@@ -23,6 +23,7 @@
 #include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "na/ir/operations/NAStandardOperation.hpp"
+#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <algorithm>
 #include <cmath>

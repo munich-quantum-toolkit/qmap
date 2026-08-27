@@ -638,7 +638,7 @@ MoveToAodConverter::AodTransitionBuilder::getDimensionMovesFromInitialPosition(
     const uint32_t initialPosition) const {
   std::vector<std::shared_ptr<DimensionMove>> dimensionMoves;
   for (const auto& transition : transitions) {
-    for (auto& dimensionMove : transition.getDimensionMoves(dimension)) {
+    for (const auto& dimensionMove : transition.getDimensionMoves(dimension)) {
       if (dimensionMove->initialPosition == initialPosition) {
         dimensionMoves.emplace_back(dimensionMove);
       }

@@ -41,15 +41,16 @@ AodOperation::AodOperation(const NeutralAtomOpType newNeutralAtomOpType,
     : AodOperation(newNeutralAtomOpType, std::move(operationTargets),
                    convertToDimensions(dimensions), starts, ends) {}
 
-std::string AodOperation::Segment::toQASMString() const {
+auto AodOperation::Segment::toQASMString() const -> std::string {
   std::stringstream ss;
   ss << static_cast<std::size_t>(dimension) << ", " << start << ", " << end
      << "; ";
   return ss.str();
 }
 
-std::vector<AodOperation::Dimension> AodOperation::convertToDimensions(
-    const std::vector<std::uint32_t>& dimensions) {
+auto AodOperation::convertToDimensions(
+    const std::vector<std::uint32_t>& dimensions)
+    -> std::vector<AodOperation::Dimension> {
   std::vector<Dimension> convertedDimensions(dimensions.size());
   for (std::size_t i = 0; i < dimensions.size(); ++i) {
     convertedDimensions[i] = static_cast<Dimension>(dimensions[i]);
@@ -57,8 +58,8 @@ std::vector<AodOperation::Dimension> AodOperation::convertToDimensions(
   return convertedDimensions;
 }
 
-NeutralAtomOpType
-AodOperation::validateType(const NeutralAtomOpType candidateNeutralAtomOpType) {
+auto AodOperation::validateType(
+    const NeutralAtomOpType candidateNeutralAtomOpType) -> NeutralAtomOpType {
   if (candidateNeutralAtomOpType == NeutralAtomOpType::AodActivate ||
       candidateNeutralAtomOpType == NeutralAtomOpType::AodDeactivate ||
       candidateNeutralAtomOpType == NeutralAtomOpType::AodMove) {
@@ -125,7 +126,8 @@ AodOperation::AodOperation(const NeutralAtomOpType newNeutralAtomOpType,
   name = toString(neutralAtomOpType);
 }
 
-std::vector<qc::fp> AodOperation::getEnds(const Dimension dimension) const {
+auto AodOperation::getEnds(const Dimension dimension) const
+    -> std::vector<qc::fp> {
   std::vector<qc::fp> ends;
   for (const auto& segment : segments) {
     if (segment.dimension == dimension) {
@@ -135,7 +137,8 @@ std::vector<qc::fp> AodOperation::getEnds(const Dimension dimension) const {
   return ends;
 }
 
-std::vector<qc::fp> AodOperation::getStarts(const Dimension dimension) const {
+auto AodOperation::getStarts(const Dimension dimension) const
+    -> std::vector<qc::fp> {
   std::vector<qc::fp> starts;
   for (const auto& segment : segments) {
     if (segment.dimension == dimension) {
@@ -145,7 +148,7 @@ std::vector<qc::fp> AodOperation::getStarts(const Dimension dimension) const {
   return starts;
 }
 
-qc::fp AodOperation::getMaxDistance(const Dimension dimension) const {
+auto AodOperation::getMaxDistance(const Dimension dimension) const -> qc::fp {
   const auto distances = getDistances(dimension);
   if (distances.empty()) {
     return 0;
@@ -153,8 +156,8 @@ qc::fp AodOperation::getMaxDistance(const Dimension dimension) const {
   return *std::ranges::max_element(distances);
 }
 
-std::vector<qc::fp>
-AodOperation::getDistances(const Dimension dimension) const {
+auto AodOperation::getDistances(const Dimension dimension) const
+    -> std::vector<qc::fp> {
   std::vector<qc::fp> distances;
   for (const auto& segment : segments) {
     if (segment.dimension == dimension) {
@@ -164,23 +167,22 @@ AodOperation::getDistances(const Dimension dimension) const {
   return distances;
 }
 
-bool AodOperation::equals(const qc::Operation& operation,
+auto AodOperation::equals(const qc::Operation& operation,
                           const qc::Permutation& permutation1,
-                          const qc::Permutation& permutation2) const {
+                          const qc::Permutation& permutation2) const -> bool {
   const auto* other = dynamic_cast<const AodOperation*>(&operation);
   return other != nullptr && neutralAtomOpType == other->neutralAtomOpType &&
          qc::Operation::equals(operation, permutation1, permutation2) &&
          segments == other->segments;
 }
 
-bool AodOperation::equals(const qc::Operation& operation) const {
+auto AodOperation::equals(const qc::Operation& operation) const -> bool {
   return equals(operation, {}, {});
 }
 
-std::ostream& AodOperation::print(std::ostream& os,
-                                  const qc::Permutation& permutation,
-                                  const std::size_t prefixWidth,
-                                  const std::size_t nQubits) const {
+auto AodOperation::print(std::ostream& os, const qc::Permutation& permutation,
+                         const std::size_t prefixWidth,
+                         const std::size_t nQubits) const -> std::ostream& {
   return detail::printNeutralAtomOperation(*this, neutralAtomOpType, os,
                                            permutation, prefixWidth, nQubits);
 }
