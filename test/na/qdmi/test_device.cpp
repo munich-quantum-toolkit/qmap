@@ -469,6 +469,26 @@ TEST_F(NaQDMISpecificationTest, JobCreate) {
   MQT_QMAP_NA_QDMI_device_job_free(job);
 }
 
+TEST_F(NaQDMISpecificationTest, JobRetrievalValidatesArguments) {
+  MQT_QMAP_NA_QDMI_Device_Job job = nullptr;
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                nullptr, "job-123", &job),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                session, nullptr, &job),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(session,
+                                                                      "", &job),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                session, "job-123", nullptr),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                session, "job-123", &job),
+            QDMI_ERROR_NOTSUPPORTED);
+  EXPECT_EQ(job, nullptr);
+}
+
 TEST_F(NaQDMISpecificationTest, JobSetParameter) {
   EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_set_parameter(
                 nullptr, QDMI_DEVICE_JOB_PARAMETER_MAX, 0, nullptr),
@@ -1061,10 +1081,11 @@ TEST_F(NADeviceTest, QueryOperationData) {
           for (const auto& site2 : sites) {
             if (site1 != site2) {
               const std::pair sitePair{site1, site2};
+              const std::array queriedSites{sitePair.first, sitePair.second};
               result = MQT_QMAP_NA_QDMI_device_session_query_operation_property(
-                  session, operation, 2,
-                  reinterpret_cast<const MQT_QMAP_NA_QDMI_Site*>(&sitePair), 0,
-                  nullptr, QDMI_OPERATION_PROPERTY_NAME, 0, nullptr, nullptr);
+                  session, operation, queriedSites.size(), queriedSites.data(),
+                  0, nullptr, QDMI_OPERATION_PROPERTY_NAME, 0, nullptr,
+                  nullptr);
               ASSERT_THAT(result, testing::AnyOf(QDMI_SUCCESS,
                                                  QDMI_ERROR_NOTSUPPORTED));
               if (result == QDMI_SUCCESS) {
@@ -1143,20 +1164,24 @@ TEST_F(NADeviceTest, QueryOperationData) {
             }
           }
         }
-        std::vector<std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>>
-            queriedSupportedSitesVec(
-                sitesSize / sizeof(std::pair<MQT_QMAP_NA_QDMI_Site,
-                                             MQT_QMAP_NA_QDMI_Site>),
-                {nullptr, nullptr});
+        std::vector<MQT_QMAP_NA_QDMI_Site> queriedSupportedSitesVec(
+            sitesSize / sizeof(MQT_QMAP_NA_QDMI_Site), nullptr);
         EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_query_operation_property(
                       session, operation, 0, nullptr, 0, nullptr,
                       QDMI_OPERATION_PROPERTY_SITES, sitesSize,
                       queriedSupportedSitesVec.data(), nullptr),
                   QDMI_SUCCESS);
-        const std::unordered_set<
+        ASSERT_EQ(queriedSupportedSitesVec.size() % 2, 0);
+        std::unordered_set<
             std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>, PairHash>
-            queriedSupportedSitesSet(queriedSupportedSitesVec.cbegin(),
-                                     queriedSupportedSitesVec.cend());
+            queriedSupportedSitesSet;
+        for (auto it = queriedSupportedSitesVec.cbegin();
+             it != queriedSupportedSitesVec.cend(); ++it) {
+          const auto first = *it;
+          ++it;
+          ASSERT_NE(it, queriedSupportedSitesVec.cend());
+          queriedSupportedSitesSet.emplace(first, *it);
+        }
         EXPECT_EQ(queriedSupportedSitesSet, supportedSites);
       } else {
         uint64_t interactionRadius = 0;

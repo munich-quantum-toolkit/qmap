@@ -556,7 +556,7 @@ MQT_QMAP_NA_QDMI_Operation_impl_d::MQT_QMAP_NA_QDMI_Operation_impl_d(
       isZoned_(true) {}
 void MQT_QMAP_NA_QDMI_Operation_impl_d::sortSites() {
   std::visit(
-      [](auto& sites) {
+      [this](auto& sites) {
         using T = std::decay_t<decltype(sites)>;
         if constexpr (std::is_same_v<T, std::vector<MQT_QMAP_NA_QDMI_Site>>) {
           // Single-qubit: sort flat list by pointer address
@@ -573,6 +573,12 @@ void MQT_QMAP_NA_QDMI_Operation_impl_d::sortSites() {
             }
           });
           std::ranges::sort(sites);
+          flattenedSupportedSites_.clear();
+          flattenedSupportedSites_.reserve(sites.size() * 2);
+          for (const auto& [first, second] : sites) {
+            flattenedSupportedSites_.emplace_back(first);
+            flattenedSupportedSites_.emplace_back(second);
+          }
         }
         // more cases go here if needed in the future
       },
@@ -651,25 +657,10 @@ auto MQT_QMAP_NA_QDMI_Operation_impl_d::queryProperty(
           } else if constexpr (std::is_same_v<T, std::vector<std::pair<
                                                      MQT_QMAP_NA_QDMI_Site,
                                                      MQT_QMAP_NA_QDMI_Site>>>) {
-            // Ensure std::pair has standard layout and expected size
-            static_assert(
-                std::is_standard_layout_v<
-                    std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>>);
-            static_assert(
-                sizeof(
-                    std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>) ==
-                2 * sizeof(MQT_QMAP_NA_QDMI_Site));
-            // Two-qubit: reinterpret as flat array of sites using std::span
-            // std::pair has standard layout, so the memory layout of
-            // vector<pair<Site, Site>> is equivalent to Site[2*N]
-            const auto flatView = std::span<const MQT_QMAP_NA_QDMI_Site>(
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                reinterpret_cast<const MQT_QMAP_NA_QDMI_Site*>(
-                    storedSites.data()),
-                storedSites.size() * 2);
+            // Local multi-qubit sites are exposed as a flat list of tuples.
             ADD_LIST_PROPERTY(QDMI_OPERATION_PROPERTY_SITES,
-                              MQT_QMAP_NA_QDMI_Site, flatView, prop, size,
-                              value, sizeRet)
+                              MQT_QMAP_NA_QDMI_Site, flattenedSupportedSites_,
+                              prop, size, value, sizeRet)
           }
           // more cases go here if needed in the future
           return QDMI_ERROR_NOTSUPPORTED;
@@ -760,9 +751,12 @@ auto MQT_QMAP_NA_QDMI_device_session_create_device_job(
 }
 
 auto MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
-    [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Session session,
-    [[maybe_unused]] const char* jobId,
-    [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
+    MQT_QMAP_NA_QDMI_Device_Session session, const char* jobId,
+    MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
+  if (session == nullptr || jobId == nullptr || jobId[0] == '\0' ||
+      job == nullptr) {
+    return QDMI_ERROR_INVALIDARGUMENT;
+  }
   return QDMI_ERROR_NOTSUPPORTED;
 }
 
