@@ -22,8 +22,8 @@
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 #include "na/ir/operations/NAStandardOperation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -140,7 +140,7 @@ void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& frontLayer,
 void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
   auto it = qc.begin();
   while (it != qc.end()) {
-    if (hasNeutralAtomOpType(**it, NeutralAtomOpType::Bridge)) {
+    if (hasNAOpType(**it, NAOpType::Bridge)) {
       const auto targets = (*it)->getTargets();
       it = qc.erase(it);
       size_t nInserted = 0;
@@ -1197,18 +1197,18 @@ qc::fp NeutralAtomMapper::parallelMoveCost(const MoveComb& moveComb) const {
   // then can may be loaded in parallel
   const auto moveCoordInit = this->arch->getCoordinate(move.origin);
   const auto moveCoordEnd = this->arch->getCoordinate(move.target);
-  parallelCost += arch->getShuttlingTime(NeutralAtomOpType::AodActivate) +
-                  arch->getShuttlingTime(NeutralAtomOpType::AodDeactivate);
+  parallelCost += arch->getShuttlingTime(NAOpType::AodActivate) +
+                  arch->getShuttlingTime(NAOpType::AodDeactivate);
   for (const auto& lastMove : this->lastMoves) {
     const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.origin);
     const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.target);
     if (moveCoordInit.x == lastMoveCoordInit.x ||
         moveCoordInit.y == lastMoveCoordInit.y) {
-      parallelCost -= arch->getShuttlingTime(NeutralAtomOpType::AodActivate);
+      parallelCost -= arch->getShuttlingTime(NAOpType::AodActivate);
     }
     if (moveCoordEnd.x == lastMoveCoordEnd.x ||
         moveCoordEnd.y == lastMoveCoordEnd.y) {
-      parallelCost -= arch->getShuttlingTime(NeutralAtomOpType::AodDeactivate);
+      parallelCost -= arch->getShuttlingTime(NAOpType::AodDeactivate);
     }
   }
   return parallelCost;
@@ -1592,18 +1592,16 @@ NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) const {
       if (nearbyFreeIt != nearbyFreeCoords.end()) {
         totalTime += this->arch->getVectorShuttlingTime(
             this->arch->getVector(otherCoord, *nearbyFreeIt));
-        totalTime +=
-            this->arch->getShuttlingTime(NeutralAtomOpType::AodActivate) +
-            this->arch->getShuttlingTime(NeutralAtomOpType::AodDeactivate);
+        totalTime += this->arch->getShuttlingTime(NAOpType::AodActivate) +
+                     this->arch->getShuttlingTime(NAOpType::AodDeactivate);
         ++nearbyFreeIt;
         totalMoves++;
       } else if (nearbyOccIt != nearbyOccupiedCoords.end()) {
         totalTime += 2 * this->arch->getVectorShuttlingTime(
                              this->arch->getVector(otherCoord, *nearbyOccIt));
         totalTime +=
-            2 *
-            (this->arch->getShuttlingTime(NeutralAtomOpType::AodActivate) +
-             this->arch->getShuttlingTime(NeutralAtomOpType::AodDeactivate));
+            2 * (this->arch->getShuttlingTime(NAOpType::AodActivate) +
+                 this->arch->getShuttlingTime(NAOpType::AodDeactivate));
         ++nearbyOccIt;
         totalMoves += 2;
       } else {
@@ -1636,15 +1634,14 @@ bool NeutralAtomMapper::swapGateBetter(const qc::Operation* opPointer) {
       std::exp(-minTimeSwaps * this->arch->getNqubits() /
                this->arch->getDecoherenceTime()) *
       std::pow(this->arch->getGateAverageFidelity("swap"), minNumSwaps);
-  const auto fidMoves = std::exp(-minTimeMoves * this->arch->getNqubits() /
-                                 this->arch->getDecoherenceTime()) *
-                        std::pow(this->arch->getShuttlingAverageFidelity(
-                                     NeutralAtomOpType::AodMove) *
-                                     this->arch->getShuttlingAverageFidelity(
-                                         NeutralAtomOpType::AodActivate) *
-                                     this->arch->getShuttlingAverageFidelity(
-                                         NeutralAtomOpType::AodDeactivate),
-                                 minMoves);
+  const auto fidMoves =
+      std::exp(-minTimeMoves * this->arch->getNqubits() /
+               this->arch->getDecoherenceTime()) *
+      std::pow(
+          this->arch->getShuttlingAverageFidelity(NAOpType::AodMove) *
+              this->arch->getShuttlingAverageFidelity(NAOpType::AodActivate) *
+              this->arch->getShuttlingAverageFidelity(NAOpType::AodDeactivate),
+          minMoves);
 
   return fidSwaps * parameters.gateWeight >
          fidMoves * parameters.shuttlingWeight;
@@ -1763,17 +1760,15 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   auto const moveDist = this->arch->getMoveCombEuclideanDistance(bestMoveComb);
   auto const moveCombSize = bestMoveComb.size();
   auto const moveOpFidelity = std::pow(
-      this->arch->getShuttlingAverageFidelity(NeutralAtomOpType::AodMove) *
-          this->arch->getShuttlingAverageFidelity(
-              NeutralAtomOpType::AodActivate) *
-          this->arch->getShuttlingAverageFidelity(
-              NeutralAtomOpType::AodDeactivate),
+      this->arch->getShuttlingAverageFidelity(NAOpType::AodMove) *
+          this->arch->getShuttlingAverageFidelity(NAOpType::AodActivate) *
+          this->arch->getShuttlingAverageFidelity(NAOpType::AodDeactivate),
       moveCombSize);
   auto const moveTime =
-      (moveDist / this->arch->getShuttlingTime(NeutralAtomOpType::AodMove)) +
-      (this->arch->getShuttlingTime(NeutralAtomOpType::AodActivate) *
+      (moveDist / this->arch->getShuttlingTime(NAOpType::AodMove)) +
+      (this->arch->getShuttlingTime(NAOpType::AodActivate) *
        static_cast<qc::fp>(moveCombSize)) +
-      (this->arch->getShuttlingTime(NeutralAtomOpType::AodDeactivate) *
+      (this->arch->getShuttlingTime(NAOpType::AodDeactivate) *
        static_cast<qc::fp>(moveCombSize));
   auto const moveDecoherence = std::exp(-moveTime * this->arch->getNqubits() /
                                         this->arch->getDecoherenceTime());
@@ -1791,15 +1786,14 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     // flying ancilla
     auto const faDist = this->arch->getFaEuclideanDistance(bestFaComb);
     auto const faCombSize = bestFaComb.moves.size();
-    auto const faOpFidelity =
-        std::pow(std::pow(this->arch->getShuttlingAverageFidelity(
-                              NeutralAtomOpType::AodMove),
-                          3) *
-                     std::pow(this->arch->getGateAverageFidelity("cz"), 2) *
-                     std::pow(this->arch->getGateAverageFidelity("h"), 4),
-                 faCombSize);
+    auto const faOpFidelity = std::pow(
+        std::pow(this->arch->getShuttlingAverageFidelity(NAOpType::AodMove),
+                 3) *
+            std::pow(this->arch->getGateAverageFidelity("cz"), 2) *
+            std::pow(this->arch->getGateAverageFidelity("h"), 4),
+        faCombSize);
     auto const faDecoherence = std::exp(
-        -faDist / this->arch->getShuttlingTime(NeutralAtomOpType::AodMove) *
+        -faDist / this->arch->getShuttlingTime(NAOpType::AodMove) *
         this->arch->getNqubits() * 2 / this->arch->getDecoherenceTime());
     faFidelity = faOpFidelity * faDecoherence;
   }
@@ -1815,23 +1809,21 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
 
     auto const passByDist = this->arch->getPassByEuclideanDistance(bestPbComb);
     auto const passByTime =
-        (passByDist /
-         this->arch->getShuttlingTime(NeutralAtomOpType::AodMove)) *
-            2 +
-        (this->arch->getShuttlingTime(NeutralAtomOpType::AodActivate) *
+        (passByDist / this->arch->getShuttlingTime(NAOpType::AodMove)) * 2 +
+        (this->arch->getShuttlingTime(NAOpType::AodActivate) *
          static_cast<qc::fp>(pbCombSize)) +
-        (this->arch->getShuttlingTime(NeutralAtomOpType::AodDeactivate) *
+        (this->arch->getShuttlingTime(NAOpType::AodDeactivate) *
          static_cast<qc::fp>(pbCombSize));
-    passByFidelity = std::pow(std::pow(this->arch->getShuttlingAverageFidelity(
-                                           NeutralAtomOpType::AodMove),
-                                       2) *
-                                  this->arch->getShuttlingAverageFidelity(
-                                      NeutralAtomOpType::AodActivate) *
-                                  this->arch->getShuttlingAverageFidelity(
-                                      NeutralAtomOpType::AodDeactivate),
-                              pbCombSize) *
-                     std::exp(-passByTime * this->arch->getNqubits() /
-                              this->arch->getDecoherenceTime());
+    passByFidelity =
+        std::pow(
+            std::pow(this->arch->getShuttlingAverageFidelity(NAOpType::AodMove),
+                     2) *
+                this->arch->getShuttlingAverageFidelity(NAOpType::AodActivate) *
+                this->arch->getShuttlingAverageFidelity(
+                    NAOpType::AodDeactivate),
+            pbCombSize) *
+        std::exp(-passByTime * this->arch->getNqubits() /
+                 this->arch->getDecoherenceTime());
   }
 
   auto const minDistanceReduction =

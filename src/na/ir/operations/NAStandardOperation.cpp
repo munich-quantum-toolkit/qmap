@@ -10,7 +10,7 @@
 
 #include "na/ir/operations/NAStandardOperation.hpp"
 
-#include "NeutralAtomOperationPrinting.hpp"
+#include "NAOperationPrinting.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
@@ -25,18 +25,18 @@
 
 namespace na {
 
-NAStandardOperation::NAStandardOperation(
-    const NeutralAtomOpType newNeutralAtomOpType, qc::Targets operationTargets)
+NAStandardOperation::NAStandardOperation(const NAOpType newNAOpType,
+                                         qc::Targets operationTargets)
     : qc::StandardOperation(operationTargets, qc::OpType::None),
-      neutralAtomOpType(validateType(newNeutralAtomOpType)) {
-  name = toString(neutralAtomOpType);
+      naOpType(validateType(newNAOpType)) {
+  name = toString(naOpType);
 }
 
-auto NAStandardOperation::validateType(
-    const NeutralAtomOpType candidateNeutralAtomOpType) -> NeutralAtomOpType {
-  if (candidateNeutralAtomOpType == NeutralAtomOpType::Move ||
-      candidateNeutralAtomOpType == NeutralAtomOpType::Bridge) {
-    return candidateNeutralAtomOpType;
+auto NAStandardOperation::validateType(const NAOpType candidateNAOpType)
+    -> NAOpType {
+  if (candidateNAOpType == NAOpType::Move ||
+      candidateNAOpType == NAOpType::Bridge) {
+    return candidateNAOpType;
   }
   throw std::invalid_argument(
       "A standard neutral-atom operation must be a move or bridge.");
@@ -47,7 +47,7 @@ auto NAStandardOperation::equals(const qc::Operation& operation,
                                  const qc::Permutation& permutation2) const
     -> bool {
   const auto* other = dynamic_cast<const NAStandardOperation*>(&operation);
-  return other != nullptr && neutralAtomOpType == other->neutralAtomOpType &&
+  return other != nullptr && naOpType == other->naOpType &&
          qc::StandardOperation::equals(operation, permutation1, permutation2);
 }
 
@@ -84,9 +84,8 @@ auto NAStandardOperation::commutesAtQubit(const qc::Operation& other,
     return true;
   }
 
-  const auto otherNeutralAtomOpType = na::getNeutralAtomOpType(other);
-  if (otherNeutralAtomOpType != neutralAtomOpType ||
-      targets != other.getTargets()) {
+  const auto otherNAOpType = na::getNAOpType(other);
+  if (otherNAOpType != naOpType || targets != other.getTargets()) {
     return false;
   }
   return parameter.size() <= 1 || parameter == other.getParameter();
@@ -97,8 +96,8 @@ auto NAStandardOperation::print(std::ostream& os,
                                 const std::size_t prefixWidth,
                                 const std::size_t nQubits) const
     -> std::ostream& {
-  return detail::printNeutralAtomOperation(*this, neutralAtomOpType, os,
-                                           permutation, prefixWidth, nQubits);
+  return detail::printNAOperation(*this, naOpType, os, permutation, prefixWidth,
+                                  nQubits);
 }
 
 void NAStandardOperation::dumpOpenQASM(
@@ -113,7 +112,7 @@ void NAStandardOperation::dumpOpenQASM(
 }
 
 void NAStandardOperation::invert() {
-  if (neutralAtomOpType == NeutralAtomOpType::Move) {
+  if (naOpType == NAOpType::Move) {
     if (targets.size() != 2) {
       throw std::invalid_argument("A move operation requires two targets.");
     }
@@ -123,13 +122,13 @@ void NAStandardOperation::invert() {
 
 auto makeMoveOperation(const qc::Qubit origin, const qc::Qubit target)
     -> std::unique_ptr<qc::Operation> {
-  return std::make_unique<NAStandardOperation>(NeutralAtomOpType::Move,
+  return std::make_unique<NAStandardOperation>(NAOpType::Move,
                                                qc::Targets{origin, target});
 }
 
 auto makeBridgeOperation(qc::Targets targets)
     -> std::unique_ptr<qc::Operation> {
-  return std::make_unique<NAStandardOperation>(NeutralAtomOpType::Bridge,
+  return std::make_unique<NAStandardOperation>(NAOpType::Bridge,
                                                std::move(targets));
 }
 

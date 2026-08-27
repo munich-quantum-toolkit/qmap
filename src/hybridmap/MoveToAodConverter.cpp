@@ -17,7 +17,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/ir/entities/Location.hpp"
 #include "na/ir/operations/AodOperation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <algorithm>
 #include <array>
@@ -60,7 +60,7 @@ MoveToAodConverter::schedule(qc::QuantumComputation& circuit) {
             std::make_unique<AodOperation>(aodOperation));
       }
       ++groupIt;
-    } else if (!hasNeutralAtomOpType(*operation, NeutralAtomOpType::Move)) {
+    } else if (!hasNAOpType(*operation, NAOpType::Move)) {
       scheduledCircuit.emplace_back(operation->clone());
     }
     ++circuitIndex;
@@ -117,7 +117,7 @@ void MoveToAodConverter::initFlyingAncillas() {
     starts.emplace_back(y);
     ends.emplace_back(y);
   }
-  const AodOperation initialAodOperation(NeutralAtomOpType::AodActivate, coords,
+  const AodOperation initialAodOperation(NAOpType::AodActivate, coords,
                                          dimensions, starts, ends);
   scheduledCircuit.emplace_back(
       std::make_unique<AodOperation>(initialAodOperation));
@@ -127,7 +127,7 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& circuit) {
   MoveGroup currentMoveGroup;
   uint32_t circuitIndex = 0;
   for (const auto& operation : circuit) {
-    if (hasNeutralAtomOpType(*operation, NeutralAtomOpType::Move)) {
+    if (hasNAOpType(*operation, NAOpType::Move)) {
       const auto move = convertOperationToMove(*operation);
       if (currentMoveGroup.canAddMove(move, arch)) {
         currentMoveGroup.addMove(move, circuitIndex);
@@ -452,10 +452,8 @@ void MoveToAodConverter::processMoveGroups() {
   // convert the moves from MoveGroup to AodOperations
   for (auto groupIt = moveGroups.begin(); groupIt != moveGroups.end();
        ++groupIt) {
-    AodTransitionBuilder activationBuilder{arch,
-                                           NeutralAtomOpType::AodActivate};
-    AodTransitionBuilder deactivationBuilder{arch,
-                                             NeutralAtomOpType::AodDeactivate};
+    AodTransitionBuilder activationBuilder{arch, NAOpType::AodActivate};
+    AodTransitionBuilder deactivationBuilder{arch, NAOpType::AodDeactivate};
 
     const auto resultMoves =
         processMoves(groupIt->moves, activationBuilder, deactivationBuilder);
@@ -628,7 +626,7 @@ AodOperation MoveToAodConverter::MoveGroup::buildShuttlingOperation(
     }
   }
 
-  return {NeutralAtomOpType::AodMove, targets, segments};
+  return {NAOpType::AodMove, targets, segments};
 }
 
 std::vector<
@@ -697,7 +695,7 @@ void MoveToAodConverter::AodTransitionBuilder::computeInitialAndOffsetSegments(
   initialSegments.emplace_back(
       dimension, static_cast<qc::fp>(dimensionMove->initialPosition) * d,
       static_cast<qc::fp>(dimensionMove->initialPosition) * d);
-  if (phaseOperationType == NeutralAtomOpType::AodActivate) {
+  if (phaseOperationType == NAOpType::AodActivate) {
     offsetSegments.emplace_back(
         dimension, static_cast<qc::fp>(dimensionMove->initialPosition) * d,
         static_cast<qc::fp>(dimensionMove->initialPosition) * d +
@@ -744,7 +742,7 @@ MoveToAodConverter::AodTransitionBuilder::buildPhaseOperations(
   CoordIndices transitionTargets;
   transitionTargets.reserve(transition.moves.size());
   for (const auto& move : transition.moves) {
-    if (phaseOperationType == NeutralAtomOpType::AodActivate) {
+    if (phaseOperationType == NAOpType::AodActivate) {
       if (move.requiresLoad) {
         transitionTargets.emplace_back(move.origin);
       }
@@ -780,9 +778,8 @@ MoveToAodConverter::AodTransitionBuilder::buildPhaseOperations(
     return {};
   }
 
-  return {
-      AodOperation(phaseOperationType, transitionTargets, initialSegments),
-      AodOperation(NeutralAtomOpType::AodMove, offsetTargets, offsetSegments)};
+  return {AodOperation(phaseOperationType, transitionTargets, initialSegments),
+          AodOperation(NAOpType::AodMove, offsetTargets, offsetSegments)};
 }
 
 std::vector<AodOperation>
@@ -794,7 +791,7 @@ MoveToAodConverter::AodTransitionBuilder::buildPhaseOperations() const {
     aodOperations.insert(aodOperations.end(), operations.begin(),
                          operations.end());
   }
-  if (phaseOperationType == NeutralAtomOpType::AodActivate) {
+  if (phaseOperationType == NAOpType::AodActivate) {
     return aodOperations;
   }
   std::ranges::reverse(aodOperations);

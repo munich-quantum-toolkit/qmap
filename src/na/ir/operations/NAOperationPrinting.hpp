@@ -12,7 +12,7 @@
 
 #include "ir/Permutation.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -20,11 +20,9 @@
 namespace na::detail {
 
 /// Prints a neutral-atom operation in MQT Core's circuit-diagram format.
-auto printNeutralAtomOperation(const qc::Operation& operation,
-                               NeutralAtomOpType operationType,
-                               std::ostream& os,
-                               const qc::Permutation& permutation,
-                               std::size_t prefixWidth, std::size_t nQubits)
+auto printNAOperation(const qc::Operation& operation, NAOpType operationType,
+                      std::ostream& os, const qc::Permutation& permutation,
+                      std::size_t prefixWidth, std::size_t nQubits)
     -> std::ostream&;
 
 } // namespace na::detail

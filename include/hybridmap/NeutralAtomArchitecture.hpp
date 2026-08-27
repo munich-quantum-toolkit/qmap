@@ -18,7 +18,7 @@
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/entities/Location.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <array>
 #include <cassert>
@@ -169,8 +169,8 @@ class NeutralAtomArchitecture {
     CoordIndex nQubits = 0;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
-    std::map<NeutralAtomOpType, qc::fp> shuttlingTimes;
-    std::map<NeutralAtomOpType, qc::fp> shuttlingAverageFidelities;
+    std::map<NAOpType, qc::fp> shuttlingTimes;
+    std::map<NAOpType, qc::fp> shuttlingAverageFidelities;
     DecoherenceTimes decoherenceTimes;
   };
 
@@ -381,8 +381,7 @@ public:
    * @return Shuttling time for the given type.
    * @throw std::out_of_range If the operation type is unknown.
    */
-  [[nodiscard]] qc::fp
-  getShuttlingTime(const NeutralAtomOpType shuttlingType) const {
+  [[nodiscard]] qc::fp getShuttlingTime(const NAOpType shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
@@ -392,7 +391,7 @@ public:
    * @throw std::out_of_range If the operation type is unknown.
    */
   [[nodiscard]] qc::fp
-  getShuttlingAverageFidelity(const NeutralAtomOpType shuttlingType) const {
+  getShuttlingAverageFidelity(const NAOpType shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
@@ -574,7 +573,7 @@ public:
    */
   [[nodiscard]] qc::fp getVectorShuttlingTime(const MoveVector& v) const {
     return v.getLength() * getInterQubitDistance() /
-           getShuttlingTime(NeutralAtomOpType::Move);
+           getShuttlingTime(NAOpType::Move);
   }
 
   /**

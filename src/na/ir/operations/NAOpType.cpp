@@ -8,9 +8,9 @@
  * Licensed under the MIT License
  */
 
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
-#include "NeutralAtomOperationPrinting.hpp"
+#include "NAOperationPrinting.hpp"
 #include "na/ir/operations/AodOperation.hpp"
 #include "na/ir/operations/NAStandardOperation.hpp"
 
@@ -24,69 +24,66 @@
 
 namespace na {
 
-auto toString(const NeutralAtomOpType type) -> std::string_view {
+auto toString(const NAOpType type) -> std::string_view {
   switch (type) {
-  case NeutralAtomOpType::None:
+  case NAOpType::None:
     return "none";
-  case NeutralAtomOpType::Move:
+  case NAOpType::Move:
     return "move";
-  case NeutralAtomOpType::Bridge:
+  case NAOpType::Bridge:
     return "bridge";
-  case NeutralAtomOpType::AodActivate:
+  case NAOpType::AodActivate:
     return "aod_activate";
-  case NeutralAtomOpType::AodDeactivate:
+  case NAOpType::AodDeactivate:
     return "aod_deactivate";
-  case NeutralAtomOpType::AodMove:
+  case NAOpType::AodMove:
     return "aod_move";
   }
   throw std::invalid_argument("Unknown neutral-atom operation type.");
 }
 
-auto neutralAtomOpTypeFromString(const std::string_view name)
-    -> NeutralAtomOpType {
+auto naOpTypeFromString(const std::string_view name) -> NAOpType {
   if (name == "none") {
-    return NeutralAtomOpType::None;
+    return NAOpType::None;
   }
   if (name == "move") {
-    return NeutralAtomOpType::Move;
+    return NAOpType::Move;
   }
   if (name == "bridge") {
-    return NeutralAtomOpType::Bridge;
+    return NAOpType::Bridge;
   }
   if (name == "aod_activate") {
-    return NeutralAtomOpType::AodActivate;
+    return NAOpType::AodActivate;
   }
   if (name == "aod_deactivate") {
-    return NeutralAtomOpType::AodDeactivate;
+    return NAOpType::AodDeactivate;
   }
   if (name == "aod_move") {
-    return NeutralAtomOpType::AodMove;
+    return NAOpType::AodMove;
   }
   throw std::invalid_argument("Unknown neutral-atom operation name: " +
                               std::string(name));
 }
 
-auto getNeutralAtomOpType(const qc::Operation& operation)
-    -> std::optional<NeutralAtomOpType> {
+auto getNAOpType(const qc::Operation& operation) -> std::optional<NAOpType> {
   if (const auto* standardOperation =
           dynamic_cast<const NAStandardOperation*>(&operation)) {
-    if (standardOperation->getNeutralAtomOpType() != NeutralAtomOpType::None) {
-      return standardOperation->getNeutralAtomOpType();
+    if (standardOperation->getNAOpType() != NAOpType::None) {
+      return standardOperation->getNAOpType();
     }
     return std::nullopt;
   }
   if (const auto* aodOperation =
           dynamic_cast<const AodOperation*>(&operation)) {
-    if (aodOperation->getNeutralAtomOpType() != NeutralAtomOpType::None) {
-      return aodOperation->getNeutralAtomOpType();
+    if (aodOperation->getNAOpType() != NAOpType::None) {
+      return aodOperation->getNAOpType();
     }
   }
   return std::nullopt;
 }
 
-auto hasNeutralAtomOpType(const qc::Operation& operation,
-                          const NeutralAtomOpType type) -> bool {
-  const auto operationType = getNeutralAtomOpType(operation);
+auto hasNAOpType(const qc::Operation& operation, const NAOpType type) -> bool {
+  const auto operationType = getNAOpType(operation);
   return operationType.has_value() && *operationType == type;
 }
 
@@ -94,11 +91,11 @@ auto isAodOperation(const qc::Operation& operation) -> bool {
   return dynamic_cast<const AodOperation*>(&operation) != nullptr;
 }
 
-auto detail::printNeutralAtomOperation(
-    const qc::Operation& operation, const NeutralAtomOpType operationType,
-    std::ostream& os, const qc::Permutation& permutation,
-    [[maybe_unused]] const std::size_t prefixWidth, const std::size_t nQubits)
-    -> std::ostream& {
+auto detail::printNAOperation(const qc::Operation& operation,
+                              const NAOpType operationType, std::ostream& os,
+                              const qc::Permutation& permutation,
+                              [[maybe_unused]] const std::size_t prefixWidth,
+                              const std::size_t nQubits) -> std::ostream& {
   const auto precisionBefore = os.precision(20);
   const auto& actualControls = permutation.apply(operation.getControls());
   const auto& actualTargets = permutation.apply(operation.getTargets());

@@ -10,12 +10,12 @@
 
 #include "na/ir/operations/AodOperation.hpp"
 
-#include "NeutralAtomOperationPrinting.hpp"
+#include "NAOperationPrinting.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -33,12 +33,12 @@
 
 namespace na {
 
-AodOperation::AodOperation(const NeutralAtomOpType newNeutralAtomOpType,
+AodOperation::AodOperation(const NAOpType newNAOpType,
                            std::vector<qc::Qubit> operationTargets,
                            const std::vector<std::uint32_t>& dimensions,
                            const std::vector<qc::fp>& starts,
                            const std::vector<qc::fp>& ends)
-    : AodOperation(newNeutralAtomOpType, std::move(operationTargets),
+    : AodOperation(newNAOpType, std::move(operationTargets),
                    convertToDimensions(dimensions), starts, ends) {}
 
 auto AodOperation::Segment::toQASMString() const -> std::string {
@@ -58,35 +58,33 @@ auto AodOperation::convertToDimensions(
   return convertedDimensions;
 }
 
-auto AodOperation::validateType(
-    const NeutralAtomOpType candidateNeutralAtomOpType) -> NeutralAtomOpType {
-  if (candidateNeutralAtomOpType == NeutralAtomOpType::AodActivate ||
-      candidateNeutralAtomOpType == NeutralAtomOpType::AodDeactivate ||
-      candidateNeutralAtomOpType == NeutralAtomOpType::AodMove) {
-    return candidateNeutralAtomOpType;
+auto AodOperation::validateType(const NAOpType candidateNAOpType) -> NAOpType {
+  if (candidateNAOpType == NAOpType::AodActivate ||
+      candidateNAOpType == NAOpType::AodDeactivate ||
+      candidateNAOpType == NAOpType::AodMove) {
+    return candidateNAOpType;
   }
   throw std::invalid_argument("An AOD operation requires an AOD type.");
 }
 
-void AodOperation::setNeutralAtomOpType(
-    const NeutralAtomOpType newNeutralAtomOpType) {
-  neutralAtomOpType = validateType(newNeutralAtomOpType);
-  name = toString(neutralAtomOpType);
+void AodOperation::setNAOpType(const NAOpType newNAOpType) {
+  naOpType = validateType(newNAOpType);
+  name = toString(naOpType);
 }
 
-AodOperation::AodOperation(const NeutralAtomOpType newNeutralAtomOpType,
+AodOperation::AodOperation(const NAOpType newNAOpType,
                            std::vector<qc::Qubit> operationTargets,
                            const std::vector<Dimension>& dimensions,
                            const std::vector<qc::fp>& starts,
                            const std::vector<qc::fp>& ends)
-    : neutralAtomOpType(validateType(newNeutralAtomOpType)) {
+    : naOpType(validateType(newNAOpType)) {
   if (dimensions.size() != starts.size() || starts.size() != ends.size()) {
     throw std::invalid_argument(
         "AOD dimensions, starts, and ends must have equal sizes.");
   }
   type = qc::OpType::None;
   targets = std::move(operationTargets);
-  name = toString(neutralAtomOpType);
+  name = toString(naOpType);
 
   for (std::size_t i = 0; i < dimensions.size(); ++i) {
     segments.emplace_back(dimensions[i], starts[i], ends[i]);
@@ -98,32 +96,30 @@ AodOperation::AodOperation(const std::string& typeName,
                            const std::vector<std::uint32_t>& dimensions,
                            const std::vector<qc::fp>& starts,
                            const std::vector<qc::fp>& ends)
-    : AodOperation(neutralAtomOpTypeFromString(typeName),
-                   std::move(operationTargets), convertToDimensions(dimensions),
-                   starts, ends) {}
+    : AodOperation(naOpTypeFromString(typeName), std::move(operationTargets),
+                   convertToDimensions(dimensions), starts, ends) {}
 
 AodOperation::AodOperation(
-    const NeutralAtomOpType newNeutralAtomOpType,
-    std::vector<qc::Qubit> operationTargets,
+    const NAOpType newNAOpType, std::vector<qc::Qubit> operationTargets,
     const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& operationSegments)
-    : neutralAtomOpType(validateType(newNeutralAtomOpType)) {
+    : naOpType(validateType(newNAOpType)) {
   type = qc::OpType::None;
   targets = std::move(operationTargets);
-  name = toString(neutralAtomOpType);
+  name = toString(naOpType);
 
   for (const auto& [dimension, start, end] : operationSegments) {
     segments.emplace_back(dimension, start, end);
   }
 }
 
-AodOperation::AodOperation(const NeutralAtomOpType newNeutralAtomOpType,
+AodOperation::AodOperation(const NAOpType newNAOpType,
                            std::vector<qc::Qubit> operationTargets,
                            std::vector<Segment> operationSegments)
-    : neutralAtomOpType(validateType(newNeutralAtomOpType)),
+    : naOpType(validateType(newNAOpType)),
       segments(std::move(operationSegments)) {
   type = qc::OpType::None;
   targets = std::move(operationTargets);
-  name = toString(neutralAtomOpType);
+  name = toString(naOpType);
 }
 
 auto AodOperation::getEnds(const Dimension dimension) const
@@ -171,7 +167,7 @@ auto AodOperation::equals(const qc::Operation& operation,
                           const qc::Permutation& permutation1,
                           const qc::Permutation& permutation2) const -> bool {
   const auto* other = dynamic_cast<const AodOperation*>(&operation);
-  return other != nullptr && neutralAtomOpType == other->neutralAtomOpType &&
+  return other != nullptr && naOpType == other->naOpType &&
          qc::Operation::equals(operation, permutation1, permutation2) &&
          segments == other->segments;
 }
@@ -183,8 +179,8 @@ auto AodOperation::equals(const qc::Operation& operation) const -> bool {
 auto AodOperation::print(std::ostream& os, const qc::Permutation& permutation,
                          const std::size_t prefixWidth,
                          const std::size_t nQubits) const -> std::ostream& {
-  return detail::printNeutralAtomOperation(*this, neutralAtomOpType, os,
-                                           permutation, prefixWidth, nQubits);
+  return detail::printNAOperation(*this, naOpType, os, permutation, prefixWidth,
+                                  nQubits);
 }
 
 void AodOperation::setGate(const qc::OpType operationType) {
@@ -224,14 +220,14 @@ void AodOperation::dumpOpenQASM(
 }
 
 void AodOperation::invert() {
-  if (neutralAtomOpType == NeutralAtomOpType::AodMove) {
+  if (naOpType == NAOpType::AodMove) {
     for (auto& segment : segments) {
       std::swap(segment.start, segment.end);
     }
-  } else if (neutralAtomOpType == NeutralAtomOpType::AodActivate) {
-    setNeutralAtomOpType(NeutralAtomOpType::AodDeactivate);
-  } else if (neutralAtomOpType == NeutralAtomOpType::AodDeactivate) {
-    setNeutralAtomOpType(NeutralAtomOpType::AodActivate);
+  } else if (naOpType == NAOpType::AodActivate) {
+    setNAOpType(NAOpType::AodDeactivate);
+  } else if (naOpType == NAOpType::AodDeactivate) {
+    setNAOpType(NAOpType::AodActivate);
   }
 }
 

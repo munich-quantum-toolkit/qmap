@@ -18,7 +18,7 @@
 #include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -51,26 +51,23 @@ public:
   };
 
 private:
-  NeutralAtomOpType neutralAtomOpType = NeutralAtomOpType::None;
+  NAOpType naOpType = NAOpType::None;
   std::vector<Segment> segments;
 
-  static NeutralAtomOpType
-  validateType(NeutralAtomOpType candidateNeutralAtomOpType);
+  static NAOpType validateType(NAOpType candidateNAOpType);
 
   static std::vector<Dimension>
   convertToDimensions(const std::vector<std::uint32_t>& dimensions);
 
-  void setNeutralAtomOpType(NeutralAtomOpType newNeutralAtomOpType);
+  void setNAOpType(NAOpType newNAOpType);
 
 public:
   AodOperation() = default;
-  AodOperation(NeutralAtomOpType newNeutralAtomOpType,
-               std::vector<qc::Qubit> operationTargets,
+  AodOperation(NAOpType newNAOpType, std::vector<qc::Qubit> operationTargets,
                const std::vector<Dimension>& dimensions,
                const std::vector<qc::fp>& starts,
                const std::vector<qc::fp>& ends);
-  AodOperation(NeutralAtomOpType newNeutralAtomOpType,
-               std::vector<qc::Qubit> operationTargets,
+  AodOperation(NAOpType newNAOpType, std::vector<qc::Qubit> operationTargets,
                const std::vector<std::uint32_t>& dimensions,
                const std::vector<qc::fp>& starts,
                const std::vector<qc::fp>& ends);
@@ -80,17 +77,13 @@ public:
                const std::vector<qc::fp>& starts,
                const std::vector<qc::fp>& ends);
   AodOperation(
-      NeutralAtomOpType newNeutralAtomOpType,
-      std::vector<qc::Qubit> operationTargets,
+      NAOpType newNAOpType, std::vector<qc::Qubit> operationTargets,
       const std::vector<std::tuple<Dimension, qc::fp, qc::fp>>& segments);
-  AodOperation(NeutralAtomOpType newNeutralAtomOpType,
-               std::vector<qc::Qubit> operationTargets,
+  AodOperation(NAOpType newNAOpType, std::vector<qc::Qubit> operationTargets,
                std::vector<Segment> operationSegments);
 
   /// Returns the neutral-atom operation type.
-  [[nodiscard]] NeutralAtomOpType getNeutralAtomOpType() const {
-    return neutralAtomOpType;
-  }
+  [[nodiscard]] NAOpType getNAOpType() const { return naOpType; }
 
   [[nodiscard]] std::unique_ptr<qc::Operation> clone() const override {
     return std::make_unique<AodOperation>(*this);

@@ -19,7 +19,7 @@
 #include "ir/operations/OpType.hpp"
 #include "na/ir/entities/Location.hpp"
 #include "na/ir/operations/AodOperation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -144,14 +144,14 @@ protected:
     const NeutralAtomArchitecture* arch;
     std::vector<Transition> transitions;
     /// Operation emitted for this activation or deactivation phase.
-    NeutralAtomOpType phaseOperationType;
+    NAOpType phaseOperationType;
 
     // Constructor
     AodTransitionBuilder() = delete;
     AodTransitionBuilder(const AodTransitionBuilder&) = delete;
     AodTransitionBuilder(AodTransitionBuilder&&) = delete;
     AodTransitionBuilder(const NeutralAtomArchitecture& architecture,
-                         const NeutralAtomOpType phaseOperationType)
+                         const NAOpType phaseOperationType)
         : arch(&architecture), phaseOperationType(phaseOperationType) {}
 
     // Methods

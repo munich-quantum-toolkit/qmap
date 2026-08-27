@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-/** @file NeutralAtomOpType.hpp
+/** @file NAOpType.hpp
  * @brief Neutral-atom operation types embedded in quantum computations.
  */
 
@@ -23,7 +23,7 @@
 namespace na {
 
 /// Neutral-atom operation types embedded in a quantum computation.
-enum class NeutralAtomOpType : std::uint8_t {
+enum class NAOpType : std::uint8_t {
   None,
   Move,
   Bridge,
@@ -33,19 +33,17 @@ enum class NeutralAtomOpType : std::uint8_t {
 };
 
 /// Converts a neutral-atom operation type to its textual name.
-[[nodiscard]] std::string_view toString(NeutralAtomOpType type);
+[[nodiscard]] std::string_view toString(NAOpType type);
 
 /// Converts a textual name to a neutral-atom operation type.
-[[nodiscard]] NeutralAtomOpType
-neutralAtomOpTypeFromString(std::string_view name);
+[[nodiscard]] NAOpType naOpTypeFromString(std::string_view name);
 
 /// Returns the neutral-atom type of an operation, if it has one.
-[[nodiscard]] std::optional<NeutralAtomOpType>
-getNeutralAtomOpType(const qc::Operation& operation);
+[[nodiscard]] std::optional<NAOpType>
+getNAOpType(const qc::Operation& operation);
 
 /// Checks whether an operation has a particular neutral-atom type.
-[[nodiscard]] bool hasNeutralAtomOpType(const qc::Operation& operation,
-                                        NeutralAtomOpType type);
+[[nodiscard]] bool hasNAOpType(const qc::Operation& operation, NAOpType type);
 
 /// Checks whether an operation is an AOD operation.
 [[nodiscard]] bool isAodOperation(const qc::Operation& operation);

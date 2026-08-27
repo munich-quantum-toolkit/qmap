@@ -16,7 +16,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -68,9 +68,9 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     if (verbose) {
       spdlog::info("{}", index);
     }
-    if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodActivate)) {
+    if (hasNAOpType(*op, NAOpType::AodActivate)) {
       nAodActivate++;
-    } else if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodMove)) {
+    } else if (hasNAOpType(*op, NAOpType::AodMove)) {
       nAodMove++;
     } else if (op->getType() == qc::OpType::Z && op->getNcontrols() == 1) {
       nCZs++;

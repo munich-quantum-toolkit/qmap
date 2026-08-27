@@ -18,7 +18,7 @@
 #include "ir/Register.hpp"
 #include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
-#include "na/ir/operations/NeutralAtomOpType.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -32,20 +32,16 @@ namespace na {
  * formerly represented by `qc::StandardOperation` in MQT Core.
  */
 class NAStandardOperation final : public qc::StandardOperation {
-  NeutralAtomOpType neutralAtomOpType = NeutralAtomOpType::None;
+  NAOpType naOpType = NAOpType::None;
 
-  static NeutralAtomOpType
-  validateType(NeutralAtomOpType candidateNeutralAtomOpType);
+  static NAOpType validateType(NAOpType candidateNAOpType);
 
 public:
   NAStandardOperation() = default;
-  NAStandardOperation(NeutralAtomOpType newNeutralAtomOpType,
-                      qc::Targets operationTargets);
+  NAStandardOperation(NAOpType newNAOpType, qc::Targets operationTargets);
 
   /// Returns the neutral-atom operation type.
-  [[nodiscard]] NeutralAtomOpType getNeutralAtomOpType() const {
-    return neutralAtomOpType;
-  }
+  [[nodiscard]] NAOpType getNAOpType() const { return naOpType; }
 
   [[nodiscard]] std::unique_ptr<qc::Operation> clone() const override {
     return std::make_unique<NAStandardOperation>(*this);
