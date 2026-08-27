@@ -13,7 +13,9 @@ MQT QMAP now owns circuit transformations that MQT Core removed from
 
 - Replace `qc::CircuitOptimizer::singleQubitGateFusion` with
   `qmap::singleQubitGateFusion`.
-- Replace `qc::CircuitOptimizer::decomposeSWAP` with `qmap::decomposeSWAP`.
+- Replace `qc::CircuitOptimizer::decomposeSWAP` with `qmap::decomposeSWAP`. The
+  QMAP function recursively decomposes uncontrolled SWAPs and preserves
+  controlled SWAPs.
 - Replace `qc::CircuitOptimizer::cancelCNOTs` with `qmap::cancelCNOTs`.
 - Replace `qc::CircuitOptimizer::replaceMCXWithMCZ` with
   `qmap::replaceMCXWithMCZ`.

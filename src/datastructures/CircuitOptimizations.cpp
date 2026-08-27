@@ -115,35 +115,24 @@ auto decomposeSWAPAt(Container& operations, typename Container::iterator it,
   return operations.insert(it, std::make_unique<qc::StandardOperation>(
                                    qc::Control{targets[0]}, targets[1], qc::X));
 }
+
+template <class Container>
+void decomposeSWAPIn(Container& operations, const bool isDirectedArchitecture) {
+  for (auto it = operations.begin(); it != operations.end(); ++it) {
+    if ((*it)->isStandardOperation() && (*it)->getType() == qc::SWAP &&
+        (*it)->getNcontrols() == 0U) {
+      it = decomposeSWAPAt(operations, it, isDirectedArchitecture);
+    } else if ((*it)->isCompoundOperation()) {
+      auto* compound = dynamic_cast<qc::CompoundOperation*>(it->get());
+      decomposeSWAPIn(*compound, isDirectedArchitecture);
+    }
+  }
+}
 } // namespace
 
 void decomposeSWAP(qc::QuantumComputation& qc,
                    const bool isDirectedArchitecture) {
-  auto it = qc.begin();
-  while (it != qc.end()) {
-    if ((*it)->isStandardOperation()) {
-      if ((*it)->getType() == qc::SWAP) {
-        it = decomposeSWAPAt(qc, it, isDirectedArchitecture);
-      } else {
-        ++it;
-      }
-    } else if ((*it)->isCompoundOperation()) {
-      auto& compound = dynamic_cast<qc::CompoundOperation&>(**it);
-      auto compoundIt = compound.begin();
-      while (compoundIt != compound.end()) {
-        if ((*compoundIt)->isStandardOperation() &&
-            (*compoundIt)->getType() == qc::SWAP) {
-          compoundIt =
-              decomposeSWAPAt(compound, compoundIt, isDirectedArchitecture);
-        } else {
-          ++compoundIt;
-        }
-      }
-      ++it;
-    } else {
-      ++it;
-    }
-  }
+  decomposeSWAPIn(qc, isDirectedArchitecture);
 }
 
 void cancelCNOTs(qc::QuantumComputation& qc) {

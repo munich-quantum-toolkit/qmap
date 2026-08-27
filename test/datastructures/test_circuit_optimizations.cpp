@@ -9,6 +9,8 @@
  */
 
 #include "datastructures/CircuitOptimizations.hpp"
+#include "dd/FunctionalityConstruction.hpp"
+#include "dd/Package.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
@@ -21,6 +23,28 @@
 #include <vector>
 
 namespace qmap {
+namespace {
+void expectFusionPreservesFunctionality(qc::QuantumComputation& circuit,
+                                        const std::size_t expectedOperations) {
+  dd::Package package(circuit.getNqubits());
+  const auto before = dd::buildFunctionality(circuit, package);
+
+  singleQubitGateFusion(circuit);
+  const auto after = dd::buildFunctionality(circuit, package);
+
+  EXPECT_EQ(circuit.getNops(), expectedOperations);
+  EXPECT_EQ(before, after);
+
+  package.decRef(before);
+  package.decRef(after);
+  package.garbageCollect(true);
+
+  const auto [vectors, matrices, realNumbers] = package.computeActiveCounts();
+  EXPECT_EQ(vectors, 0U);
+  EXPECT_EQ(matrices, 0U);
+  EXPECT_EQ(realNumbers, 0U);
+}
+} // namespace
 
 TEST(DecomposeSWAP, UndirectedArchitecture) {
   qc::QuantumComputation circuit(2, 2);
@@ -109,6 +133,34 @@ TEST(DecomposeSWAP, DirectedCompoundOperation) {
       dynamic_cast<const qc::CompoundOperation*>(circuit.front().get());
   ASSERT_NE(compound, nullptr);
   EXPECT_EQ(compound->size(), 21U);
+}
+
+TEST(DecomposeSWAP, PreservesControlledSWAP) {
+  qc::QuantumComputation circuit(3U);
+  circuit.cswap(2, 0, 1);
+
+  decomposeSWAP(circuit, false);
+
+  ASSERT_EQ(circuit.size(), 1U);
+  EXPECT_EQ(circuit.front()->getType(), qc::SWAP);
+  EXPECT_EQ(circuit.front()->getControls(), qc::Controls{2});
+}
+
+TEST(DecomposeSWAP, NestedCompoundOperation) {
+  qc::QuantumComputation operation(2U);
+  operation.swap(0, 1);
+  qc::QuantumComputation nestedOperation(2U);
+  nestedOperation.emplace_back(operation.asCompoundOperation());
+  qc::QuantumComputation circuit(2U);
+  circuit.emplace_back(nestedOperation.asCompoundOperation());
+
+  decomposeSWAP(circuit, false);
+  circuit.flattenOperations();
+
+  ASSERT_EQ(circuit.size(), 3U);
+  for (const auto& op : circuit) {
+    EXPECT_EQ(op->getType(), qc::X);
+  }
 }
 
 TEST(CancelCNOTs, IdenticalCNOTs) {
@@ -350,6 +402,41 @@ TEST(SingleQubitGateFusion, PreservesZeroTargetOperation) {
 
   ASSERT_EQ(circuit.size(), 1U);
   EXPECT_EQ(circuit.front()->getType(), qc::GPhase);
+}
+
+TEST(SingleQubitGateFusion, PreservesTwoGateFunctionality) {
+  qc::QuantumComputation circuit(1U);
+  circuit.x(0);
+  circuit.h(0);
+
+  expectFusionPreservesFunctionality(circuit, 1U);
+}
+
+TEST(SingleQubitGateFusion, PreservesThreeGateFunctionality) {
+  qc::QuantumComputation circuit(1U);
+  circuit.x(0);
+  circuit.h(0);
+  circuit.y(0);
+
+  expectFusionPreservesFunctionality(circuit, 1U);
+}
+
+TEST(SingleQubitGateFusion, PreservesSeparatedFunctionality) {
+  qc::QuantumComputation circuit(2U);
+  circuit.h(0);
+  circuit.cx(0, 1);
+  circuit.y(0);
+
+  expectFusionPreservesFunctionality(circuit, 3U);
+}
+
+TEST(SingleQubitGateFusion, FusesAcrossIndependentGates) {
+  qc::QuantumComputation circuit(2U);
+  circuit.h(0);
+  circuit.z(1);
+  circuit.y(0);
+
+  expectFusionPreservesFunctionality(circuit, 2U);
 }
 
 TEST(ReplaceMCXWithMCZ, CX) {

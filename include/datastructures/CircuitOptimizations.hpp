@@ -17,7 +17,8 @@ class QuantumComputation;
 namespace qmap {
 
 /**
- * @brief Decompose SWAP gates into CNOT gates.
+ * @brief Decompose uncontrolled SWAP gates into CNOT gates.
+ * @details Controlled SWAP gates are preserved.
  * @param qc Quantum circuit to transform.
  * @param isDirectedArchitecture Whether all CNOTs must use the same direction.
  */
