@@ -12,13 +12,13 @@
 
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "hybridmap/NeutralAtomOperation.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <array>
 #include <cassert>
@@ -169,8 +169,8 @@ class NeutralAtomArchitecture {
     CoordIndex nQubits = 0;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
-    std::map<NeutralAtomOperationKind, qc::fp> shuttlingTimes;
-    std::map<NeutralAtomOperationKind, qc::fp> shuttlingAverageFidelities;
+    std::map<NeutralAtomOpType, qc::fp> shuttlingTimes;
+    std::map<NeutralAtomOpType, qc::fp> shuttlingAverageFidelities;
     DecoherenceTimes decoherenceTimes;
   };
 
@@ -377,22 +377,22 @@ public:
   }
   /**
    * @brief Get the shuttling time of an operation type.
-   * @param shuttlingType Shuttling operation kind.
+   * @param shuttlingType Shuttling operation type.
    * @return Shuttling time for the given type.
    * @throw std::out_of_range If the operation type is unknown.
    */
   [[nodiscard]] qc::fp
-  getShuttlingTime(const NeutralAtomOperationKind shuttlingType) const {
+  getShuttlingTime(const NeutralAtomOpType shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
    * @brief Get the average fidelity of a shuttling operation type.
-   * @param shuttlingType Shuttling operation kind.
+   * @param shuttlingType Shuttling operation type.
    * @return Average shuttling fidelity for the given type.
    * @throw std::out_of_range If the operation type is unknown.
    */
-  [[nodiscard]] qc::fp getShuttlingAverageFidelity(
-      const NeutralAtomOperationKind shuttlingType) const {
+  [[nodiscard]] qc::fp
+  getShuttlingAverageFidelity(const NeutralAtomOpType shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
@@ -470,7 +470,7 @@ public:
   getMoveCombEuclideanDistance(const MoveComb& moveComb) const {
     qc::fp dist = 0;
     for (const auto& move : moveComb.moves) {
-      dist += getEuclideanDistance(move.c1, move.c2);
+      dist += getEuclideanDistance(move.origin, move.target);
     }
     return dist;
   }
@@ -499,7 +499,7 @@ public:
   getPassByEuclideanDistance(const PassByComb& pbComb) const {
     qc::fp dist = 0;
     for (const auto& fa : pbComb.moves) {
-      dist += getEuclideanDistance(fa.c1, fa.c2) * 2;
+      dist += getEuclideanDistance(fa.origin, fa.target) * 2;
     }
     return dist;
   }
@@ -574,7 +574,7 @@ public:
    */
   [[nodiscard]] qc::fp getVectorShuttlingTime(const MoveVector& v) const {
     return v.getLength() * getInterQubitDistance() /
-           getShuttlingTime(NeutralAtomOperationKind::Move);
+           getShuttlingTime(NeutralAtomOpType::Move);
   }
 
   /**

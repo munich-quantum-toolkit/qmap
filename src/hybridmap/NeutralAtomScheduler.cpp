@@ -12,11 +12,11 @@
 
 #include "hybridmap/HybridAnimation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -68,11 +68,9 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     if (verbose) {
       spdlog::info("{}", index);
     }
-    if (hasNeutralAtomOperationKind(*op,
-                                    NeutralAtomOperationKind::AodActivate)) {
+    if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodActivate)) {
       nAodActivate++;
-    } else if (hasNeutralAtomOperationKind(*op,
-                                           NeutralAtomOperationKind::AodMove)) {
+    } else if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodMove)) {
       nAodMove++;
     } else if (op->getType() == qc::OpType::Z && op->getNcontrols() == 1) {
       nCZs++;

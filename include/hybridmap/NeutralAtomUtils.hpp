@@ -11,10 +11,10 @@
 #pragma once
 
 #include "circuit_optimizer/CircuitOptimizer.hpp"
-#include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "na/ir/operations/AodOperation.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -150,8 +150,8 @@ struct Direction {
    * @param dim Dimension (X or Y).
    * @return +1 if non-negative movement else -1.
    */
-  [[nodiscard]] int32_t getSign(const Dimension dim) const {
-    return dim == Dimension::X ? getSignX() : getSignY();
+  [[nodiscard]] int32_t getSign(const AodOperation::Dimension dim) const {
+    return dim == AodOperation::Dimension::X ? getSignX() : getSignY();
   }
 };
 
@@ -217,13 +217,13 @@ struct MoveVector {
  * ordering.
  */
 struct FlyingAncilla {
-  /** Origin coordinate index of the flying ancilla. */
+  /// Origin coordinate index of the flying ancilla.
   CoordIndex origin;
-  /** First data atom coordinate involved in interaction. */
+  /// First data atom coordinate involved in interaction.
   CoordIndex q1;
-  /** Second data atom coordinate involved in interaction. */
+  /// Second data atom coordinate involved in interaction.
   CoordIndex q2;
-  /** Optional bookkeeping index to order/identify moves. */
+  /// Optional bookkeeping index to order/identify moves.
   size_t index;
 };
 
@@ -233,9 +233,9 @@ struct FlyingAncilla {
  * @param op Operation implemented (non-owning pointer).
  */
 struct FlyingAncillaComb {
-  /** Sequence of flying ancilla moves realizing an interaction. */
+  /// Sequence of flying ancilla moves realizing an interaction.
   std::vector<FlyingAncilla> moves;
-  /** Operation this combination implements or is associated with. */
+  /// Operation this combination implements or is associated with.
   const qc::Operation* op = nullptr;
 };
 
@@ -245,9 +245,9 @@ struct FlyingAncillaComb {
  * interaction.
  */
 struct PassByComb {
-  /** Sequence of atom moves realizing a pass-by maneuver. */
+  /// Sequence of atom moves realizing a pass-by maneuver.
   std::vector<AtomMove> moves;
-  /** Operation this combination implements or is associated with. */
+  /// Operation this combination implements or is associated with.
   const qc::Operation* op = nullptr;
 };
 
@@ -258,11 +258,11 @@ struct PassByComb {
  */
 struct MoveComb {
   std::vector<AtomMove> moves;
-  /** Aggregated cost heuristic; defaults to +inf until computed. */
+  /// Aggregated cost heuristic; defaults to +inf until computed.
   qc::fp cost = std::numeric_limits<qc::fp>::max();
-  /** Operation this move combination aims to realize (optional). */
+  /// Operation this move combination aims to realize (optional).
   const qc::Operation* op = nullptr;
-  /** Best known positions for the operation after applying the moves. */
+  /// Best known positions for the operation after applying the moves.
   CoordIndices bestPos;
 
   MoveComb(std::vector<AtomMove> mov, const qc::fp c, const qc::Operation* o,
@@ -405,15 +405,15 @@ struct MultiQubitMovePos {
  */
 class BridgeCircuits {
 public:
-  /** Bridge circuits indexed by chain length (number of qubits). */
+  /// Bridge circuits indexed by chain length (number of qubits).
   std::vector<qc::QuantumComputation> bridgeCircuits;
-  /** Total number of H gates per length. */
+  /// Total number of H gates per length.
   std::vector<size_t> hs;
-  /** Total number of CZ gates per length (counted via Z after MCX->MCZ). */
+  /// Total number of CZ gates per length (counted via Z after MCX->MCZ).
   std::vector<size_t> czs;
-  /** Maximum number of H gates on any single qubit for a given length. */
+  /// Maximum number of H gates on any single qubit for a given length.
   std::vector<size_t> hDepth;
-  /** Maximum number of CZ involvements on any single qubit for a length. */
+  /// Maximum number of CZ involvements on any single qubit for a length.
   std::vector<size_t> czDepth;
 
   /**

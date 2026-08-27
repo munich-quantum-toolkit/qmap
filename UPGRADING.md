@@ -6,6 +6,17 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+### Neutral-atom stack
+
+The neutral-atom computation IR and circuit operations previously supplied by
+MQT Core now live in QMAP under the `na/ir` headers. This includes
+`NAComputation`, its entities and operations, and the move, bridge, and AOD
+circuit operations.
+
+The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
+`origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
+`load1`, and `load2`, respectively.
+
 ## [3.9.0]
 
 This release updates the minimum required `mqt-core` version to 3.9.0 and

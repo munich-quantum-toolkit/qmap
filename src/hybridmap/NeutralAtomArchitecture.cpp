@@ -11,14 +11,14 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 
 #include "datastructures/SymmetricMatrix.hpp"
-#include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "hybridmap/NeutralAtomOperation.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/AodOperation.hpp"
+#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -98,11 +98,11 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     ensureGateWithFallback(gateAverageFidelities, "cz", "none");
     ensureGateWithFallback(gateAverageFidelities, "h", "none");
     parameters.gateAverageFidelities = gateAverageFidelities;
-    std::map<NeutralAtomOperationKind, qc::fp> shuttlingTimes;
+    std::map<NeutralAtomOpType, qc::fp> shuttlingTimes;
 
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingTimes"].items()) {
-      shuttlingTimes.emplace(neutralAtomOperationKindFromString(key), value);
+      shuttlingTimes.emplace(neutralAtomOpTypeFromString(key), value);
     }
     // compute values for SWAP gate
     qc::fp const swapGateTime =
@@ -133,11 +133,11 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     }
 
     parameters.shuttlingTimes = shuttlingTimes;
-    std::map<NeutralAtomOperationKind, qc::fp> shuttlingAverageFidelities;
+    std::map<NeutralAtomOpType, qc::fp> shuttlingAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
-      shuttlingAverageFidelities.emplace(
-          neutralAtomOperationKindFromString(key), value);
+      shuttlingAverageFidelities.emplace(neutralAtomOpTypeFromString(key),
+                                         value);
     }
     parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
@@ -275,16 +275,16 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
 
   animationMachine +=
       "movement {\n\tmax_speed: " +
-      std::to_string(getShuttlingTime(NeutralAtomOperationKind::AodMove) *
+      std::to_string(getShuttlingTime(NeutralAtomOpType::AodMove) *
                      shuttlingSpeedFactor) +
       "\n}\n";
 
   animationMachine +=
       "time {\n\tload: " +
-      std::to_string(getShuttlingTime(NeutralAtomOperationKind::AodActivate) /
+      std::to_string(getShuttlingTime(NeutralAtomOpType::AodActivate) /
                      shuttlingSpeedFactor) +
       "\n\tstore: " +
-      std::to_string(getShuttlingTime(NeutralAtomOperationKind::AodDeactivate) /
+      std::to_string(getShuttlingTime(NeutralAtomOpType::AodDeactivate) /
                      shuttlingSpeedFactor) +
       "\n\trz: " + std::to_string(getGateTime("x")) +
       "\n\try: " + std::to_string(getGateTime("x")) +
@@ -325,25 +325,21 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   if (op == nullptr) {
     throw std::invalid_argument("Operation must not be null.");
   }
-  const auto* neutralAtomOperation =
-      dynamic_cast<const NeutralAtomOperation*>(op);
-  if (neutralAtomOperation != nullptr &&
-      (neutralAtomOperation->getKind() ==
-           NeutralAtomOperationKind::AodActivate ||
-       neutralAtomOperation->getKind() ==
-           NeutralAtomOperationKind::AodDeactivate)) {
-    return getShuttlingTime(neutralAtomOperation->getKind());
+  const auto neutralAtomOpType = getNeutralAtomOpType(*op);
+  if (neutralAtomOpType == NeutralAtomOpType::AodActivate ||
+      neutralAtomOpType == NeutralAtomOpType::AodDeactivate) {
+    return getShuttlingTime(*neutralAtomOpType);
   }
-  if (neutralAtomOperation != nullptr &&
-      neutralAtomOperation->getKind() == NeutralAtomOperationKind::AodMove) {
-    const auto v =
-        parameters.shuttlingTimes.at(NeutralAtomOperationKind::AodMove);
+  if (neutralAtomOpType == NeutralAtomOpType::AodMove) {
+    const auto v = parameters.shuttlingTimes.at(NeutralAtomOpType::AodMove);
     const auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
     if (opAodMove == nullptr) {
       throw std::logic_error("An AOD move must be backed by AodOperation.");
     }
-    const auto distanceX = opAodMove->getMaxDistance(Dimension::X);
-    const auto distanceY = opAodMove->getMaxDistance(Dimension::Y);
+    const auto distanceX =
+        opAodMove->getMaxDistance(AodOperation::Dimension::X);
+    const auto distanceY =
+        opAodMove->getMaxDistance(AodOperation::Dimension::Y);
     return (distanceX + distanceY) / v;
   }
   std::string opName;
@@ -370,15 +366,11 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
   if (op == nullptr) {
     throw std::invalid_argument("Operation must not be null.");
   }
-  const auto* neutralAtomOperation =
-      dynamic_cast<const NeutralAtomOperation*>(op);
-  if (neutralAtomOperation != nullptr &&
-      (neutralAtomOperation->getKind() ==
-           NeutralAtomOperationKind::AodActivate ||
-       neutralAtomOperation->getKind() ==
-           NeutralAtomOperationKind::AodDeactivate ||
-       neutralAtomOperation->getKind() == NeutralAtomOperationKind::AodMove)) {
-    return getShuttlingAverageFidelity(neutralAtomOperation->getKind());
+  const auto neutralAtomOpType = getNeutralAtomOpType(*op);
+  if (neutralAtomOpType == NeutralAtomOpType::AodActivate ||
+      neutralAtomOpType == NeutralAtomOpType::AodDeactivate ||
+      neutralAtomOpType == NeutralAtomOpType::AodMove) {
+    return getShuttlingAverageFidelity(*neutralAtomOpType);
   }
   std::string opName;
   const auto nQubits = op->getNqubits();
@@ -391,15 +383,11 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
 
 std::set<CoordIndex>
 NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
-  const auto* neutralAtomOperation =
-      dynamic_cast<const NeutralAtomOperation*>(op);
-  if (op->getNqubits() == 1 || (neutralAtomOperation != nullptr &&
-                                (neutralAtomOperation->getKind() ==
-                                     NeutralAtomOperationKind::AodActivate ||
-                                 neutralAtomOperation->getKind() ==
-                                     NeutralAtomOperationKind::AodDeactivate ||
-                                 neutralAtomOperation->getKind() ==
-                                     NeutralAtomOperationKind::AodMove))) {
+  const auto neutralAtomOpType = getNeutralAtomOpType(*op);
+  if (op->getNqubits() == 1 ||
+      neutralAtomOpType == NeutralAtomOpType::AodActivate ||
+      neutralAtomOpType == NeutralAtomOpType::AodDeactivate ||
+      neutralAtomOpType == NeutralAtomOpType::AodMove) {
     return op->getUsedQubits();
   }
   std::set<CoordIndex> blockedCoordIndices;

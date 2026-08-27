@@ -44,8 +44,10 @@ TEST(NeutralAtomUtils, InitialMappingFromStringThrow) {
 }
 
 TEST(NeutralAtomUtils, MoveCombConstructorsAndEquality) {
-  constexpr AtomMove m1{.c1 = 1, .c2 = 2, .load1 = true, .load2 = false};
-  constexpr AtomMove m2{.c1 = 3, .c2 = 4, .load1 = false, .load2 = true};
+  constexpr AtomMove m1{
+      .origin = 1, .target = 2, .requiresLoad = true, .requiresStore = false};
+  constexpr AtomMove m2{
+      .origin = 3, .target = 4, .requiresLoad = false, .requiresStore = true};
   const CoordIndices pos{5, 6};
 
   // vector-based constructor

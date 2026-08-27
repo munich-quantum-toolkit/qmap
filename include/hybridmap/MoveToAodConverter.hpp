@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "hybridmap/AodOperation.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
@@ -19,6 +18,8 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/AodOperation.hpp"
+#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -30,17 +31,6 @@
 
 namespace na {
 /**
- * @brief Result type for merging two move-derived activations.
- * @details Indicates whether merging is impossible, trivial, a full merge, or
- * requires appending.
- */
-enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
-/**
- * @brief Pair of merge types for X and Y dimensions.
- */
-using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
-
-/**
  * @brief Converts abstract atom moves into concrete AOD activation/move
  * sequences.
  * @details Groups parallelizable moves, computes safe offset maneuvers for
@@ -48,6 +38,26 @@ using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
  * respecting device constraints.
  */
 class MoveToAodConverter {
+  /// Result of merging one move into an AOD transition.
+  enum class TransitionMergeType : std::uint8_t {
+    Impossible,
+    Trivial,
+    Merge,
+    Append
+  };
+
+  /// Merge decisions for the X and Y dimensions of one transition phase.
+  struct DimensionMergeTypes {
+    TransitionMergeType x;
+    TransitionMergeType y;
+  };
+
+  /// Merge decisions for the activation and deactivation phases.
+  struct PhaseMergeTypes {
+    TransitionMergeType activation;
+    TransitionMergeType deactivation;
+  };
+
   struct AncillaAtom {
     struct XAndY {
       std::uint32_t x;
@@ -68,180 +78,186 @@ class MoveToAodConverter {
 
 protected:
   /**
-   * @brief Helper for constructing and merging AOD activations/moves.
-   * @details Tracks per-dimension AOD moves with offsets and associated atom
-   * moves; produces AodOperation sequences for activation/move/deactivation.
+   * @brief Builds the operations for one AOD transition phase.
+   * @details Tracks per-dimension moves with offsets and associated atom moves;
+   * produces operations for either activation or deactivation.
    */
-  struct AodActivationHelper {
+  struct AodTransitionBuilder {
     /**
      * @brief Single AOD movement in one dimension (x or y).
      * @details Stores initial position, movement delta, required offset to
-     * avoid crossing, and whether a load/unload is needed.
+     * avoid crossing, and whether this phase transfers an atom between static
+     * and mobile traps.
      */
-    struct AodMove {
-      // start of the move
-      uint32_t init;
-      // need load/unload or not
-      bool load;
-      // need offset move to avoid crossing
+    struct DimensionMove {
+      /// Start of the move.
+      uint32_t initialPosition;
+      /// Whether this phase transfers an atom between trap types.
+      bool requiresAtomTransfer;
+      /// Offset move required to avoid crossing.
       int32_t offset;
-      // delta of the actual move
+      /// Delta of the actual move.
       qc::fp delta;
 
-      AodMove(const uint32_t initMove, const qc::fp deltaMove,
-              const int32_t offsetMove, const bool loadMove)
-          : init(initMove), load(loadMove), offset(offsetMove),
-            delta(deltaMove) {}
+      DimensionMove(const uint32_t initialPosition, const qc::fp delta,
+                    const int32_t offset, const bool requiresAtomTransfer)
+          : initialPosition(initialPosition),
+            requiresAtomTransfer(requiresAtomTransfer), offset(offset),
+            delta(delta) {}
     };
     /**
-     * @brief Aggregate of per-dimension activation moves plus logical atom
-     * move.
+     * @brief Aggregate of per-dimension moves plus logical atom moves.
      * @details Represents either activation or deactivation depending on
-     * context. Holds x- and y- dimension AOD moves and the associated AtomMove.
+     * context.
      */
-    struct AodActivation {
-      // first: x, second: delta x, third: offset x
-      std::vector<std::shared_ptr<AodMove>> activateXs;
-      std::vector<std::shared_ptr<AodMove>> activateYs;
+    struct Transition {
+      std::vector<std::shared_ptr<DimensionMove>> xMoves;
+      std::vector<std::shared_ptr<DimensionMove>> yMoves;
       std::vector<AtomMove> moves;
 
-      AodActivation(const AodMove& activateX, const AodMove& activateY,
-                    const AtomMove& move)
+      Transition(const DimensionMove& xMove, const DimensionMove& yMove,
+                 const AtomMove& move)
           : moves({move}) {
-        activateXs.emplace_back(std::make_unique<AodMove>(activateX));
-        activateYs.emplace_back(std::make_unique<AodMove>(activateY));
+        xMoves.emplace_back(std::make_unique<DimensionMove>(xMove));
+        yMoves.emplace_back(std::make_unique<DimensionMove>(yMove));
       }
-      AodActivation(const Dimension dim, const AodMove& activate,
-                    const AtomMove& move)
+      Transition(const AodOperation::Dimension dimension,
+                 const DimensionMove& dimensionMove, const AtomMove& move)
           : moves({move}) {
-        if (dim == Dimension::X) {
-          activateXs.emplace_back(std::make_unique<AodMove>(activate));
+        if (dimension == AodOperation::Dimension::X) {
+          xMoves.emplace_back(std::make_unique<DimensionMove>(dimensionMove));
         } else {
-          activateYs.emplace_back(std::make_unique<AodMove>(activate));
+          yMoves.emplace_back(std::make_unique<DimensionMove>(dimensionMove));
         }
       }
 
-      [[nodiscard]] std::vector<std::shared_ptr<AodMove>>
-      getActivates(const Dimension dim) const {
-        if (dim == Dimension::X) {
-          return activateXs;
+      [[nodiscard]] const std::vector<std::shared_ptr<DimensionMove>>&
+      getDimensionMoves(const AodOperation::Dimension dimension) const {
+        if (dimension == AodOperation::Dimension::X) {
+          return xMoves;
         }
-        return activateYs;
+        return yMoves;
       }
     };
 
-    // NeutralAtomArchitecture to call necessary hardware information
+    /// Architecture providing the necessary hardware information.
     const NeutralAtomArchitecture* arch;
-    std::vector<AodActivation> allActivations;
-    // Differentiate between loading and unloading
-    NeutralAtomOperationKind type;
-    AncillaAtoms* ancillas;
+    std::vector<Transition> transitions;
+    /// Operation emitted for this activation or deactivation phase.
+    NeutralAtomOpType phaseOperationType;
 
     // Constructor
-    AodActivationHelper() = delete;
-    AodActivationHelper(const AodActivationHelper&) = delete;
-    AodActivationHelper(AodActivationHelper&&) = delete;
-    AodActivationHelper(const NeutralAtomArchitecture& architecture,
-                        const NeutralAtomOperationKind opType,
-                        AncillaAtoms* ancillas)
-        : arch(&architecture), type(opType), ancillas(ancillas) {}
+    AodTransitionBuilder() = delete;
+    AodTransitionBuilder(const AodTransitionBuilder&) = delete;
+    AodTransitionBuilder(AodTransitionBuilder&&) = delete;
+    AodTransitionBuilder(const NeutralAtomArchitecture& architecture,
+                         const NeutralAtomOpType phaseOperationType)
+        : arch(&architecture), phaseOperationType(phaseOperationType) {}
 
     // Methods
 
     /**
-     * @brief Return all AOD moves along a dimension that start at a given
+     * @brief Return all internal moves along a dimension that start at a given
      * position.
-     * @param dim Dimension (X or Y).
-     * @param init Initial position index.
-     * @return Vector of matching AOD move descriptors.
+     * @param dimension Dimension (X or Y).
+     * @param initialPosition Initial position index.
+     * @return Vector of matching dimension moves.
      */
-    [[nodiscard]] std::vector<std::shared_ptr<AodMove>>
-    getAodMovesFromInit(Dimension dim, uint32_t init) const;
+    [[nodiscard]] std::vector<std::shared_ptr<DimensionMove>>
+    getDimensionMovesFromInitialPosition(AodOperation::Dimension dimension,
+                                         uint32_t initialPosition) const;
 
-    // Activation management
+    // Transition management
     /**
-     * @brief Merge an atom move into current activations according to merge
+     * @brief Merge an atom move into the current transitions according to merge
      * policy.
      * @details Uses per-dimension merge types to either merge, append, or
-     * reject combining with in-flight activations; records offsets and
+     * reject combining with in-flight transitions; records offsets and
      * load/unload handling.
-     * @param merge Merge policy for X and Y.
+     * @param mergeTypes Merge policies for X and Y.
      * @param origin Origin location.
      * @param move Atom move descriptor.
-     * @param v Geometric move vector.
-     * @param needLoad Whether an AOD load is required.
+     * @param moveVector Geometric move vector.
+     * @param requiresAtomTransfer Whether this phase transfers the atom
+     * between static and mobile traps.
      */
-    void addActivation(
-        const std::pair<ActivationMergeType, ActivationMergeType>& merge,
-        const Location& origin, const AtomMove& move, const MoveVector& v,
-        bool needLoad);
+    void addTransition(const DimensionMergeTypes& mergeTypes,
+                       const Location& origin, const AtomMove& move,
+                       const MoveVector& moveVector, bool requiresAtomTransfer);
 
-    void addActivationFa(const Location& origin, const AtomMove& move,
-                         const MoveVector& v, bool needLoad);
+    void addFlyingAncillaTransition(const Location& origin,
+                                    const AtomMove& move,
+                                    const MoveVector& moveVector,
+                                    bool requiresAtomTransfer);
     /**
-     * @brief Merge an activation into the aggregate along a specific dimension.
-     * @param dim Dimension of the activation.
-     * @param activationDim Activation to merge for the specified dimension.
-     * @param activationOtherDim Complementary activation for the other
+     * @brief Merge a transition into the aggregate along a specific dimension.
+     * @param dimension Dimension to merge.
+     * @param dimensionTransition Transition to merge for that dimension.
+     * @param complementaryDimensionTransition Transition for the complementary
      * dimension.
      */
-    void mergeActivationDim(Dimension dim, const AodActivation& activationDim,
-                            const AodActivation& activationOtherDim);
+    void mergeTransitionDimension(
+        AodOperation::Dimension dimension,
+        const Transition& dimensionTransition,
+        const Transition& complementaryDimensionTransition);
     /**
      * @brief Reorder offset moves to avoid crossing.
-     * @param aodMoves Collection of offset moves to reorder.
+     * @param dimensionMoves Collection of offset moves to reorder.
      * @param sign Direction of offsets (+1/-1 for right/left or down/up).
      */
-    static void reAssignOffsets(std::vector<std::shared_ptr<AodMove>>& aodMoves,
-                                int32_t sign);
+    static void
+    reassignOffsets(std::vector<std::shared_ptr<DimensionMove>>& dimensionMoves,
+                    int32_t sign);
 
     /**
      * @brief Maximum absolute offset at a position along a dimension.
-     * @param dim Dimension.
-     * @param init Initial position.
+     * @param dimension Dimension.
+     * @param initialPosition Initial position.
      * @param sign Direction (+1/-1).
      * @return Maximum offset value.
      */
-    [[nodiscard]] uint32_t getMaxOffsetAtInit(Dimension dim, uint32_t init,
-                                              int32_t sign) const;
+    [[nodiscard]] uint32_t
+    getMaxOffsetAtInitialPosition(AodOperation::Dimension dimension,
+                                  uint32_t initialPosition, int32_t sign) const;
 
     /**
      * @brief Check whether additional offset space is available at a position.
-     * @param dim Dimension.
-     * @param init Initial position.
+     * @param dimension Dimension.
+     * @param initialPosition Initial position.
      * @param sign Direction (+1/-1).
      * @return True if more offset steps fit; false otherwise.
      */
-    [[nodiscard]] bool checkIntermediateSpaceAtInit(Dimension dim,
-                                                    uint32_t init,
-                                                    int32_t sign) const;
+    [[nodiscard]] bool
+    hasIntermediateSpaceAtInitialPosition(AodOperation::Dimension dimension,
+                                          uint32_t initialPosition,
+                                          int32_t sign) const;
 
-    void computeInitAndOffsetOperations(
-        Dimension dimension, const std::shared_ptr<AodMove>& aodMove,
-        std::vector<SingleOperation>& initOperations,
-        std::vector<SingleOperation>& offsetOperations) const;
-    // Convert activation to AOD operations
+    void computeInitialAndOffsetSegments(
+        AodOperation::Dimension dimension,
+        const std::shared_ptr<DimensionMove>& dimensionMove,
+        std::vector<AodOperation::Segment>& initialSegments,
+        std::vector<AodOperation::Segment>& offsetSegments) const;
     /**
-     * @brief Convert a single activation aggregate into AOD operations.
-     * @details Emission order: activate, move, deactivate.
-     * @param activation Activation aggregate to convert.
+     * @brief Convert one transition into operations for this builder's phase.
+     * @details Emits the phase operation followed by its offset move.
+     * @param transition Transition aggregate to convert.
      * @return Vector of emitted AOD operations.
      */
     [[nodiscard]] std::vector<AodOperation>
-    getAodOperation(const AodActivation& activation) const;
+    buildPhaseOperations(const Transition& transition) const;
     /**
-     * @brief Convert all stored activations into AOD operations.
-     * @return Concatenated vector of emitted AOD operations.
+     * @brief Convert all stored transitions into operations for this phase.
+     * @return Concatenated vector of emitted phase operations.
      */
-    [[nodiscard]] std::vector<AodOperation> getAodOperations() const;
+    [[nodiscard]] std::vector<AodOperation> buildPhaseOperations() const;
   };
 
-  [[nodiscard]] static std::pair<ActivationMergeType, ActivationMergeType>
-  canAddActivation(const AodActivationHelper& activationHelper,
-                   const AodActivationHelper& deactivationHelper,
-                   const Location& origin, const MoveVector& v,
-                   const Location& final, const MoveVector& vReverse,
-                   Dimension dim);
+  [[nodiscard]] static PhaseMergeTypes
+  canAddTransition(const AodTransitionBuilder& activationBuilder,
+                   const AodTransitionBuilder& deactivationBuilder,
+                   const Location& origin, const MoveVector& moveVector,
+                   const Location& final, const MoveVector& reverseMoveVector,
+                   AodOperation::Dimension dimension);
 
   /**
    * @brief Move operations within a move group can be executed in parallel
@@ -254,10 +270,10 @@ protected:
     // the moves and the index they appear in the original quantum circuit (to
     // insert them back later)
     std::vector<std::pair<AtomMove, uint32_t>> moves;
-    std::vector<std::pair<AtomMove, uint32_t>> movesFa;
-    std::vector<AodOperation> processedOpsInit;
-    std::vector<AodOperation> processedOpsFinal;
-    AodOperation processedOpShuttle;
+    std::vector<std::pair<AtomMove, uint32_t>> flyingAncillaMoves;
+    std::vector<AodOperation> activationOperations;
+    std::vector<AodOperation> deactivationOperations;
+    AodOperation shuttlingOperation;
     std::vector<CoordIndex> qubitsUsedByGates;
 
     // Constructor
@@ -275,23 +291,23 @@ protected:
     /**
      * @brief Add a move to the group.
      * @param move Move to add.
-     * @param idx Circuit index of the move.
+     * @param circuitIndex Circuit index of the move.
      */
-    void addMove(const AtomMove& move, uint32_t idx);
+    void addMove(const AtomMove& move, uint32_t circuitIndex);
     /**
      * @brief Circuit index of the earliest move in the group.
      * @return Minimum circuit index across stored moves.
      */
 
-    [[nodiscard]] uint32_t getFirstIdx() const {
-      assert(!moves.empty() || !movesFa.empty());
+    [[nodiscard]] uint32_t getFirstCircuitIndex() const {
+      assert(!moves.empty() || !flyingAncillaMoves.empty());
       if (moves.empty()) {
-        return movesFa.front().second;
+        return flyingAncillaMoves.front().second;
       }
-      if (movesFa.empty()) {
+      if (flyingAncillaMoves.empty()) {
         return moves.front().second;
       }
-      return std::min(moves.front().second, movesFa.front().second);
+      return std::min(moves.front().second, flyingAncillaMoves.front().second);
     }
     /**
      * @brief Check if two moves are parallelizable.
@@ -303,45 +319,46 @@ protected:
 
     /**
      * @brief Build the shuttling operation connecting load and unload phases.
-     * @param aodActivationHelper Activation helper (loading phase info).
-     * @param aodDeactivationHelper Deactivation helper (unloading phase info).
+     * @param activationBuilder Builder for the loading phase.
+     * @param deactivationBuilder Builder for the unloading phase.
      * @return Constructed AOD shuttling operation.
      */
     static AodOperation
-    connectAodOperations(const AodActivationHelper& aodActivationHelper,
-                         const AodActivationHelper& aodDeactivationHelper);
+    buildShuttlingOperation(const AodTransitionBuilder& activationBuilder,
+                            const AodTransitionBuilder& deactivationBuilder);
   };
 
   const NeutralAtomArchitecture& arch;
-  qc::QuantumComputation qcScheduled;
+  qc::QuantumComputation scheduledCircuit;
   std::vector<MoveGroup> moveGroups;
   const HardwareQubits& hardwareQubits;
   AncillaAtoms ancillas;
 
-  AtomMove convertOpToMove(qc::Operation* get) const;
+  AtomMove convertOperationToMove(const qc::Operation& operation) const;
 
   void initFlyingAncillas();
 
   /**
    * @brief Partition moves into groups that can execute in parallel.
-   * @param qc Quantum circuit to schedule.
+   * @param circuit Quantum circuit to schedule.
    */
   void initMoveGroups(
-      qc::QuantumComputation& qc); //, qc::Permutation& hwToCoordIdx);
+      qc::QuantumComputation& circuit); //, qc::Permutation& hwToCoordIdx);
   /**
    * @brief Convert move groups into concrete AOD operations.
-   * @details Uses activation/deactivation helpers to emit load/move/unload
+   * @details Uses activation/deactivation builders to emit load/move/unload
    * sequences; splits groups when parallelism constraints require it.
    */
   void processMoveGroups();
 
   std::pair<std::vector<AtomMove>, MoveGroup>
   processMoves(const std::vector<std::pair<AtomMove, uint32_t>>& moves,
-               AodActivationHelper& aodActivationHelper,
-               AodActivationHelper& aodDeactivationHelper) const;
-  void processMovesFa(const std::vector<std::pair<AtomMove, uint32_t>>& movesFa,
-                      AodActivationHelper& aodActivationHelper,
-                      AodActivationHelper& aodDeactivationHelper) const;
+               AodTransitionBuilder& activationBuilder,
+               AodTransitionBuilder& deactivationBuilder) const;
+  void processFlyingAncillaMoves(
+      const std::vector<std::pair<AtomMove, uint32_t>>& flyingAncillaMoves,
+      AodTransitionBuilder& activationBuilder,
+      AodTransitionBuilder& deactivationBuilder) const;
 
 public:
   MoveToAodConverter() = delete;
@@ -350,10 +367,10 @@ public:
   explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg,
                               const HardwareQubits& hardwareQubitsArg,
                               const HardwareQubits& flyingAncillas)
-      : arch(archArg), qcScheduled(arch.getNpositions()),
+      : arch(archArg), scheduledCircuit(arch.getNpositions()),
         hardwareQubits(hardwareQubitsArg) {
-    qcScheduled.addAncillaryRegister(arch.getNpositions());
-    qcScheduled.addAncillaryRegister(arch.getNpositions(), "fa");
+    scheduledCircuit.addAncillaryRegister(arch.getNpositions());
+    scheduledCircuit.addAncillaryRegister(arch.getNpositions(), "fa");
     for (std::uint32_t i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
       const auto coord =
           flyingAncillas.getInitHwPos().at(i) + (2 * arch.getNpositions());
@@ -366,10 +383,10 @@ public:
 
   /**
    * @brief Schedule a circuit: replace abstract moves by AOD load/move/unload.
-   * @param qc Quantum circuit to schedule.
+   * @param circuit Quantum circuit to schedule.
    * @return New circuit containing AOD operations.
    */
-  qc::QuantumComputation schedule(qc::QuantumComputation& qc);
+  qc::QuantumComputation schedule(qc::QuantumComputation& circuit);
 
   /**
    * @brief Get number of constructed move groups.

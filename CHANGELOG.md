@@ -12,6 +12,11 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Changed
+
+- ♻️ Move the neutral-atom computation IR and circuit operations from MQT Core
+  to QMAP ([#1111]) ([**@denialhaag**])
+
 ## [3.9.0] - 2026-08-24
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._

@@ -10,11 +10,11 @@
 
 #include "hybridmap/HybridAnimation.hpp"
 
-#include "hybridmap/AodOperation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/Definitions.hpp"
+#include "na/ir/operations/AodOperation.hpp"
+#include "na/ir/operations/NeutralAtomOpType.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -69,30 +69,28 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
                                       qc::fp startTime) {
   std::string opString;
 
-  if (hasNeutralAtomOperationKind(*op, NeutralAtomOperationKind::AodActivate)) {
+  if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodActivate)) {
     opString += "@" + std::to_string(startTime) + " load [\n";
     for (const auto& coordIdx : op->getTargets()) {
       const auto id = coordIdxToId.at(coordIdx);
       opString += "\t atom" + std::to_string(id) + "\n";
     }
     opString += "]\n";
-  } else if (hasNeutralAtomOperationKind(
-                 *op, NeutralAtomOperationKind::AodDeactivate)) {
+  } else if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodDeactivate)) {
     opString += "@" + std::to_string(startTime) + " store [\n";
     for (const auto& coordIdx : op->getTargets()) {
       const auto id = coordIdxToId.at(coordIdx);
       opString += "\t atom" + std::to_string(id) + "\n";
     }
     opString += "]\n";
-  } else if (hasNeutralAtomOperationKind(*op,
-                                         NeutralAtomOperationKind::AodMove)) {
+  } else if (hasNeutralAtomOpType(*op, NeutralAtomOpType::AodMove)) {
     // update atom coordinates
     const auto* aodOp = dynamic_cast<AodOperation*>(op.get());
     assert(aodOp != nullptr && "An AOD move must be backed by AodOperation");
-    const auto startsX = aodOp->getStarts(Dimension::X);
-    const auto endsX = aodOp->getEnds(Dimension::X);
-    const auto startsY = aodOp->getStarts(Dimension::Y);
-    const auto endsY = aodOp->getEnds(Dimension::Y);
+    const auto startsX = aodOp->getStarts(AodOperation::Dimension::X);
+    const auto endsX = aodOp->getEnds(AodOperation::Dimension::X);
+    const auto startsY = aodOp->getStarts(AodOperation::Dimension::Y);
+    const auto endsY = aodOp->getEnds(AodOperation::Dimension::Y);
     assert(startsX.size() == endsX.size());
     assert(startsY.size() == endsY.size());
     const auto& coordIndices = op->getTargets(); // renamed
