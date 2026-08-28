@@ -116,16 +116,16 @@ random data of the same shapes instead:
 ```{code-cell} ipython3
 import numpy as np
 import torch
-from mqt.qmap.ph.graph import generate_beam_splitter_matrix
-from mqt.qmap.ph.unitary_to_phase_compilation import get_haar_random_unitary
 
 chip_dim = 8
 target_dim = 4
 
-# Placeholder for beam-splitter reflectivities (statistically distributed around 0.5).
-beam_splitter_reflectivities = generate_beam_splitter_matrix(
-    chip_size=chip_dim, ideal_bs=False, rng=np.random.default_rng(42)
-).tolist()
+# Placeholder for beam-splitter reflectivities: two values per MZI (in/out),
+# ordered MZI-by-MZI, scattered around the ideal 0.5 split. A chip_dim-mode chip
+# has chip_dim // 2 MZIs on even layers and chip_dim // 2 - 1 on odd layers.
+bs_rng = np.random.default_rng(42)
+total_mzis = sum(chip_dim // 2 if layer % 2 == 0 else chip_dim // 2 - 1 for layer in range(chip_dim))
+beam_splitter_reflectivities = bs_rng.normal(0.55, 0.04, size=2 * total_mzis).clip(0.0, 1.0).tolist()
 
 # Placeholder for transmissions, normalized so the best mode is 1.0.
 hw_rng = np.random.default_rng(9)
@@ -136,10 +136,12 @@ output_transmissions = hw_rng.uniform(0.7, 1.0, size=chip_dim)
 output_transmissions /= output_transmissions.max()
 output_transmissions = output_transmissions.tolist()
 
-# Placeholder for desired unitary: a Haar-random 4x4 unitary.
-target_unitary = get_haar_random_unitary(
-    target_dim, torch.Generator().manual_seed(10), dtype=torch.complex128
-)
+# Placeholder for desired unitary: a Haar-random 4x4 unitary via the QR method
+# (draw a complex Gaussian, QR-decompose, fix the phases on R's diagonal).
+gen = torch.Generator().manual_seed(10)
+z = torch.randn(target_dim, target_dim, generator=gen, dtype=torch.complex128)
+q, r = torch.linalg.qr(z)
+target_unitary = q * (torch.diagonal(r) / torch.diagonal(r).abs()).unsqueeze(0)
 
 print("beam_splitter_reflectivities:", len(beam_splitter_reflectivities), "values (flat, 2 * total_mzis)")
 print("input_transmissions :", [round(t, 3) for t in input_transmissions])
