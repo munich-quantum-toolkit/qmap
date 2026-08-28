@@ -6,5 +6,5 @@
 #
 # Licensed under the MIT License
 
-from . import state_preparation as state_preparation
-from . import zoned as zoned
+from mqt.qmap.na import state_preparation as state_preparation
+from mqt.qmap.na import zoned as zoned
