@@ -574,7 +574,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
           info.totalLogFidelity += architecture->getSingleQubitFidelityCost(q1);
         }
       } else {
-        assert(g->getType() == qc::X);
+        assert(g->getType() == qc::X || g->getType() == qc::Y ||
+               g->getType() == qc::Z);
         ++info.cnots;
         ++info.gates;
         auto q1 =
