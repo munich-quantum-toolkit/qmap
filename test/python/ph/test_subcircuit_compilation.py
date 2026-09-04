@@ -126,6 +126,95 @@ class TestCompileSubcircuitEndToEnd:
         assert first.output_ports == second.output_ports
 
 
+class TestCompileSubcircuitInputValidation:
+    """The public entry point rejects malformed dimensions and characterization data."""
+
+    @staticmethod
+    def test_short_output_transmissions_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """A too-short output-transmission vector raises instead of being silently accepted."""
+        target = _reproducible_unitary(2, seed=1)
+        with pytest.raises(ValueError, match="output_transmissions must have length"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4,
+                input_transmissions=ones_transmissions_chip4,
+                output_transmissions=ones_transmissions_chip4[:-1],
+                target_unitary=target,
+            )
+
+    @staticmethod
+    def test_negative_transmission_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """A negative transmission raises instead of becoming a NaN edge cost."""
+        target = _reproducible_unitary(2, seed=1)
+        bad = [*ones_transmissions_chip4[:-1], -0.1]
+        with pytest.raises(ValueError, match=r"input_transmissions values must be finite and in \[0, 1\]"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4,
+                input_transmissions=bad,
+                output_transmissions=ones_transmissions_chip4,
+                target_unitary=target,
+            )
+
+    @staticmethod
+    def test_short_beam_splitter_vector_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """A too-short beam-splitter vector raises a clear error, not an incidental IndexError."""
+        target = _reproducible_unitary(2, seed=1)
+        with pytest.raises(ValueError, match="beam_splitter_reflectivities must have length"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4[:-1],
+                input_transmissions=ones_transmissions_chip4,
+                output_transmissions=ones_transmissions_chip4,
+                target_unitary=target,
+            )
+
+    @staticmethod
+    def test_non_square_target_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """A non-square target matrix raises."""
+        target = torch.zeros((2, 3), dtype=torch.complex128)
+        with pytest.raises(ValueError, match="square 2D matrix"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4,
+                input_transmissions=ones_transmissions_chip4,
+                output_transmissions=ones_transmissions_chip4,
+                target_unitary=target,
+            )
+
+    @staticmethod
+    def test_odd_dimension_target_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """An odd-dimensioned target (no dual-rail pairing) raises."""
+        target = torch.eye(3, dtype=torch.complex128)
+        with pytest.raises(ValueError, match="positive even number"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4,
+                input_transmissions=ones_transmissions_chip4,
+                output_transmissions=ones_transmissions_chip4,
+                target_unitary=target,
+            )
+
+    @staticmethod
+    def test_real_dtype_target_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """A real-dtype target raises (a unitary must be complex)."""
+        target = torch.eye(2, dtype=torch.float64)
+        with pytest.raises(ValueError, match="complex dtype"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4,
+                input_transmissions=ones_transmissions_chip4,
+                output_transmissions=ones_transmissions_chip4,
+                target_unitary=target,
+            )
+
+    @staticmethod
+    def test_target_larger_than_chip_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
+        """A target wider than the chip raises."""
+        target = _reproducible_unitary(6, seed=1)  # target_dim 6 > chip_dim 4
+        with pytest.raises(ValueError, match="cannot exceed chip dimension"):
+            compile_subcircuit(
+                beam_splitter_reflectivities=ideal_bs_chip4,
+                input_transmissions=ones_transmissions_chip4,
+                output_transmissions=ones_transmissions_chip4,
+                target_unitary=target,
+            )
+
+
 def test_output_ports_follow_extreme_routing(extreme_routing_chip) -> None:
     """End-to-end routing regression through ``compile_subcircuit``.
 

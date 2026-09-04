@@ -15,43 +15,40 @@ torch = pytest.importorskip("torch")
 from mqt.qmap.ph.unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
 
 
-class TestOptimizeMinimumIterations:
-    """Regression tests for the minimum-iteration guard."""
+class TestMaxIterationsContract:
+    """``max_iterations`` is an exact bound on the number of gradient steps."""
 
     @staticmethod
-    def test_max_iterations_is_clamped_to_two() -> None:
-        """Test that ``max_iterations`` is clamped to a floor of two steps.
-
-        With a single raw iteration the loop would evaluate the initial parameters,
-        take one optimizer step, and terminate before ever evaluating that step -
-        returning the initial parameters.  The optimizer clamps ``max_iterations`` to
-        a minimum of 2 so the step's result is evaluated too.  The clamp is not
-        exposed as a field, but it is observable: ``max_iterations=1`` must produce
-        exactly the same result as ``max_iterations=2`` (both run two steps), and a
-        genuinely different result from ``max_iterations=3`` (which runs one more).
-        """
-        chip_dim = 4
+    def _run(max_iterations: int):
+        """Optimize a fixed 4-mode target for exactly ``max_iterations`` steps."""
         # chip_dim=4: MZIs per layer [2, 1, 2, 1] -> 6 MZIs -> 12 ideal reflectivities.
         bs = torch.as_tensor([0.5] * 12, dtype=torch.float64)
         # A generic, reproducible unitary target (Q factor of a seeded complex Gaussian).
-        z = torch.randn(chip_dim, chip_dim, generator=torch.Generator().manual_seed(1), dtype=torch.complex128)
+        z = torch.randn(4, 4, generator=torch.Generator().manual_seed(1), dtype=torch.complex128)
         target_unitary, _ = torch.linalg.qr(z)
+        # Seed immediately before each run so the random parameter init is identical.
+        torch.manual_seed(0)
+        return optimize_unitary_subcircuit_parameters(
+            target_unitary=target_unitary,
+            beam_splitter_reflectivities=bs,
+            max_iterations=max_iterations,
+        )
 
-        def run(max_iterations: int):
-            # Seed immediately before each run so the random parameter init is identical.
-            torch.manual_seed(0)
-            return optimize_unitary_subcircuit_parameters(
-                target_unitary=target_unitary,
-                beam_splitter_reflectivities=bs,
-                max_iterations=max_iterations,
-            )
+    def test_zero_iterations_performs_no_step(self) -> None:
+        """``max_iterations=0`` returns the (evaluated) initial state, taking no step."""
+        # Two zero-step runs are identical, and a single step changes the result -
+        # so zero really is a no-optimization run, not silently bumped to one.
+        assert torch.equal(self._run(0).phase_shifter_params, self._run(0).phase_shifter_params)
+        assert not torch.equal(self._run(0).phase_shifter_params, self._run(1).phase_shifter_params)
 
-        clamped = run(1)
-        floor = run(2)
-        one_more = run(3)
+    def test_each_step_counts_exactly(self) -> None:
+        """0, 1, and 2 steps each produce a distinct result (no clamp collapsing 0/1 onto 2)."""
+        zero, one, two = self._run(0), self._run(1), self._run(2)
+        # The old floor-of-two clamp forced run(1) == run(2); an exact bound must not.
+        assert not torch.equal(zero.phase_shifter_params, one.phase_shifter_params)
+        assert not torch.equal(one.phase_shifter_params, two.phase_shifter_params)
 
-        # max_iterations=1 is clamped up to 2, so it matches the max_iterations=2 run exactly.
-        assert torch.equal(clamped.phase_shifter_params, floor.phase_shifter_params)
-        assert clamped.best_loss == floor.best_loss
-        # ...and the floor really is two steps: a third step changes the result.
-        assert not torch.equal(floor.phase_shifter_params, one_more.phase_shifter_params)
+    def test_more_steps_never_worsen_best_loss(self) -> None:
+        """The returned best loss is non-increasing in the step budget."""
+        losses = [self._run(mi).best_loss for mi in (0, 1, 2, 3)]
+        assert losses == sorted(losses, reverse=True)
