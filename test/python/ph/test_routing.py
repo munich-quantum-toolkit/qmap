@@ -207,7 +207,7 @@ class TestRoutingLayerMappingRegression:
             chip_dim=chip.chip_dim,
             target_dim=chip.target_dim,
             input_transmission=[1.0] * chip.chip_dim,
-            output_transmission=[1.0] * chip.chip_dim,
+            output_transmission=chip.output_transmissions,
             beam_splitter_reflectivities=chip.bs,
         )
         route, cost = get_best_route(routing_graph.graph, routing_graph.layers)

@@ -11,12 +11,9 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING
 
+import rustworkx as rx
 import torch
-
-if TYPE_CHECKING:
-    import rustworkx as rx
 
 
 class MaskState(IntEnum):
@@ -34,82 +31,17 @@ class MaskState(IntEnum):
     BOT_ONLY = 4  # Virtual PS: bottom is param, top is bottom + pi
 
 
-def find_optimal_routing_dag(
-    graph: rx.PyDiGraph,
-    layers: list,
-    source_node: int,
-) -> tuple[dict[int, float], dict[int, int | None]]:
-    """Compute the shortest path through a layered photonic DAG.
-
-    Performs a forward sweep over each layer in topological order, reading
-    edge weights directly from the graph.
-
-    Args:
-        graph: Weighted directed acyclic graph as produced by
-            :func:`graph.construct_graph`.
-        layers: Per-layer node index arrays as returned by
-            :func:`graph.construct_graph`.
-        source_node: Node index of the DAG source.
-
-    Returns:
-        A tuple ``(distances, predecessors)`` where *distances* maps each
-        node index to its minimum accumulated cost from the source, and
-        *predecessors* maps each node index to the preceding node index on
-        the optimal path (``None`` for the source).
-    """
-    distances: dict[int, float] = {node: float("inf") for layer in layers for node in layer}
-    predecessors: dict[int, int | None] = {node: None for layer in layers for node in layer}
-    distances[source_node] = 0.0
-
-    for layer in layers:
-        for u in layer:
-            if distances[u] == float("inf"):
-                continue
-            for _, v, weight in graph.out_edges(u):
-                accumulated_cost = distances[u] + weight
-                if accumulated_cost < distances[v]:
-                    distances[v] = accumulated_cost
-                    predecessors[v] = u
-
-    return distances, predecessors
-
-
-def reconstruct_path(
-    predecessors: dict[int, int | None],
-    target_node: int,
-) -> list[int]:
-    """Walk backward from the sink to reconstruct the optimal node sequence.
-
-    Args:
-        predecessors: Mapping from node index to the preceding node index on
-            the optimal path, as returned by
-            :func:`find_optimal_routing_dag`.
-        target_node: Node index of the DAG sink.
-
-    Returns:
-        Ordered list of node indices from source to sink.  Returns an empty
-        list if ``target_node`` was unreachable.
-    """
-    path: list[int] = []
-    current: int | None = target_node
-
-    while current is not None:
-        path.append(current)
-        current = predecessors[current]
-
-    path.reverse()
-
-    if len(path) == 1 and predecessors[target_node] is None:
-        return []
-
-    return path
-
-
 def get_best_route(
     graph: rx.PyDiGraph,
     layers: list,
 ) -> tuple[list[int], float]:
-    """Find the optimal routing path and return relative node indices per layer.
+    """Find the minimum-cost route through the layered photonic DAG.
+
+    The routing graph carries all photonic semantics in its edge weights
+    (``-log`` fidelities set during :func:`graph.construct_graph`), so finding
+    the placement is a plain shortest-path problem. Edge weights are ``>= 0`` but
+    include ``-log(1.0) == -0.0``, which Dijkstra's non-negativity check rejects,
+    so Bellman-Ford is used.
 
     Args:
         graph: Weighted directed acyclic graph as produced by
@@ -120,21 +52,24 @@ def get_best_route(
     Returns:
         A tuple ``(relative_path_indices, final_cost)`` where
         *relative_path_indices* is the list of within-layer positions of each
-        chosen node and *final_cost* is the total accumulated path cost.
+        chosen node and *final_cost* is the total accumulated path cost. Returns
+        ``([], inf)`` if the sink is unreachable from the source.
     """
     source_node = layers[0][0]
     sink_node = layers[-1][0]
 
-    distances, predecessors = find_optimal_routing_dag(graph, layers, source_node)
-    absolute_path_nodes = reconstruct_path(predecessors, sink_node)
+    paths = rx.digraph_bellman_ford_shortest_paths(graph, source_node, target=sink_node, weight_fn=float)
+    if sink_node not in paths:
+        return [], float("inf")
 
-    relative_path_indices: list[int] = []
-    if absolute_path_nodes:
-        for layer_idx, node_id in enumerate(absolute_path_nodes):
-            relative_index = list(layers[layer_idx]).index(node_id)
-            relative_path_indices.append(relative_index)
+    absolute_path_nodes = list(paths[sink_node])
+    lengths = rx.digraph_bellman_ford_shortest_path_lengths(graph, source_node, float, goal=sink_node)
 
-    return relative_path_indices, distances[sink_node]
+    relative_path_indices = [
+        list(layers[layer_idx]).index(node_id) for layer_idx, node_id in enumerate(absolute_path_nodes)
+    ]
+
+    return relative_path_indices, lengths[sink_node]
 
 
 def infer_input_computation_and_output_ports(

@@ -98,8 +98,16 @@ def extreme_routing_chip():
     used by the other scenarios cannot catch this -- there every MZI is near-perfect
     at both bar and cross, so the mapping barely affects the routing cost.
     """
+    # Both candidate optimal routes are perfect (cost 0); they differ only in the
+    # output window ([2, 3, 4, 5] vs [4, 5, 6, 7]). A negligible output loss on
+    # modes 6-7 (exclusive to the higher window) makes the intended [2, 3, 4, 5]
+    # window the unique optimum, so the mapping regression does not depend on the
+    # shortest-path solver's tie-breaking.
+    output_transmissions = [1.0] * _EXTREME_CHIP_DIM
+    output_transmissions[6] = output_transmissions[7] = 0.999
     return SimpleNamespace(
         bs=_build_extreme_routing_bs(seed=7),
         chip_dim=_EXTREME_CHIP_DIM,
         target_dim=_EXTREME_TARGET_DIM,
+        output_transmissions=output_transmissions,
     )

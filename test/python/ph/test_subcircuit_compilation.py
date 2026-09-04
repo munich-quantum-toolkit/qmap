@@ -230,13 +230,14 @@ def test_output_ports_follow_extreme_routing(extreme_routing_chip) -> None:
     """
     chip = extreme_routing_chip
     target = _reproducible_unitary(chip.target_dim, seed=10)
-    perfect_transmissions = [1.0] * chip.chip_dim
 
     torch.manual_seed(0)
     result = compile_subcircuit(
         beam_splitter_reflectivities=chip.bs,
-        input_transmissions=perfect_transmissions,
-        output_transmissions=perfect_transmissions,
+        input_transmissions=[1.0] * chip.chip_dim,
+        # A negligible output loss on the top modes breaks the two-fold routing
+        # degeneracy so the intended [2, 3, 4, 5] window is the unique optimum.
+        output_transmissions=chip.output_transmissions,
         target_unitary=target,
         config=OptimizationConfig(max_iterations=5),
     )

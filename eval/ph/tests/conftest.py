@@ -83,8 +83,16 @@ def extreme_routing_chip():
     route and ejects photons out of the computation window, collapsing the
     coincidence rate. See ``test_subcircuit_compilation.test_extreme_routing_coincidence_rate``.
     """
+    # Both candidate optimal routes are perfect (cost 0); they differ only in the
+    # output window ([2, 3, 4, 5] vs [4, 5, 6, 7]). A negligible output loss on
+    # modes 6-7 (exclusive to the higher window) makes the intended [2, 3, 4, 5]
+    # window the unique optimum, so the mapping regression does not depend on the
+    # shortest-path solver's tie-breaking.
+    output_transmissions = [1.0] * _EXTREME_CHIP_DIM
+    output_transmissions[6] = output_transmissions[7] = 0.999
     return SimpleNamespace(
         bs=_build_extreme_routing_bs(seed=7),
         chip_dim=_EXTREME_CHIP_DIM,
         target_dim=_EXTREME_TARGET_DIM,
+        output_transmissions=output_transmissions,
     )

@@ -385,7 +385,10 @@ def test_extreme_routing_coincidence_rate(extreme_routing_chip) -> None:
     the coincidence rate stays ~1.0 regardless of the mapping.
     """
     chip = extreme_routing_chip
-    perfect_transmissions = [1.0] * chip.chip_dim
+    input_transmissions = [1.0] * chip.chip_dim
+    # A negligible output loss on the top modes breaks the two-fold routing
+    # degeneracy so the intended [2, 3, 4, 5] window is the unique optimum.
+    output_transmissions = chip.output_transmissions
 
     rng = torch.Generator().manual_seed(10)
     target_unitary = get_haar_random_unitary(chip.target_dim, rng, dtype=torch.complex128)
@@ -397,16 +400,16 @@ def test_extreme_routing_coincidence_rate(extreme_routing_chip) -> None:
     config = OptimizationConfig(max_iterations=300)
     compilation = compile_subcircuit(
         beam_splitter_reflectivities=chip.bs,
-        input_transmissions=perfect_transmissions,
-        output_transmissions=perfect_transmissions,
+        input_transmissions=input_transmissions,
+        output_transmissions=output_transmissions,
         target_unitary=target_unitary,
         config=config,
     )
     result = evaluate_subcircuit(
         compilation,
         beam_splitter_reflectivities=chip.bs,
-        input_transmissions=perfect_transmissions,
-        output_transmissions=perfect_transmissions,
+        input_transmissions=input_transmissions,
+        output_transmissions=output_transmissions,
         target_unitary=target_unitary,
         target_unitary_embedded=embedded,
         phase_error=0.0,
