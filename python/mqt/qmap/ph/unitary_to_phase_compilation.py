@@ -281,8 +281,10 @@ def optimize_unitary_subcircuit_parameters(
         active_cols_target: Column indices within the computation zone
             corresponding to ``active_cols``.
         verbose: If ``True``, log progress (INFO level) every 100 iterations.
-        max_iterations: Maximum number of gradient steps.  Clamped to a minimum
-            of 2 so at least one optimizer step is evaluated before returning.
+        max_iterations: Exact upper bound on the number of gradient steps. The
+            loop evaluates the initial parameters and the parameters after each
+            step, so ``0`` performs no step and returns the initial state, ``1``
+            performs exactly one step, and so on.
         baseline: If ``True``, restrict comparison to the first
             ``target_dim`` output rows (baseline mode).
         output_rows: Explicit list of output rows to compare; overrides the
@@ -299,12 +301,6 @@ def optimize_unitary_subcircuit_parameters(
     Returns:
         An :class:`OptimizationResult` with the best parameter grid and its loss.
     """
-    # With a single iteration the loop would evaluate the initial parameters, take one
-    # optimizer step, and terminate before ever evaluating that step's result - leaving
-    # the step wasted and returning the initial parameters. Require at least two
-    # iterations so at least one optimizer step is always evaluated before returning.
-    max_iterations = max(2, max_iterations)
-
     target_dim = target_unitary.shape[0]
 
     if movement_mask is not None:
@@ -359,7 +355,9 @@ def optimize_unitary_subcircuit_parameters(
     patience_ref_loss = float("inf")
     no_improve_steps = 0
 
-    while loop_loss > threshold and index < max_iterations:
+    while True:
+        # Evaluate the current parameters (initial state, then the result of each
+        # step) so the returned best is always over states that were measured.
         ps_for_build = phase_shifter_params
         grad_mask = corner_grad_mask
 
@@ -420,6 +418,13 @@ def optimize_unitary_subcircuit_parameters(
         if verbose and index % 100 == 0:
             logger.info("Iteration %d: loss=%.6e", index, loop_loss)
 
+        # Stop before taking a step whose result would not be evaluated: on
+        # convergence, once the exact step budget is spent, or on early stop.
+        if loop_loss <= threshold or index >= max_iterations:
+            break
+        if early_stop_patience > 0 and no_improve_steps >= early_stop_patience:
+            break
+
         optimizer.zero_grad()
         loss.backward()
 
@@ -429,9 +434,6 @@ def optimize_unitary_subcircuit_parameters(
         optimizer.step()
         scheduler.step(loop_loss)
         index += 1
-
-        if early_stop_patience > 0 and no_improve_steps >= early_stop_patience:
-            break
 
     return OptimizationResult(
         phase_shifter_params=torch.remainder(best_params, TWO_PI),
