@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -76,6 +77,80 @@ class CompilationResult:
     output_ports: list[int]
     loss: float
     compute_time: float
+
+
+def _validate_compile_inputs(
+    beam_splitter_reflectivities: list[float],
+    input_transmissions: list[float],
+    output_transmissions: list[float],
+    target_unitary: torch.Tensor,
+) -> None:
+    """Reject malformed public inputs before any routing work begins.
+
+    Guards the public compiler boundary against bad characterization data and
+    targets. Without these checks the pipeline silently accepts a short
+    transmission vector, turns a negative transmission into a ``NaN`` edge cost,
+    and raises an incidental ``IndexError`` for a short beam-splitter vector deep
+    in graph construction. ``chip_dim`` is defined as ``len(input_transmissions)``
+    and everything else is validated against it.
+
+    Args:
+        beam_splitter_reflectivities: Flat, MZI-ordered reflectivity list.
+        input_transmissions: Per-mode input transmission coefficients (defines
+            ``chip_dim``).
+        output_transmissions: Per-mode output transmission coefficients.
+        target_unitary: Target unitary tensor.
+
+    Raises:
+        ValueError: If any input has the wrong shape, a non-finite value, or a
+            coefficient outside ``[0, 1]``.
+    """
+    if target_unitary.ndim != 2 or target_unitary.shape[0] != target_unitary.shape[1]:
+        msg = f"target_unitary must be a square 2D matrix, got shape {tuple(target_unitary.shape)}."
+        raise ValueError(msg)
+    target_dim = int(target_unitary.shape[0])
+    if target_dim == 0 or target_dim % 2 != 0:
+        msg = f"target_unitary dimension must be a positive even number, got {target_dim}."
+        raise ValueError(msg)
+    if not torch.is_complex(target_unitary):
+        msg = f"target_unitary must have a complex dtype, got {target_unitary.dtype}."
+        raise ValueError(msg)
+    if not bool(torch.isfinite(target_unitary).all()):
+        msg = "target_unitary must contain only finite values."
+        raise ValueError(msg)
+
+    chip_dim = len(input_transmissions)
+    if chip_dim == 0 or chip_dim % 2 != 0:
+        msg = f"input_transmissions length (chip_dim) must be a positive even number, got {chip_dim}."
+        raise ValueError(msg)
+    if target_dim > chip_dim:
+        msg = f"target dimension {target_dim} cannot exceed chip dimension {chip_dim}."
+        raise ValueError(msg)
+
+    for name, transmissions in (
+        ("input_transmissions", input_transmissions),
+        ("output_transmissions", output_transmissions),
+    ):
+        if len(transmissions) != chip_dim:
+            msg = f"{name} must have length chip_dim={chip_dim}, got {len(transmissions)}."
+            raise ValueError(msg)
+        for value in transmissions:
+            if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+                msg = f"{name} values must be finite and in [0, 1], got {value}."
+                raise ValueError(msg)
+
+    # 2 * total_mzis reduces to chip_dim * (chip_dim - 1) for an even-width chip.
+    expected_bs = chip_dim * (chip_dim - 1)
+    if len(beam_splitter_reflectivities) != expected_bs:
+        msg = (
+            f"beam_splitter_reflectivities must have length chip_dim*(chip_dim-1)={expected_bs} "
+            f"for chip_dim={chip_dim}, got {len(beam_splitter_reflectivities)}."
+        )
+        raise ValueError(msg)
+    for value in beam_splitter_reflectivities:
+        if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+            msg = f"beam_splitter_reflectivities values must be finite and in [0, 1], got {value}."
+            raise ValueError(msg)
 
 
 def _validate_input_ports(input_ports: list[int], chip_dim: int) -> None:
@@ -259,12 +334,26 @@ def compile_subcircuit(
         program, the input/output ports, the final fidelity loss, and the
         compilation compute time.
 
+    Raises:
+        ValueError: If ``target_unitary`` is not a square, even-dimensioned,
+            finite complex matrix with ``target_dim <= chip_dim``; if either
+            transmission vector does not have exactly ``chip_dim`` finite values
+            in ``[0, 1]``; or if ``beam_splitter_reflectivities`` does not have
+            exactly ``chip_dim * (chip_dim - 1)`` finite values in ``[0, 1]``.
+
     Note:
         No hardware simulation is performed, so this step is suitable
         for chips too large to simulate classically.
     """
     if config is None:
         config = OptimizationConfig()
+
+    _validate_compile_inputs(
+        beam_splitter_reflectivities,
+        input_transmissions,
+        output_transmissions,
+        target_unitary,
+    )
 
     chip_dim = len(input_transmissions)
     target_dim = int(target_unitary.shape[0])
