@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 import torch
 
-from .routing_to_phases import get_effective_params_and_mask, reshape_flattened_params_to_grid
+from .routing_to_phases import apply_routing_transform, precompute_routing_transform, reshape_flattened_params_to_grid
 
 logger = logging.getLogger(__name__)
 
@@ -339,6 +339,20 @@ def optimize_unitary_subcircuit_parameters(
         corner_grad_mask[0, -1] = 0.0
         corner_grad_mask[num_modes_opt - 1, -1] = 0.0
 
+    # The routing constraints depend only on the movement mask and geometry, not on the
+    # phases, so precompute them once here and re-apply the cheap phase-dependent part
+    # (a gather + a few torch.where) each iteration.
+    routing_transform = (
+        None
+        if movement_mask is None
+        else precompute_routing_transform(
+            num_modes_opt,
+            movement_mask,
+            phase_shifter_params.shape[1],
+            optimize_routing_parameters=optimize_routing_parameters,
+        )
+    )
+
     optimizer = torch.optim.Adam([phase_shifter_params], lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
@@ -361,13 +375,8 @@ def optimize_unitary_subcircuit_parameters(
         ps_for_build = phase_shifter_params
         grad_mask = corner_grad_mask
 
-        if movement_mask is not None:
-            effective_params, movement_grad_mask, _ = get_effective_params_and_mask(
-                num_modes_opt,
-                movement_mask,
-                phase_shifter_params,
-                optimize_routing_parameters=optimize_routing_parameters,
-            )
+        if routing_transform is not None:
+            effective_params, movement_grad_mask = apply_routing_transform(phase_shifter_params, routing_transform)
             ps_for_build = effective_params
             grad_mask = movement_grad_mask if grad_mask is None else grad_mask * movement_grad_mask.to(grad_mask.dtype)
 

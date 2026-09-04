@@ -15,7 +15,12 @@ import pytest
 torch = pytest.importorskip("torch")
 
 from mqt.qmap.ph.routing import MaskState
-from mqt.qmap.ph.routing_to_phases import get_effective_params_and_mask, reshape_flattened_params_to_grid
+from mqt.qmap.ph.routing_to_phases import (
+    apply_routing_transform,
+    get_effective_params_and_mask,
+    precompute_routing_transform,
+    reshape_flattened_params_to_grid,
+)
 
 
 class TestReshapeFlattenedParamsToGrid:
@@ -77,7 +82,7 @@ class TestGetEffectiveParamsAndMask:
         mask = self._bar_mask(chip_dim)
         raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
 
-        eff, _grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
+        eff, _grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
 
         # Even layers: each MZI pair -> (top=0, bot=pi)
         for layer in range(0, chip_dim, 2):
@@ -91,7 +96,7 @@ class TestGetEffectiveParamsAndMask:
         mask = self._bar_mask(chip_dim)
         raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
 
-        _, grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
+        _, grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
 
         assert not grad.any()
 
@@ -101,7 +106,7 @@ class TestGetEffectiveParamsAndMask:
         mask = self._cross_mask(chip_dim)
         raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
 
-        eff, grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
+        eff, grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
 
         assert not eff.any()
         assert not grad.any()
@@ -113,7 +118,7 @@ class TestGetEffectiveParamsAndMask:
         mask = torch.zeros((chip_dim, chip_dim), dtype=torch.int)  # all MaskState.MZI
         raw = torch.ones((chip_dim, chip_dim), dtype=torch.float64)
 
-        eff, _grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
+        eff, _grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
 
         # Non-zero MZI params should pass through unchanged
         assert torch.allclose(eff, raw)
@@ -130,16 +135,55 @@ class TestGetEffectiveParamsAndMask:
         mask = torch.zeros((chip_dim, chip_dim), dtype=torch.int)  # all MaskState.MZI
         raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
 
-        eff, grad, _ = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
+        eff, grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
 
         assert not eff.any()  # phases remain (0, 0), not overwritten to (0, pi)
         assert grad.all()  # every compute cell stays trainable
 
-    def test_returns_three_tensors(self) -> None:
-        """Test that get_effective_params_and_mask returns a tuple of three tensors."""
+    def test_returns_two_tensors(self) -> None:
+        """Test that get_effective_params_and_mask returns a tuple of two tensors."""
         chip_dim = 4
         mask = self._bar_mask(chip_dim)
         raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
 
         result = get_effective_params_and_mask(chip_dim, mask, raw)
-        assert len(result) == 3
+        assert len(result) == 2
+
+
+class TestRoutingTransform:
+    """Tests for the precompute/apply split of the routing-to-phase conversion."""
+
+    @staticmethod
+    def test_precompute_apply_matches_wrapper() -> None:
+        """Test that precompute + apply reproduces the one-shot wrapper exactly."""
+        chip_dim = 8
+        mask = torch.full((chip_dim, chip_dim), MaskState.CROSS, dtype=torch.int)
+        raw = torch.rand((chip_dim, chip_dim), dtype=torch.float64)
+
+        eff_ref, grad_ref = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=True)
+        transform = precompute_routing_transform(chip_dim, mask, raw.shape[1], optimize_routing_parameters=True)
+        eff, grad = apply_routing_transform(raw, transform)
+
+        assert torch.equal(eff, eff_ref)
+        assert torch.equal(grad, grad_ref)
+
+    @staticmethod
+    def test_transform_is_phase_independent() -> None:
+        """Test that one precomputed transform serves any phase values (the point of the split).
+
+        The grad mask is constant, and applying the transform to two different phase
+        grids matches computing each from scratch - so it is safe to precompute once
+        and reuse across optimizer iterations.
+        """
+        chip_dim = 8
+        mask = torch.ones((chip_dim, chip_dim), dtype=torch.int)  # all BAR
+        transform = precompute_routing_transform(chip_dim, mask, chip_dim, optimize_routing_parameters=False)
+
+        raw_a = torch.rand((chip_dim, chip_dim), dtype=torch.float64)
+        raw_b = torch.rand((chip_dim, chip_dim), dtype=torch.float64)
+        eff_a, grad_a = apply_routing_transform(raw_a, transform)
+        eff_b, grad_b = apply_routing_transform(raw_b, transform)
+
+        assert torch.equal(grad_a, grad_b)  # grad mask does not depend on the phases
+        assert torch.equal(eff_a, get_effective_params_and_mask(chip_dim, mask, raw_a)[0])
+        assert torch.equal(eff_b, get_effective_params_and_mask(chip_dim, mask, raw_b)[0])

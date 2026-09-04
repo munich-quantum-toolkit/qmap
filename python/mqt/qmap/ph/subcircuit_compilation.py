@@ -285,7 +285,7 @@ def _run_proposed_optimization(
     # phase_shifter_params is already the (chip_dim, chip_dim) grid the optimizer trains natively.
     phase_shifter_params_2d = result.phase_shifter_params.detach()
 
-    params_including_routing, _, _ = get_effective_params_and_mask(
+    params_including_routing, _ = get_effective_params_and_mask(
         chip_dim,
         movement_mask,
         phase_shifter_params_2d,
