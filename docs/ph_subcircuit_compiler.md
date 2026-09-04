@@ -191,13 +191,13 @@ read out. The router chose these to minimize photon loss.
 
 {py:class}`~mqt.qmap.ph.subcircuit_compilation.CompilationResult` bundles:
 
-| Field          | Meaning                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------- |
-| `phases`       | `(chip_dim, chip_dim)` tensor of phase-shifter angles to program (rows = modes, columns = MZI layers) |
-| `input_ports`  | the `target_dim // 2` physical modes to inject photons into (lower mode of each dual-rail pair)       |
-| `output_ports` | the `target_dim` physical modes of the computation zone, where the output is measured                 |
-| `loss`         | final fidelity loss of the optimization (see below)                                                   |
-| `compute_time` | wall-clock seconds for routing + optimization                                                         |
+| Field          | Meaning                                                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `phases`       | flat list of `chip_dim**2` phase-shifter angles to program, column-major (mode `r`, layer `c` at index `c * chip_dim + r`) |
+| `input_ports`  | the `target_dim // 2` physical modes to inject photons into (lower mode of each dual-rail pair)                            |
+| `output_ports` | the `target_dim` physical modes of the computation zone, where the output is measured                                      |
+| `loss`         | final fidelity loss of the optimization (see below)                                                                        |
+| `compute_time` | wall-clock seconds for routing + optimization                                                                              |
 
 ### Fidelity loss
 
