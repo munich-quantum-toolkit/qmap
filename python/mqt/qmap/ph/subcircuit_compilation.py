@@ -220,16 +220,11 @@ def _setup_routing(
     )
     _validate_input_ports(input_ports, chip_dim)
 
-    # When photons enter on odd columns (mode 0 is not an active input), apply a swap
-    # permutation to the target so the optimizer sees the correct column ordering.
+    # When photons enter on odd columns (mode 0 is not an active input), swap each
+    # adjacent pair of target columns (0<->1, 2<->3, ...) so the optimizer sees the
+    # correct ordering. Indexing by `i ^ 1` does this without a permutation matmul.
     if 0 not in active_cols_computation_zone:
-        permutation_matrix = torch.zeros((target_dim, target_dim), dtype=torch.complex128)
-        for i in range(target_dim):
-            if i % 2 == 0:
-                permutation_matrix[i, i + 1] = 1
-            else:
-                permutation_matrix[i, i - 1] = 1
-        target_unitary_opt = target_unitary @ permutation_matrix
+        target_unitary_opt = target_unitary[:, [i ^ 1 for i in range(target_dim)]]
     else:
         target_unitary_opt = target_unitary
 
