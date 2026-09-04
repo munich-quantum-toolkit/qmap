@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
-import platform
 import shutil
 import tempfile
 from pathlib import Path
@@ -85,19 +84,6 @@ def _run_tests(
         *install_args,
         env=env,
     )
-    # === TEMPORARY (macOS-Intel torch wheel gap) - remove once resolved ===
-    # torch >= 2.3 ships no macOS x86_64 wheels, so the torch-bearing optional
-    # dependencies (the `photonics` extra, and the `evaluation` group used by the
-    # `evaluation` session) cannot be installed on Intel macOS runners. Skip them
-    # there; the torch/perceval tests self-skip via `pytest.importorskip`, and the
-    # torch-free tests (e.g. test_graph.py) still run. Remove this block and
-    # restore the unconditional args below once torch publishes macOS x86_64 wheels
-    # again or Intel macOS runners leave the matrix.
-    optional_deps = optional_dependencies
-    if platform.system() == "Darwin" and platform.machine() == "x86_64":
-        session.warn("Skipping torch-dependent optional dependencies on macOS x86_64 (no torch wheel available).")
-        optional_deps = ()
-    # === END TEMPORARY ===
     session.run(
         "uv",
         "sync",
@@ -105,7 +91,7 @@ def _run_tests(
         "--no-dev",  # do not auto-install dev dependencies
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
-        *optional_deps,
+        *optional_dependencies,
         *install_args,
         env=env,
     )
