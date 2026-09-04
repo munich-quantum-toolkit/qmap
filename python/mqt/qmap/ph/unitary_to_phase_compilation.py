@@ -22,70 +22,29 @@ logger = logging.getLogger(__name__)
 TWO_PI = 2 * torch.pi
 
 
-def build_unitary_from_components(
-    num_modes: int,
-    beam_splitter_params: torch.Tensor,
-    phase_shifter_params: torch.Tensor,
-    exclude_edge_phase_shifters: bool = False,
-    layer_range: tuple[int, int] | None = None,
-) -> torch.Tensor:
-    """Build the full-chip unitary matrix from physical component parameters.
-
-    This is the special case of
-    :func:`build_unitary_selected_columns_from_components` that selects every
-    column, so the full ``(num_modes, num_modes)`` unitary is produced by the
-    same efficient row-wise propagation (avoiding a full ``N x N`` matrix
-    multiplication for every individual component).
-
-    Args:
-        num_modes: Number of spatial modes on the chip.
-        beam_splitter_params: 1D tensor of reflectivities ordered MZI-by-MZI
-            as in/out pairs, layer by layer.
-        phase_shifter_params: Phase-shifter parameter array.  Accepted shapes
-            are ``(N, N)``, ``(N**2,)``, or ``(N**2 - 2,)`` (corner-excluded).
-        exclude_edge_phase_shifters: If ``True``, the top-right and bottom-
-            right corner phase shifters are omitted.
-        layer_range: Optional ``(start, end)`` tuple selecting a subset of
-            physical layers.  Defaults to all ``num_modes`` layers.
-
-    Returns:
-        Complex tensor of shape ``(num_modes, num_modes)`` representing the
-        chip unitary.
-    """
-    return build_unitary_selected_columns_from_components(
-        num_modes,
-        beam_splitter_params,
-        phase_shifter_params,
-        column_indices=list(range(num_modes)),
-        exclude_edge_phase_shifters=exclude_edge_phase_shifters,
-        layer_range=layer_range,
-    )
-
-
 def build_unitary_selected_columns_from_components(
     num_modes: int,
     beam_splitter_params: torch.Tensor,
     phase_shifter_params: torch.Tensor,
     column_indices: list[int] | torch.Tensor,
     exclude_edge_phase_shifters: bool = False,
-    layer_range: tuple[int, int] | None = None,
 ) -> torch.Tensor:
     """Build selected columns of the chip unitary without constructing the full matrix.
 
     Propagates only the selected input state vectors through the MZI mesh, so it
     is faster when ``len(column_indices) << num_modes`` and never forms an
-    ``N x N`` component matrix.  Selecting every column yields the full unitary;
-    :func:`build_unitary_from_components` is that special case.
+    ``N x N`` component matrix.  Selecting every column
+    (``column_indices=list(range(num_modes))``) yields the full chip unitary.
 
     Args:
         num_modes: Number of spatial modes on the chip.
-        beam_splitter_params: 1D tensor of beam-splitter reflectivities.
-        phase_shifter_params: Phase-shifter parameter array (see
-            :func:`build_unitary_from_components`).
+        beam_splitter_params: 1D tensor of beam-splitter reflectivities ordered
+            MZI-by-MZI as in/out pairs, layer by layer.
+        phase_shifter_params: Phase-shifter parameter array.  Accepted shapes are
+            ``(N, N)``, ``(N**2,)``, or ``(N**2 - 2,)`` (corner-excluded).
         column_indices: Indices of the columns to compute.
         exclude_edge_phase_shifters: If ``True``, corner phase shifters are
             omitted.
-        layer_range: Optional ``(start, end)`` tuple for a layer subset.
 
     Returns:
         Complex tensor of shape ``(num_modes, len(column_indices))``
@@ -99,34 +58,21 @@ def build_unitary_selected_columns_from_components(
     else:
         col_idx = torch.tensor(column_indices, dtype=torch.long)
 
-    def to_grid(tensor: torch.Tensor, fill_value: float = 0.0) -> torch.Tensor:
+    def to_grid(tensor: torch.Tensor) -> torch.Tensor:
+        # The optimizer trains the parameters natively as an (n, n) grid, so pass
+        # that through; also accept the flat (n**2,) / corner-excluded (n**2 - 2,)
+        # forms, inflating them with the shared reshape helper.
         if tensor.shape == (n, n):
             return tensor
         flat = tensor.flatten()
-        if flat.numel() == n2:
-            return flat.reshape(n, n)
-        if flat.numel() == n2 - 2:
-            grid = torch.zeros((n, n), dtype=tensor.dtype, device=tensor.device)
-            if fill_value:
-                grid.fill_(fill_value)
-            mask = torch.ones((n, n), dtype=torch.bool, device=tensor.device)
-            mask[0, -1] = False
-            mask[n - 1, -1] = False
-            grid[mask] = flat
-            return grid
-        msg = f"Invalid parameter size: {flat.numel()}. Expected {n2}."
-        raise ValueError(msg)
+        if flat.numel() not in {n2, n2 - 2}:
+            msg = f"Invalid parameter size: {flat.numel()}. Expected {n2}."
+            raise ValueError(msg)
+        return reshape_flattened_params_to_grid(flat, n, exclude_edge_phase_shifters=flat.numel() == n2 - 2)
 
-    ps_grid = to_grid(phase_shifter_params, fill_value=0.0)
-
-    start_layer = 0 if layer_range is None else layer_range[0]
-    end_layer = n if layer_range is None else layer_range[1]
+    ps_grid = to_grid(phase_shifter_params)
 
     bs_idx = 0
-    for layer in range(start_layer):
-        mzis_in_layer = n // 2 if layer % 2 == 0 else n // 2 - 1
-        bs_idx += mzis_in_layer * 2
-
     u = torch.eye(num_modes, dtype=torch.complex128)[:, col_idx]
 
     def apply_ps_left(u_local: torch.Tensor, mode: int, phi: torch.Tensor) -> torch.Tensor:
@@ -147,7 +93,7 @@ def build_unitary_selected_columns_from_components(
         suffix = u_local[mode + 2 :, :]
         return torch.cat((prefix, new_top, new_bot, suffix), dim=0)
 
-    for layer in range(start_layer, end_layer):
+    for layer in range(n):
         if layer % 2 == 0:
             for i in range(0, num_modes - 1, 2):
                 theta_in = beam_splitter_params[bs_idx]
@@ -398,10 +344,12 @@ def optimize_unitary_subcircuit_parameters(
                 baseline_outputs=compared_rows,
             )
         else:
-            u_model = build_unitary_from_components(
+            # The full unitary is the selected builder with every column.
+            u_model = build_unitary_selected_columns_from_components(
                 num_modes_opt,
                 beam_splitter_reflectivities,
                 ps_for_build,
+                column_indices=list(range(num_modes_opt)),
                 exclude_edge_phase_shifters=exclude_edge_phase_shifters,
             )
             loss = fidelity_loss(
