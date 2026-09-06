@@ -54,18 +54,15 @@ FetchContent_Declare(
   mqt-core
   GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/core.git
   GIT_TAG ${MQT_CORE_REV}
-  FIND_PACKAGE_ARGS ${MQT_CORE_MINIMUM_VERSION})
+  EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS ${MQT_CORE_MINIMUM_VERSION})
 list(APPEND FETCH_PACKAGES mqt-core)
 
 set(JSON_VERSION
     3.12.0
     CACHE STRING "nlohmann_json version")
 set(JSON_URL https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/json.tar.xz)
-set(JSON_SystemInclude
-    ON
-    CACHE INTERNAL "Treat the library headers like system headers")
 cmake_dependent_option(JSON_Install "Install nlohmann_json library" ON "MQT_QMAP_INSTALL" OFF)
-FetchContent_Declare(nlohmann_json URL ${JSON_URL} FIND_PACKAGE_ARGS ${JSON_VERSION})
+FetchContent_Declare(nlohmann_json URL ${JSON_URL} SYSTEM FIND_PACKAGE_ARGS ${JSON_VERSION})
 list(APPEND FETCH_PACKAGES nlohmann_json)
 
 set(PLOG_REV
@@ -76,7 +73,7 @@ FetchContent_Declare(
   plog
   GIT_REPOSITORY https://github.com/SergiusTheBest/plog.git
   GIT_TAG ${PLOG_REV}
-  FIND_PACKAGE_ARGS)
+  SYSTEM FIND_PACKAGE_ARGS)
 list(APPEND FETCH_PACKAGES plog)
 
 set(SPDLOG_VERSION
@@ -102,7 +99,3 @@ endif()
 
 # Make all declared dependencies available.
 FetchContent_MakeAvailable(${FETCH_PACKAGES})
-
-# Mark the plog includes as SYSTEM includes to suppress warnings.
-get_target_property(PLOG_IID plog INTERFACE_INCLUDE_DIRECTORIES)
-set_target_properties(plog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${PLOG_IID}")

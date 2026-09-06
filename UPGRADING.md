@@ -6,6 +6,8 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+This release requires CMake 3.28 or newer.
+
 ### macOS support
 
 MQT QMAP no longer supports x86 macOS. Use Apple silicon with macOS 13.3 or
