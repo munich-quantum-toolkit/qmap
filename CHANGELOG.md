@@ -30,6 +30,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
 
 ### Changed
 
+- 🎉 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
+  ([**@tobi-forster**])
 - ⬆️ Update `mqt-core` to version 3.9.0 ([#1116]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.15.0 ([#1116]) ([**@denialhaag**])
 - ♻️ Move output-permutation measurement construction from MQT Core into QMAP
@@ -304,6 +306,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106
 [#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069
+[#1059]: https://github.com/munich-quantum-toolkit/qmap/pull/1059
 [#1058]: https://github.com/munich-quantum-toolkit/qmap/pull/1058
 [#1057]: https://github.com/munich-quantum-toolkit/qmap/pull/1057
 [#1020]: https://github.com/munich-quantum-toolkit/qmap/pull/1020
@@ -353,6 +356,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [**@ystade**]: https://github.com/ystade
 [**@denialhaag**]: https://github.com/denialhaag
 [**@lsschmid**]: https://github.com/lsschmid
+[**@tobi-forster**]: https://github.com/tobi-forster
 
 <!-- General links -->
 

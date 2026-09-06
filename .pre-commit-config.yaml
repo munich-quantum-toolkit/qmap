@@ -89,6 +89,8 @@ repos:
     hooks:
       - id: license-tools
         priority: 4
+        # Plain-numeric hardware data files have no comment syntax for a header.
+        exclude: '^eval/ph/hardware_data/.*\.txt$'
 
   ## Format BibTeX files with bibtex-tidy
   - repo: https://github.com/FlamingTempura/bibtex-tidy

@@ -64,6 +64,7 @@ def _run_tests(
     install_args: Sequence[str] = (),
     extra_command: Sequence[str] = (),
     pytest_run_args: Sequence[str] = (),
+    optional_dependencies: Sequence[str] = ("--extra", "photonics"),
 ) -> None:
     env = {"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     if shutil.which("cmake") is None and shutil.which("cmake3") is None:
@@ -90,6 +91,7 @@ def _run_tests(
         "--no-dev",  # do not auto-install dev dependencies
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
+        *optional_dependencies,
         *install_args,
         env=env,
     )
@@ -112,6 +114,23 @@ def _run_tests(
 def tests(session: nox.Session) -> None:
     """Run the test suite."""
     _run_tests(session)
+
+
+@nox.session(reuse_venv=True, venv_backend="uv", default=False)
+def evaluation(session: nox.Session) -> None:
+    """Run the photonic paper-evaluation tests in eval/ph/tests.
+
+    Installs the ``evaluation`` dependency group (Perceval, pandas, torch, numpy)
+    and runs the evaluation tests. Deliberately not a default session: the
+    Perceval-based evaluation is paper-reproduction work, not the shipped
+    compiler's contract, so it runs on demand (``nox -s evaluation``) rather than
+    in the default CI matrix.
+    """
+    _run_tests(
+        session,
+        optional_dependencies=("--group", "evaluation"),
+        pytest_run_args=["eval/ph/tests"],
+    )
 
 
 @nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, venv_backend="uv", default=True)
