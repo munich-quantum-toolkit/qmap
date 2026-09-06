@@ -171,7 +171,7 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
   // check targets
   if (std::ranges::find(op1->getTargets(), qubit) != op1->getTargets().end() &&
       std::ranges::find(op2->getTargets(), qubit) != op2->getTargets().end() &&
-      op1->getType() == op2->getType()) {
+      op1->getType() == op2->getType() && op1->getName() == op2->getName()) {
     return true;
   }
   return false;

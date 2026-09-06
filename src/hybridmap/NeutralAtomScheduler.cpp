@@ -16,6 +16,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -67,9 +68,9 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     if (verbose) {
       spdlog::info("{}", index);
     }
-    if (op->getType() == qc::AodActivate) {
+    if (hasNAOpType(*op, NAOpType::AodActivate)) {
       nAodActivate++;
-    } else if (op->getType() == qc::AodMove) {
+    } else if (hasNAOpType(*op, NAOpType::AodMove)) {
       nAodMove++;
     } else if (op->getType() == qc::OpType::Z && op->getNcontrols() == 1) {
       nCZs++;
@@ -77,8 +78,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     auto qubits = op->getUsedQubits();
     auto opTime = arch->getOpTime(op.get());
-    if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
-        op->getType() == qc::AodDeactivate) {
+    if (isAodOperation(*op)) {
       opTime *= shuttlingSpeedFactor;
     }
     const auto opFidelity = arch->getOpFidelity(op.get());
@@ -98,8 +98,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     }
 
     qc::fp maxTime = 0;
-    if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
-        op->getType() == qc::AodDeactivate) {
+    if (isAodOperation(*op)) {
       // AodBlocking
       maxTime = aodLastBlockedTime;
       for (const auto& qubit : qubits) {

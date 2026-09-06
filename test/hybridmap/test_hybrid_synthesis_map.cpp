@@ -16,6 +16,7 @@
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "na/ir/operations/NAStandardOperation.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -56,7 +57,7 @@ protected:
     circuits.push_back(qc1);
 
     qc::QuantumComputation qc2(3);
-    qc2.move(0, 2);
+    qc2.emplace_back(makeMoveOperation(0, 2));
     qc2.x(0);
     circuits.push_back(qc2);
   }

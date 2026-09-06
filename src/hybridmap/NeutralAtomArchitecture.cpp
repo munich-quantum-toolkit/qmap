@@ -14,10 +14,11 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "na/entities/Location.hpp"
+#include "na/ir/entities/Location.hpp"
+#include "na/ir/operations/AodOperation.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -97,11 +98,11 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     ensureGateWithFallback(gateAverageFidelities, "cz", "none");
     ensureGateWithFallback(gateAverageFidelities, "h", "none");
     parameters.gateAverageFidelities = gateAverageFidelities;
-    std::map<qc::OpType, qc::fp> shuttlingTimes;
+    std::map<NAOpType, qc::fp> shuttlingTimes;
 
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingTimes"].items()) {
-      shuttlingTimes.emplace(qc::opTypeFromString(key), value);
+      shuttlingTimes.emplace(naOpTypeFromString(key), value);
     }
     // compute values for SWAP gate
     qc::fp const swapGateTime =
@@ -132,10 +133,10 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     }
 
     parameters.shuttlingTimes = shuttlingTimes;
-    std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
+    std::map<NAOpType, qc::fp> shuttlingAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
-      shuttlingAverageFidelities.emplace(qc::opTypeFromString(key), value);
+      shuttlingAverageFidelities.emplace(naOpTypeFromString(key), value);
     }
     parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
@@ -272,20 +273,20 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
   std::string animationMachine = "name: \"Hybrid_" + name + "\"\n";
 
   animationMachine += "movement {\n\tmax_speed: " +
-                      std::to_string(getShuttlingTime(qc::OpType::AodMove) *
+                      std::to_string(getShuttlingTime(NAOpType::AodMove) *
                                      shuttlingSpeedFactor) +
                       "\n}\n";
 
-  animationMachine +=
-      "time {\n\tload: " +
-      std::to_string(getShuttlingTime(qc::OpType::AodActivate) /
-                     shuttlingSpeedFactor) +
-      "\n\tstore: " +
-      std::to_string(getShuttlingTime(qc::OpType::AodDeactivate) /
-                     shuttlingSpeedFactor) +
-      "\n\trz: " + std::to_string(getGateTime("x")) +
-      "\n\try: " + std::to_string(getGateTime("x")) +
-      "\n\tcz: " + std::to_string(getGateTime("cz")) + "\n\tunit: \"us\"\n}\n";
+  animationMachine += "time {\n\tload: " +
+                      std::to_string(getShuttlingTime(NAOpType::AodActivate) /
+                                     shuttlingSpeedFactor) +
+                      "\n\tstore: " +
+                      std::to_string(getShuttlingTime(NAOpType::AodDeactivate) /
+                                     shuttlingSpeedFactor) +
+                      "\n\trz: " + std::to_string(getGateTime("x")) +
+                      "\n\try: " + std::to_string(getGateTime("x")) +
+                      "\n\tcz: " + std::to_string(getGateTime("cz")) +
+                      "\n\tunit: \"us\"\n}\n";
 
   animationMachine +=
       "distance {\n\tinteraction: " +
@@ -319,15 +320,24 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
 }
 
 qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
-  if (op->getType() == qc::OpType::AodActivate ||
-      op->getType() == qc::OpType::AodDeactivate) {
-    return getShuttlingTime(op->getType());
+  if (op == nullptr) {
+    throw std::invalid_argument("Operation must not be null.");
   }
-  if (op->getType() == qc::OpType::AodMove) {
-    const auto v = parameters.shuttlingTimes.at(op->getType());
+  const auto naOpType = getNAOpType(*op);
+  if (naOpType == NAOpType::AodActivate ||
+      naOpType == NAOpType::AodDeactivate) {
+    return getShuttlingTime(*naOpType);
+  }
+  if (naOpType == NAOpType::AodMove) {
+    const auto v = parameters.shuttlingTimes.at(NAOpType::AodMove);
     const auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
-    const auto distanceX = opAodMove->getMaxDistance(Dimension::X);
-    const auto distanceY = opAodMove->getMaxDistance(Dimension::Y);
+    if (opAodMove == nullptr) {
+      throw std::logic_error("An AOD move must be backed by AodOperation.");
+    }
+    const auto distanceX =
+        opAodMove->getMaxDistance(AodOperation::Dimension::X);
+    const auto distanceY =
+        opAodMove->getMaxDistance(AodOperation::Dimension::Y);
     return (distanceX + distanceY) / v;
   }
   std::string opName;
@@ -351,10 +361,13 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
 }
 
 qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
-  if (op->getType() == qc::OpType::AodActivate ||
-      op->getType() == qc::OpType::AodDeactivate ||
-      op->getType() == qc::OpType::AodMove) {
-    return getShuttlingAverageFidelity(op->getType());
+  if (op == nullptr) {
+    throw std::invalid_argument("Operation must not be null.");
+  }
+  const auto naOpType = getNAOpType(*op);
+  if (naOpType == NAOpType::AodActivate ||
+      naOpType == NAOpType::AodDeactivate || naOpType == NAOpType::AodMove) {
+    return getShuttlingAverageFidelity(*naOpType);
   }
   std::string opName;
   const auto nQubits = op->getNqubits();
@@ -367,9 +380,9 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
 
 std::set<CoordIndex>
 NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
-  if (op->getNqubits() == 1 || op->getType() == qc::OpType::AodActivate ||
-      op->getType() == qc::OpType::AodDeactivate ||
-      op->getType() == qc::OpType::AodMove) {
+  const auto naOpType = getNAOpType(*op);
+  if (op->getNqubits() == 1 || naOpType == NAOpType::AodActivate ||
+      naOpType == NAOpType::AodDeactivate || naOpType == NAOpType::AodMove) {
     return op->getUsedQubits();
   }
   std::set<CoordIndex> blockedCoordIndices;

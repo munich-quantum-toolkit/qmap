@@ -19,7 +19,7 @@
 #include "layout_synthesizer/placer/HeuristicPlacer.hpp"
 #include "layout_synthesizer/placer/VertexMatchingPlacer.hpp"
 #include "layout_synthesizer/router/IndependentSetRouter.hpp"
-#include "na/NAComputation.hpp"
+#include "na/ir/NAComputation.hpp"
 #include "reuse_analyzer/VertexMatchingReuseAnalyzer.hpp"
 #include "scheduler/ASAPScheduler.hpp"
 

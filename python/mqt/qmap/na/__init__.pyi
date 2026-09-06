@@ -6,5 +6,6 @@
 #
 # Licensed under the MIT License
 
+from mqt.qmap.na import qdmi as qdmi
 from mqt.qmap.na import state_preparation as state_preparation
 from mqt.qmap.na import zoned as zoned

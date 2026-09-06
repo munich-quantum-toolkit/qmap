@@ -15,15 +15,15 @@
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/NAComputation.hpp"
-#include "na/entities/Atom.hpp"
+#include "na/ir/NAComputation.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/operations/NAComputationGlobalCZOperation.hpp"
+#include "na/ir/operations/NAComputationGlobalRYOperation.hpp"
+#include "na/ir/operations/NAComputationLoadOperation.hpp"
+#include "na/ir/operations/NAComputationLocalRZOperation.hpp"
+#include "na/ir/operations/NAComputationMoveOperation.hpp"
+#include "na/ir/operations/NAComputationStoreOperation.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/operations/GlobalCZOp.hpp"
-#include "na/operations/GlobalRYOp.hpp"
-#include "na/operations/LoadOp.hpp"
-#include "na/operations/LocalRZOp.hpp"
-#include "na/operations/MoveOp.hpp"
-#include "na/operations/StoreOp.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -118,7 +118,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
       code.emplaceInitialLocation(atom, pos);
     }
     if (!loadAtoms.empty()) {
-      code.emplaceBack<LoadOp>(loadAtoms);
+      code.emplaceBack<NAComputationLoadOperation>(loadAtoms);
     }
   }
   const auto ops = layer.getExecutablesOfType(H, 0);
@@ -132,12 +132,12 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     throw std::invalid_argument("Not all atoms are initialized to plus state.");
   }
   // initialize atoms in to |+> state starting in |0> state
-  code.emplaceBack<GlobalRYOp>(globalZone, PI_2);
+  code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, PI_2);
   std::for_each(ops.cbegin(), ops.cend(), [](const auto& v) { v->execute(); });
   // Reference to the executable set of the input circuit
   const auto& executableSet = layer.getExecutableSet();
   if (result.stages.front().rydberg) {
-    code.emplaceBack<GlobalCZOp>(interactionZone);
+    code.emplaceBack<NAComputationGlobalCZOperation>(interactionZone);
     // find and execute corresponding gates in input circuit
     for (const auto& g : result.stages.front().gates) {
       const auto& it = std::find_if(
@@ -181,16 +181,16 @@ auto CodeGenerator::generate(const QuantumComputation& input,
       wasAOD[i] = q.a;
     }
     if (!storeAtoms.empty()) {
-      code.emplaceBack<StoreOp>(storeAtoms);
+      code.emplaceBack<NAComputationStoreOperation>(storeAtoms);
     }
     if (!loadAtoms.empty()) {
-      code.emplaceBack<LoadOp>(loadAtoms);
+      code.emplaceBack<NAComputationLoadOperation>(loadAtoms);
     }
     if (!moveAtoms.empty()) {
-      code.emplaceBack<MoveOp>(moveAtoms, targetLocations);
+      code.emplaceBack<NAComputationMoveOperation>(moveAtoms, targetLocations);
     }
     if (result.stages.at(t).rydberg) {
-      code.emplaceBack<GlobalCZOp>(interactionZone);
+      code.emplaceBack<NAComputationGlobalCZOperation>(interactionZone);
     }
     // find and execute corresponding gates in input circuit
     for (const auto& g : result.stages.at(t).gates) {
@@ -212,7 +212,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     }
   }
   if (!executableSet.empty()) {
-    code.emplaceBack<GlobalRYOp>(globalZone, -PI_4);
+    code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, -PI_4);
     while (!executableSet.empty()) {
       const auto& v = (*executableSet.cbegin());
       if (v->getOperation()->getType() != H) {
@@ -220,10 +220,10 @@ auto CodeGenerator::generate(const QuantumComputation& input,
             "Not all non CZ-gates in input circuit are executed.");
       }
       const auto q = v->getOperation()->getTargets().front();
-      code.emplaceBack<LocalRZOp>(*atoms[q], PI);
+      code.emplaceBack<NAComputationLocalRZOperation>(*atoms[q], PI);
       v->execute();
     }
-    code.emplaceBack<GlobalRYOp>(globalZone, PI_4);
+    code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, PI_4);
   }
   return code;
 }
