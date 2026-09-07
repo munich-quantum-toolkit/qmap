@@ -15,9 +15,33 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 ### Added
 
 - ♻️ Move the `singleQubitGateFusion`, `decomposeSWAP`, `cancelCNOTs`, and
-  `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP while
-  preserving controlled SWAPs and recursively decomposing uncontrolled SWAPs in
-  nested compound operations ([#1125]) ([**@simon1hofmann**])
+  `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP
+  ([#1125]) ([**@simon1hofmann**], [**@burgholzer**])
+
+- ✨ Provide the neutral-atom QDMI device and client integration transferred
+  from MQT Core, preserving distinct registered devices with the same name
+  ([#1111]) ([**@denialhaag**], [**@burgholzer**])
+
+### Changed
+
+- ♻️ Move the neutral-atom computation IR and circuit operations from MQT Core
+  to QMAP ([#1111]) ([**@denialhaag**], [**@burgholzer**])
+- 💥 Drop support for x86 macOS and stop publishing the respective wheels
+  ([#1126]) ([**@denialhaag**])
+- ⬆️ Raise the macOS deployment target to 13.3 to enable `std::format` in libc++
+  ([#1126]) ([**@denialhaag**])
+- 💥 Require Python 3.11 or newer ([#1126]) ([**@denialhaag**])
+
+### Fixed
+
+- 🐛 Preserve mid-circuit measurements, resets, and barriers during single-qubit
+  gate fusion ([#1125]) ([**@burgholzer**])
+- 🐛 Preserve bijective layouts when the heuristic mapper moves logical qubits
+  ([#1153]) ([**@burgholzer**])
+- 🐛 Preserve the input circuit name during mapping ([#1154])
+  ([**@burgholzer**])
+- 🐛 Handle Qiskit targets without calibration properties ([#1152])
+  ([**@burgholzer**])
 
 ## [3.9.0] - 2026-08-24
 
@@ -25,8 +49,6 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
 
 ### Added
 
-- ✨ Move the neutral-atom QDMI provider from MQT Core to QMAP ([#1111])
-  ([**@denialhaag**])
 - 🐍 Start building CPython 3.15 wheels ([#1096]) ([**@denialhaag**])
 
 ### Changed
@@ -302,6 +324,11 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 [#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
 [#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
+
+[#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
+[#1153]: https://github.com/munich-quantum-toolkit/qmap/pull/1153
+[#1152]: https://github.com/munich-quantum-toolkit/qmap/pull/1152
+[#1126]: https://github.com/munich-quantum-toolkit/qmap/pull/1126
 [#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106
 [#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096

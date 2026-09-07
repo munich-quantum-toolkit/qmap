@@ -32,6 +32,7 @@ void cancelCNOTs(qc::QuantumComputation& qc);
 
 /**
  * @brief Fuse adjacent single-qubit gates.
+ * @details Preserves measurements, resets, and barriers.
  * @param qc Quantum circuit to transform.
  */
 void singleQubitGateFusion(qc::QuantumComputation& qc);

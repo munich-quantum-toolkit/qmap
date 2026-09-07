@@ -16,6 +16,7 @@ from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 
 from mqt.qmap.plugins.qiskit.sc import compile_
+from mqt.qmap.sc import Heuristic, InitialLayout, Layering
 
 
 @pytest.fixture
@@ -79,3 +80,50 @@ def test_heuristic_non_trivial_swaps(backend: GenericBackendV2) -> None:
     print(result)
 
     assert result.considered_equivalent() is True
+
+
+def test_heuristic_layout_with_deferred_single_qubit() -> None:
+    """Verify that placing a single-only qubit preserves a bijective layout."""
+    qc = QuantumCircuit(4)
+    qc.h(3)
+    qc.cx(0, 1)
+    qc.cx(1, 2)
+    qc.measure_all()
+    backend = GenericBackendV2(num_qubits=5, coupling_map=[[0, 1], [1, 4], [4, 3], [3, 2]])
+
+    qc_mapped, _ = compile_(qc, arch=backend)
+
+    assert verify(qc, qc_mapped).considered_equivalent() is True
+
+
+def test_heuristic_static_layout_is_bijective() -> None:
+    """Verify that static placement preserves a bijective layout."""
+    qc = QuantumCircuit(4)
+    qc.h(0)
+    qc.h(1)
+    qc.cx(2, 3)
+    qc.measure_all()
+    backend = GenericBackendV2(num_qubits=5, coupling_map=[[0, 4], [4, 3], [3, 2], [2, 1]])
+
+    qc_mapped, _ = compile_(qc, arch=backend, initial_layout=InitialLayout.static, layering=Layering.disjoint_qubits)
+
+    assert verify(qc, qc_mapped).considered_equivalent() is True
+
+
+def test_fidelity_aware_layout_is_bijective() -> None:
+    """Verify that fidelity-aware single-qubit placement preserves a bijective layout."""
+    qc = QuantumCircuit(4)
+    qc.h(3)
+    qc.cx(0, 1)
+    qc.cx(1, 2)
+    qc.measure_all()
+    backend = GenericBackendV2(num_qubits=5, coupling_map=[[0, 1], [1, 4], [4, 3], [3, 2]], seed=1)
+
+    qc_mapped, _ = compile_(
+        qc,
+        arch=backend,
+        heuristic=Heuristic.fidelity_best_location,
+        lookahead_heuristic=None,
+    )
+
+    assert verify(qc, qc_mapped).considered_equivalent() is True

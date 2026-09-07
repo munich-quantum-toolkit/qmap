@@ -11,6 +11,7 @@
 #include "sc/heuristic/HeuristicMapper.hpp"
 
 #include "ir/Definitions.hpp"
+#include "ir/Permutation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
@@ -106,6 +107,20 @@ void HeuristicMapper::map(const Configuration& configuration) {
   }
 }
 
+namespace {
+// search for current position of target value in map and afterward exchange
+// it with the value at new position
+void findAndSWAP(const qc::Qubit targetValue, const qc::Qubit newPosition,
+                 qc::Permutation& map) {
+  for (const auto& q : map) {
+    if (q.second == targetValue) {
+      std::swap(map.at(newPosition), map.at(q.first));
+      break;
+    }
+  }
+}
+} // namespace
+
 void HeuristicMapper::staticInitialMapping() {
   for (const auto& gate : layers.at(0U)) {
     if (gate.singleQubit()) {
@@ -120,11 +135,12 @@ void HeuristicMapper::staticInitialMapping() {
         locations.at(static_cast<std::uint16_t>(gate.control)) =
             static_cast<std::int16_t>(q0);
         locations.at(gate.target) = static_cast<std::int16_t>(q1);
-        qcMapped.initialLayout.at(q0) = static_cast<qc::Qubit>(gate.control);
-        qcMapped.initialLayout.at(q1) = static_cast<qc::Qubit>(gate.target);
-        qcMapped.outputPermutation.at(q0) =
-            static_cast<qc::Qubit>(gate.control);
-        qcMapped.outputPermutation.at(q1) = static_cast<qc::Qubit>(gate.target);
+        findAndSWAP(static_cast<qc::Qubit>(gate.control), q0,
+                    qcMapped.initialLayout);
+        findAndSWAP(gate.target, q1, qcMapped.initialLayout);
+        findAndSWAP(static_cast<qc::Qubit>(gate.control), q0,
+                    qcMapped.outputPermutation);
+        findAndSWAP(gate.target, q1, qcMapped.outputPermutation);
         break;
       }
     }
@@ -137,8 +153,8 @@ void HeuristicMapper::staticInitialMapping() {
         if (qubits.at(j) == DEFAULT_POSITION) {
           locations.at(i) = static_cast<std::int16_t>(j);
           qubits.at(j) = static_cast<std::int16_t>(i);
-          qcMapped.initialLayout.at(j) = i;
-          qcMapped.outputPermutation.at(j) = i;
+          findAndSWAP(i, j, qcMapped.initialLayout);
+          findAndSWAP(i, j, qcMapped.outputPermutation);
           break;
         }
       }
@@ -194,20 +210,6 @@ void HeuristicMapper::createInitialMapping() {
   }
 }
 
-namespace {
-// search for current position of target value in map and afterward exchange
-// it with the value at new position
-void findAndSWAP(const qc::Qubit targetValue, const qc::Qubit newPosition,
-                 qc::Permutation& map) {
-  for (const auto& q : map) {
-    if (q.second == targetValue) {
-      std::swap(map.at(newPosition), map.at(q.first));
-      break;
-    }
-  }
-}
-} // namespace
-
 void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
   if (fidelityAwareHeur) {
     for (std::size_t q = 0; q < singleQubitMultiplicities.at(layer).size();
@@ -223,6 +225,10 @@ void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
           if (qubits.at(physQbit) == -1) {
             locations.at(q) = static_cast<std::int16_t>(physQbit);
             qubits.at(physQbit) = static_cast<std::int16_t>(q);
+            findAndSWAP(static_cast<qc::Qubit>(q), physQbit,
+                        qcMapped.initialLayout);
+            findAndSWAP(static_cast<qc::Qubit>(q), physQbit,
+                        qcMapped.outputPermutation);
             break;
           }
         }
@@ -498,7 +504,7 @@ void HeuristicMapper::routeCircuit() {
           locations.at(target) = static_cast<std::int16_t>(loc);
           qubits.at(loc) = static_cast<std::int16_t>(target);
           op->setTargets({static_cast<qc::Qubit>(loc)});
-          qcMapped.initialLayout.at(loc) = target;
+          findAndSWAP(target, loc, qcMapped.initialLayout);
           qcMapped.outputPermutation[static_cast<qc::Qubit>(loc)] = target;
         } else {
           op->setTargets({static_cast<qc::Qubit>(targetLocation)});

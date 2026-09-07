@@ -8,14 +8,9 @@
  * Licensed under the MIT License
  */
 
+#include "fomac/FoMaC.hpp"
 #include "na/fomac/Device.hpp"
 #include "na/qdmi/Configuration.hpp"
-
-#if __has_include("qdmi/Client.hpp")
-#include "qdmi/Client.hpp"
-#else
-#include "fomac/FoMaC.hpp"
-#endif
 
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
@@ -72,7 +67,7 @@ void registerQdmi(nb::module_& m) {
   const auto deviceId = registerPackagedDevice();
   m.attr("DEVICE_ID") = deviceId;
 
-  auto device = nb::class_<na::Session::Device, na::qdmi_client::Device>(
+  auto device = nb::class_<na::Session::Device, fomac::Device>(
       m, "Device", "Represents a device with a lattice of traps.");
 
   auto lattice = nb::class_<na::Device::Lattice>(
@@ -86,8 +81,7 @@ void registerQdmi(nb::module_& m) {
     return "<Vector x=" + std::to_string(v.x) + " y=" + std::to_string(v.y) +
            ">";
   });
-  // nanobind uses these intentionally self-comparative expressions to bind
-  // Python rich comparison. NOLINTBEGIN(misc-redundant-expression)
+  // NOLINTBEGIN(misc-redundant-expression)
   vector.def(nb::self == nb::self,
              nb::sig("def __eq__(self, arg: object, /) -> bool"));
   vector.def(nb::self != nb::self,
@@ -155,7 +149,7 @@ void registerQdmi(nb::module_& m) {
         return dev.getDecoherenceTimes().t2;
       },
       "The T2 time of the device.");
-  device.def("__repr__", [](const na::qdmi_client::Device& dev) {
+  device.def("__repr__", [](const fomac::Device& dev) {
     return "<Device name=\"" + dev.getName() + "\">";
   });
   device.def_static(
@@ -174,23 +168,6 @@ Returns:
              nb::sig("def __ne__(self, arg: object, /) -> bool"));
   // NOLINTEND(misc-redundant-expression)
 
-  // A device registered at runtime is reachable by its identifier but does not
-  // appear in the device list of a QDMI session, so the packaged device is
-  // opened by identifier.
-  m.def(
-      "devices",
-      [deviceId]() -> std::vector<na::Session::Device> {
-        if (deviceId.empty()) {
-          return {};
-        }
-        const auto driver = nb::module_::import_("mqt.core.qdmi.driver");
-        const auto opened = driver.attr("open_device")(deviceId);
-        auto device = na::Session::Device::tryCreateFromDevice(
-            nb::cast<na::qdmi_client::Device>(opened));
-        if (!device.has_value()) {
-          return {};
-        }
-        return {*device};
-      },
-      "Returns a list of available devices.");
+  m.def("devices", &na::Session::getDevices,
+        "Returns the registered neutral-atom devices.");
 }

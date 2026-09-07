@@ -27,19 +27,43 @@ MQT QMAP now owns circuit transformations that MQT Core removed from
 For the QMAP-owned replacements, include
 `datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
 
+### Neutral-atom stack
+
+The neutral-atom computation IR and circuit operations previously supplied by
+MQT Core now live in QMAP under the `na/ir` headers. This includes
+`NAComputation`, its entities and operations, and the move, bridge, and AOD
+circuit operations. Move and bridge operations use `NAStandardOperation` and
+remain custom operations to MQT Core. They do not support quantum controls.
+
+The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
+`origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
+`load1`, and `load2`, respectively.
+
+MQT QMAP now ships and registers the neutral-atom QDMI device and exposes its
+client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
+`mqt.qmap.na.default`; this keeps it distinct from MQT Core 3.9.0's
+`mqt.na.default` provider while both packages are installed. The provider reads
+its bundled description automatically and can be configured through the
+`MQT_QMAP_QDMI_NA_CONFIG_JSON` and `MQT_QMAP_QDMI_NA_CONFIG_FILE` environment
+variables. Device discovery opens each registered ID once; separate devices may
+have the same display name.
+
+This release requires CMake 3.28 or newer.
+
+### macOS support
+
+MQT QMAP no longer supports x86 macOS. Use Apple silicon with macOS 13.3 or
+newer. The new deployment target enables `std::format` in libc++.
+
+### Python support
+
+MQT QMAP now requires Python 3.11 or newer. Upgrade the Python environment
+before installing this release.
+
 ## [3.9.0]
 
 This release updates the minimum required `mqt-core` version to 3.9.0 and
 `nanobind` to 2.15.0.
-
-### Neutral-atom QDMI provider
-
-MQT QMAP now ships and registers the neutral-atom QDMI provider as
-`mqt.qmap.na.qdmi`. Its stable device ID is `mqt.qmap.na.default`; this keeps it
-distinct from MQT Core 3.9.0's `mqt.na.default` provider while both packages are
-installed. The provider reads its bundled description automatically and can be
-configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
-`MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables.
 
 ## [3.8.0]
 

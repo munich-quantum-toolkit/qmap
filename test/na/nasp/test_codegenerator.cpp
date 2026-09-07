@@ -10,7 +10,7 @@
 
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/computation/NAComputation.hpp"
+#include "na/ir/NAComputation.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "qasm3/Importer.hpp"

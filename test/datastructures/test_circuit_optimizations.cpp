@@ -15,11 +15,14 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/Control.hpp"
+#include "ir/operations/NonUnitaryOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
 
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace qmap {
@@ -402,6 +405,65 @@ TEST(SingleQubitGateFusion, PreservesZeroTargetOperation) {
 
   ASSERT_EQ(circuit.size(), 1U);
   EXPECT_EQ(circuit.front()->getType(), qc::GPhase);
+}
+
+TEST(SingleQubitGateFusion, PreservesMidCircuitMeasurement) {
+  for (const auto nested : {false, true}) {
+    qc::QuantumComputation circuit(1, 2);
+    circuit.h(0);
+    if (nested) {
+      auto compound = std::make_unique<qc::CompoundOperation>();
+      compound->emplace_back<qc::NonUnitaryOperation>(qc::Qubit{0}, qc::Bit{1});
+      circuit.emplace_back(std::move(compound));
+    } else {
+      circuit.measure(0, 1);
+    }
+    circuit.x(0);
+
+    singleQubitGateFusion(circuit);
+    circuit.flattenOperations();
+
+    ASSERT_EQ(circuit.size(), 3U);
+    EXPECT_EQ(circuit.front()->getType(), qc::H);
+    const auto* measurement =
+        dynamic_cast<const qc::NonUnitaryOperation*>(circuit.at(1).get());
+    ASSERT_NE(measurement, nullptr);
+    EXPECT_EQ(measurement->getType(), qc::Measure);
+    EXPECT_EQ(measurement->getTargets(), qc::Targets{0});
+    EXPECT_EQ(measurement->getClassics(), std::vector<qc::Bit>{1});
+    EXPECT_EQ(circuit.back()->getType(), qc::X);
+  }
+}
+
+TEST(SingleQubitGateFusion, PreservesReset) {
+  qc::QuantumComputation circuit(1);
+  circuit.h(0);
+  circuit.reset(0);
+  circuit.x(0);
+
+  singleQubitGateFusion(circuit);
+  circuit.flattenOperations();
+
+  ASSERT_EQ(circuit.size(), 3U);
+  EXPECT_EQ(circuit.front()->getType(), qc::H);
+  EXPECT_TRUE(circuit.at(1)->isNonUnitaryOperation());
+  EXPECT_EQ(circuit.at(1)->getType(), qc::Reset);
+  EXPECT_EQ(circuit.back()->getType(), qc::X);
+}
+
+TEST(SingleQubitGateFusion, PreservesBarrier) {
+  qc::QuantumComputation circuit(1);
+  circuit.h(0);
+  circuit.barrier(0);
+  circuit.h(0);
+
+  singleQubitGateFusion(circuit);
+  circuit.flattenOperations();
+
+  ASSERT_EQ(circuit.size(), 3U);
+  EXPECT_EQ(circuit.front()->getType(), qc::H);
+  EXPECT_EQ(circuit.at(1)->getType(), qc::Barrier);
+  EXPECT_EQ(circuit.back()->getType(), qc::H);
 }
 
 TEST(SingleQubitGateFusion, PreservesTwoGateFunctionality) {

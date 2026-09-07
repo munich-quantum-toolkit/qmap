@@ -10,8 +10,10 @@
 
 #include "na/fomac/Device.hpp"
 
+#include "fomac/FoMaC.hpp"
 #include "ir/Definitions.hpp"
 #include "na/qdmi/Configuration.hpp"
+#include "qdmi/driver/Driver.hpp"
 
 #include <algorithm>
 #include <array>
@@ -41,7 +43,7 @@ namespace {
  * @param sites is a vector of Session sites
  * @return the extent covering all given sites
  */
-auto calculateExtentFromSites(const std::vector<qdmi_client::Site>& sites)
+auto calculateExtentFromSites(const std::vector<fomac::Site>& sites)
     -> Device::Region {
   auto minX = std::numeric_limits<int64_t>::max();
   auto maxX = std::numeric_limits<int64_t>::min();
@@ -66,8 +68,8 @@ auto calculateExtentFromSites(const std::vector<qdmi_client::Site>& sites)
  * @return the extent covering all sites in the pairs
  */
 auto calculateExtentFromSites(
-    const std::vector<std::pair<qdmi_client::Site, qdmi_client::Site>>&
-        sitePairs) -> Device::Region {
+    const std::vector<std::pair<fomac::Site, fomac::Site>>& sitePairs)
+    -> Device::Region {
   auto minX = std::numeric_limits<int64_t>::max();
   auto maxX = std::numeric_limits<int64_t>::min();
   auto minY = std::numeric_limits<int64_t>::max();
@@ -122,7 +124,7 @@ auto Session::Device::initQubitsNumFromDevice() -> void {
   numQubits = getQubitsNum();
 }
 auto Session::Device::initLengthUnitFromDevice() -> bool {
-  const auto& u = qdmi_client::Device::getLengthUnit();
+  const auto& u = fomac::Device::getLengthUnit();
   if (!u.has_value()) {
     SPDLOG_INFO("Length unit not set");
     return false;
@@ -132,7 +134,7 @@ auto Session::Device::initLengthUnitFromDevice() -> bool {
   return true;
 }
 auto Session::Device::initDurationUnitFromDevice() -> bool {
-  const auto& u = qdmi_client::Device::getDurationUnit();
+  const auto& u = fomac::Device::getDurationUnit();
   if (!u.has_value()) {
     SPDLOG_INFO("Duration unit not set");
     return false;
@@ -295,7 +297,7 @@ auto Session::Device::initTrapsfromDevice() -> bool {
 auto Session::Device::initOperationsFromDevice() -> bool {
   std::map<size_t, std::pair<ShuttlingUnit, std::array<bool, 3>>>
       shuttlingUnitsPerId;
-  for (const qdmi_client::Operation& op : getOperations()) {
+  for (const fomac::Operation& op : getOperations()) {
     const auto zoned = op.isZoned();
     const auto& nq = op.getQubitsNum();
     const auto& opName = op.getName();
@@ -305,10 +307,9 @@ auto Session::Device::initOperationsFromDevice() -> bool {
       return false;
     }
     if (zoned) {
-      if (std::ranges::any_of(*sitesOpt,
-                              [](const qdmi_client::Site& site) -> bool {
-                                return !site.isZone();
-                              })) {
+      if (std::ranges::any_of(*sitesOpt, [](const fomac::Site& site) -> bool {
+            return !site.isZone();
+          })) {
         SPDLOG_INFO("Operation marked as zoned but has non-zone sites");
         return false;
       }
@@ -472,21 +473,21 @@ auto Session::Device::initOperationsFromDevice() -> bool {
                .duration = *d,
                .fidelity = *f,
                .numParameters = op.getParametersNum()}});
-        } else if (*nq == 2) {
-          // zoned two-qubit operations
+        } else if (*nq > 1) {
+          // zoned multi-qubit operations
           const auto& ir = op.getInteractionRadius();
           if (!ir.has_value()) {
-            SPDLOG_INFO("Two-qubit Operation missing interaction radius");
+            SPDLOG_INFO("Multi-qubit operation missing interaction radius");
             return false;
           }
           const auto& br = op.getBlockingRadius();
           if (!br.has_value()) {
-            SPDLOG_INFO("Two-qubit Operation missing blocking radius");
+            SPDLOG_INFO("Multi-qubit operation missing blocking radius");
             return false;
           }
           const auto& fi = op.getIdlingFidelity();
           if (!fi.has_value()) {
-            SPDLOG_INFO("Two-qubit Operation missing idling fidelity");
+            SPDLOG_INFO("Multi-qubit operation missing idling fidelity");
             return false;
           }
           globalMultiQubitOperations.emplace_back(GlobalMultiQubitOperation{
@@ -500,7 +501,8 @@ auto Session::Device::initOperationsFromDevice() -> bool {
               *fi,
               *nq});
         } else {
-          SPDLOG_INFO("Number of Qubits must be 1 or 2");
+          SPDLOG_INFO("Number of qubits must be positive");
+          return false;
         }
       }
     } else {
@@ -577,8 +579,8 @@ auto Session::Device::initOperationsFromDevice() -> bool {
 
 auto Session::getDevices() -> std::vector<Device> {
   std::vector<Device> devices;
-  qdmi_client::Session session;
-  for (const auto& d : session.getDevices()) {
+  for (const auto& id : qdmi::Driver::get().registeredDeviceIds()) {
+    const auto d = fomac::Session::openDevice(id);
     if (auto r = Device::tryCreateFromDevice(d); r.has_value()) {
       devices.emplace_back(r.value());
     }

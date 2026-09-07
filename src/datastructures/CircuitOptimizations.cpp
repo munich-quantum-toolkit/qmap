@@ -279,17 +279,20 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
 }
 
 void singleQubitGateFusion(qc::QuantumComputation& qc) {
+  const auto canFuse = [](const qc::Operation& operation) {
+    return operation.isStandardOperation() && operation.isUnitary() &&
+           operation.getType() != qc::Barrier &&
+           operation.getControls().empty() &&
+           operation.getTargets().size() == 1U;
+  };
   static const std::map<qc::OpType, qc::OpType> INVERSE_MAP = {
-      {qc::I, qc::I},     {qc::X, qc::X},     {qc::Y, qc::Y},
-      {qc::Z, qc::Z},     {qc::H, qc::H},     {qc::S, qc::Sdg},
-      {qc::Sdg, qc::S},   {qc::T, qc::Tdg},   {qc::Tdg, qc::T},
-      {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX}, {qc::Barrier, qc::Barrier}};
+      {qc::I, qc::I},   {qc::X, qc::X},     {qc::Y, qc::Y},    {qc::Z, qc::Z},
+      {qc::H, qc::H},   {qc::S, qc::Sdg},   {qc::Sdg, qc::S},  {qc::T, qc::Tdg},
+      {qc::Tdg, qc::T}, {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX}};
 
   auto dag = DAG(qc.getHighestPhysicalQubitIndex() + 1U);
   for (auto& operation : qc) {
-    if (!operation->isStandardOperation() ||
-        !operation->getControls().empty() ||
-        operation->getTargets().size() != 1U) {
+    if (!canFuse(*operation)) {
       addToDAG(dag, &operation);
       continue;
     }
@@ -301,9 +304,7 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
     }
 
     auto* previous = dag.at(target).back();
-    if (!(*previous)->isCompoundOperation() &&
-        (!(*previous)->getControls().empty() ||
-         (*previous)->getTargets().size() != 1U)) {
+    if (!(*previous)->isCompoundOperation() && !canFuse(**previous)) {
       addToDAG(dag, &operation);
       continue;
     }
@@ -323,14 +324,12 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
 
       const auto last = --compound->end();
       const auto inverse = INVERSE_MAP.find((*last)->getType());
-      if (inverse != INVERSE_MAP.end() &&
+      if (canFuse(**last) && inverse != INVERSE_MAP.end() &&
           operation->getType() == inverse->second) {
         compound->pop_back();
         operation->setGate(qc::I);
       } else {
-        compound->emplace_back<qc::StandardOperation>(
-            operation->getTargets().at(0), operation->getType(),
-            operation->getParameter());
+        compound->emplace_back(operation->clone());
         operation->setGate(qc::I);
       }
       continue;
@@ -343,12 +342,8 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
       operation->setGate(qc::I);
     } else {
       auto compound = std::make_unique<qc::CompoundOperation>();
-      compound->emplace_back<qc::StandardOperation>(
-          (*previous)->getTargets().at(0), (*previous)->getType(),
-          (*previous)->getParameter());
-      compound->emplace_back<qc::StandardOperation>(
-          operation->getTargets().at(0), operation->getType(),
-          operation->getParameter());
+      compound->emplace_back((*previous)->clone());
+      compound->emplace_back(operation->clone());
       operation->setGate(qc::I);
       *previous = std::move(compound);
       dag.at(target).push_back(previous);

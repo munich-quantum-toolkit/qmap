@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include "na/computation/NAComputation.hpp"
-#include "na/computation/entities/Atom.hpp"
-#include "na/computation/entities/Zone.hpp"
+#include "na/ir/NAComputation.hpp"
+#include "na/ir/entities/Atom.hpp"
+#include "na/ir/entities/Zone.hpp"
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
 
