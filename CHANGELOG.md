@@ -20,6 +20,11 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
   ([#1126]) ([**@denialhaag**])
 - 💥 Require Python 3.11 or newer ([#1126]) ([**@denialhaag**])
 
+### Fixed
+
+- 🐛 Handle Qiskit targets without calibration properties ([#1152])
+  ([**@burgholzer**])
+
 ## [3.9.0] - 2026-08-24
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
@@ -299,6 +304,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1152]: https://github.com/munich-quantum-toolkit/qmap/pull/1152
 [#1126]: https://github.com/munich-quantum-toolkit/qmap/pull/1126
 [#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106

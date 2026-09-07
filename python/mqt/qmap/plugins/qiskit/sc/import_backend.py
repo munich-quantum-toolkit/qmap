@@ -29,19 +29,28 @@ def import_target(target: Target) -> Architecture.Properties:
         The imported target as an Architecture.Properties object.
     """
     props = Architecture.Properties()
-    props.num_qubits = len(target.qubit_properties)
+    if target.num_qubits is None:
+        msg = "Cannot import an unbounded Qiskit target."
+        raise ValueError(msg)
+    props.num_qubits = target.num_qubits
 
-    for i in range(props.num_qubits):
-        qubit_props = target.qubit_properties[i]
-        props.set_t1(i, qubit_props.t1)
-        props.set_t2(i, qubit_props.t2)
-        props.set_frequency(i, qubit_props.frequency)
+    for i, qubit_props in enumerate(target.qubit_properties or ()):
+        if qubit_props is None:
+            continue
+        if qubit_props.t1 is not None:
+            props.set_t1(i, qubit_props.t1)
+        if qubit_props.t2 is not None:
+            props.set_t2(i, qubit_props.t2)
+        if qubit_props.frequency is not None:
+            props.set_frequency(i, qubit_props.frequency)
 
     for instruction, qargs in target.instructions:
-        if instruction.name in {"reset", "delay"}:
+        if instruction.name in {"reset", "delay"} or qargs is None:
             continue
 
         instruction_props = target[instruction.name][qargs]
+        if instruction_props is None or instruction_props.error is None:
+            continue
         if instruction.name == "measure":
             props.set_readout_error(qargs[0], instruction_props.error)
         elif len(qargs) == 1:
