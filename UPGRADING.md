@@ -6,6 +6,14 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+### Neutral-atom OpenQASM serialization
+
+Include `na/ir/OpenQASMSerializer.hpp` and call
+`na::serializeOpenQASM(computation, stream)` to serialize circuits containing
+move, bridge, or AOD operations. Link `MQT::QMapNAIR`. Core's
+`qasm3::Serializer` traverses compound and conditional operations; QMAP supplies
+the extended neutral-atom leaf syntax.
+
 ### Neutral-atom stack
 
 The neutral-atom computation IR and circuit operations previously supplied by

@@ -14,6 +14,9 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Added
 
+- ✨ Provide extended neutral-atom OpenQASM serialization through
+  `na::serializeOpenQASM` ([#1124]) ([**@burgholzer**])
+
 - ✨ Provide the neutral-atom QDMI device and client integration transferred
   from MQT Core, preserving distinct registered devices with the same name
   ([#1111]) ([**@denialhaag**], [**@burgholzer**])
@@ -316,6 +319,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1124]: https://github.com/munich-quantum-toolkit/qmap/pull/1124
 [#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
 
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154

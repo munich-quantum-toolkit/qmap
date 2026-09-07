@@ -15,7 +15,6 @@
 #pragma once
 
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/operations/NAOpType.hpp"
@@ -107,20 +106,16 @@ public:
 
   [[nodiscard]] std::vector<qc::fp> getDistances(Dimension dimension) const;
 
-  [[nodiscard]] bool equals(const qc::Operation& operation,
-                            const qc::Permutation& permutation1,
-                            const qc::Permutation& permutation2) const override;
-
   [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
   std::ostream& print(std::ostream& os, const qc::Permutation& permutation,
                       std::size_t prefixWidth,
                       std::size_t nQubits) const override;
 
-  void dumpOpenQASM(std::ostream& of,
-                    const qc::QubitIndexToRegisterMap& qubitMap,
-                    const qc::BitIndexToRegisterMap& bitMap, std::size_t indent,
-                    bool openQASM3) const override;
+  /// Returns the elementary AOD movements.
+  [[nodiscard]] const std::vector<Segment>& getSegments() const {
+    return segments;
+  }
 
   void invert() override;
 };

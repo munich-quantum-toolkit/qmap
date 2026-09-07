@@ -12,7 +12,6 @@
 
 #include "NAOperationPrinting.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/operations/NAOpType.hpp"
@@ -21,8 +20,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iomanip>
-#include <limits>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -163,17 +160,10 @@ auto AodOperation::getDistances(const Dimension dimension) const
   return distances;
 }
 
-auto AodOperation::equals(const qc::Operation& operation,
-                          const qc::Permutation& permutation1,
-                          const qc::Permutation& permutation2) const -> bool {
+auto AodOperation::equals(const qc::Operation& operation) const -> bool {
   const auto* other = dynamic_cast<const AodOperation*>(&operation);
   return other != nullptr && naOpType == other->naOpType &&
-         qc::Operation::equals(operation, permutation1, permutation2) &&
-         segments == other->segments;
-}
-
-auto AodOperation::equals(const qc::Operation& operation) const -> bool {
-  return equals(operation, {}, {});
+         qc::Operation::equals(operation) && segments == other->segments;
 }
 
 auto AodOperation::print(std::ostream& os, const qc::Permutation& permutation,
@@ -188,35 +178,6 @@ void AodOperation::setGate(const qc::OpType operationType) {
     throw std::invalid_argument(
         "An AOD operation cannot change its gate type.");
   }
-}
-
-void AodOperation::dumpOpenQASM(
-    std::ostream& of, const qc::QubitIndexToRegisterMap& qubitMap,
-    [[maybe_unused]] const qc::BitIndexToRegisterMap& bitMap,
-    const std::size_t indent, [[maybe_unused]] const bool openQASM3) const {
-  of << std::setprecision(std::numeric_limits<qc::fp>::digits10);
-  of << std::string(indent * OUTPUT_INDENT_SIZE, ' ') << name << " (";
-
-  bool first = true;
-  for (const auto& segment : segments) {
-    if (!first) {
-      of << "; ";
-    }
-    first = false;
-    of << static_cast<std::size_t>(segment.dimension) << ", " << segment.start
-       << ", " << segment.end;
-  }
-  of << ")";
-
-  bool firstQubit = true;
-  for (const auto& qubit : targets) {
-    if (!firstQubit) {
-      of << ",";
-    }
-    firstQubit = false;
-    of << " " << qubitMap.at(qubit).second;
-  }
-  of << ";\n";
 }
 
 void AodOperation::invert() {
