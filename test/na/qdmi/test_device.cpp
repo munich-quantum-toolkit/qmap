@@ -11,6 +11,7 @@
 #include "TestUtils.hpp"
 #include "mqt_qmap_na_qdmi/device.h"
 #include "na/qdmi/Configuration.hpp"
+#include "na/qdmi/Device.hpp"
 
 #include <algorithm>
 #include <array>
@@ -63,6 +64,12 @@ struct PairHash {
 };
 
 using mqt::test::ScopedEnvironmentVariable;
+
+static_assert(noexcept(std::declval<MQT_QMAP_NA_QDMI_Device_Session_impl_d&>()
+                           .setParameter(QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1,
+                                         0, nullptr)));
+static_assert(noexcept(std::declval<MQT_QMAP_NA_QDMI_Device_Session_impl_d&>()
+                           .createDeviceJob(nullptr)));
 
 [[nodiscard]] auto queryName(MQT_QMAP_NA_QDMI_Device_Session session)
     -> std::string {
@@ -267,6 +274,54 @@ TEST(NaRuntimeConfiguration, ValidatesRawParameterStringsAndRetry) {
   MQT_QMAP_NA_QDMI_device_session_free(session);
 }
 
+TEST(NaRuntimeConfiguration, ReportsInvalidModelDiagnosticsToStderr) {
+  MQT_QMAP_NA_QDMI_Device_Session session = nullptr;
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_alloc(&session), QDMI_SUCCESS);
+  constexpr auto invalidConfiguration = std::to_array("{}");
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_set_parameter(
+                session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1,
+                invalidConfiguration.size(), invalidConfiguration.data()),
+            QDMI_SUCCESS);
+
+  ::testing::internal::CaptureStderr();
+  const auto status = MQT_QMAP_NA_QDMI_device_session_init(session);
+  const auto diagnostic = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_EQ(status, QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_THAT(diagnostic,
+              ::testing::AllOf(
+                  ::testing::HasSubstr("[mqt-qmap] [error]"),
+                  ::testing::HasSubstr(
+                      "Invalid NA device configuration from inline session "
+                      "configuration"),
+                  ::testing::HasSubstr("$/schema-version is required")));
+  MQT_QMAP_NA_QDMI_device_session_free(session);
+}
+
+TEST(NaRuntimeConfiguration, ReportsInitializationFailuresToStderr) {
+  MQT_QMAP_NA_QDMI_Device_Session session = nullptr;
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_alloc(&session), QDMI_SUCCESS);
+  constexpr auto overflowingNumber = std::to_array("1e1000");
+  ASSERT_EQ(MQT_QMAP_NA_QDMI_device_session_set_parameter(
+                session, QDMI_DEVICE_SESSION_PARAMETER_CUSTOM1,
+                overflowingNumber.size(), overflowingNumber.data()),
+            QDMI_SUCCESS);
+
+  ::testing::internal::CaptureStderr();
+  const auto status = MQT_QMAP_NA_QDMI_device_session_init(session);
+  const auto diagnostic = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_EQ(status, QDMI_ERROR_FATAL);
+  EXPECT_THAT(
+      diagnostic,
+      ::testing::AllOf(::testing::HasSubstr("[mqt-qmap] [error]"),
+                       ::testing::HasSubstr(
+                           "Failed to initialize NA device from inline session "
+                           "configuration"),
+                       ::testing::HasSubstr("number overflow")));
+  MQT_QMAP_NA_QDMI_device_session_free(session);
+}
+
 TEST(NaRuntimeConfiguration, SelectsEnvironmentAndExplicitSources) {
   std::ifstream input(NA_DEVICE_JSON);
   ASSERT_TRUE(input);
@@ -419,6 +474,26 @@ TEST_F(NaQDMISpecificationTest, JobCreate) {
   EXPECT_THAT(MQT_QMAP_NA_QDMI_device_session_create_device_job(session, &job),
               testing::AnyOf(QDMI_SUCCESS, QDMI_ERROR_NOTSUPPORTED));
   MQT_QMAP_NA_QDMI_device_job_free(job);
+}
+
+TEST_F(NaQDMISpecificationTest, JobRetrievalValidatesArguments) {
+  MQT_QMAP_NA_QDMI_Device_Job job = nullptr;
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                nullptr, "job-123", &job),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                session, nullptr, &job),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(session,
+                                                                      "", &job),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                session, "job-123", nullptr),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
+                session, "job-123", &job),
+            QDMI_ERROR_NOTSUPPORTED);
+  EXPECT_EQ(job, nullptr);
 }
 
 TEST_F(NaQDMISpecificationTest, JobSetParameter) {
@@ -1013,10 +1088,11 @@ TEST_F(NADeviceTest, QueryOperationData) {
           for (const auto& site2 : sites) {
             if (site1 != site2) {
               const std::pair sitePair{site1, site2};
+              const std::array queriedSites{sitePair.first, sitePair.second};
               result = MQT_QMAP_NA_QDMI_device_session_query_operation_property(
-                  session, operation, 2,
-                  reinterpret_cast<const MQT_QMAP_NA_QDMI_Site*>(&sitePair), 0,
-                  nullptr, QDMI_OPERATION_PROPERTY_NAME, 0, nullptr, nullptr);
+                  session, operation, queriedSites.size(), queriedSites.data(),
+                  0, nullptr, QDMI_OPERATION_PROPERTY_NAME, 0, nullptr,
+                  nullptr);
               ASSERT_THAT(result, testing::AnyOf(QDMI_SUCCESS,
                                                  QDMI_ERROR_NOTSUPPORTED));
               if (result == QDMI_SUCCESS) {
@@ -1095,20 +1171,24 @@ TEST_F(NADeviceTest, QueryOperationData) {
             }
           }
         }
-        std::vector<std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>>
-            queriedSupportedSitesVec(
-                sitesSize / sizeof(std::pair<MQT_QMAP_NA_QDMI_Site,
-                                             MQT_QMAP_NA_QDMI_Site>),
-                {nullptr, nullptr});
+        std::vector<MQT_QMAP_NA_QDMI_Site> queriedSupportedSitesVec(
+            sitesSize / sizeof(MQT_QMAP_NA_QDMI_Site), nullptr);
         EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_query_operation_property(
                       session, operation, 0, nullptr, 0, nullptr,
                       QDMI_OPERATION_PROPERTY_SITES, sitesSize,
                       queriedSupportedSitesVec.data(), nullptr),
                   QDMI_SUCCESS);
-        const std::unordered_set<
+        ASSERT_EQ(queriedSupportedSitesVec.size() % 2, 0);
+        std::unordered_set<
             std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>, PairHash>
-            queriedSupportedSitesSet(queriedSupportedSitesVec.cbegin(),
-                                     queriedSupportedSitesVec.cend());
+            queriedSupportedSitesSet;
+        for (auto it = queriedSupportedSitesVec.cbegin();
+             it != queriedSupportedSitesVec.cend(); ++it) {
+          const auto first = *it;
+          ++it;
+          ASSERT_NE(it, queriedSupportedSitesVec.cend());
+          queriedSupportedSitesSet.emplace(first, *it);
+        }
         EXPECT_EQ(queriedSupportedSitesSet, supportedSites);
       } else {
         uint64_t interactionRadius = 0;

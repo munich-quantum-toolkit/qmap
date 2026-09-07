@@ -13,9 +13,9 @@
 #include "Architecture.hpp"
 #include "MappingResults.hpp"
 #include "ir/Definitions.hpp"
-#include "ir/OpenQASMSerializer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
+#include "qasm3/Serializer.hpp"
 #include "utils.hpp"
 
 #include <cstddef>
@@ -96,8 +96,8 @@ protected:
   Architecture* architecture;
   std::uint16_t nqubits;
   qc::QuantumComputation inputCircuit;
-  qc::QubitIndexToRegisterMap qregs;
-  qc::BitIndexToRegisterMap cregs;
+  qasm3::QubitIndexToRegisterMap qregs;
+  qasm3::BitIndexToRegisterMap cregs;
   std::vector<std::ofstream> searchNodesLogFiles; // 1 per layer
   bool deactivated = false;
 

@@ -70,13 +70,13 @@ public:
    * @see MQT_QMAP_NA_QDMI_device_session_set_parameter
    */
   int setParameter(QDMI_Device_Session_Parameter param, size_t size,
-                   const void* value);
+                   const void* value) noexcept;
 
   /**
    * @brief Create a new device job.
    * @see MQT_QMAP_NA_QDMI_device_session_create_device_job
    */
-  int createDeviceJob(MQT_QMAP_NA_QDMI_Device_Job* job);
+  int createDeviceJob(MQT_QMAP_NA_QDMI_Device_Job* job) noexcept;
 
   /**
    * @brief Frees the device job.
@@ -269,6 +269,8 @@ private:
 
   /// The operation's supported sites
   SitesStorage supportedSites_;
+  /// Flattened site tuples used by the QDMI list-property representation.
+  std::vector<MQT_QMAP_NA_QDMI_Site> flattenedSupportedSites_;
   /// Indicates if this operation is zoned (global)
   bool isZoned_ = false;
 

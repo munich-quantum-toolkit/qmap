@@ -73,14 +73,15 @@ using WeightedSwaps = std::vector<WeightedSwap>;
 using SwapDistance = int32_t;
 /**
  * @brief Atom shuttle between two coordinate indices.
- * @details c1: source (expected occupied), c2: destination (expected free).
- * load1/load2 specify load/unload actions (e.g., addressing focus).
+ * @details `origin` is expected to be occupied and `target` is expected to be
+ * free. `requiresLoad` and `requiresStore` specify whether the atom must be
+ * transferred from or to static storage at the respective endpoint.
  */
 struct AtomMove {
-  CoordIndex c1 = 0;
-  CoordIndex c2 = 0;
-  bool load1 = true;
-  bool load2 = true;
+  CoordIndex origin = 0;
+  CoordIndex target = 0;
+  bool requiresLoad = true;
+  bool requiresStore = true;
 
   /**
    * @brief Equality comparison.
@@ -88,8 +89,9 @@ struct AtomMove {
    * @return True if all fields match.
    */
   bool operator==(const AtomMove& other) const {
-    return c1 == other.c1 && c2 == other.c2 && load1 == other.load1 &&
-           load2 == other.load2;
+    return origin == other.origin && target == other.target &&
+           requiresLoad == other.requiresLoad &&
+           requiresStore == other.requiresStore;
   }
   /**
    * @brief Inequality comparison.
@@ -104,8 +106,9 @@ struct AtomMove {
    * @return True if this move is less than the other in lexicographical order.
    */
   bool operator<(const AtomMove& other) const {
-    return std::tie(c1, c2, load1, load2) <
-           std::tie(other.c1, other.c2, other.load1, other.load2);
+    return std::tie(origin, target, requiresLoad, requiresStore) <
+           std::tie(other.origin, other.target, other.requiresLoad,
+                    other.requiresStore);
   }
 };
 

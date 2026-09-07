@@ -204,7 +204,7 @@ def main() -> int:
                 except Exception as e:  # ruff:ignore[blind-except]
                     table = f"Error while reading progress: {e!r}"
 
-            timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M:%S")
 
             clear_screen()
             print("Clifford Synthesis Progress Monitor")

@@ -18,9 +18,9 @@
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "hybridmap/OpenQASMSerializer.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "na/ir/OpenQASMSerializer.hpp"
 
 #include <cmath>
 #include <cstddef>

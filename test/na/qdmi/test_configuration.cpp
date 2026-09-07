@@ -50,6 +50,12 @@ TEST(NaConfigurationTest, RejectsUnknownMissingAndInvalidValues) {
   EXPECT_THROW(static_cast<void>(readJSON(invalidFidelity.dump(), "inline")),
                std::invalid_argument);
 
+  auto singleQubitGlobalMulti = json;
+  singleQubitGlobalMulti["globalMultiQubitOperations"][0]["numQubits"] = 1;
+  EXPECT_THROW(
+      static_cast<void>(readJSON(singleQubitGlobalMulti.dump(), "inline")),
+      std::invalid_argument);
+
   auto invalidUnit = json;
   invalidUnit["durationUnit"]["unit"] = "ts";
   EXPECT_THROW(static_cast<void>(readJSON(invalidUnit.dump(), "inline")),

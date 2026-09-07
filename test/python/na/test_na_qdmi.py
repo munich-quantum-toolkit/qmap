@@ -32,7 +32,8 @@ def device_tuple() -> tuple[Device, Mapping[str, Any]]:
     """Return a neutral-atom QDMI device instance."""
     with pathlib.Path("json/na/mqt-qmap-qdmi-na-device.json").open(encoding="utf-8") as f:
         device_dict = load(f)
-    return next(iter(devices())), device_dict
+    device = next(device for device in devices() if device.name() == device_dict["name"])
+    return device, device_dict
 
 
 def test_device_is_registered() -> None:
@@ -40,9 +41,10 @@ def test_device_is_registered() -> None:
     assert DEVICE_ID in registered_device_ids()
 
 
-def test_device_is_the_packaged_one() -> None:
-    """The reported device is the one that this package ships, not another provider's."""
-    assert [device.name() for device in devices()] == [open_device(DEVICE_ID).name()]
+def test_devices_include_the_packaged_one_once() -> None:
+    """The packaged device is reported exactly once alongside discovered devices."""
+    packaged_device_name = open_device(DEVICE_ID).name()
+    assert [device.name() for device in devices()].count(packaged_device_name) == 1
 
 
 def test_compiler_target_rejects_zone_model() -> None:

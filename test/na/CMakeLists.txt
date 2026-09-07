@@ -11,7 +11,7 @@ if(TARGET MQT::QMapNA)
   package_add_test(mqt-qmap-na-test MQT::QMapNA ${NA_TEST_SOURCES})
 endif()
 
-add_subdirectory(computation)
+add_subdirectory(ir)
 add_subdirectory(nalac)
 add_subdirectory(nasp)
 add_subdirectory(qdmi)

@@ -23,22 +23,79 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <new>
+#include <optional>
 #include <span>
-#include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <stdio.h>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
 
 namespace {
+/// Writes one best-effort diagnostic to the process standard error stream.
+///
+/// The writer does not allocate memory. This property lets exception handlers
+/// report allocation failures without throwing another exception.
+void emitDiagnostic(
+    const std::initializer_list<std::string_view> parts) noexcept {
+#ifdef _WIN32
+  _lock_file(stderr);
+#else
+  flockfile(stderr);
+#endif
+  const auto write = [](const std::string_view part) noexcept {
+    if (!part.empty()) {
+#ifdef _WIN32
+      _fwrite_nolock(part.data(), sizeof(char), part.size(), stderr);
+#else
+      std::fwrite(part.data(), sizeof(char), part.size(), stderr);
+#endif
+    }
+  };
+  write("[mqt-qmap] [error] ");
+  for (const auto part : parts) {
+    write(part);
+  }
+#ifdef _WIN32
+  _fputc_nolock('\n', stderr);
+  _fflush_nolock(stderr);
+  _unlock_file(stderr);
+#else
+  std::fputc('\n', stderr);
+  std::fflush(stderr);
+  funlockfile(stderr);
+#endif
+}
+
+/// Maps exceptions from an allocation-capable device call to QDMI status codes.
+template <class Callable>
+[[nodiscard]] auto guardDeviceCall(const std::string_view action,
+                                   Callable&& callable) noexcept -> int {
+  try {
+    return std::invoke(std::forward<Callable>(callable));
+  } catch (const std::bad_alloc&) {
+    emitDiagnostic({"Out of memory while ", action});
+    return QDMI_ERROR_OUTOFMEM;
+  } catch (const std::exception& error) {
+    emitDiagnostic({"Failed while ", action, ": ", error.what()});
+    return QDMI_ERROR_FATAL;
+  } catch (...) {
+    emitDiagnostic({"Failed while ", action, ": unknown exception"});
+    return QDMI_ERROR_FATAL;
+  }
+}
+
 [[nodiscard]] auto inside(const na::Device::Region& region, const int64_t x,
                           const int64_t y) -> bool {
   return region.origin.x <= x &&
@@ -76,16 +133,18 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
   if (status_ != Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  int loadStatus = QDMI_SUCCESS;
-  const auto loaded = ::qdmi::detail::loadDeviceConfiguration(
-      inlineConfiguration_, fileConfiguration_, "MQT_QMAP_QDMI_NA_CONFIG_JSON",
-      "MQT_QMAP_QDMI_NA_CONFIG_FILE", "mqt-qmap-qdmi-na-device.json",
-      reinterpret_cast<const void*>(&MQT_QMAP_NA_QDMI_device_initialize),
-      loadStatus);
-  if (!loaded) {
-    return loadStatus;
-  }
+  std::optional<::qdmi::detail::LoadedDeviceConfiguration> loaded;
   try {
+    int loadStatus = QDMI_SUCCESS;
+    loaded = ::qdmi::detail::loadDeviceConfiguration(
+        inlineConfiguration_, fileConfiguration_,
+        "MQT_QMAP_QDMI_NA_CONFIG_JSON", "MQT_QMAP_QDMI_NA_CONFIG_FILE",
+        "mqt-qmap-qdmi-na-device.json",
+        reinterpret_cast<const void*>(&MQT_QMAP_NA_QDMI_device_initialize),
+        loadStatus);
+    if (!loaded) {
+      return loadStatus;
+    }
     const auto configuration = na::readJSON(loaded->json, loaded->source);
     std::vector<std::unique_ptr<MQT_QMAP_NA_QDMI_Site_impl_d>> newSiteStorage;
     std::vector<MQT_QMAP_NA_QDMI_Site> newSites;
@@ -216,22 +275,31 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::init() -> int {
     status_ = Status::INITIALIZED;
     return QDMI_SUCCESS;
   } catch (const std::bad_alloc&) {
-    SPDLOG_ERROR("Out of memory while initializing NA device from {}",
-                 loaded->source);
+    const std::string_view source =
+        loaded ? std::string_view(loaded->source)
+               : std::string_view("selected configuration");
+    emitDiagnostic(
+        {"Out of memory while initializing NA device from ", source});
     return QDMI_ERROR_OUTOFMEM;
   } catch (const std::invalid_argument& error) {
-    SPDLOG_ERROR("Invalid NA device configuration from {}: {}", loaded->source,
-                 error.what());
+    const std::string_view source =
+        loaded ? std::string_view(loaded->source)
+               : std::string_view("selected configuration");
+    emitDiagnostic(
+        {"Invalid NA device configuration from ", source, ": ", error.what()});
     return QDMI_ERROR_INVALIDARGUMENT;
   } catch (const std::exception& error) {
-    SPDLOG_ERROR("Failed to initialize NA device from {}: {}", loaded->source,
-                 error.what());
+    const std::string_view source =
+        loaded ? std::string_view(loaded->source)
+               : std::string_view("selected configuration");
+    emitDiagnostic(
+        {"Failed to initialize NA device from ", source, ": ", error.what()});
     return QDMI_ERROR_FATAL;
   }
 }
 auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
-    QDMI_Device_Session_Parameter param, const size_t size, const void* value)
-    -> int {
+    QDMI_Device_Session_Parameter param, const size_t size,
+    const void* value) noexcept -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(param, QDMI_DEVICE_SESSION_PARAMETER)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -239,21 +307,26 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::setParameter(
   if (status_ != Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  return ::qdmi::detail::setDeviceConfigurationParameter(
-      param, size, value, inlineConfiguration_, fileConfiguration_);
+  return guardDeviceCall("setting an NA device session parameter", [&] {
+    return ::qdmi::detail::setDeviceConfigurationParameter(
+        param, size, value, inlineConfiguration_, fileConfiguration_);
+  });
 }
 auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::createDeviceJob(
     // NOLINTNEXTLINE(readability-non-const-parameter)
-    MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
+    MQT_QMAP_NA_QDMI_Device_Job* job) noexcept -> int {
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
   if (status_ == Status::ALLOCATED) {
     return QDMI_ERROR_BADSTATE;
   }
-  auto uniqueJob = std::make_unique<MQT_QMAP_NA_QDMI_Device_Job_impl_d>(this);
-  *job = jobs_.emplace(uniqueJob.get(), std::move(uniqueJob)).first->first;
-  return QDMI_SUCCESS;
+  *job = nullptr;
+  return guardDeviceCall("creating an NA device job", [&] {
+    auto uniqueJob = std::make_unique<MQT_QMAP_NA_QDMI_Device_Job_impl_d>(this);
+    *job = jobs_.emplace(uniqueJob.get(), std::move(uniqueJob)).first->first;
+    return QDMI_SUCCESS;
+  });
 }
 void MQT_QMAP_NA_QDMI_Device_Session_impl_d::freeDeviceJob(
     MQT_QMAP_NA_QDMI_Device_Job job) {
@@ -506,7 +579,7 @@ MQT_QMAP_NA_QDMI_Operation_impl_d::MQT_QMAP_NA_QDMI_Operation_impl_d(
       isZoned_(true) {}
 void MQT_QMAP_NA_QDMI_Operation_impl_d::sortSites() {
   std::visit(
-      [](auto& sites) {
+      [this](auto& sites) {
         using T = std::decay_t<decltype(sites)>;
         if constexpr (std::is_same_v<T, std::vector<MQT_QMAP_NA_QDMI_Site>>) {
           // Single-qubit: sort flat list by pointer address
@@ -523,6 +596,12 @@ void MQT_QMAP_NA_QDMI_Operation_impl_d::sortSites() {
             }
           });
           std::ranges::sort(sites);
+          flattenedSupportedSites_.clear();
+          flattenedSupportedSites_.reserve(sites.size() * 2);
+          for (const auto& [first, second] : sites) {
+            flattenedSupportedSites_.emplace_back(first);
+            flattenedSupportedSites_.emplace_back(second);
+          }
         }
         // more cases go here if needed in the future
       },
@@ -601,25 +680,10 @@ auto MQT_QMAP_NA_QDMI_Operation_impl_d::queryProperty(
           } else if constexpr (std::is_same_v<T, std::vector<std::pair<
                                                      MQT_QMAP_NA_QDMI_Site,
                                                      MQT_QMAP_NA_QDMI_Site>>>) {
-            // Ensure std::pair has standard layout and expected size
-            static_assert(
-                std::is_standard_layout_v<
-                    std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>>);
-            static_assert(
-                sizeof(
-                    std::pair<MQT_QMAP_NA_QDMI_Site, MQT_QMAP_NA_QDMI_Site>) ==
-                2 * sizeof(MQT_QMAP_NA_QDMI_Site));
-            // Two-qubit: reinterpret as flat array of sites using std::span
-            // std::pair has standard layout, so the memory layout of
-            // vector<pair<Site, Site>> is equivalent to Site[2*N]
-            const auto flatView = std::span<const MQT_QMAP_NA_QDMI_Site>(
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                reinterpret_cast<const MQT_QMAP_NA_QDMI_Site*>(
-                    storedSites.data()),
-                storedSites.size() * 2);
+            // Local multi-qubit sites are exposed as a flat list of tuples.
             ADD_LIST_PROPERTY(QDMI_OPERATION_PROPERTY_SITES,
-                              MQT_QMAP_NA_QDMI_Site, flatView, prop, size,
-                              value, sizeRet)
+                              MQT_QMAP_NA_QDMI_Site, flattenedSupportedSites_,
+                              prop, size, value, sizeRet)
           }
           // more cases go here if needed in the future
           return QDMI_ERROR_NOTSUPPORTED;
@@ -710,9 +774,12 @@ auto MQT_QMAP_NA_QDMI_device_session_create_device_job(
 }
 
 auto MQT_QMAP_NA_QDMI_device_session_retrieve_device_job_by_id(
-    [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Session session,
-    [[maybe_unused]] const char* jobId,
-    [[maybe_unused]] MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
+    MQT_QMAP_NA_QDMI_Device_Session session, const char* jobId,
+    MQT_QMAP_NA_QDMI_Device_Job* job) -> int {
+  if (session == nullptr || jobId == nullptr || jobId[0] == '\0' ||
+      job == nullptr) {
+    return QDMI_ERROR_INVALIDARGUMENT;
+  }
   return QDMI_ERROR_NOTSUPPORTED;
 }
 

@@ -15,8 +15,8 @@
 
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
-#include "hybridmap/NeutralAtomOperation.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "na/ir/operations/NAStandardOperation.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>
