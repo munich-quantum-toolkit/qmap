@@ -22,6 +22,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Fixed
 
+- 🐛 Preserve bijective layouts when the heuristic mapper moves logical qubits
+  ([#1153]) ([**@burgholzer**])
 - 🐛 Preserve the input circuit name during mapping ([#1154])
   ([**@burgholzer**])
 - 🐛 Handle Qiskit targets without calibration properties ([#1152])
@@ -307,6 +309,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
+[#1153]: https://github.com/munich-quantum-toolkit/qmap/pull/1153
 [#1152]: https://github.com/munich-quantum-toolkit/qmap/pull/1152
 [#1126]: https://github.com/munich-quantum-toolkit/qmap/pull/1126
 [#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
