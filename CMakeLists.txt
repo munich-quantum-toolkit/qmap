@@ -7,7 +7,7 @@
 # Licensed under the MIT License
 
 # set required cmake version
-cmake_minimum_required(VERSION 3.24...4.4)
+cmake_minimum_required(VERSION 3.28...4.4)
 
 project(
   mqt-qmap
@@ -72,17 +72,7 @@ endif()
 
 option(BUILD_MQT_QMAP_TESTS "Also build tests for the MQT QMAP project" ${MQT_QMAP_MASTER_PROJECT})
 
-# on macOS with GCC, disable module scanning
-# https://www.reddit.com/r/cpp_questions/comments/1kwlkom/comment/ni5angh/
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
-    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-  else()
-    message(WARNING "CMake 3.28+ is required to disable C++ module scanning on macOS with GCC. "
-                    "Current version: ${CMAKE_VERSION}. "
-                    "Consider upgrading CMake to avoid potential build issues.")
-  endif()
-endif()
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 include(cmake/ExternalDependencies.cmake)
 

@@ -17,12 +17,12 @@
 #include "ir/Definitions.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/Operation.hpp"
-#include "ir/operations/StandardOperation.hpp"
 #include "na/ir/operations/NAOpType.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 
 namespace na {
 
@@ -31,7 +31,7 @@ namespace na {
  * @details This class replaces the neutral-atom operation types that were
  * formerly represented by `qc::StandardOperation` in MQT Core.
  */
-class NAStandardOperation final : public qc::StandardOperation {
+class NAStandardOperation final : public qc::Operation {
   NAOpType naOpType = NAOpType::None;
 
   static NAOpType validateType(NAOpType candidateNAOpType);
@@ -54,6 +54,22 @@ public:
   [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
   void setGate(qc::OpType operationType) override;
+
+  /// Move and bridge operations do not support quantum controls.
+  [[noreturn]] void addControl([[maybe_unused]] qc::Control control) override {
+    throw std::invalid_argument(
+        "Neutral-atom operations do not support controls.");
+  }
+  void clearControls() override { controls.clear(); }
+  [[noreturn]] void
+  removeControl([[maybe_unused]] qc::Control control) override {
+    throw std::invalid_argument(
+        "Neutral-atom operations do not have controls.");
+  }
+  qc::Controls::iterator
+  removeControl(const qc::Controls::iterator it) override {
+    return controls.erase(it);
+  }
 
   [[nodiscard]] auto commutesAtQubit(const qc::Operation& other,
                                      const qc::Qubit& qubit) const

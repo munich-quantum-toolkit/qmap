@@ -11,7 +11,8 @@ of changes including minor and patch releases, please refer to the
 The neutral-atom computation IR and circuit operations previously supplied by
 MQT Core now live in QMAP under the `na/ir` headers. This includes
 `NAComputation`, its entities and operations, and the move, bridge, and AOD
-circuit operations.
+circuit operations. Move and bridge operations use `NAStandardOperation` and
+remain custom operations to MQT Core. They do not support quantum controls.
 
 The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
 `origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
@@ -23,7 +24,10 @@ client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
 `mqt.na.default` provider while both packages are installed. The provider reads
 its bundled description automatically and can be configured through the
 `MQT_QMAP_QDMI_NA_CONFIG_JSON` and `MQT_QMAP_QDMI_NA_CONFIG_FILE` environment
-variables.
+variables. Device discovery opens each registered ID once; separate devices may
+have the same display name.
+
+This release requires CMake 3.28 or newer.
 
 ### macOS support
 

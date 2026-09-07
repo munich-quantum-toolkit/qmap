@@ -154,7 +154,9 @@ public:
     // The following is the result of
     // NLOHMANN_DEFINE_DERIVED_TYPE_INTRUSIVE_ONLY_SERIALIZE(Device, na::Device)
     // without any new attributes, which is the reason the macro cannot be used.
+    /// nlohmann::json requires this name for ADL serialization.
     template <typename BasicJsonType>
+    // NOLINTNEXTLINE(readability-identifier-naming)
     friend void to_json(BasicJsonType& nlohmannJsonJ,
                         const Device& nlohmannJsonT) {
       // NOLINTNEXTLINE(misc-include-cleaner)
@@ -166,7 +168,7 @@ public:
   /// @brief Deleted default constructor to prevent instantiation.
   Session() = delete;
 
-  /// @see QDMI_SESSION_PROPERTY_DEVICES
+  /// Opens each registered device once and returns the compatible devices.
   [[nodiscard]] static auto getDevices() -> std::vector<Device>;
 };
 

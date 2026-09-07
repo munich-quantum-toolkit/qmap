@@ -12,7 +12,6 @@
 #include "na/fomac/Device.hpp"
 #include "na/qdmi/Configuration.hpp"
 
-#include <algorithm>
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/optional.h> // NOLINT(misc-include-cleaner)
@@ -169,31 +168,6 @@ Returns:
              nb::sig("def __ne__(self, arg: object, /) -> bool"));
   // NOLINTEND(misc-redundant-expression)
 
-  // A device registered at runtime is reachable by its identifier but does not
-  // appear in the device list of a QDMI session, so the packaged device is
-  // opened by identifier and added to the discovered compatible devices.
-  m.def(
-      "devices",
-      [deviceId]() -> std::vector<na::Session::Device> {
-        auto devices = na::Session::getDevices();
-        if (deviceId.empty()) {
-          return devices;
-        }
-        const auto driver = nb::module_::import_("mqt.core.qdmi.driver");
-        const auto opened = driver.attr("open_device")(deviceId);
-        const auto packagedDevice = na::Session::Device::tryCreateFromDevice(
-            nb::cast<fomac::Device>(opened));
-        if (!packagedDevice.has_value()) {
-          return devices;
-        }
-        const auto packagedDeviceName = packagedDevice->getName();
-        if (std::ranges::none_of(
-                devices, [&packagedDeviceName](const auto& availableDevice) {
-                  return availableDevice.getName() == packagedDeviceName;
-                })) {
-          devices.emplace_back(*packagedDevice);
-        }
-        return devices;
-      },
-      "Returns a list of available devices.");
+  m.def("devices", &na::Session::getDevices,
+        "Returns the registered neutral-atom devices.");
 }

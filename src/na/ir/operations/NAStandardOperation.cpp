@@ -12,9 +12,11 @@
 
 #include "NAOperationPrinting.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/Permutation.hpp"
 #include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -27,8 +29,9 @@ namespace na {
 
 NAStandardOperation::NAStandardOperation(const NAOpType newNAOpType,
                                          qc::Targets operationTargets)
-    : qc::StandardOperation(operationTargets, qc::OpType::None),
-      naOpType(validateType(newNAOpType)) {
+    : naOpType(validateType(newNAOpType)) {
+  targets = std::move(operationTargets);
+  type = qc::OpType::None;
   name = toString(naOpType);
 }
 
@@ -48,7 +51,7 @@ auto NAStandardOperation::equals(const qc::Operation& operation,
     -> bool {
   const auto* other = dynamic_cast<const NAStandardOperation*>(&operation);
   return other != nullptr && naOpType == other->naOpType &&
-         qc::StandardOperation::equals(operation, permutation1, permutation2);
+         qc::Operation::equals(operation, permutation1, permutation2);
 }
 
 auto NAStandardOperation::equals(const qc::Operation& operation) const -> bool {

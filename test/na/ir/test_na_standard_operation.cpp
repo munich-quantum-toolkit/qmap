@@ -9,10 +9,13 @@
  */
 
 #include "ir/Definitions.hpp"
+#include "ir/Permutation.hpp"
 #include "ir/Register.hpp"
+#include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "na/ir/operations/AodOperation.hpp"
+#include "na/ir/operations/NAOpType.hpp"
 #include "na/ir/operations/NAStandardOperation.hpp"
 
 #include <array>
@@ -29,7 +32,9 @@ TEST(NAStandardOperation, Move) {
   EXPECT_EQ(move.getType(), qc::OpType::None);
   EXPECT_EQ(move.getName(), "move");
   EXPECT_EQ(move.getNAOpType(), NAOpType::Move);
-  EXPECT_TRUE(move.isStandardOperation());
+  EXPECT_FALSE(move.isStandardOperation());
+  EXPECT_THROW(move.addControl(qc::Control{2}), std::invalid_argument);
+  EXPECT_TRUE(move.getControls().empty());
   EXPECT_TRUE(hasNAOpType(move, NAOpType::Move));
   EXPECT_FALSE(isAodOperation(move));
   EXPECT_NO_THROW(move.setGate(qc::OpType::None));

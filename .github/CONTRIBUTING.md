@@ -5,4 +5,4 @@
 
 Thank you for your interest in contributing to MQT QMAP! An extensive
 contribution guide is available in our
-[documentation](https://mqt.readthedocs.io/projects/qmap/en/latest/contributing.html).
+[documentation](https://mqt.readthedocs.io/projects/qmap/en/stable/contributing.html).

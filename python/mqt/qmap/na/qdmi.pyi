@@ -110,4 +110,4 @@ class Device(mqt.core.qdmi.Device):
     def __ne__(self, arg: object, /) -> bool: ...
 
 def devices() -> list[Device]:
-    """Returns a list of available devices."""
+    """Returns the registered neutral-atom devices."""

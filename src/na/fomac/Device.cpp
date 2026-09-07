@@ -10,8 +10,10 @@
 
 #include "na/fomac/Device.hpp"
 
+#include "fomac/FoMaC.hpp"
 #include "ir/Definitions.hpp"
 #include "na/qdmi/Configuration.hpp"
+#include "qdmi/driver/Driver.hpp"
 
 #include <algorithm>
 #include <array>
@@ -577,8 +579,8 @@ auto Session::Device::initOperationsFromDevice() -> bool {
 
 auto Session::getDevices() -> std::vector<Device> {
   std::vector<Device> devices;
-  fomac::Session session;
-  for (const auto& d : session.getDevices()) {
+  for (const auto& id : qdmi::Driver::get().registeredDeviceIds()) {
+    const auto d = fomac::Session::openDevice(id);
     if (auto r = Device::tryCreateFromDevice(d); r.has_value()) {
       devices.emplace_back(r.value());
     }
