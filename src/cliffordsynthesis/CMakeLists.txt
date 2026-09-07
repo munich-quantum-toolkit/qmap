@@ -31,8 +31,7 @@ if(NOT TARGET ${MQT_QMAP_CLIFFORD_SYNTHESIS_TARGET_NAME})
   target_link_libraries(
     ${MQT_QMAP_CLIFFORD_SYNTHESIS_TARGET_NAME}
     PUBLIC MQT::CoreIR plog::plog nlohmann_json::nlohmann_json
-    PRIVATE MQT::LogicBlocks MQT::ProjectWarnings MQT::ProjectOptions MQT::CoreQASM
-            MQT::CoreCircuitOptimizer)
+    PRIVATE MQT::LogicBlocks MQT::ProjectWarnings MQT::ProjectOptions MQT::CoreQASM MQT::QMapDS)
 
   # add MQT alias
   add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_CLIFFORD_SYNTHESIS_TARGET_NAME})

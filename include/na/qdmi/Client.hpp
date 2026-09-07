@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "fomac/FoMaC.hpp"
 #include "na/qdmi/Configuration.hpp"
+#include "qdmi/Client.hpp"
 
 // NOLINTNEXTLINE(misc-include-cleaner)
 #include <nlohmann/json.hpp>
@@ -25,17 +25,17 @@
 namespace na {
 /**
  * @brief Class representing the QDMI client with neutral-atom extensions.
- * @see fomac::Session
+ * @see qdmi::Session
  */
 class Session {
 public:
   /**
    * @brief Class representing a quantum device with neutral atom extensions.
-   * @see fomac::Device
+   * @see qdmi::Device
    * @note Since it inherits from @ref na::Device, Device objects can be
    * converted to `nlohmann::json` objects.
    */
-  class Device : public fomac::Device, na::Device {
+  class Device : public qdmi::Device, na::Device {
 
     /**
      * @brief Initializes the name from the underlying QDMI device.
@@ -83,14 +83,14 @@ public:
     auto initOperationsFromDevice() -> bool;
 
     /**
-     * @brief Constructs a Device object from a fomac::Device object.
-     * @param device The fomac::Device object to wrap.
+     * @brief Constructs a Device object from a qdmi::Device object.
+     * @param device The qdmi::Device object to wrap.
      * @note The constructor does not initialize the additional fields of this
      * class. For their initialization, the corresponding `init*FromDevice`
      * methods must be called, see @ref tryCreateFromDevice.
      */
-    explicit Device(const fomac::Device& device)
-        : fomac::Device(device), na::Device() {};
+    explicit Device(const qdmi::Device& device)
+        : qdmi::Device(device), na::Device() {};
 
   public:
     /// @returns the length unit of the device.
@@ -114,16 +114,16 @@ public:
     }
 
     /**
-     * @brief Try to create a Device object from a fomac::Device object.
+     * @brief Try to create a Device object from a qdmi::Device object.
      * @details This method attempts to create a Device object by initializing
-     * all necessary fields from the provided fomac::Device object. If any
+     * all necessary fields from the provided qdmi::Device object. If any
      * required information is missing or invalid, the method returns
      * `std::nullopt`.
-     * @param device is the fomac::Device object to wrap.
+     * @param device is the qdmi::Device object to wrap.
      * @return An optional containing the instantiated device if compatible,
      * std::nullopt otherwise.
      */
-    [[nodiscard]] static auto tryCreateFromDevice(const fomac::Device& device)
+    [[nodiscard]] static auto tryCreateFromDevice(const qdmi::Device& device)
         -> std::optional<Device> {
       Device d(device);
       // The sequence of the following method calls does not matter.

@@ -20,7 +20,21 @@
 #include <utility>
 #include <vector>
 
+namespace qc {
+class QuantumComputation;
+}
+
 namespace na {
+
+using CircuitDAG = std::vector<std::deque<std::unique_ptr<qc::Operation>*>>;
+
+/**
+ * @brief Construct the per-qubit operation DAG used by neutral-atom mapping.
+ * @param qc Circuit whose operations are referenced by the DAG.
+ * @return One operation queue per physical qubit.
+ */
+[[nodiscard]] CircuitDAG constructDAG(qc::QuantumComputation& qc);
+
 /**
  * @brief Helper for constructing executable or look-ahead layers from a circuit
  * DAG.
@@ -32,11 +46,10 @@ namespace na {
 
 class NeutralAtomLayer {
 protected:
-  using DAG = std::vector<std::deque<std::unique_ptr<qc::Operation>*>>;
   using DAGIterator = std::deque<std::unique_ptr<qc::Operation>*>::iterator;
   using DAGIterators = std::vector<DAGIterator>;
 
-  DAG dag;
+  CircuitDAG dag;
   DAGIterators iterators;
   DAGIterators ends;
   GateList gates;
@@ -84,7 +97,7 @@ public:
    * @param lookaheadDepth Max number of multi-qubit gates to look ahead per
    * qubit.
    */
-  explicit NeutralAtomLayer(DAG graph, const bool isFrontLayer,
+  explicit NeutralAtomLayer(CircuitDAG graph, const bool isFrontLayer,
                             const uint32_t lookaheadDepth = 1)
       : dag(std::move(graph)), lookaheadDepth(lookaheadDepth),
         isFrontLayer(isFrontLayer) {

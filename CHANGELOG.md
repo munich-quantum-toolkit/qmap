@@ -17,12 +17,18 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 - ✨ Provide extended neutral-atom OpenQASM serialization through
   `na::serializeOpenQASM` ([#1124]) ([**@burgholzer**])
 
+- ♻️ Move the `singleQubitGateFusion`, `decomposeSWAP`, `cancelCNOTs`, and
+  `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP
+  ([#1125]) ([**@simon1hofmann**], [**@burgholzer**])
+
 - ✨ Provide the neutral-atom QDMI device and client integration transferred
   from MQT Core, preserving distinct registered devices with the same name
   ([#1111]) ([**@denialhaag**], [**@burgholzer**])
 
 ### Changed
 
+- ⬆️ Require MQT Core 3.10 for C++ builds and use its QDMI client API ([#1144])
+  ([**@burgholzer**])
 - ♻️ Move the neutral-atom computation IR and circuit operations from MQT Core
   to QMAP ([#1111]) ([**@denialhaag**], [**@burgholzer**])
 - 💥 Drop support for x86 macOS and stop publishing the respective wheels
@@ -33,6 +39,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Fixed
 
+- 🐛 Preserve mid-circuit measurements, resets, and barriers during single-qubit
+  gate fusion ([#1125]) ([**@burgholzer**])
 - 🐛 Preserve bijective layouts when the heuristic mapper moves logical qubits
   ([#1153]) ([**@burgholzer**])
 - 🐛 Preserve the input circuit name during mapping ([#1154])
@@ -320,6 +328,9 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#1124]: https://github.com/munich-quantum-toolkit/qmap/pull/1124
+
+[#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
+[#1144]: https://github.com/munich-quantum-toolkit/qmap/pull/1144
 [#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
 
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154

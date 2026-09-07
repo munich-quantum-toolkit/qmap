@@ -11,8 +11,8 @@
 #include "cliffordsynthesis/Results.hpp"
 
 #include "Logic.hpp"
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "datastructures/CircuitOptimizations.hpp"
 #include "ir/QuantumComputation.hpp"
 
 #include <nlohmann/json.hpp>
@@ -24,7 +24,7 @@ namespace cs {
 Results::Results(qc::QuantumComputation& qc, const Tableau& tableau) {
   // SWAP gates are not natively supported in the encoding, so we need to
   // decompose them into sequences of three CNOTs.
-  qc::CircuitOptimizer::decomposeSWAP(qc, false);
+  qmap::decomposeSWAP(qc, false);
 
   setResultCircuit(qc);
   setResultTableau(tableau);

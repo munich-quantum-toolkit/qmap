@@ -8,11 +8,11 @@
  * Licensed under the MIT License
  */
 
-#include "na/fomac/Device.hpp"
+#include "na/qdmi/Client.hpp"
 
-#include "fomac/FoMaC.hpp"
 #include "ir/Definitions.hpp"
 #include "na/qdmi/Configuration.hpp"
+#include "qdmi/Client.hpp"
 #include "qdmi/driver/Driver.hpp"
 
 #include <algorithm>
@@ -43,7 +43,7 @@ namespace {
  * @param sites is a vector of Session sites
  * @return the extent covering all given sites
  */
-auto calculateExtentFromSites(const std::vector<fomac::Site>& sites)
+auto calculateExtentFromSites(const std::vector<qdmi::Site>& sites)
     -> Device::Region {
   auto minX = std::numeric_limits<int64_t>::max();
   auto maxX = std::numeric_limits<int64_t>::min();
@@ -68,7 +68,7 @@ auto calculateExtentFromSites(const std::vector<fomac::Site>& sites)
  * @return the extent covering all sites in the pairs
  */
 auto calculateExtentFromSites(
-    const std::vector<std::pair<fomac::Site, fomac::Site>>& sitePairs)
+    const std::vector<std::pair<qdmi::Site, qdmi::Site>>& sitePairs)
     -> Device::Region {
   auto minX = std::numeric_limits<int64_t>::max();
   auto maxX = std::numeric_limits<int64_t>::min();
@@ -124,7 +124,7 @@ auto Session::Device::initQubitsNumFromDevice() -> void {
   numQubits = getQubitsNum();
 }
 auto Session::Device::initLengthUnitFromDevice() -> bool {
-  const auto& u = fomac::Device::getLengthUnit();
+  const auto& u = qdmi::Device::getLengthUnit();
   if (!u.has_value()) {
     SPDLOG_INFO("Length unit not set");
     return false;
@@ -134,7 +134,7 @@ auto Session::Device::initLengthUnitFromDevice() -> bool {
   return true;
 }
 auto Session::Device::initDurationUnitFromDevice() -> bool {
-  const auto& u = fomac::Device::getDurationUnit();
+  const auto& u = qdmi::Device::getDurationUnit();
   if (!u.has_value()) {
     SPDLOG_INFO("Duration unit not set");
     return false;
@@ -297,7 +297,7 @@ auto Session::Device::initTrapsfromDevice() -> bool {
 auto Session::Device::initOperationsFromDevice() -> bool {
   std::map<size_t, std::pair<ShuttlingUnit, std::array<bool, 3>>>
       shuttlingUnitsPerId;
-  for (const fomac::Operation& op : getOperations()) {
+  for (const qdmi::Operation& op : getOperations()) {
     const auto zoned = op.isZoned();
     const auto& nq = op.getQubitsNum();
     const auto& opName = op.getName();
@@ -307,7 +307,7 @@ auto Session::Device::initOperationsFromDevice() -> bool {
       return false;
     }
     if (zoned) {
-      if (std::ranges::any_of(*sitesOpt, [](const fomac::Site& site) -> bool {
+      if (std::ranges::any_of(*sitesOpt, [](const qdmi::Site& site) -> bool {
             return !site.isZone();
           })) {
         SPDLOG_INFO("Operation marked as zoned but has non-zone sites");
@@ -580,7 +580,7 @@ auto Session::Device::initOperationsFromDevice() -> bool {
 auto Session::getDevices() -> std::vector<Device> {
   std::vector<Device> devices;
   for (const auto& id : qdmi::Driver::get().registeredDeviceIds()) {
-    const auto d = fomac::Session::openDevice(id);
+    const auto d = qdmi::Session::openDevice(id);
     if (auto r = Device::tryCreateFromDevice(d); r.has_value()) {
       devices.emplace_back(r.value());
     }

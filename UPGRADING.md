@@ -6,6 +6,17 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+### MQT Core for C++ builds
+
+C++ builds require MQT Core 3.10.x. MQT Core 4 is not supported. Include
+`na/qdmi/Client.hpp` for QMAP's neutral-atom client and `qdmi/Client.hpp` for
+Core's generic client. The generic C++ namespace is `qdmi`, and its CMake target
+is `MQT::CoreQDMI`.
+
+The Python dependency update requires a QCEC release that supports Core 3.10.
+Until that release, the published Python dependency constraints still select
+Core 3.9 and cannot build this C++ port.
+
 ### Neutral-atom OpenQASM serialization
 
 Include `na/ir/OpenQASMSerializer.hpp` and call
@@ -13,6 +24,27 @@ Include `na/ir/OpenQASMSerializer.hpp` and call
 move, bridge, or AOD operations. Link `MQT::QMapNAIR`. Core's
 `qasm3::Serializer` traverses compound and conditional operations; QMAP supplies
 the extended neutral-atom leaf syntax.
+
+### Circuit transformations
+
+MQT QMAP now owns circuit transformations that MQT Core removed from
+`qc::CircuitOptimizer`. Apply these C++ replacements:
+
+- Replace `qc::CircuitOptimizer::singleQubitGateFusion` with
+  `qmap::singleQubitGateFusion`.
+- Replace `qc::CircuitOptimizer::decomposeSWAP` with `qmap::decomposeSWAP`. The
+  QMAP function recursively decomposes uncontrolled SWAPs and preserves
+  controlled SWAPs.
+- Replace `qc::CircuitOptimizer::cancelCNOTs` with `qmap::cancelCNOTs`.
+- Replace `qc::CircuitOptimizer::replaceMCXWithMCZ` with
+  `qmap::replaceMCXWithMCZ`.
+- Replace `qc::CircuitOptimizer::flattenOperations(qc)` with
+  `qc.flattenOperations()`.
+- Replace `qc::CircuitOptimizer::removeFinalMeasurements(qc)` with
+  `qc.removeFinalMeasurements()`.
+
+For the QMAP-owned replacements, include
+`datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
 
 ### Neutral-atom stack
 
@@ -28,12 +60,10 @@ The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
 
 MQT QMAP now ships and registers the neutral-atom QDMI device and exposes its
 client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
-`mqt.qmap.na.default`; this keeps it distinct from MQT Core 3.9.0's
-`mqt.na.default` provider while both packages are installed. The provider reads
-its bundled description automatically and can be configured through the
-`MQT_QMAP_QDMI_NA_CONFIG_JSON` and `MQT_QMAP_QDMI_NA_CONFIG_FILE` environment
-variables. Device discovery opens each registered ID once; separate devices may
-have the same display name.
+`mqt.qmap.na.default`. The provider reads its bundled description automatically
+and can be configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
+`MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables. Device discovery opens
+each registered ID once; separate devices may have the same display name.
 
 This release requires CMake 3.28 or newer.
 

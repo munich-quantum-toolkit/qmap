@@ -12,6 +12,7 @@
 
 #include "NAOperationPrinting.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/Permutation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/operations/NAOpType.hpp"
