@@ -29,20 +29,20 @@ namespace qmap {
 namespace {
 void expectFusionPreservesFunctionality(qc::QuantumComputation& circuit,
                                         const std::size_t expectedOperations) {
-  dd::Package package(circuit.getNqubits());
-  const auto before = dd::buildFunctionality(circuit, package);
+  const auto package = std::make_unique<dd::Package>(circuit.getNqubits());
+  const auto before = dd::buildFunctionality(circuit, *package);
 
   singleQubitGateFusion(circuit);
-  const auto after = dd::buildFunctionality(circuit, package);
+  const auto after = dd::buildFunctionality(circuit, *package);
 
   EXPECT_EQ(circuit.getNops(), expectedOperations);
   EXPECT_EQ(before, after);
 
-  package.decRef(before);
-  package.decRef(after);
-  package.garbageCollect(true);
+  package->decRef(before);
+  package->decRef(after);
+  package->garbageCollect(true);
 
-  const auto [vectors, matrices, realNumbers] = package.computeActiveCounts();
+  const auto [vectors, matrices, realNumbers] = package->computeActiveCounts();
   EXPECT_EQ(vectors, 0U);
   EXPECT_EQ(matrices, 0U);
   EXPECT_EQ(realNumbers, 0U);
