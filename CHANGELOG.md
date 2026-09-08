@@ -12,8 +12,16 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- ✨ Provide the neutral-atom QDMI device and client integration transferred
+  from MQT Core, preserving distinct registered devices with the same name
+  ([#1111]) ([**@denialhaag**], [**@burgholzer**])
+
 ### Changed
 
+- ♻️ Move the neutral-atom computation IR and circuit operations from MQT Core
+  to QMAP ([#1111]) ([**@denialhaag**], [**@burgholzer**])
 - 💥 Drop support for x86 macOS and stop publishing the respective wheels
   ([#1126]) ([**@denialhaag**])
 - ⬆️ Raise the macOS deployment target to 13.3 to enable `std::format` in libc++
@@ -307,6 +315,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [2.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v2.8.0
 
 <!-- PR links -->
+
+[#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
 
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
 [#1153]: https://github.com/munich-quantum-toolkit/qmap/pull/1153

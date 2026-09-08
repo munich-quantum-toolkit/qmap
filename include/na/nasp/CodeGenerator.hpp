@@ -12,8 +12,8 @@
 
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "na/NAComputation.hpp"
-#include "na/entities/Location.hpp"
+#include "na/ir/NAComputation.hpp"
+#include "na/ir/entities/Location.hpp"
 
 #include <cstdint>
 

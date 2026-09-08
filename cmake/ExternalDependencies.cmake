@@ -40,6 +40,31 @@ if(BUILD_MQT_QMAP_BINDINGS)
   find_package(nanobind CONFIG REQUIRED)
 endif()
 
+if(TARGET qdmi::qdmi)
+  message(STATUS "QDMI is already available.")
+else()
+  message(STATUS "QDMI will be included via FetchContent")
+  # cmake-format: off
+  set(QDMI_MINIMUM_VERSION 1.3.3
+      CACHE STRING "Minimum QDMI version")
+  set(QDMI_VERSION 1.3.3
+      CACHE STRING "QDMI version")
+  set(QDMI_REV "18cfb67fd9042761d3005c2f8655751c1758f9c5" # v1.3.3
+      CACHE STRING "QDMI identifier (tag, branch or commit hash)")
+  set(QDMI_REPO_OWNER "Munich-Quantum-Software-Stack"
+      CACHE STRING "QDMI repository owner (change when using a fork)")
+  set(INSTALL_QDMI
+      OFF
+      CACHE BOOL "Generate installation instructions for QDMI")
+  # cmake-format: on
+  FetchContent_Declare(
+    qdmi
+    GIT_REPOSITORY https://github.com/${QDMI_REPO_OWNER}/qdmi.git
+    GIT_TAG ${QDMI_REV}
+    FIND_PACKAGE_ARGS ${QDMI_MINIMUM_VERSION})
+  list(APPEND FETCH_PACKAGES qdmi)
+endif()
+
 # cmake-format: off
 set(MQT_CORE_MINIMUM_VERSION 3.9.0
     CACHE STRING "MQT Core minimum version")
