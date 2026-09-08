@@ -75,10 +75,6 @@ set(MQT_CORE_REV "e9e2c959b3c81fda10ea8db34b908b638e61ba49"
 set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
 # cmake-format: on
-if(BUILD_MQT_QMAP_BINDINGS)
-  # Share Core's Python libraries and device registry instead of fetching a second copy.
-  find_package(mqt-core ${MQT_CORE_MINIMUM_VERSION}...<3.11 CONFIG REQUIRED)
-endif()
 FetchContent_Declare(
   mqt-core
   GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/core.git

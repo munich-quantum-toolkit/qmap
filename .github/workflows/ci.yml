@@ -118,7 +118,7 @@ jobs:
     with:
       clang-version: 20
       files-changed-only: true
-      install-pkgs: "mqt-core==3.10.0,nanobind==3.0.1"
+      install-pkgs: "nanobind==3.0.1"
       setup-python: true
       setup-z3: true
       cpp-linter-extra-args: "-std=c++20"
