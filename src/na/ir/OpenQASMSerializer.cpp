@@ -29,11 +29,11 @@ namespace {
 
 constexpr std::size_t OUTPUT_INDENT_SIZE = 2U;
 
-bool serializeOperation(
+auto serializeOperation(
     std::ostream& output, const qc::Operation& operation,
     const qasm3::QubitIndexToRegisterMap& qubitMap,
     [[maybe_unused]] const qasm3::BitIndexToRegisterMap& bitMap,
-    const std::size_t indent) {
+    const std::size_t indent) -> bool {
   const auto indentation = std::string(indent * OUTPUT_INDENT_SIZE, ' ');
   if (const auto* aod = dynamic_cast<const AodOperation*>(&operation);
       aod != nullptr) {
