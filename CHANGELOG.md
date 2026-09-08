@@ -16,26 +16,32 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 - ✨ Provide extended neutral-atom OpenQASM serialization through
   `na::serializeOpenQASM` ([#1124]) ([**@burgholzer**])
-
-- ♻️ Move the `singleQubitGateFusion`, `decomposeSWAP`, `cancelCNOTs`, and
-  `replaceMCXWithMCZ` circuit transformations from MQT Core to MQT QMAP
-  ([#1125]) ([**@simon1hofmann**], [**@burgholzer**])
-
 - ✨ Provide the neutral-atom QDMI device and client integration transferred
   from MQT Core, preserving distinct registered devices with the same name
   ([#1111]) ([**@denialhaag**], [**@burgholzer**])
 
 ### Changed
 
-- ⬆️ Require MQT Core 3.10 for C++ builds and use its QDMI client API ([#1144])
-  ([**@burgholzer**])
-- ♻️ Move the neutral-atom computation IR and circuit operations from MQT Core
-  to QMAP ([#1111]) ([**@denialhaag**], [**@burgholzer**])
+- ⬆️ Update `mqt-core` to version 3.10.0 ([#1144]) ([**@denialhaag**],
+  [**@burgholzer**])
+- ⬆️ Update `nanobind` to version 3.0.1 ([#1144]) ([**@denialhaag**],
+  [**@burgholzer**])
+- 💥 Require Python 3.11 or newer ([#1126]) ([**@denialhaag**])
+- 📦 Publish one split-mode `cp311-abi3` wheel for GIL-enabled CPython 3.11 and
+  newer ([#1144]) ([**@denialhaag**])
+- 📦 Publish one `cp315-abi3t` wheel for free-threaded CPython 3.15 and newer
+  ([#1144]) ([**@denialhaag**])
+- 💥 Raise the minimum Qiskit version from 1.0.0 to 2.1.0 ([#1144])
+  ([**@denialhaag**])
+- ♻️ Own the `singleQubitGateFusion`, `decomposeSWAP`, `cancelCNOTs`, and
+  `replaceMCXWithMCZ` circuit transformations ([#1125]) ([**@simon1hofmann**],
+  [**@burgholzer**])
+- ♻️ Own the neutral-atom computation IR and circuit operations ([#1111])
+  ([**@denialhaag**], [**@burgholzer**])
 - 💥 Drop support for x86 macOS and stop publishing the respective wheels
   ([#1126]) ([**@denialhaag**])
 - ⬆️ Raise the macOS deployment target to 13.3 to enable `std::format` in libc++
   ([#1126]) ([**@denialhaag**])
-- 💥 Require Python 3.11 or newer ([#1126]) ([**@denialhaag**])
 
 ### Fixed
 
@@ -327,17 +333,15 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
-[#1124]: https://github.com/munich-quantum-toolkit/qmap/pull/1124
-
-[#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
-[#1144]: https://github.com/munich-quantum-toolkit/qmap/pull/1144
-[#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
-
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
 [#1153]: https://github.com/munich-quantum-toolkit/qmap/pull/1153
 [#1152]: https://github.com/munich-quantum-toolkit/qmap/pull/1152
+[#1144]: https://github.com/munich-quantum-toolkit/qmap/pull/1144
 [#1126]: https://github.com/munich-quantum-toolkit/qmap/pull/1126
+[#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
+[#1124]: https://github.com/munich-quantum-toolkit/qmap/pull/1124
 [#1116]: https://github.com/munich-quantum-toolkit/qmap/pull/1116
+[#1111]: https://github.com/munich-quantum-toolkit/qmap/pull/1111
 [#1106]: https://github.com/munich-quantum-toolkit/qmap/pull/1106
 [#1096]: https://github.com/munich-quantum-toolkit/qmap/pull/1096
 [#1069]: https://github.com/munich-quantum-toolkit/qmap/pull/1069

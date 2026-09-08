@@ -6,16 +6,13 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
-### MQT Core for C++ builds
+This release updates the minimum required `mqt-core` version to 3.10.0.
 
-C++ builds require MQT Core 3.10.x. MQT Core 4 is not supported. Include
-`na/qdmi/Client.hpp` for QMAP's neutral-atom client and `qdmi/Client.hpp` for
-Core's generic client. The generic C++ namespace is `qdmi`, and its CMake target
-is `MQT::CoreQDMI`.
+### QDMI client API
 
-The Python dependency update requires a QCEC release that supports Core 3.10.
-Until that release, the published Python dependency constraints still select
-Core 3.9 and cannot build this C++ port.
+Include `na/qdmi/Client.hpp` for QMAP's neutral-atom client and
+`qdmi/Client.hpp` for MQT Core's generic client. The generic C++ namespace is
+`qdmi`, and its CMake target is `MQT::CoreQDMI`.
 
 ### Neutral-atom OpenQASM serialization
 
@@ -65,17 +62,36 @@ and can be configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
 `MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables. Device discovery opens
 each registered ID once; separate devices may have the same display name.
 
-This release requires CMake 3.28 or newer.
+### CMake 3.28 minimum
+
+MQT QMAP now requires CMake 3.28 or newer. Upgrade CMake before building this
+release.
 
 ### macOS support
 
 MQT QMAP no longer supports x86 macOS. Use Apple silicon with macOS 13.3 or
 newer. The new deployment target enables `std::format` in libc++.
 
-### Python support
+### Qiskit 2.1 minimum
+
+The minimum Qiskit version increases from **1.0.0 to 2.1.0**, dropping support
+for all Qiskit 1.x releases and Qiskit 2.0. Upgrade Qiskit to 2.1.0 or newer.
+
+### Python 3.11 and Stable ABI wheels
 
 MQT QMAP now requires Python 3.11 or newer. Upgrade the Python environment
 before installing this release.
+
+MQT QMAP now publishes one `cp311-abi3` wheel for GIL-enabled CPython 3.11 and
+newer. Free-threaded support starts with CPython 3.15 in a separate
+`cp315-abi3t` wheel. MQT QMAP no longer publishes free-threaded CPython 3.13 or
+3.14 wheels.
+
+This release updates `nanobind` to 3.0.1, which changes the `nanobind` ABI.
+
+The Python bindings depend on `nanobind-backend`, which supplies the
+interpreter-specific `nanobind` runtime. This dependency does not change the C++
+API or the Python import paths.
 
 ## [3.9.0]
 

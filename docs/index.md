@@ -11,8 +11,8 @@ QMAP is publicly available on GitHub at
 [munich-quantum-toolkit/qmap](https://github.com/munich-quantum-toolkit/qmap),
 while pre-built binaries are available via
 [PyPI](https://pypi.org/project/mqt.qmap/) for all major operating systems and
-all modern Python versions. MQT QMAP is fully compatible with Qiskit 1.0 and
-above.
+all modern Python versions. MQT QMAP is fully compatible with Qiskit 2.1 and
+newer.
 
 We recommend you to start with the
 {doc}`installation instructions <installation>` or by reading our overview paper
