@@ -18,7 +18,6 @@
 #include <nanobind/stl/string.h>   // NOLINT(misc-include-cleaner)
 #include <nanobind/stl/vector.h>   // NOLINT(misc-include-cleaner)
 #include <string>
-#include <vector>
 
 namespace nb = nanobind;
 using namespace nb::literals;
