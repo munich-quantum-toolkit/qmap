@@ -130,7 +130,7 @@ name = "cffi"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz", hash = "sha256:dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be", size = 530807, upload-time = "2026-08-03T21:21:18.939Z" }
 wheels = [
@@ -1490,13 +1490,26 @@ wheels = [
 
 [[package]]
 name = "mqt-qcec"
-version = "3.9.1.dev30+gceddf335a"
-source = { git = "https://github.com/munich-quantum-toolkit/qcec.git?rev=ceddf335a08fe3f0dc095ca4bdc21a2677ad1a54#ceddf335a08fe3f0dc095ca4bdc21a2677ad1a54" }
+version = "3.10.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mqt-core" },
     { name = "nanobind-backend" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/93/37/0f80e018acb70b21a48dda003b1a00cb64f286c80f632400bd70ed47ccdf/mqt_qcec-3.10.0.tar.gz", hash = "sha256:eaa9f5cb5075627eb1cd447d37f85312bcbb7ce163062ffb995834705886951d", size = 317289, upload-time = "2026-09-08T20:19:44.942Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/80/acde6e6e820d43fbe2e0e1aa5fa16a24f2e7e52c93ab178d460dcf4a0e9b/mqt_qcec-3.10.0-cp311-abi3-macosx_13_0_arm64.whl", hash = "sha256:87b8d34c04a8c86da6cdbeabd9d00727be6eadf9fc21d5f82898037265ccc31d", size = 263329, upload-time = "2026-09-08T20:19:29.898Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/be/e7b0ffb80aebb3cd66f0826215f9094a5ec712a5fe5c47d0c312faa218a4/mqt_qcec-3.10.0-cp311-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1ab91821ca556a02b48d0ca589b5329ce5dd72675aaeff907ffc6d25d4acd833", size = 283490, upload-time = "2026-09-08T20:19:31.731Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/58/ca55270fa895a79e0ead28b017d2bd0a7d86413a266cd30df5035129de8a/mqt_qcec-3.10.0-cp311-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1de65553124c117b0eba3091090f8dbceb41adf9dcfb21de486a14d47cac0e41", size = 305261, upload-time = "2026-09-08T20:19:33.117Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/60/aec56956801e74ccbe093c4f3365e0b317bc91400316d439661f20e24e6a/mqt_qcec-3.10.0-cp311-abi3-win_amd64.whl", hash = "sha256:b9bf7854bb496e6e331f584eb37f8feedb1a58aea5707606615fea3ba58369ae", size = 490457, upload-time = "2026-09-08T20:19:34.464Z" },
+    { url = "https://files.pythonhosted.org/packages/48/69/aed8303932f85ed53e12d35fa6a4e8f622113cfe453deda57b157e200319/mqt_qcec-3.10.0-cp311-abi3-win_arm64.whl", hash = "sha256:dc043279561325aa70bbb4d4bbf174cc6d06071524d8babe0c01053c3a7e40b2", size = 672722, upload-time = "2026-09-08T20:19:35.904Z" },
+    { url = "https://files.pythonhosted.org/packages/76/1d/48ab66bafd86fb9b80b1d6230f27758667b8e1915d7f0c3741404f9c91f8/mqt_qcec-3.10.0-cp315-abi3t-macosx_13_0_arm64.whl", hash = "sha256:a2248cfeb13697c0f6aa5f205bf6ea777aacfc2d38bce0c3935b14cc1bfde6cb", size = 263253, upload-time = "2026-09-08T20:19:37.363Z" },
+    { url = "https://files.pythonhosted.org/packages/53/9b/ec8363e6ed16a9fe61f56c0121a1c26f941a24c5a5dc9625b3b5f59878da/mqt_qcec-3.10.0-cp315-abi3t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f35acfca9f32b58c6a874efc962b017725b5a6b8ac47e0e6500bc95dcd1f48a1", size = 283562, upload-time = "2026-09-08T20:19:39.143Z" },
+    { url = "https://files.pythonhosted.org/packages/68/bf/566c6978affa8f4b3c309a937a5115b534db7537ac22543ac204d57a0fbc/mqt_qcec-3.10.0-cp315-abi3t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f676dd06605376094cf120cf663d6dd28f703641e45a550e1bc1be496e959a51", size = 305480, upload-time = "2026-09-08T20:19:40.396Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/12/f4bd13b234f7919aba389ac543d5b793ef6984e3aac90d50863463a975fc/mqt_qcec-3.10.0-cp315-abi3t-win_amd64.whl", hash = "sha256:5029ae467d67c14aaa60502545e31f59ce0ca3774481be1bb18f99a429b60dde", size = 505119, upload-time = "2026-09-08T20:19:41.898Z" },
+    { url = "https://files.pythonhosted.org/packages/13/ab/29ade932e97f24e0849aacbfdf972fb04a7c115b45fb3e609c7ad5956d23/mqt_qcec-3.10.0-cp315-abi3t-win_arm64.whl", hash = "sha256:cabcc8a50f300f57709536a93e2e703c6573b62f408370e0d407481e4d875f31", size = 694148, upload-time = "2026-09-08T20:19:43.553Z" },
 ]
 
 [[package]]
@@ -1606,7 +1619,7 @@ dev = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "mqt-core", specifier = "~=3.10.0" },
-    { name = "mqt-qcec", git = "https://github.com/munich-quantum-toolkit/qcec.git?rev=ceddf335a08fe3f0dc095ca4bdc21a2677ad1a54" },
+    { name = "mqt-qcec", specifier = ">=3.10.0" },
     { name = "nanobind", specifier = "~=3.0.1" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "nox", specifier = ">=2025.11.12" },
@@ -1641,7 +1654,7 @@ docs = [
 test = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-    { name = "mqt-qcec", git = "https://github.com/munich-quantum-toolkit/qcec.git?rev=ceddf335a08fe3f0dc095ca4bdc21a2677ad1a54" },
+    { name = "mqt-qcec", specifier = ">=3.10.0" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
@@ -2100,7 +2113,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -2825,7 +2838,7 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7a/97/5a3609c4f8d58b039179648e62dd220f89864f56f7357f5d4f45c29eb2cc/scipy-1.17.1.tar.gz", hash = "sha256:95d8e012d8cb8816c226aef832200b1d45109ed4464303e997c5b13122b297c0", size = 30573822, upload-time = "2026-02-23T00:26:24.851Z" }
 wheels = [
@@ -2910,7 +2923,7 @@ resolution-markers = [
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7e/74/66de6258867beb2ef08f35f9f2ac017a52cacd5081714d239ff1a442d458/scipy-1.18.1.tar.gz", hash = "sha256:52c4b7422442aba924d03ad4019852b08a92e64ea187b933135687bfe2747307", size = 30781235, upload-time = "2026-08-21T23:28:50.599Z" }
 wheels = [
@@ -3028,23 +3041,23 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "alabaster" },
-    { name = "babel" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-    { name = "docutils" },
-    { name = "imagesize" },
-    { name = "jinja2" },
-    { name = "packaging" },
-    { name = "pygments" },
-    { name = "requests" },
-    { name = "roman-numerals" },
-    { name = "snowballstemmer" },
-    { name = "sphinxcontrib-applehelp" },
-    { name = "sphinxcontrib-devhelp" },
-    { name = "sphinxcontrib-htmlhelp" },
-    { name = "sphinxcontrib-jsmath" },
-    { name = "sphinxcontrib-qthelp" },
-    { name = "sphinxcontrib-serializinghtml" },
+    { name = "alabaster", marker = "python_full_version < '3.12'" },
+    { name = "babel", marker = "python_full_version < '3.12'" },
+    { name = "colorama", marker = "python_full_version < '3.12' and sys_platform == 'win32'" },
+    { name = "docutils", marker = "python_full_version < '3.12'" },
+    { name = "imagesize", marker = "python_full_version < '3.12'" },
+    { name = "jinja2", marker = "python_full_version < '3.12'" },
+    { name = "packaging", marker = "python_full_version < '3.12'" },
+    { name = "pygments", marker = "python_full_version < '3.12'" },
+    { name = "requests", marker = "python_full_version < '3.12'" },
+    { name = "roman-numerals", marker = "python_full_version < '3.12'" },
+    { name = "snowballstemmer", marker = "python_full_version < '3.12'" },
+    { name = "sphinxcontrib-applehelp", marker = "python_full_version < '3.12'" },
+    { name = "sphinxcontrib-devhelp", marker = "python_full_version < '3.12'" },
+    { name = "sphinxcontrib-htmlhelp", marker = "python_full_version < '3.12'" },
+    { name = "sphinxcontrib-jsmath", marker = "python_full_version < '3.12'" },
+    { name = "sphinxcontrib-qthelp", marker = "python_full_version < '3.12'" },
+    { name = "sphinxcontrib-serializinghtml", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/50/a8c6ccc36d5eacdfd7913ddccd15a9cee03ecafc5ee2bc40e1f168d85022/sphinx-9.0.4.tar.gz", hash = "sha256:594ef59d042972abbc581d8baa577404abe4e6c3b04ef61bd7fc2acbd51f3fa3", size = 8710502, upload-time = "2025-12-04T07:45:27.343Z" }
 wheels = [
@@ -3070,23 +3083,23 @@ resolution-markers = [
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "alabaster" },
-    { name = "babel" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-    { name = "docutils" },
-    { name = "imagesize" },
-    { name = "jinja2" },
-    { name = "packaging" },
-    { name = "pygments" },
-    { name = "requests" },
-    { name = "roman-numerals" },
-    { name = "snowballstemmer" },
-    { name = "sphinxcontrib-applehelp" },
-    { name = "sphinxcontrib-devhelp" },
-    { name = "sphinxcontrib-htmlhelp" },
-    { name = "sphinxcontrib-jsmath" },
-    { name = "sphinxcontrib-qthelp" },
-    { name = "sphinxcontrib-serializinghtml" },
+    { name = "alabaster", marker = "python_full_version >= '3.12'" },
+    { name = "babel", marker = "python_full_version >= '3.12'" },
+    { name = "colorama", marker = "python_full_version >= '3.12' and sys_platform == 'win32'" },
+    { name = "docutils", marker = "python_full_version >= '3.12'" },
+    { name = "imagesize", marker = "python_full_version >= '3.12'" },
+    { name = "jinja2", marker = "python_full_version >= '3.12'" },
+    { name = "packaging", marker = "python_full_version >= '3.12'" },
+    { name = "pygments", marker = "python_full_version >= '3.12'" },
+    { name = "requests", marker = "python_full_version >= '3.12'" },
+    { name = "roman-numerals", marker = "python_full_version >= '3.12'" },
+    { name = "snowballstemmer", marker = "python_full_version >= '3.12'" },
+    { name = "sphinxcontrib-applehelp", marker = "python_full_version >= '3.12'" },
+    { name = "sphinxcontrib-devhelp", marker = "python_full_version >= '3.12'" },
+    { name = "sphinxcontrib-htmlhelp", marker = "python_full_version >= '3.12'" },
+    { name = "sphinxcontrib-jsmath", marker = "python_full_version >= '3.12'" },
+    { name = "sphinxcontrib-qthelp", marker = "python_full_version >= '3.12'" },
+    { name = "sphinxcontrib-serializinghtml", marker = "python_full_version >= '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cd/bd/f08eb0f4eed5c83f1ba2a3bd18f7745a2b1525fad70660a1c00224ec468a/sphinx-9.1.0.tar.gz", hash = "sha256:7741722357dd75f8190766926071fed3bdc211c74dd2d7d4df5404da95930ddb", size = 8718324, upload-time = "2025-12-31T15:09:27.646Z" }
 wheels = [

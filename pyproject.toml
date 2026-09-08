@@ -362,7 +362,6 @@ cache-keys = [
 
 [tool.uv.sources]
 mqt-qmap = { workspace = true }
-mqt-qcec = { git = "https://github.com/munich-quantum-toolkit/qcec.git", rev = "ceddf335a08fe3f0dc095ca4bdc21a2677ad1a54" }
 
 
 [tool.ty.terminal]
