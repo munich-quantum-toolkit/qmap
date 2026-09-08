@@ -8,7 +8,7 @@
 
 [build-system]
 requires = [
-  "nanobind~=2.15.0",
+  "nanobind~=3.0.1",
   "vcs-versioning>=2.3.0",
   "scikit-build-core>=1.0.3",
   "mqt.core~=3.10.0",
@@ -86,11 +86,14 @@ wheel.install-dir = "mqt/qmap"
 # Explicitly set the package directory
 wheel.packages = ["python/mqt"]
 
-# Enable Stable ABI builds for CPython 3.12+
-wheel.py-api = "cp312"
+# Build one split-mode Stable ABI wheel for GIL-enabled CPython 3.11+
+wheel.py-api = "cp311"
 
 # Set required Ninja version
 ninja.version = ">=1.10"
+
+# CMake 4.4 detects free-threaded Python and supplies Py_GIL_DISABLED on Windows
+cmake.version = ">=4.4.1"
 
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}/{build_type}"
@@ -124,11 +127,9 @@ BUILD_MQT_QMAP_BINDINGS = "ON"
 ENABLE_IPO = "ON"
 
 [[tool.scikit-build.overrides]]
-if.python-version = ">=3.13"
+if.python-version = ">=3.15"
 if.abi-flags = "t"
-if.platform-system = "win32"
-inherit.cmake.define = "append"
-cmake.define.DISABLE_GIL = "1"
+wheel.py-api = "cp315t"
 
 
 [[tool.dynamic-metadata]]
@@ -301,7 +302,7 @@ PC170 = "We do not use rST files anymore"
 
 [tool.cibuildwheel]
 build = "cp3*"
-skip = ["*-musllinux_*"]
+skip = ["*-musllinux_*", "cp314t-*"]
 archs = "auto64"
 test-groups = ["test"]
 test-sources = [
@@ -310,11 +311,13 @@ test-sources = [
 ]
 test-command = "pytest test/python"
 build-frontend = "uv"
-test-skip = [
-  "cp3??t-*", # no freethreading qiskit wheels
-  "cp*-win_arm64", # no numpy, qiskit, ... wheels
-  "cp315*", # no 3.15 wheels yet
-]
+
+[[tool.cibuildwheel.overrides]]
+select = ["cp*-win_arm64", "cp315*"]
+before-test = ""
+test-groups = []
+test-sources = []
+test-command = "python -c \"import mqt.qmap.clifford_synthesis, mqt.qmap.hybrid_mapper, mqt.qmap.na, mqt.qmap.sc\""
 
 # The mqt-core shared libraries are provided by the mqt-core Python package.
 # They should not be vendorized into the mqt-qmap wheel. This requires
@@ -374,7 +377,8 @@ exclude = [
 
 [dependency-groups]
 build = [
-  "nanobind~=2.15.0",
+  "cmake>=4.4.1",
+  "nanobind~=3.0.1",
   "vcs-versioning>=2.3.0",
   "scikit-build-core>=1.0.3",
   "mqt.core~=3.10.0",
