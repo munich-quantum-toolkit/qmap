@@ -83,7 +83,7 @@ FetchContent_Declare(
   mqt-core
   GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/core.git
   GIT_TAG ${MQT_CORE_REV}
-  EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS ${MQT_CORE_MINIMUM_VERSION}...<3.11)
+  SYSTEM EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS ${MQT_CORE_MINIMUM_VERSION}...<3.11)
 list(APPEND FETCH_PACKAGES mqt-core)
 
 set(JSON_VERSION
@@ -111,7 +111,8 @@ set(SPDLOG_VERSION
 set(SPDLOG_URL https://github.com/gabime/spdlog/archive/refs/tags/v${SPDLOG_VERSION}.tar.gz)
 # Add position independent code for spdlog, this is required for python bindings on linux
 set(SPDLOG_BUILD_PIC ON)
-FetchContent_Declare(spdlog URL ${SPDLOG_URL} FIND_PACKAGE_ARGS ${SPDLOG_VERSION})
+FetchContent_Declare(spdlog URL ${SPDLOG_URL} SYSTEM EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS
+                                ${SPDLOG_VERSION})
 list(APPEND FETCH_PACKAGES spdlog)
 
 if(BUILD_MQT_QMAP_TESTS)
