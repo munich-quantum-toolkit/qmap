@@ -62,16 +62,6 @@ and can be configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
 `MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables. Device discovery opens
 each registered ID once; separate devices may have the same display name.
 
-### CMake 3.28 minimum
-
-MQT QMAP now requires CMake 3.28 or newer. Upgrade CMake before building this
-release.
-
-### macOS support
-
-MQT QMAP no longer supports x86 macOS. Use Apple silicon with macOS 13.3 or
-newer. The new deployment target enables `std::format` in libc++.
-
 ### Qiskit 2.1 minimum
 
 The minimum Qiskit version increases from **1.0.0 to 2.1.0**, dropping support
@@ -89,9 +79,15 @@ newer. Free-threaded support starts with CPython 3.15 in a separate
 
 This release updates `nanobind` to 3.0.1, which changes the `nanobind` ABI.
 
-The Python bindings depend on `nanobind-backend`, which supplies the
-interpreter-specific `nanobind` runtime. This dependency does not change the C++
-API or the Python import paths.
+### macOS support
+
+MQT QMAP no longer supports x86 macOS. Use Apple silicon with macOS 13.3 or
+newer. The new deployment target enables `std::format` in libc++.
+
+### CMake 3.28 minimum
+
+MQT QMAP now requires CMake 3.28 or newer. Upgrade CMake before building this
+release.
 
 ## [3.9.0]
 
