@@ -38,8 +38,7 @@ endif()
 
 set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-qdmi-device)
 
-# MQT Core ships its own neutral-atom device under `mqt.na.default`, so this provider claims a
-# QMAP-owned identifier and prefix to keep both registrable side by side.
+# Use a QMAP-owned identifier and prefix for this provider.
 set(QDMI_PREFIX "MQT_QMAP_NA")
 
 if(NOT TARGET ${TARGET_NAME})
@@ -70,8 +69,8 @@ if(NOT TARGET ${TARGET_NAME})
   endif()
   target_compile_definitions(${TARGET_NAME} PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}")
 
-  # The device reads its bundled description from beside the shared module. MQT Core v3.9.0 copies
-  # runtime files into the build tree and exposes them to `mqt_copy_qdmi_runtime` consumers.
+  # The device reads its bundled description from beside the shared module. Core copies runtime
+  # files into the build tree and exposes them to `mqt_copy_qdmi_runtime` consumers.
   mqt_configure_qdmi_device(
     ${TARGET_NAME}
     ID
@@ -100,4 +99,16 @@ if(NOT TARGET ${TARGET_NAME})
     DESTINATION ${MQT_QMAP_NA_DEVICE_INSTALL_DIR}
     COMPONENT ${MQT_QMAP_TARGET_NAME}_Python
     EXCLUDE_FROM_ALL)
+endif()
+
+set(TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na-qdmi-client)
+
+if(NOT TARGET ${TARGET_NAME})
+  add_library(${TARGET_NAME} ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/qdmi/Client.hpp Client.cpp)
+  target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
+  target_link_libraries(
+    ${TARGET_NAME}
+    PUBLIC MQT::CoreQDMI MQT::QMapNAQDMIDeviceConfig nlohmann_json::nlohmann_json
+    PRIVATE spdlog::spdlog MQT::CoreIR MQT::ProjectOptions MQT::ProjectWarnings)
+  add_library(MQT::QMapNAQDMIClient ALIAS ${TARGET_NAME})
 endif()

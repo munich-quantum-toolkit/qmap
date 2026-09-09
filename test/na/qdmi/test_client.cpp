@@ -8,7 +8,7 @@
  * Licensed under the MIT License
  */
 
-#include "na/fomac/Device.hpp"
+#include "na/qdmi/Client.hpp"
 #include "qdmi/driver/Driver.hpp"
 
 #include <algorithm>
@@ -41,7 +41,7 @@ TEST(NaQdmiClient, FullJsonRoundTrip) {
                                                   .prefix = "MQT_QMAP_NA",
                                                   .session = {}}));
 
-  const auto genericDevice = fomac::Session::openDevice(deviceId);
+  const auto genericDevice = qdmi::Session::openDevice(deviceId);
   const auto device = Session::Device::tryCreateFromDevice(genericDevice);
   ASSERT_TRUE(device.has_value());
 
@@ -71,7 +71,7 @@ TEST(NaQdmiClient, ThreeQubitGlobalOperationRoundTrip) {
   qdmi::DeviceSessionConfig overrides;
   overrides.deviceConfiguration =
       qdmi::InlineDeviceConfiguration{.json = expected.dump()};
-  const auto genericDevice = fomac::Session::openDevice(deviceId, overrides);
+  const auto genericDevice = qdmi::Session::openDevice(deviceId, overrides);
   const auto device = Session::Device::tryCreateFromDevice(genericDevice);
   ASSERT_TRUE(device.has_value());
 

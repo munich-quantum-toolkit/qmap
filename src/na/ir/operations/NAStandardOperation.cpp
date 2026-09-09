@@ -13,7 +13,6 @@
 #include "NAOperationPrinting.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Permutation.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/operations/NAOpType.hpp"
@@ -45,17 +44,10 @@ auto NAStandardOperation::validateType(const NAOpType candidateNAOpType)
       "A standard neutral-atom operation must be a move or bridge.");
 }
 
-auto NAStandardOperation::equals(const qc::Operation& operation,
-                                 const qc::Permutation& permutation1,
-                                 const qc::Permutation& permutation2) const
-    -> bool {
+auto NAStandardOperation::equals(const qc::Operation& operation) const -> bool {
   const auto* other = dynamic_cast<const NAStandardOperation*>(&operation);
   return other != nullptr && naOpType == other->naOpType &&
-         qc::Operation::equals(operation, permutation1, permutation2);
-}
-
-auto NAStandardOperation::equals(const qc::Operation& operation) const -> bool {
-  return equals(operation, {}, {});
+         qc::Operation::equals(operation);
 }
 
 void NAStandardOperation::setGate(const qc::OpType operationType) {
@@ -101,17 +93,6 @@ auto NAStandardOperation::print(std::ostream& os,
     -> std::ostream& {
   return detail::printNAOperation(*this, naOpType, os, permutation, prefixWidth,
                                   nQubits);
-}
-
-void NAStandardOperation::dumpOpenQASM(
-    std::ostream& of, const qc::QubitIndexToRegisterMap& qubitMap,
-    [[maybe_unused]] const qc::BitIndexToRegisterMap& bitMap,
-    const std::size_t indent, [[maybe_unused]] const bool openQASM3) const {
-  of << std::string(indent * OUTPUT_INDENT_SIZE, ' ') << name;
-  for (std::size_t i = 0; i < targets.size(); ++i) {
-    of << (i == 0 ? " " : ", ") << qubitMap.at(targets[i]).second;
-  }
-  of << ";\n";
 }
 
 void NAStandardOperation::invert() {

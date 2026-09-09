@@ -15,7 +15,6 @@
 #pragma once
 
 #include "ir/Definitions.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/ir/operations/NAOpType.hpp"
 
@@ -47,10 +46,6 @@ public:
     return std::make_unique<NAStandardOperation>(*this);
   }
 
-  [[nodiscard]] bool equals(const qc::Operation& operation,
-                            const qc::Permutation& permutation1,
-                            const qc::Permutation& permutation2) const override;
-
   [[nodiscard]] bool equals(const qc::Operation& operation) const override;
 
   void setGate(qc::OpType operationType) override;
@@ -78,11 +73,6 @@ public:
   std::ostream& print(std::ostream& os, const qc::Permutation& permutation,
                       std::size_t prefixWidth,
                       std::size_t nQubits) const override;
-
-  void dumpOpenQASM(std::ostream& of,
-                    const qc::QubitIndexToRegisterMap& qubitMap,
-                    const qc::BitIndexToRegisterMap& bitMap, std::size_t indent,
-                    bool openQASM3) const override;
 
   void invert() override;
 };

@@ -12,8 +12,8 @@
 
 #include "HardwareQubits.hpp"
 #include "NeutralAtomArchitecture.hpp"
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/Permutation.hpp"
@@ -38,11 +38,9 @@ namespace na {
  */
 class Mapping {
 protected:
-  using DAG = std::vector<std::deque<std::unique_ptr<qc::Operation>*>>;
-
   qc::Permutation circToHw;
   HardwareQubits hwQubits;
-  DAG dag;
+  CircuitDAG dag;
 
   /**
    * @brief Compute an initial mapping via (heuristic) graph matching.
@@ -80,8 +78,7 @@ public:
    */
   Mapping(const size_t nQubits, const InitialMapping initialMapping,
           qc::QuantumComputation& qc, HardwareQubits hwQubitsArg)
-      : hwQubits(std::move(hwQubitsArg)),
-        dag(qc::CircuitOptimizer::constructDAG(qc)) {
+      : hwQubits(std::move(hwQubitsArg)), dag(constructDAG(qc)) {
 
     if (qc.getNqubits() > hwQubits.getNumQubits()) {
       throw std::runtime_error("Not enough qubits in architecture for circuit");

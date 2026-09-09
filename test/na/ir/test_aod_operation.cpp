@@ -8,7 +8,6 @@
  * Licensed under the MIT License
  */
 
-#include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
 #include "na/ir/operations/AodOperation.hpp"
 
@@ -63,21 +62,6 @@ TEST(AodOperation, Distances) {
   EXPECT_EQ(move.getMaxDistance(na::AodOperation::Dimension::Y), 2.0);
 }
 
-TEST(AodOperation, Qasm) {
-  const na::AodOperation move(
-      na::NAOpType::AodMove, {0, 1},
-      {na::AodOperation::Dimension::X, na::AodOperation::Dimension::Y},
-      {0.0, 1.0}, {1.0, 3.0});
-  std::stringstream ss;
-  qc::QuantumRegister qreg(0, 2, "q");
-  qc::QubitIndexToRegisterMap qubitToReg{};
-  qubitToReg.try_emplace(0, qreg, qreg.toString(0));
-  qubitToReg.try_emplace(1, qreg, qreg.toString(1));
-  move.dumpOpenQASM(ss, qubitToReg, {}, 0, false);
-
-  EXPECT_EQ(ss.str(), "aod_move (0, 0, 1; 1, 1, 3) q[0], q[1];\n");
-}
-
 TEST(AodOperation, Print) {
   const na::AodOperation activate(na::NAOpType::AodActivate, {1},
                                   {na::AodOperation::Dimension::X}, {0.0},
@@ -107,10 +91,10 @@ TEST(AodOperation, Constructors) {
   EXPECT_EQ(move.getMaxDistance(na::AodOperation::Dimension::Y), 2.0);
   EXPECT_EQ(move2.getNAOpType(), na::NAOpType::AodMove);
   EXPECT_TRUE(move3 == move4);
-  const qc::Operation& moveBase = move3;
-  EXPECT_TRUE(
-      moveBase.equals(na::AodOperation(na::NAOpType::AodMove, {1}, {segment}),
-                      qc::Permutation{{0, 1}}, {}));
+  const auto remappedMove = move3.clone();
+  remappedMove->apply(qc::Permutation{{0, 1}});
+  EXPECT_TRUE(remappedMove->equals(
+      na::AodOperation(na::NAOpType::AodMove, {1}, {segment})));
   EXPECT_THROW(static_cast<void>(na::AodOperation(
                    na::NAOpType::Move, {0}, std::vector<std::uint32_t>{dir1},
                    {0.0}, {1.0})),

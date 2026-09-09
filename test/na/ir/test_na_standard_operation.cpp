@@ -10,7 +10,6 @@
 
 #include "ir/Definitions.hpp"
 #include "ir/Permutation.hpp"
-#include "ir/Register.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
@@ -55,32 +54,16 @@ TEST(NAStandardOperation, Bridge) {
   EXPECT_FALSE(bridge.commutesAtQubit(move, 0));
   EXPECT_TRUE(bridge.commutesAtQubit(*same, 0));
   const qc::Operation& bridgeBase = bridge;
-  EXPECT_FALSE(bridgeBase.equals(move, {}, {}));
+  EXPECT_FALSE(bridgeBase.equals(move));
 
   const NAStandardOperation permutedBridge(NAOpType::Bridge, {3, 4, 5});
-  EXPECT_TRUE(bridgeBase.equals(permutedBridge,
-                                qc::Permutation{{0, 3}, {1, 4}, {2, 5}}, {}));
+  const auto remappedBridge = bridge.clone();
+  remappedBridge->apply(qc::Permutation{{0, 3}, {1, 4}, {2, 5}});
+  EXPECT_TRUE(remappedBridge->equals(permutedBridge));
   const auto inverse = bridge.getInverted();
   EXPECT_TRUE(bridge == *inverse);
   EXPECT_THROW(static_cast<void>(NAStandardOperation(NAOpType::AodMove, {0})),
                std::invalid_argument);
-}
-
-TEST(NAStandardOperation, Qasm) {
-  const NAStandardOperation bridge(NAOpType::Bridge, {0, 1, 2});
-  std::stringstream stream;
-  const qc::QuantumRegister quantumRegister(0, 3, "q");
-  qc::QubitIndexToRegisterMap qubitMap{};
-  for (qc::Qubit qubit = 0; qubit < 3; ++qubit) {
-    qubitMap.try_emplace(qubit, quantumRegister,
-                         quantumRegister.toString(qubit));
-  }
-
-  bridge.dumpOpenQASM(stream, qubitMap, {}, 0, false);
-  const NAStandardOperation move(NAOpType::Move, {0, 2});
-  move.dumpOpenQASM(stream, qubitMap, {}, 0, false);
-
-  EXPECT_EQ(stream.str(), "bridge q[0], q[1], q[2];\nmove q[0], q[2];\n");
 }
 
 TEST(NAStandardOperation, Print) {
@@ -122,7 +105,7 @@ TEST(NAStandardOperation, AodOperationsRemainDistinct) {
   EXPECT_TRUE(first == same);
   EXPECT_FALSE(first == different);
   const qc::Operation& firstBase = first;
-  EXPECT_FALSE(firstBase.equals(different, {}, {}));
+  EXPECT_FALSE(firstBase.equals(different));
 }
 
 } // namespace na

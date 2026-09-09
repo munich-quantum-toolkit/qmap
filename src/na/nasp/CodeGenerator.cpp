@@ -10,7 +10,6 @@
 
 #include "na/nasp/CodeGenerator.hpp"
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "datastructures/Layer.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -84,7 +83,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
   auto maxHOffset = result.maxHOffset;
   auto maxVOffset = result.maxVOffset;
   auto flattened = input;
-  CircuitOptimizer::flattenOperations(flattened);
+  flattened.flattenOperations();
   const Layer layer(flattened);
   NAComputation code;
   const auto& globalZone = code.emplaceBackZone("global");

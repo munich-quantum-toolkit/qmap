@@ -8,9 +8,9 @@
  * Licensed under the MIT License
  */
 
-#include "fomac/FoMaC.hpp"
-#include "na/fomac/Device.hpp"
+#include "na/qdmi/Client.hpp"
 #include "na/qdmi/Configuration.hpp"
+#include "qdmi/Client.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
@@ -66,7 +66,7 @@ void registerQdmi(nb::module_& m) {
   const auto deviceId = registerPackagedDevice();
   m.attr("DEVICE_ID") = deviceId;
 
-  auto device = nb::class_<na::Session::Device, fomac::Device>(
+  auto device = nb::class_<na::Session::Device, qdmi::Device>(
       m, "Device", "Represents a device with a lattice of traps.");
 
   auto lattice = nb::class_<na::Device::Lattice>(
@@ -148,7 +148,7 @@ void registerQdmi(nb::module_& m) {
         return dev.getDecoherenceTimes().t2;
       },
       "The T2 time of the device.");
-  device.def("__repr__", [](const fomac::Device& dev) {
+  device.def("__repr__", [](const qdmi::Device& dev) {
     return "<Device name=\"" + dev.getName() + "\">";
   });
   device.def_static(
