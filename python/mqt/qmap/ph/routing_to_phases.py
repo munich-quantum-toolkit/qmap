@@ -12,215 +12,92 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 import torch
 
+from .mesh import mzi_top_modes
 from .routing import MaskState
 
 
 @dataclass(frozen=True)
 class RoutingTransform:
-    """Phase-independent routing constraints, precomputed once per optimization.
-
-    Every field depends only on the movement mask and the chip geometry, never on
-    the current phase values, so they are built once and reused across all
-    optimizer iterations. :func:`apply_routing_transform` combines them with the
-    live ``raw_params`` to produce the effective phases each step.
+    """Static routing constraints for a phase grid.
 
     Attributes:
-        partner_mode: For each cell, the mode index of its MZI-pair partner
-            (used to read the partner's raw phase).
-        set_zero: Cells whose effective phase is forced to ``0``.
-        set_pi: Cells whose effective phase is forced to ``pi``.
-        set_partner: Cells whose effective phase equals the partner's raw phase.
-        set_partner_pi: Cells whose effective phase equals the partner's raw
-            phase plus ``pi``.
-        grad_mask: ``1.0`` where a cell contributes gradients, ``0.0`` where it
-            is frozen.
+        source_mode: Raw phase source for each cell, including paired modes.
+        offset: Fixed phase offset, either zero or pi.
+        use_raw: Whether the effective phase includes a raw phase.
     """
 
-    partner_mode: torch.Tensor
-    set_zero: torch.Tensor
-    set_pi: torch.Tensor
-    set_partner: torch.Tensor
-    set_partner_pi: torch.Tensor
-    grad_mask: torch.Tensor
+    source_mode: torch.Tensor
+    offset: torch.Tensor
+    use_raw: torch.Tensor
 
 
 def precompute_routing_transform(
-    num_modes: int,
     movement_mask: torch.Tensor,
-    num_layers: int,
     optimize_routing_parameters: bool = False,
 ) -> RoutingTransform:
-    """Precompute the phase-independent routing constraints for a movement mask.
+    """Precompute phase sources and offsets from the mesh and routing states.
 
-    The pairing geometry, per-cell routing states, the constant-fill selectors,
-    and the gradient mask all depend only on ``movement_mask`` and the chip
-    geometry, so they are built once here and applied to the live phases each
-    iteration by :func:`apply_routing_transform`. This keeps the fixed structural
-    work out of the optimizer's inner loop.
-
-    The routing logic, in order:
-
-    1. Take the virtual phase-shifter states (``TOP_ONLY``/``BOT_ONLY``)
-       directly from ``movement_mask``.  :func:`routing.route_to_movement_mask`
-       assigns these structurally from the compute-zone geometry, so genuine
-       compute MZI pairs stay trainable regardless of their current phase
-       magnitudes.
-    2. Resolve each MZI pair to a single routing state by priority
-       (``BOT_ONLY`` > ``TOP_ONLY`` > ``CROSS`` > ``BAR`` > ``MZI``, i.e. the
-       larger ``MaskState`` code).  Masks produced by the routing pipeline always
-       assign both modes of a pair the same state, so this ordering only acts as
-       a defensive tiebreak and does not affect the result in practice.
-
-    Compute-zone MZI cells (``MaskState.MZI``) are always left as free, trainable
-    parameters - the compute/routing distinction comes solely from the structural
-    ``movement_mask``, never from the current phase magnitudes. When
-    ``optimize_routing_parameters`` is ``True``, routing cells become trainable
-    with a constrained offset so their relative phase relationship is preserved
-    (cross: equal phases; bar: phases differ by pi).
+    A bar pair has phases differing by pi; a cross pair has equal phases.
+    Routing pairs share one trainable phase when optimization is enabled.
+    Virtual phase shifters use the raw phase of their active mode. Compute
+    cells remain independent. Mixed pairs take the higher MaskState code.
 
     Args:
-        num_modes: Number of spatial modes on the chip.
-        movement_mask: Integer tensor of shape ``(num_modes, num_modes)`` with
-            state codes.
-        num_layers: Number of MZI layers (columns) of the parameter grid.
-        optimize_routing_parameters: If ``True``, routing MZI pairs expose a
-            single trainable degree of freedom while the second mode is derived
-            and gradient-masked.
+        movement_mask: Integer grid of routing states, indexed by mode and layer.
+        optimize_routing_parameters: Whether routing pairs have a trainable phase.
 
     Returns:
-        A :class:`RoutingTransform` bundling the static selectors and grad mask.
+        Phase sources, offsets, and selectors to reuse during optimization.
     """
+    num_modes, num_layers = movement_mask.shape
     device = movement_mask.device
-    mask_used = movement_mask[:, :num_layers]
-
-    # Per-cell geometry (broadcast to (num_modes, num_layers)).
     mode_col = torch.arange(num_modes, device=device).view(num_modes, 1)
-    layer_row = torch.arange(num_layers, device=device).view(1, num_layers)
-    even_layer = layer_row % 2 == 0
-    even_mode = mode_col % 2 == 0
-    first_mode = mode_col == 0
-    last_mode = mode_col == num_modes - 1
-
-    # Layer parity sets the pairing: even layers pair (0,1),(2,3),...; odd layers pair
-    # (1,2),(3,4),... and leave the two edge modes (0 and num_modes-1) as single edges.
-    is_single = (~even_layer) & (first_mode | last_mode)
-    is_top = torch.where(even_layer, even_mode, (~even_mode) & (~last_mode))
-    is_bot = torch.where(even_layer, ~even_mode, even_mode & (~first_mode))
+    is_top = torch.zeros_like(movement_mask, dtype=torch.bool)
+    is_bot = torch.zeros_like(is_top)
+    for layer in range(num_layers):
+        tops = mzi_top_modes(num_modes, layer)
+        is_top[tops.start : tops.stop : tops.step, layer] = True
+        is_bot[tops.start + 1 : tops.stop + 1 : tops.step, layer] = True
     is_pair = is_top | is_bot
 
-    # Each pair cell resolves to the higher-priority state of its two modes.  The MaskState
-    # codes ARE the priority order (MZI=0 < BAR=1 < CROSS=2 < TOP_ONLY=3 < BOT_ONLY=4), so
-    # "higher priority" is just the larger code.  A top cell's partner is mode+1, a bot cell's
-    # is mode-1 (singles partner with themselves; harmless, since they are never read as a pair).
     partner_mode = mode_col.expand(num_modes, num_layers) + is_top.long() - is_bot.long()
-    mask_partner = torch.gather(mask_used, 0, partner_mode)
-    pair_state = torch.maximum(mask_used, mask_partner)
+    pair_state = torch.maximum(movement_mask, torch.gather(movement_mask, 0, partner_mode))
+    bar = is_pair & (pair_state == MaskState.BAR)
+    cross = is_pair & (pair_state == MaskState.CROSS)
+    top_only = is_pair & (pair_state == MaskState.TOP_ONLY)
+    bot_only = is_pair & (pair_state == MaskState.BOT_ONLY)
 
-    st_cross = is_pair & (pair_state == MaskState.CROSS)
-    st_bar = is_pair & (pair_state == MaskState.BAR)
-    st_top_only = is_pair & (pair_state == MaskState.TOP_ONLY)
-    st_bot_only = is_pair & (pair_state == MaskState.BOT_ONLY)
-    single_active = is_single & ((mask_used == MaskState.CROSS) | (mask_used == MaskState.BAR))
-
-    # Constrained-cell selectors; compute cells (MZI) and the top-of-pair BAR/CROSS cells
-    # under optimization keep their raw value when the transform is applied.
-    set_partner_pi = (is_bot & st_top_only) | (is_top & st_bot_only)  # -> raw of the partner mode + pi
+    derived = (is_bot & top_only) | (is_top & bot_only)
+    fixed = ~is_pair & ((movement_mask == MaskState.BAR) | (movement_mask == MaskState.CROSS))
     if optimize_routing_parameters:
-        set_zero = single_active
-        set_pi = torch.zeros_like(is_single)
-        set_partner = is_bot & st_cross  # -> raw of the partner (top) mode
-        set_partner_pi |= is_bot & st_bar
+        derived |= is_bot & (bar | cross)
     else:
-        set_zero = single_active | (is_top & (st_cross | st_bar)) | (is_bot & st_cross)
-        set_pi = is_bot & st_bar  # -> pi
-        set_partner = torch.zeros_like(is_single)
+        fixed |= bar | cross
 
-    # grad_mask: freeze (0.0) the derived and fixed-routing cells; free cells keep 1.0.
-    grad_zero = single_active | (is_top & st_bot_only) | (is_bot & (st_cross | st_bar)) | (is_bot & st_top_only)
-    if not optimize_routing_parameters:
-        grad_zero |= is_top & (st_cross | st_bar)
-    ones = torch.ones((num_modes, num_layers), dtype=torch.float32, device=device)
-    grad_mask = torch.where(grad_zero, torch.zeros_like(ones), ones)
-
+    offset = torch.zeros_like(movement_mask, dtype=torch.float64)
+    offset[(is_bot & (bar | top_only)) | (is_top & bot_only)] = torch.pi
     return RoutingTransform(
-        partner_mode=partner_mode,
-        set_zero=set_zero,
-        set_pi=set_pi,
-        set_partner=set_partner,
-        set_partner_pi=set_partner_pi,
-        grad_mask=grad_mask,
+        source_mode=torch.where(derived, partner_mode, mode_col),
+        offset=offset,
+        use_raw=~fixed,
     )
 
 
-def apply_routing_transform(
-    raw_params: torch.Tensor,
-    transform: RoutingTransform,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Apply precomputed routing constraints to the current phase values.
-
-    This is the only phase-dependent part of the routing-to-phase conversion: one
-    gather of the partner phases and a handful of ``torch.where`` selections. It
-    is differentiable in ``raw_params`` and cheap enough to call every optimizer
-    iteration.
+def apply_routing_transform(raw_params: torch.Tensor, transform: RoutingTransform) -> torch.Tensor:
+    """Apply routing constraints while preserving gradients to their raw sources.
 
     Args:
-        raw_params: Float tensor of shape ``(num_modes, num_layers)`` with the
-            current unconstrained phase values.
-        transform: Static routing constraints from
-            :func:`precompute_routing_transform`.
+        raw_params: Current phase grid.
+        transform: Precomputed routing constraints.
 
     Returns:
-        A tuple ``(effective_params, grad_mask)`` where *effective_params* are the
-        physically constrained phase values and *grad_mask* marks trainable
-        (``1.0``) vs frozen (``0.0``) cells.
+        Effective phases. Autograd freezes constants and accumulates gradients
+        from derived phases into their sources.
     """
-    raw_partner = torch.gather(raw_params, 0, transform.partner_mode)
-    effective_params = raw_params.clone()
-    effective_params = torch.where(transform.set_zero, torch.zeros_like(raw_params), effective_params)
-    effective_params = torch.where(transform.set_pi, torch.full_like(raw_params, np.pi), effective_params)
-    effective_params = torch.where(transform.set_partner, raw_partner, effective_params)
-    effective_params = torch.where(transform.set_partner_pi, raw_partner + np.pi, effective_params)
-    return effective_params, transform.grad_mask
-
-
-def get_effective_params_and_mask(
-    num_modes: int,
-    movement_mask: torch.Tensor,
-    raw_params: torch.Tensor,
-    optimize_routing_parameters: bool = False,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Apply routing constraints to produce effective phase-shifter parameters.
-
-    Convenience wrapper that precomputes the routing transform and immediately
-    applies it. Hot loops should instead call :func:`precompute_routing_transform`
-    once and :func:`apply_routing_transform` per iteration, to avoid rebuilding
-    the phase-independent structure on every step.
-
-    Args:
-        num_modes: Number of spatial modes on the chip.
-        movement_mask: Integer tensor of shape ``(num_modes, num_modes)``
-            with state codes.
-        raw_params: Float tensor of shape ``(num_modes, num_modes)`` with
-            current unconstrained phase values.
-        optimize_routing_parameters: If ``True``, routing MZI pairs expose
-            a single trainable degree of freedom while the second mode is
-            derived and gradient-masked.
-
-    Returns:
-        A tuple ``(effective_params, grad_mask)`` where *effective_params* are the
-        physically constrained phase values and *grad_mask* indicates which
-        entries contribute gradients (``1.0``) or are frozen (``0.0``).
-    """
-    transform = precompute_routing_transform(
-        num_modes,
-        movement_mask,
-        raw_params.shape[1],
-        optimize_routing_parameters=optimize_routing_parameters,
-    )
-    return apply_routing_transform(raw_params, transform)
+    source = torch.gather(raw_params, 0, transform.source_mode)
+    return torch.where(transform.use_raw, source, 0.0) + transform.offset.to(raw_params.dtype)
 
 
 def reshape_flattened_params_to_grid(
@@ -256,12 +133,14 @@ def reshape_flattened_params_to_grid(
         msg = f"Size mismatch: expected {expected_size} parameters for {num_modes} modes, but got {params_1d.numel()}."
         raise ValueError(msg)
 
+    if not exclude_edge_phase_shifters:
+        return params_1d.reshape(num_modes, num_modes)
+
     grid_2d = torch.zeros((num_modes, num_modes), dtype=params_1d.dtype, device=params_1d.device)
     mask = torch.ones((num_modes, num_modes), dtype=torch.bool, device=params_1d.device)
 
-    if exclude_edge_phase_shifters:
-        mask[0, -1] = False
-        mask[num_modes - 1, -1] = False
+    mask[0, -1] = False
+    mask[num_modes - 1, -1] = False
 
     grid_2d[mask] = params_1d
     return grid_2d

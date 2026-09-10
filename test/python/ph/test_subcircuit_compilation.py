@@ -26,6 +26,7 @@ import pytest
 torch = pytest.importorskip("torch")
 
 from mqt.qmap.ph.subcircuit_compilation import CompilationResult, OptimizationConfig, compile_subcircuit
+from mqt.qmap.ph.unitary_to_phase_compilation import build_unitary_selected_columns_from_components, fidelity_loss
 
 
 def _reproducible_unitary(dim: int, seed: int) -> torch.Tensor:
@@ -206,7 +207,7 @@ class TestCompileSubcircuitInputValidation:
     def test_target_larger_than_chip_raises(ideal_bs_chip4, ones_transmissions_chip4) -> None:
         """A target wider than the chip raises."""
         target = _reproducible_unitary(6, seed=1)  # target_dim 6 > chip_dim 4
-        with pytest.raises(ValueError, match="cannot exceed chip dimension"):
+        with pytest.raises(ValueError, match="must be smaller than chip dimension"):
             compile_subcircuit(
                 beam_splitter_reflectivities=ideal_bs_chip4,
                 input_transmissions=ones_transmissions_chip4,
@@ -244,3 +245,60 @@ def test_output_ports_follow_extreme_routing(extreme_routing_chip) -> None:
 
     assert result.input_ports == [0, 2]
     assert result.output_ports == [2, 3, 4, 5]
+
+
+@pytest.mark.parametrize("dtype", [torch.complex64, torch.complex128])
+@pytest.mark.parametrize("exclude_corners", [False, True])
+def test_returned_phases_reproduce_loss(dtype: torch.dtype, exclude_corners: bool) -> None:
+    """The programmed phases and physical ports reproduce the reported fidelity."""
+    target = _reproducible_unitary(2, seed=11).to(dtype)
+    bs = torch.tensor([0.4, 0.6] * 6, dtype=torch.float64)
+    result = compile_subcircuit(
+        bs.tolist(),
+        [0.2, 1.0, 0.9, 1.0],
+        [0.2, 0.2, 1.0, 1.0],
+        target,
+        OptimizationConfig(max_iterations=3, exclude_edge_phase_shifters=exclude_corners),
+    )
+    grid = torch.tensor(result.phases, dtype=torch.float64).reshape(4, 4).T
+    unitary = build_unitary_selected_columns_from_components(4, bs, grid, result.input_ports, exclude_corners)
+    measured_loss = fidelity_loss(unitary[result.output_ports], target[:, ::2])
+    assert result.loss == pytest.approx(measured_loss.item(), abs=1e-12)
+
+
+@pytest.mark.parametrize("field", ["input_transmissions", "output_transmissions", "beam_splitter_reflectivities"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -0.1, 1.1])
+def test_invalid_characterization_values(field: str, value: float) -> None:
+    """All characterization vectors reject non-finite or out-of-range values."""
+    values = {
+        "beam_splitter_reflectivities": [0.5] * 12,
+        "input_transmissions": [1.0] * 4,
+        "output_transmissions": [1.0] * 4,
+    }
+    values[field][0] = value
+    with pytest.raises(ValueError, match=f"{field} values must be finite"):
+        compile_subcircuit(
+            values["beam_splitter_reflectivities"],
+            values["input_transmissions"],
+            values["output_transmissions"],
+            torch.eye(2, dtype=torch.complex128),
+        )
+
+
+def test_target_must_leave_routing_space() -> None:
+    """A full-chip target is outside the subcircuit compiler's supported geometry."""
+    with pytest.raises(ValueError, match="must be smaller than chip dimension"):
+        compile_subcircuit([0.5] * 12, [1.0] * 4, [1.0] * 4, torch.eye(4, dtype=torch.complex128))
+
+
+@pytest.mark.parametrize("blocked_input", [False, True])
+def test_fully_blocked_chip_raises(blocked_input: bool) -> None:
+    """Zero-transmission hardware fails with a routing diagnostic and no log warning."""
+    with pytest.raises(ValueError, match="No route with nonzero transmission"):
+        compile_subcircuit(
+            [0.5] * 12,
+            [0.0 if blocked_input else 1.0] * 4,
+            [1.0 if blocked_input else 0.0] * 4,
+            torch.eye(2, dtype=torch.complex128),
+            OptimizationConfig(max_iterations=0),
+        )

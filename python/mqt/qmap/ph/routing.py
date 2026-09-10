@@ -10,10 +10,14 @@
 
 from __future__ import annotations
 
+import itertools
+import math
 from enum import IntEnum
 
 import rustworkx as rx
 import torch
+
+from .mesh import mzi_top_modes
 
 
 class MaskState(IntEnum):
@@ -63,55 +67,36 @@ def get_best_route(
         return [], float("inf")
 
     absolute_path_nodes = list(paths[sink_node])
-    lengths = rx.digraph_bellman_ford_shortest_path_lengths(graph, source_node, float, goal=sink_node)
+    cost = sum(itertools.starmap(graph.get_edge_data, itertools.pairwise(absolute_path_nodes)))
+    if not math.isfinite(cost):
+        return [], math.inf
 
     relative_path_indices = [
         list(layers[layer_idx]).index(node_id) for layer_idx, node_id in enumerate(absolute_path_nodes)
     ]
 
-    return relative_path_indices, lengths[sink_node]
+    return relative_path_indices, cost
 
 
-def infer_input_computation_and_output_ports(
-    route: list[int],
-    target_dim: int,
-) -> tuple[list[int], list[int], list[int]]:
-    """Infer input ports, output ports, and computation-zone active columns from a route.
-
-    The first node after the source defines the input window and the last
-    node before the sink defines the computation/output window.
+def infer_input_and_output_ports(route: list[int], target_dim: int) -> tuple[list[int], list[int]]:
+    """Infer the physical dual-rail input modes and output window from a route.
 
     Args:
-        route: Relative-index path as returned by :func:`get_best_route`.
-        target_dim: Dimension of the target unitary.
+        route: Relative node indices from source to sink.
+        target_dim: Width of the computation zone.
 
     Returns:
-        A tuple ``(input_ports, output_ports, active_cols)`` where
-        *input_ports* are the physical mode indices used for photon injection,
-        *output_ports* are the physical mode indices of the computation zone,
-        and *active_cols* are the column indices active within the computation
-        zone (even or odd, depending on the routing outcome).
+        Input mode indices and output window indices.
 
     Raises:
-        ValueError: If ``route`` contains fewer than two nodes.
+        ValueError: If the route lacks input or output nodes.
     """
-    if len(route) < 2:
-        msg = "Route must have at least 2 nodes (source and sink)"
+    if len(route) < 4:
+        msg = "Route must have at least 4 nodes (source, input, output, and sink)."
         raise ValueError(msg)
-
-    input_index = route[1]
-    computation_index = route[-2]
-
-    input_ports_cache = [(input_index * 2) + i for i in range(target_dim)]
-    input_ports = input_ports_cache[::2]
-
-    active_cols = list(range(0, target_dim, 2)) if computation_index % 2 == 0 else list(range(1, target_dim, 2))
-
-    output_index_cache = computation_index - 1 if computation_index % 2 == 1 else computation_index
-
-    output_ports = [output_index_cache + i for i in range(target_dim)]
-
-    return input_ports, output_ports, active_cols
+    input_start = 2 * route[1]
+    output_start = route[-2] // 2 * 2
+    return list(range(input_start, input_start + target_dim, 2)), list(range(output_start, output_start + target_dim))
 
 
 def route_to_movement_mask(
@@ -157,17 +142,14 @@ def route_to_movement_mask(
         if prev_mode == node:
             continue  # bar: photons pass straight through; the column stays BAR
 
-        if abs(prev_mode - node) != 1:
+        row_start = min(prev_mode, node)
+        if abs(prev_mode - node) != 1 or row_start not in mzi_top_modes(chip_dim, chip_layer):
             msg = (
                 f"Invalid edge from node_{route[i - 1]} to node_{node} at chip layer {chip_layer}: a routing "
-                f"transition must be straight-through (bar) or a move to an immediate neighbor (cross)."
+                f"transition must be straight-through (bar) or cross an MZI pair."
             )
             raise ValueError(msg)
 
-        # cross: the run starts at the top mode of the MZI pair (in this chip layer) that contains
-        # prev_mode. Even chip layers pair modes (0,1),(2,3),...; odd chip layers pair (1,2),(3,4),...
-        # - so rounding prev_mode down to the layer's parity gives that pair's top mode.
-        row_start = prev_mode - ((prev_mode - chip_layer % 2) % 2)
         movement_mask[row_start : row_start + target_dim, chip_layer] = MaskState.CROSS
 
     output_index = route[-2]
@@ -179,12 +161,8 @@ def route_to_movement_mask(
 
     # Convert mixed compute-boundary pairs to virtual phase-shifter states.
     for chip_layer in range(compute_layer_start, chip_dim):
-        if chip_layer % 2 == 0:
-            mzi_pairs = [(i, i + 1) for i in range(0, chip_dim - 1, 2)]
-        else:
-            mzi_pairs = [(i, i + 1) for i in range(1, chip_dim - 1, 2)]
-
-        for top, bot in mzi_pairs:
+        for top in mzi_top_modes(chip_dim, chip_layer):
+            bot = top + 1
             top_is_compute = movement_mask[top, chip_layer].item() == MaskState.MZI
             bot_is_compute = movement_mask[bot, chip_layer].item() == MaskState.MZI
 

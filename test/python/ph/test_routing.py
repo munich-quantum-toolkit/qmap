@@ -16,51 +16,28 @@ from mqt.qmap.ph.graph import construct_graph
 from mqt.qmap.ph.routing import (
     MaskState,
     get_best_route,
-    infer_input_computation_and_output_ports,
+    infer_input_and_output_ports,
     route_to_movement_mask,
 )
 
 
-class TestInferInputComputationAndOutputPorts:
-    """Tests for infer_input_computation_and_output_ports."""
+@pytest.mark.parametrize(
+    ("route", "target_dim", "input_ports", "output_ports"),
+    [
+        ([0, 0, 0, 0, 0], 2, [0], [0, 1]),
+        ([0, 1, 1, 2, 0], 2, [2], [2, 3]),
+        ([0, 0, 0, 0, 1, 1, 0], 4, [0, 2], [0, 1, 2, 3]),
+    ],
+)
+def test_ports_follow_physical_route(route, target_dim, input_ports, output_ports) -> None:
+    """Inputs follow the dual-rail window; either output parity selects a full window."""
+    assert infer_input_and_output_ports(route, target_dim) == (input_ports, output_ports)
 
-    @staticmethod
-    def test_straight_route_first_position() -> None:
-        """Test that a straight route through position 0 yields input port 0, output ports [0,1], and active col 0."""
-        # Source -> input 0 -> ... -> compute 0 -> sink
-        input_ports, output_ports, active_cols = infer_input_computation_and_output_ports([0, 0, 0, 0, 0], target_dim=2)
-        assert input_ports == [0]
-        assert output_ports == [0, 1]
-        assert active_cols == [0]
 
-    @staticmethod
-    def test_route_at_second_input_position() -> None:
-        """Test that a route through input position 1 yields input port 1, output ports [2,3], and active col 1."""
-        # Source -> input 1 -> intermediate nodes -> compute at odd index -> sink
-        input_ports, output_ports, active_cols = infer_input_computation_and_output_ports([0, 1, 1, 1, 0], target_dim=2)
-        assert input_ports == [2]
-        assert output_ports == [0, 1]
-        assert active_cols == [1]
-
-    @staticmethod
-    def test_active_cols_even_for_even_computation_index() -> None:
-        """Test that an even computation index yields only even active columns."""
-        _, _, active_cols = infer_input_computation_and_output_ports([0, 0, 0, 0, 0], target_dim=4)
-        # computation_index=0, even -> active_cols=[0, 2]
-        assert all(c % 2 == 0 for c in active_cols)
-
-    @staticmethod
-    def test_active_cols_odd_for_odd_computation_index() -> None:
-        """Test that an odd computation index yields only odd active columns."""
-        _, _, active_cols = infer_input_computation_and_output_ports([0, 0, 1, 1, 0], target_dim=4)
-        # computation_index=1, odd -> active_cols=[1, 3]
-        assert all(c % 2 == 1 for c in active_cols)
-
-    @staticmethod
-    def test_raises_for_too_short_route() -> None:
-        """Test that a route with fewer than 2 nodes raises ValueError."""
-        with pytest.raises(ValueError, match="at least 2 nodes"):
-            infer_input_computation_and_output_ports([0], target_dim=2)
+def test_incomplete_route_has_no_ports() -> None:
+    """A route needs both an input node and an output node."""
+    with pytest.raises(ValueError, match="at least 4 nodes"):
+        infer_input_and_output_ports([0], target_dim=2)
 
 
 class TestRouteToMovementMask:
@@ -182,6 +159,13 @@ class TestGetBestRoute:
         assert route[-1] == 0  # sink
 
 
+@pytest.mark.parametrize("route", [[0, 0, 0, 1, 0], [0, 1, 1, 0, 0]])
+def test_cross_must_follow_layer_pairing(route: list[int]) -> None:
+    """Adjacent modes without an MZI between them cannot form a cross edge."""
+    with pytest.raises(ValueError, match="cross an MZI pair"):
+        route_to_movement_mask(route, chip_dim=4, target_dim=2)
+
+
 class TestRoutingLayerMappingRegression:
     """Regression test that the router reads the correct chip layer for each graph layer.
 
@@ -217,6 +201,6 @@ class TestRoutingLayerMappingRegression:
         assert cost == pytest.approx(0.0)
 
         # The route places the computation window on modes [2, 3, 4, 5].
-        input_ports, output_ports, _ = infer_input_computation_and_output_ports(route, chip.target_dim)
+        input_ports, output_ports = infer_input_and_output_ports(route, chip.target_dim)
         assert input_ports == [0, 2]
         assert output_ports == [2, 3, 4, 5]

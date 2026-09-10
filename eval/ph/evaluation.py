@@ -97,7 +97,6 @@ def _run_baseline_optimization(
         threshold=config.threshold,
         active_cols=baseline_active_cols,
         max_iterations=config.max_iterations,
-        baseline=True,
         exclude_edge_phase_shifters=config.exclude_edge_phase_shifters,
         early_stop_patience=50,
         # Deliberately stricter than the proposed path's 1e-4: the baseline optimizes the

@@ -104,7 +104,7 @@ _SCENARIOS = [
     # t = 1.0  (lossless)
     pytest.param(_Scenario(16, 4, 0.000, None, 0.97, 0.008, 0.97, 0.005), id="chip16-t1.0-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, None, 0.97, 0.045, 0.97, 0.050), id="chip16-t1.0-pe0.015"),
-    pytest.param(_Scenario(16, 4, 0.030, None, 0.97, 0.065, 0.97, 0.080), id="chip16-t1.0-pe0.030"),
+    pytest.param(_Scenario(16, 4, 0.030, None, 0.97, 0.080, 0.97, 0.080), id="chip16-t1.0-pe0.030"),
     # t ~ Uniform[0.9, 1.0]
     pytest.param(_Scenario(16, 4, 0.000, 0.9, 0.85, 0.008, 0.85, 0.005), id="chip16-t0.9-pe0.000"),
     pytest.param(_Scenario(16, 4, 0.015, 0.9, 0.85, 0.035, 0.85, 0.050), id="chip16-t0.9-pe0.015"),

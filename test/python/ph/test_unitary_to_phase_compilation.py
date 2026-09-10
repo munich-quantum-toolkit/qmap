@@ -12,7 +12,81 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from mqt.qmap.ph.unitary_to_phase_compilation import optimize_unitary_subcircuit_parameters
+from mqt.qmap.ph.unitary_to_phase_compilation import (
+    build_unitary_selected_columns_from_components,
+    fidelity_loss,
+    optimize_unitary_subcircuit_parameters,
+)
+
+
+def _reference_unitary(bs: torch.Tensor, phases: torch.Tensor, exclude_corners: bool) -> torch.Tensor:
+    """Propagate full component matrices as an independent small-mesh reference."""
+    n = phases.shape[0]
+    unitary = torch.eye(n, dtype=torch.complex128)
+    offset = 0
+    for layer in range(n):
+        for component in (0, 1):
+            for i, top in enumerate(range(layer % 2, n - 1, 2)):
+                r = bs[offset + 2 * i + component]
+                matrix = torch.eye(n, dtype=torch.complex128)
+                matrix[top, top] = matrix[top + 1, top + 1] = torch.sqrt(r)
+                matrix[top, top + 1] = matrix[top + 1, top] = 1j * torch.sqrt(1 - r)
+                unitary = matrix @ unitary
+            if component == 0:
+                for mode in range(n):
+                    if exclude_corners and layer == n - 1 and mode in {0, n - 1}:
+                        continue
+                    matrix = torch.eye(n, dtype=torch.complex128)
+                    matrix[mode, mode] = torch.exp(1j * phases[mode, layer])
+                    unitary = matrix @ unitary
+        offset += 2 * len(range(layer % 2, n - 1, 2))
+    return unitary
+
+
+@pytest.mark.parametrize(
+    ("num_modes", "columns", "exclude_corners"),
+    [(2, [0, 1], False), (2, [1], True), (4, [0, 2], False), (6, [1, 4], True), (8, list(range(8)), False)],
+)
+def test_batched_propagation_and_gradients(num_modes: int, columns: list[int], exclude_corners: bool) -> None:
+    """Layer batches preserve the unitary and phase gradients of component propagation."""
+    rng = torch.Generator().manual_seed(12)
+    bs = torch.rand(num_modes * (num_modes - 1), generator=rng, dtype=torch.float64)
+    phases = torch.rand((num_modes, num_modes), generator=rng, dtype=torch.float64, requires_grad=True)
+    expected = _reference_unitary(bs, phases, exclude_corners)[:, columns]
+    actual = build_unitary_selected_columns_from_components(num_modes, bs, phases, columns, exclude_corners)
+    torch.testing.assert_close(actual, expected, atol=1e-12, rtol=1e-12)
+    weights = torch.randn(actual.shape, generator=rng, dtype=torch.complex128)
+    expected_grad = torch.autograd.grad((expected * weights).real.sum(), phases)[0]
+    actual_grad = torch.autograd.grad((actual * weights).real.sum(), phases)[0]
+    torch.testing.assert_close(actual_grad, expected_grad, atol=1e-12, rtol=1e-12)
+
+
+@pytest.mark.parametrize("budget", [0, 1, 3])
+def test_gradient_step_budget_and_returned_loss(budget: int, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Count actual gradient steps and independently evaluate the returned best state."""
+    calls = 0
+    step = torch.optim.Adam.step
+
+    def counted_step(self, *args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return step(self, *args, **kwargs)
+
+    monkeypatch.setattr(torch.optim.Adam, "step", counted_step)
+    bs = torch.full((12,), 0.5, dtype=torch.float64)
+    target = torch.eye(4, dtype=torch.complex128)
+    result = optimize_unitary_subcircuit_parameters(
+        target, bs, max_iterations=budget, threshold=-1.0, early_stop_patience=0
+    )
+    assert calls == budget
+    actual = _reference_unitary(bs, result.phase_shifter_params, exclude_corners=False)
+    assert result.best_loss == pytest.approx(fidelity_loss(actual, target).item(), abs=1e-12)
+
+
+def test_negative_iteration_budget_raises() -> None:
+    """An invalid iteration budget fails before optimizer initialization."""
+    with pytest.raises(ValueError, match="max_iterations must be nonnegative"):
+        optimize_unitary_subcircuit_parameters(torch.eye(2), torch.tensor([0.5, 0.5]), max_iterations=-1)
 
 
 class TestMaxIterationsContract:

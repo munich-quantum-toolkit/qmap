@@ -12,6 +12,11 @@ releases may include breaking changes.
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
+### Added
+
+- 🎉 Add a photonic subcircuit compiler with loss-aware routing and batched
+  phase optimization ([#1059]) ([**@tobi-forster**], [**@burgholzer**])
+
 ### Changed
 
 - 💥 Drop support for x86 macOS and stop publishing the respective wheels
@@ -30,8 +35,6 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#390)._
 
 ### Changed
 
-- 🎉 Add photonic subcircuit compiler that optimizes coincidence rates ([#1059])
-  ([**@tobi-forster**])
 - ⬆️ Update `mqt-core` to version 3.9.0 ([#1116]) ([**@denialhaag**])
 - ⬆️ Update `nanobind` to version 2.15.0 ([#1116]) ([**@denialhaag**])
 - ♻️ Move output-permutation measurement construction from MQT Core into QMAP

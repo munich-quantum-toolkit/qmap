@@ -69,7 +69,6 @@ visualization = [
     "ipywidgets>=8.1.7",
 ]
 photonics = [
-    "numpy>=1.26.0",
     "torch>=2.9.0",
 ]
 
@@ -378,13 +377,6 @@ exclude = [
     "eval/**",
 ]
 
-[[tool.ty.overrides]]
-# The ph compiler imports torch/numpy and the ph tests also import perceval; none
-# are in the lint environment, so suppress only import resolution for these paths.
-include = ["python/mqt/qmap/ph/**", "test/python/ph/**"]
-rules.unresolved-import = "ignore"
-
-
 [dependency-groups]
 build = [
   "nanobind~=2.15.0",
@@ -411,6 +403,7 @@ docs = [
   "torch>=2.9.0",
 ]
 test = [
+  "torch>=2.9.0",
   "pytest>=9.0.1",
   "pytest-cov>=7.1.0",
   "pytest-sugar>=1.1.1",

@@ -262,3 +262,34 @@ class TestEdgeFidelityLayerMapping:
         cross = TestEdgeFidelityLayerMapping._fidelities_with_distinct_layers(chip_dim, {})
         cost = get_edge_cost_for_graph_layer(3, 1, 1, bar, cross, chip_dim=chip_dim, target_dim=target_dim)
         assert cost == pytest.approx(float(-np.log(0.7 * 0.7)))
+
+
+@pytest.mark.parametrize(("chip_dim", "target_dim"), [(6, 2), (8, 4)])
+def test_edge_costs_match_physical_transitions(chip_dim: int, target_dim: int) -> None:
+    """Every graph edge charges for the MZIs its photons actually traverse."""
+    bs = np.random.default_rng(7).uniform(0.1, 0.9, chip_dim * (chip_dim - 1))
+    routing = construct_graph(chip_dim, target_dim, [1.0] * chip_dim, [1.0] * chip_dim, bs.tolist())
+    offset = 0
+    for layer in range(chip_dim - target_dim):
+        transfers = []
+        for cross in (False, True):
+            transfer = np.eye(chip_dim, dtype=complex)
+            for i, top in enumerate(range(layer % 2, chip_dim - 1, 2)):
+                matrices = [
+                    np.array([[np.sqrt(r), 1j * np.sqrt(1 - r)], [1j * np.sqrt(1 - r), np.sqrt(r)]])
+                    for r in bs[offset + 2 * i : offset + 2 * i + 2]
+                ]
+                phases = np.diag([1, 1 if cross else -1])
+                transfer[top : top + 2, top : top + 2] = matrices[1] @ phases @ matrices[0]
+            transfers.append(transfer)
+
+        for i, source in enumerate(routing.layers[layer + 1]):
+            first_mode = 2 * i if layer == 0 else i
+            input_modes = np.arange(first_mode, first_mode + target_dim, 2)
+            for destination in routing.graph.successor_indices(source):
+                mode = list(routing.layers[layer + 2]).index(destination)
+                output_modes = np.arange(mode, mode + target_dim, 2)
+                transfer = transfers[int(first_mode != mode)]
+                probability = np.prod(np.abs(transfer[output_modes, input_modes]) ** 2)
+                assert routing.graph.get_edge_data(source, destination) == pytest.approx(-np.log(probability))
+        offset += 2 * len(range(layer % 2, chip_dim - 1, 2))

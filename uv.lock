@@ -1609,8 +1609,6 @@ dependencies = [
 
 [package.optional-dependencies]
 photonics = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "torch" },
 ]
 visualization = [
@@ -1644,6 +1642,7 @@ dev = [
     { name = "qiskit", extra = ["qasm3-import"] },
     { name = "rustworkx", extra = ["all"] },
     { name = "scikit-build-core" },
+    { name = "torch" },
     { name = "vcs-versioning" },
     { name = "walkerlayout" },
 ]
@@ -1685,6 +1684,7 @@ test = [
     { name = "pytest-xdist" },
     { name = "qiskit", extra = ["qasm3-import"] },
     { name = "rustworkx", extra = ["all"] },
+    { name = "torch" },
     { name = "walkerlayout" },
 ]
 
@@ -1694,7 +1694,6 @@ requires-dist = [
     { name = "ipywidgets", marker = "extra == 'visualization'", specifier = ">=8.1.7" },
     { name = "mqt-core", specifier = "~=3.9.0" },
     { name = "networkx", marker = "extra == 'visualization'", specifier = ">=3.2.1" },
-    { name = "numpy", marker = "extra == 'photonics'", specifier = ">=1.26.0" },
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
     { name = "rustworkx", extras = ["all"], specifier = ">=0.16.0" },
@@ -1726,6 +1725,7 @@ dev = [
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
     { name = "rustworkx", extras = ["all"], specifier = ">=0.16.0" },
     { name = "scikit-build-core", specifier = ">=1.0.3" },
+    { name = "torch", specifier = ">=2.9.0" },
     { name = "vcs-versioning", specifier = ">=2.3.0" },
     { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
@@ -1765,6 +1765,7 @@ test = [
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=1.0.0" },
     { name = "rustworkx", extras = ["all"], specifier = ">=0.16.0" },
+    { name = "torch", specifier = ">=2.9.0" },
     { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 

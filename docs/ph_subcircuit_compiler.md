@@ -46,8 +46,8 @@ phase shifters of the chip that implement the desired target unitary and the
 routing.
 
 :::{note}
-Compiling a subcircuit with `compile_subcircuit` needs `torch` and `numpy`,
-provided by the optional `photonics` extra. Install it with:
+Compiling a subcircuit with `compile_subcircuit` needs `torch`, provided by the
+optional `photonics` extra. Install it with:
 
 ```console
 pip install "mqt.qmap[photonics]"
@@ -71,9 +71,9 @@ The physical imperfections of the chip are captured by three lists:
 - **`beam_splitter_reflectivities`** — a list of length `2 * total_mzis`,
   ordered MZI-by-MZI as `[r_in^0, r_out^0, r_in^1, r_out^1, …]`. Ideal chips
   have all values equal to 0.5.
-- **`input_transmissions`** — per-mode amplitude transmission coefficients at
-  the chip input (fibers, gratings, waveguide tapers). Values in `[0, 1]`,
-  normalized so the best mode has coefficient 1.
+- **`input_transmissions`** — per-mode transmission probabilities at the chip
+  input (fibers, gratings, waveguide tapers). Values in `[0, 1]`, normalized so
+  the best mode has coefficient 1.
 - **`output_transmissions`** — same for the chip output.
 
 A target unitary of dimension `target_dim` is compiled into a sub-block of the
@@ -109,6 +109,11 @@ not a matrix — one entry per beam splitter, ordered MZI-by-MZI as
 values). `input_transmissions` and `output_transmissions` are lists of length
 `chip_dim`. The target unitary must be a `torch.Tensor` with a complex dtype;
 wrap a NumPy array with `torch.as_tensor(array, dtype=torch.complex128)`.
+
+Both dimensions must be positive and even, and `target_dim` must be smaller than
+`chip_dim` to leave space for routing. All characterization values must be
+finite and in `[0, 1]`. The compiler raises `ValueError` for invalid inputs or
+when every route has zero transmission.
 
 For this example we have no physical device, so we synthesise representative
 random data of the same shapes instead:
@@ -230,7 +235,7 @@ config = OptimizationConfig(
 | ----------------------------- | ------- | -------------------------------------------------------------------------------- |
 | `lr`                          | `0.05`  | Initial Adam learning rate; a scheduler halves it on plateau                     |
 | `threshold`                   | `1e-6`  | Early exit once fidelity loss falls below this value                             |
-| `max_iterations`              | `10000` | Maximum gradient steps regardless of convergence                                 |
+| `max_iterations`              | `10000` | Maximum gradient steps; zero evaluates only the initial state                    |
 | `exclude_edge_phase_shifters` | `False` | Drop the phase shifters at the two chip corners (reduces parameter count by 2)   |
 | `optimize_routing_parameters` | `True`  | Give each routing MZI one free parameter to compensate small reflectivity errors |
 

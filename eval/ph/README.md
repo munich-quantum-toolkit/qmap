@@ -7,9 +7,9 @@ strategy, simulates both on the [Perceval] photonic simulator, and compares
 their output distributions (coincidence rate and total-variation distance).
 
 It is **not part of the installed package.** `pip install mqt-qmap[photonics]`
-ships only the compiler (which needs just `numpy` and `torch`); the evaluation's
-heavier dependencies — Perceval and pandas — are kept out of the wheel and are
-installed separately (see [Setup](#setup)).
+ships only the compiler (whose extra installs `torch`); the evaluation's heavier
+dependencies — Perceval and pandas — are kept out of the wheel and are installed
+separately (see [Setup](#setup)).
 
 ## What lives where
 

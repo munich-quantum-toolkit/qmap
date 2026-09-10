@@ -17,7 +17,6 @@ torch = pytest.importorskip("torch")
 from mqt.qmap.ph.routing import MaskState
 from mqt.qmap.ph.routing_to_phases import (
     apply_routing_transform,
-    get_effective_params_and_mask,
     precompute_routing_transform,
     reshape_flattened_params_to_grid,
 )
@@ -65,125 +64,43 @@ class TestReshapeFlattenedParamsToGrid:
             reshape_flattened_params_to_grid(torch.zeros(16), num_modes=4, exclude_edge_phase_shifters=True)
 
 
-class TestGetEffectiveParamsAndMask:
-    """Tests for get_effective_params_and_mask."""
-
-    @staticmethod
-    def _bar_mask(chip_dim) -> torch.Tensor:
-        return torch.ones((chip_dim, chip_dim), dtype=torch.int)
-
-    @staticmethod
-    def _cross_mask(chip_dim) -> torch.Tensor:
-        return torch.full((chip_dim, chip_dim), MaskState.CROSS, dtype=torch.int)
-
-    def test_all_bar_mask_forces_zero_pi_no_optimize(self) -> None:
-        """Test that a full bar mask sets even-layer MZI pairs to (0, pi) when routing optimization is disabled."""
-        chip_dim = 4
-        mask = self._bar_mask(chip_dim)
-        raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
-
-        eff, _grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
-
-        # Even layers: each MZI pair -> (top=0, bot=pi)
-        for layer in range(0, chip_dim, 2):
-            for top in range(0, chip_dim - 1, 2):
-                assert eff[top, layer].item() == pytest.approx(0.0)
-                assert eff[top + 1, layer].item() == pytest.approx(math.pi)
-
-    def test_all_bar_mask_zeros_gradients_no_optimize(self) -> None:
-        """Test that a full bar mask zeros all gradients when routing optimization is disabled."""
-        chip_dim = 4
-        mask = self._bar_mask(chip_dim)
-        raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
-
-        _, grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
-
-        assert not grad.any()
-
-    def test_all_cross_mask_forces_both_zero_no_optimize(self) -> None:
-        """Test that a full cross mask forces effective params to zero when routing optimization is disabled."""
-        chip_dim = 4
-        mask = self._cross_mask(chip_dim)
-        raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
-
-        eff, grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
-
-        assert not eff.any()
-        assert not grad.any()
-
-    @staticmethod
-    def test_mzi_zone_passes_through_nonzero_params() -> None:
-        """Test that MZI-zone parameters pass through unchanged when routing optimization is disabled."""
-        chip_dim = 4
-        mask = torch.zeros((chip_dim, chip_dim), dtype=torch.int)  # all MaskState.MZI
-        raw = torch.ones((chip_dim, chip_dim), dtype=torch.float64)
-
-        eff, _grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
-
-        # Non-zero MZI params should pass through unchanged
-        assert torch.allclose(eff, raw)
-
-    @staticmethod
-    def test_mzi_zone_zero_params_stay_trainable() -> None:
-        """Test that a compute MZI with both phases near zero keeps its (0, 0) phases and gradients.
-
-        The compute/routing distinction comes from the structural mask, not from
-        transient phase magnitudes, so an all-zero compute MZI must not be sealed
-        to a bar state (0, pi) or have its gradients frozen.
-        """
-        chip_dim = 4
-        mask = torch.zeros((chip_dim, chip_dim), dtype=torch.int)  # all MaskState.MZI
-        raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
-
-        eff, grad = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=False)
-
-        assert not eff.any()  # phases remain (0, 0), not overwritten to (0, pi)
-        assert grad.all()  # every compute cell stays trainable
-
-    def test_returns_two_tensors(self) -> None:
-        """Test that get_effective_params_and_mask returns a tuple of two tensors."""
-        chip_dim = 4
-        mask = self._bar_mask(chip_dim)
-        raw = torch.zeros((chip_dim, chip_dim), dtype=torch.float64)
-
-        result = get_effective_params_and_mask(chip_dim, mask, raw)
-        assert len(result) == 2
+@pytest.mark.parametrize("state", list(MaskState))
+@pytest.mark.parametrize("optimize_routing", [False, True])
+def test_routing_constraints_and_gradients(state: MaskState, optimize_routing: bool) -> None:
+    """Routing phases and their derivatives follow the physical pair constraints."""
+    mask = torch.full((4, 4), state, dtype=torch.int)
+    transform = precompute_routing_transform(mask, optimize_routing)
+    weights = torch.arange(16, dtype=torch.float64).reshape(4, 4)
+    for values in (torch.zeros((4, 4), dtype=torch.float64), weights / 10):
+        raw = values.clone().requires_grad_(True)
+        expected = raw.clone()
+        for layer in range(4):
+            if layer % 2 and state in {MaskState.BAR, MaskState.CROSS}:
+                expected[0, layer] = expected[-1, layer] = 0
+            for top in range(layer % 2, 3, 2):
+                bottom = top + 1
+                if state == MaskState.BAR:
+                    expected[top, layer] = raw[top, layer] if optimize_routing else 0.0
+                    expected[bottom, layer] = (raw[top, layer] if optimize_routing else 0.0) + math.pi
+                elif state == MaskState.CROSS:
+                    expected[top, layer] = expected[bottom, layer] = raw[top, layer] if optimize_routing else 0.0
+                elif state == MaskState.TOP_ONLY:
+                    expected[bottom, layer] = raw[top, layer] + math.pi
+                elif state == MaskState.BOT_ONLY:
+                    expected[top, layer] = raw[bottom, layer] + math.pi
+        actual = apply_routing_transform(raw, transform)
+        torch.testing.assert_close(actual, expected, atol=1e-12, rtol=1e-12)
+        actual_grad = torch.autograd.grad((actual * weights).sum(), raw)[0]
+        expected_grad = torch.autograd.grad((expected * weights).sum(), raw)[0]
+        torch.testing.assert_close(actual_grad, expected_grad, atol=1e-12, rtol=1e-12)
 
 
-class TestRoutingTransform:
-    """Tests for the precompute/apply split of the routing-to-phase conversion."""
-
-    @staticmethod
-    def test_precompute_apply_matches_wrapper() -> None:
-        """Test that precompute + apply reproduces the one-shot wrapper exactly."""
-        chip_dim = 8
-        mask = torch.full((chip_dim, chip_dim), MaskState.CROSS, dtype=torch.int)
-        raw = torch.rand((chip_dim, chip_dim), dtype=torch.float64)
-
-        eff_ref, grad_ref = get_effective_params_and_mask(chip_dim, mask, raw, optimize_routing_parameters=True)
-        transform = precompute_routing_transform(chip_dim, mask, raw.shape[1], optimize_routing_parameters=True)
-        eff, grad = apply_routing_transform(raw, transform)
-
-        assert torch.equal(eff, eff_ref)
-        assert torch.equal(grad, grad_ref)
-
-    @staticmethod
-    def test_transform_is_phase_independent() -> None:
-        """Test that one precomputed transform serves any phase values (the point of the split).
-
-        The grad mask is constant, and applying the transform to two different phase
-        grids matches computing each from scratch - so it is safe to precompute once
-        and reuse across optimizer iterations.
-        """
-        chip_dim = 8
-        mask = torch.ones((chip_dim, chip_dim), dtype=torch.int)  # all BAR
-        transform = precompute_routing_transform(chip_dim, mask, chip_dim, optimize_routing_parameters=False)
-
-        raw_a = torch.rand((chip_dim, chip_dim), dtype=torch.float64)
-        raw_b = torch.rand((chip_dim, chip_dim), dtype=torch.float64)
-        eff_a, grad_a = apply_routing_transform(raw_a, transform)
-        eff_b, grad_b = apply_routing_transform(raw_b, transform)
-
-        assert torch.equal(grad_a, grad_b)  # grad mask does not depend on the phases
-        assert torch.equal(eff_a, get_effective_params_and_mask(chip_dim, mask, raw_a)[0])
-        assert torch.equal(eff_b, get_effective_params_and_mask(chip_dim, mask, raw_b)[0])
+def test_mixed_pair_uses_higher_priority_state() -> None:
+    """A virtual bottom phase takes precedence over a bar state in the same pair."""
+    mask = torch.zeros((4, 4), dtype=torch.int)
+    mask[1, 1] = MaskState.BAR
+    mask[2, 1] = MaskState.BOT_ONLY
+    raw = torch.arange(16, dtype=torch.float64).reshape(4, 4)
+    effective = apply_routing_transform(raw, precompute_routing_transform(mask))
+    assert effective[1, 1] == pytest.approx(raw[2, 1] + math.pi)
+    assert effective[2, 1] == raw[2, 1]
