@@ -1,0 +1,149 @@
+{
+  "schema-version": 1,
+  "name": "MQT QMAP NA Default QDMI Device",
+  "numQubits": 100,
+  "traps": [
+    {
+      "latticeOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "latticeVector1": {
+        "x": 1,
+        "y": 0
+      },
+      "latticeVector2": {
+        "x": 0,
+        "y": 1
+      },
+      "sublatticeOffsets": [
+        {
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "extent": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 9,
+          "height": 9
+        }
+      }
+    }
+  ],
+  "minAtomDistance": 1,
+  "globalSingleQubitOperations": [
+    {
+      "name": "ry",
+      "region": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 9,
+          "height": 9
+        }
+      },
+      "duration": 100,
+      "fidelity": 0.99,
+      "numParameters": 1
+    }
+  ],
+  "globalMultiQubitOperations": [
+    {
+      "name": "cz",
+      "region": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 9,
+          "height": 1
+        }
+      },
+      "interactionRadius": 2,
+      "blockingRadius": 4,
+      "duration": 1,
+      "fidelity": 0.995,
+      "idlingFidelity": 0.998,
+      "numQubits": 2,
+      "numParameters": 0
+    }
+  ],
+  "localSingleQubitOperations": [
+    {
+      "name": "rz",
+      "region": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 9,
+          "height": 9
+        }
+      },
+      "duration": 2,
+      "fidelity": 0.999,
+      "numParameters": 1
+    }
+  ],
+  "localMultiQubitOperations": [
+    {
+      "name": "cz",
+      "region": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 9,
+          "height": 9
+        }
+      },
+      "interactionRadius": 2,
+      "blockingRadius": 4,
+      "duration": 1,
+      "fidelity": 0.994,
+      "numQubits": 2,
+      "numParameters": 0
+    }
+  ],
+  "shuttlingUnits": [
+    {
+      "region": {
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 9,
+          "height": 9
+        }
+      },
+      "meanShuttlingSpeed": 55,
+      "loadDuration": 20,
+      "storeDuration": 20,
+      "loadFidelity": 0.99,
+      "storeFidelity": 0.99,
+      "numParameters": 0
+    }
+  ],
+  "decoherenceTimes": {
+    "t1": 100000000,
+    "t2": 1500000
+  },
+  "lengthUnit": {
+    "scaleFactor": 1.0,
+    "unit": "um"
+  },
+  "durationUnit": {
+    "scaleFactor": 1.0,
+    "unit": "us"
+  }
+}

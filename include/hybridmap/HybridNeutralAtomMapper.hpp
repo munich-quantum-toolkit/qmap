@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
@@ -20,6 +19,7 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "na/ir/OpenQASMSerializer.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -601,7 +601,7 @@ public:
    */
   [[nodiscard]] [[maybe_unused]] std::string getMappedQcQasm() const {
     std::stringstream ss;
-    mappedQc.dumpOpenQASM(ss, false);
+    serializeOpenQASM(mappedQc, ss);
     return ss.str();
   }
 
@@ -611,7 +611,7 @@ public:
    */
   [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) const {
     std::ofstream ofs(filename);
-    mappedQc.dumpOpenQASM(ofs, false);
+    serializeOpenQASM(mappedQc, ofs);
   }
 
   /**
@@ -623,7 +623,7 @@ public:
       convertToAod();
     }
     std::stringstream ss;
-    mappedQcAOD.dumpOpenQASM(ss, false);
+    serializeOpenQASM(mappedQcAOD, ss);
     return ss.str();
   }
 
@@ -639,7 +639,7 @@ public:
     if (!ofs) {
       throw std::runtime_error("Failed to open file: " + filename);
     }
-    mappedQcAOD.dumpOpenQASM(ofs, false);
+    serializeOpenQASM(mappedQcAOD, ofs);
   }
 
   /**

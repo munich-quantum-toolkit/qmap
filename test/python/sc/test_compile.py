@@ -50,6 +50,15 @@ def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
         compile_(example_circuit, arch=None, calibration=None)
 
 
+def test_circuit_name_is_preserved(example_circuit: QuantumCircuit) -> None:
+    """Test that mapping preserves the input circuit name."""
+    example_circuit.name = "my_bell_chain"
+
+    mapped, _ = compile_(example_circuit, arch=Arch.IBM_QX4, method=Method.exact)
+
+    assert mapped.name == example_circuit.name
+
+
 # test that all available architecture enumerations can be properly used
 @pytest.mark.parametrize(
     "arch",

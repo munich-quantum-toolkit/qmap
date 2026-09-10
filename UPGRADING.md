@@ -6,6 +6,8 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+This release updates the minimum required `mqt-core` version to 3.10.0.
+
 ### Photonic subcircuit compiler
 
 Install `mqt.qmap[photonics]` to use `compile_subcircuit` from
@@ -14,15 +16,86 @@ positive and even, and the target must be smaller than the chip. The compiler
 returns a flat list of phase angles in layer order and the physical input and
 output ports. Paper evaluation tools and their dependencies live in `eval/ph`.
 
+### QDMI client API
+
+Include `na/qdmi/Client.hpp` for QMAP's neutral-atom client and
+`qdmi/Client.hpp` for MQT Core's generic client. The generic C++ namespace is
+`qdmi`, and its CMake target is `MQT::CoreQDMI`.
+
+### Neutral-atom OpenQASM serialization
+
+Include `na/ir/OpenQASMSerializer.hpp` and call
+`na::serializeOpenQASM(computation, stream)` to serialize circuits containing
+move, bridge, or AOD operations. Link `MQT::QMapNAIR`. Core's
+`qasm3::Serializer` traverses compound and conditional operations; QMAP supplies
+the extended neutral-atom leaf syntax.
+
+### Circuit transformations
+
+MQT QMAP now owns circuit transformations that MQT Core removed from
+`qc::CircuitOptimizer`. Apply these C++ replacements:
+
+- Replace `qc::CircuitOptimizer::singleQubitGateFusion` with
+  `qmap::singleQubitGateFusion`.
+- Replace `qc::CircuitOptimizer::decomposeSWAP` with `qmap::decomposeSWAP`. The
+  QMAP function recursively decomposes uncontrolled SWAPs and preserves
+  controlled SWAPs.
+- Replace `qc::CircuitOptimizer::cancelCNOTs` with `qmap::cancelCNOTs`.
+- Replace `qc::CircuitOptimizer::replaceMCXWithMCZ` with
+  `qmap::replaceMCXWithMCZ`.
+- Replace `qc::CircuitOptimizer::flattenOperations(qc)` with
+  `qc.flattenOperations()`.
+- Replace `qc::CircuitOptimizer::removeFinalMeasurements(qc)` with
+  `qc.removeFinalMeasurements()`.
+
+For the QMAP-owned replacements, include
+`datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
+
+### Neutral-atom stack
+
+The neutral-atom computation IR and circuit operations previously supplied by
+MQT Core now live in QMAP under the `na/ir` headers. This includes
+`NAComputation`, its entities and operations, and the move, bridge, and AOD
+circuit operations. Move and bridge operations use `NAStandardOperation` and
+remain custom operations to MQT Core. They do not support quantum controls.
+
+The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
+`origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
+`load1`, and `load2`, respectively.
+
+MQT QMAP now ships and registers the neutral-atom QDMI device and exposes its
+client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
+`mqt.qmap.na.default`. The provider reads its bundled description automatically
+and can be configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
+`MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables. Device discovery opens
+each registered ID once; separate devices may have the same display name.
+
+### Qiskit 2.1 minimum
+
+The minimum Qiskit version increases from **1.0.0 to 2.1.0**, dropping support
+for all Qiskit 1.x releases and Qiskit 2.0. Upgrade Qiskit to 2.1.0 or newer.
+
+### Python 3.11 and Stable ABI wheels
+
+MQT QMAP now requires Python 3.11 or newer. Upgrade the Python environment
+before installing this release.
+
+MQT QMAP now publishes one `cp311-abi3` wheel for GIL-enabled CPython 3.11 and
+newer. Free-threaded support starts with CPython 3.15 in a separate
+`cp315-abi3t` wheel. MQT QMAP no longer publishes free-threaded CPython 3.13 or
+3.14 wheels.
+
+This release updates `nanobind` to 3.0.1, which changes the `nanobind` ABI.
+
 ### macOS support
 
 MQT QMAP no longer supports x86 macOS. Use Apple silicon with macOS 13.3 or
 newer. The new deployment target enables `std::format` in libc++.
 
-### Python support
+### CMake 3.28 minimum
 
-MQT QMAP now requires Python 3.11 or newer. Upgrade the Python environment
-before installing this release.
+MQT QMAP now requires CMake 3.28 or newer. Upgrade CMake before building this
+release.
 
 ## [3.9.0]
 

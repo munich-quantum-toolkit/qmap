@@ -12,6 +12,7 @@
 
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 
@@ -21,6 +22,16 @@
 #include <vector>
 
 namespace na {
+
+CircuitDAG constructDAG(qc::QuantumComputation& qc) {
+  CircuitDAG dag(qc.getHighestPhysicalQubitIndex() + 1U);
+  for (auto& operation : qc) {
+    for (const auto qubit : operation->getUsedQubits()) {
+      dag.at(qubit).push_back(&operation);
+    }
+  }
+  return dag;
+}
 
 void NeutralAtomLayer::updateByQubits(
     const std::set<qc::Qubit>& qubitsToUpdate) {
@@ -171,7 +182,7 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
   // check targets
   if (std::ranges::find(op1->getTargets(), qubit) != op1->getTargets().end() &&
       std::ranges::find(op2->getTargets(), qubit) != op2->getTargets().end() &&
-      op1->getType() == op2->getType()) {
+      op1->getType() == op2->getType() && op1->getName() == op2->getName()) {
     return true;
   }
   return false;
