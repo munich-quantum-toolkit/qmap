@@ -24,6 +24,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 ### Changed
 
+- 🔧 Use Ninja and shared CMake presets on all platforms, removing `-windows`
+  from preset names ([#1158]) ([**@denialhaag**])
 - ⬆️ Update `mqt-core` to version 3.10.0 ([#1144]) ([**@denialhaag**],
   [**@burgholzer**])
 - ⬆️ Update `nanobind` to version 3.0.1 ([#1144]) ([**@denialhaag**],
@@ -335,6 +337,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1158]: https://github.com/munich-quantum-toolkit/qmap/pull/1158
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
 [#1153]: https://github.com/munich-quantum-toolkit/qmap/pull/1153
 [#1152]: https://github.com/munich-quantum-toolkit/qmap/pull/1152

@@ -268,11 +268,8 @@ before-test = "uv pip install --group test"
 test-groups = []
 
 [[tool.cibuildwheel.overrides]]
-select = [ "cp*-win_arm64", "cp315*" ]
-before-test = ""
-test-command = 'python -c "import mqt.qmap.clifford_synthesis, mqt.qmap.hybrid_mapper, mqt.qmap.na, mqt.qmap.sc"'
-test-groups = []
-test-sources = []
+select = [ "cp*-win_arm64", "cp*-manylinux_aarch64", "cp315*" ]
+test-command = ""
 
 
 [tool.ruff]
