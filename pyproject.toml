@@ -7,69 +7,82 @@
 # Licensed under the MIT License
 
 [build-system]
-requires = [
-  "nanobind~=3.0.1",
-  "vcs-versioning>=2.3.0",
-  "scikit-build-core>=1.0.3",
-  "mqt.core~=3.10.0",
-]
 build-backend = "scikit_build_core.build"
+requires = [
+  "mqt-core~=3.10.0",
+  "nanobind~=3.0.1",
+  "scikit-build-core>=1.0.3",
+  "vcs-versioning>=2.3",
+]
+
 
 [project]
-name = "mqt.qmap"
+name = "mqt-qmap"
 description = "A tool for Quantum Circuit Mapping"
 readme = "README.md"
-authors = [
-    { name = "Lukas Burgholzer", email = "lukas.burgholzer@tum.de" },
-    { name = "Stefan Hillmich", email = "stefan.hillmich@scch.at" },
-    { name = "Tom Peham", email = "tom.peham@tum.de" },
-    { name = "Ludwig Schmid", email = "ludwig.s.schmid@tum.de" },
-    { name = "Yannick Stade", email = "yannick.stade@tum.de" }
-]
-keywords = ["MQT", "quantum-computing", "design-automation", "compiler", "clifford-synthesis"]
+keywords = [ "clifford-synthesis", "compiler", "design-automation", "MQT", "quantum-computing" ]
 license = "MIT"
-license-files = ["LICENSE"]
-
+license-files = [ "LICENSE" ]
+requires-python = ">=3.11,!=3.14.1"
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Information Technology",
-    "Intended Audience :: Science/Research",
-    "Natural Language :: English",
-    "Operating System :: MacOS",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX :: Linux",
-    "Programming Language :: C++",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: 3.15",
-    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
-    "Topic :: Scientific/Engineering :: Quantum Computing",
-    "Topic :: Software Development :: Compilers",
-    "Typing :: Typed",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: C++",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+  "Topic :: Scientific/Engineering :: Quantum Computing",
+  "Topic :: Software Development :: Compilers",
+  "Typing :: Typed",
 ]
-requires-python = ">=3.11, != 3.14.1"
+dynamic = [ "version" ]
 dependencies = [
-    "mqt.core~=3.10.0",
-    "nanobind-backend>=1.0",
-    "qiskit[qasm3-import]>=2.1.0",
-    "rustworkx[all]>=0.16.0",
+  "mqt-core~=3.10.0",
+  "nanobind-backend>=1",
+  "qiskit[qasm3-import]>=2.1",
+  "rustworkx[all]>=0.16",
 ]
-dynamic = ["version"]
+
+[[project.authors]]
+name = "Lukas Burgholzer"
+email = "lukas.burgholzer@tum.de"
+
+[[project.authors]]
+name = "Stefan Hillmich"
+email = "stefan.hillmich@scch.at"
+
+[[project.authors]]
+name = "Tom Peham"
+email = "tom.peham@tum.de"
+
+[[project.authors]]
+name = "Ludwig Schmid"
+email = "ludwig.s.schmid@tum.de"
+
+[[project.authors]]
+name = "Yannick Stade"
+email = "yannick.stade@tum.de"
 
 [project.optional-dependencies]
 visualization = [
-    "distinctipy>=1.3.4",
-    "plotly>=6.0.1",
-    "networkx>=3.2.1",
-    "walkerlayout>=1.0.2",
-    "ipywidgets>=8.1.7",
+  "distinctipy>=1.3.4",
+  "ipywidgets>=8.1.7",
+  "networkx>=3.2.1",
+  "plotly>=6.0.1",
+  "walkerlayout>=1.0.2",
 ]
-photonics = ["torch>=2.9.0"]
+photonics = [ "torch>=2.9" ]
 
 [project.urls]
 Homepage = "https://github.com/munich-quantum-toolkit/qmap"
@@ -77,30 +90,71 @@ Documentation = "https://mqt.readthedocs.io/projects/qmap"
 Issues = "https://github.com/munich-quantum-toolkit/qmap/issues"
 Discussions = "https://github.com/munich-quantum-toolkit/qmap/discussions"
 
+
+[dependency-groups]
+dev = [
+  { include-group = "build" },
+  { include-group = "test" },
+  "nox>=2025.11.12",
+]
+test = [
+  "distinctipy>=1.3.4",
+  "ipywidgets>=8.1.7",
+  "mqt-qcec>=3.10",
+  "networkx>=3.2.1",
+  "plotly>=6.0.1",
+  "pytest>=9.0.1",
+  "pytest-cov>=7.1",
+  "pytest-sugar>=1.1.1",
+  "pytest-xdist>=3.8",
+  "qiskit[qasm3-import]>=2.1",
+  "rustworkx[all]>=0.16",
+  "torch>=2.9",
+  "walkerlayout>=1.0.2",
+]
+docs = [
+  "distinctipy>=1.3.4",
+  "furo>=2025.12.19",
+  "ipywidgets>=8.1.7",
+  "myst-nb>=1.4",
+  "networkx>=3.2.1",
+  "plotly>=6.0.1",
+  "qiskit[qasm3-import,visualization]>=2.1",
+  "sphinx>=9",
+  "sphinx-autoapi>=3.6",
+  "sphinx-copybutton>=0.5.2",
+  "sphinx-design>=0.7",
+  "sphinx-llm>=1",
+  "sphinxcontrib-bibtex>=2.7",
+  "sphinxext-opengraph>=0.13",
+  "torch>=2.9",
+  "walkerlayout>=1.0.2",
+]
+build = [
+  "cmake>=4.4.1",
+  "mqt-core~=3.10.0",
+  "nanobind~=3.0.1",
+  "scikit-build-core>=1.0.3",
+  "vcs-versioning>=2.3",
+]
+evaluation = [
+  "numpy>=1.26",
+  "pandas>=2.3.3",
+  "perceval-quandela>=1.1",
+  "torch>=2.9",
+]
+
+
 [tool.scikit-build]
 # Protect the configuration against future changes in scikit-build-core
 minimum-version = "build-system.requires"
-
-# Set the wheel install directory
-wheel.install-dir = "mqt/qmap"
-
-# Explicitly set the package directory
-wheel.packages = ["python/mqt"]
-
-# Build one split-mode Stable ABI wheel for GIL-enabled CPython 3.11+
-wheel.py-api = "cp311"
-
-# Set required Ninja version
-ninja.version = ">=1.10"
-
-# CMake 4.4 detects free-threaded Python and supplies Py_GIL_DISABLED on Windows
-cmake.version = ">=4.4.1"
-
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}/{build_type}"
 
+[tool.scikit-build.build]
+
 # Only build the Python bindings target
-build.targets = [
+targets = [
   "mqt-qmap-clifford_synthesis-bindings",
   "mqt-qmap-na-qdmi-device",
   "mqt-qmap-hybrid_mapper-bindings",
@@ -108,24 +162,49 @@ build.targets = [
   "mqt-qmap-sc-bindings",
 ]
 
-# Only install the Python package component
-install.components = ["mqt-qmap_Python"]
-sdist.include = ["python/mqt/qmap/_version.py"]
-sdist.exclude = [
-    "**/.github",
-    "**/doc",
-    "**/docs",
-    "**/eval",
-    "**/meta",
-    "**/plots",
-    "**/test",
-    "**/tests",
-]
+[tool.scikit-build.cmake]
+
+# CMake 4.4 detects free-threaded Python and supplies Py_GIL_DISABLED on Windows
+version = ">=4.4.1"
 
 [tool.scikit-build.cmake.define]
 BUILD_MQT_QMAP_TESTS = "OFF"
 BUILD_MQT_QMAP_BINDINGS = "ON"
 ENABLE_IPO = "ON"
+
+[tool.scikit-build.ninja]
+
+# Set required Ninja version
+version = ">=1.10"
+
+[tool.scikit-build.sdist]
+include = [ "python/mqt/qmap/_version.py" ]
+exclude = [
+  "**/.github",
+  "**/doc",
+  "**/docs",
+  "**/eval",
+  "**/meta",
+  "**/plots",
+  "**/test",
+  "**/tests",
+]
+
+[tool.scikit-build.wheel]
+
+# Set the wheel install directory
+install-dir = "mqt/qmap"
+
+# Explicitly set the package directory
+packages = [ "python/mqt" ]
+
+# Build one split-mode Stable ABI wheel for GIL-enabled CPython 3.11+
+py-api = "cp311"
+
+[tool.scikit-build.install]
+
+# Only install the Python package component
+components = [ "mqt-qmap_Python" ]
 
 [[tool.scikit-build.overrides]]
 if.python-version = ">=3.15"
@@ -133,159 +212,190 @@ if.abi-flags = "t"
 wheel.py-api = "cp315t"
 
 
-[[tool.dynamic-metadata]]
-provider = "vcs_versioning"
-
-
-[tool.check-sdist]
-sdist-only = ["python/mqt/qmap/_version.py"]
-git-only = [
-    "docs/*",
-    "eval/*",
-    "extern/*",
-    "test/*",
-    ".idea/*",
+[tool.uv]
+required-version = ">=0.5.20"
+cache-keys = [
+  { file = "pyproject.toml" },
+  { git = { commit = true, tags = true } },
+  { file = "bindings/**/*.cpp" },
 ]
 
+[tool.uv.sources]
+mqt-qmap = { workspace = true }
 
-[tool.vcs-versioning]
-write_to = "python/mqt/qmap/_version.py"
 
-
-[tool.pytest]
-minversion = "9.0"
-testpaths = ["test/python"]
-strict = true
-addopts = [
-  "-ra",
-  "--showlocals",
-  "--numprocesses=auto", # Automatically use all available CPU cores for parallel testing
-]
-log_level = "INFO"
-filterwarnings = [
-  "error",
-  'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
-  'ignore:.*``qiskit.circuit.library.standard_gates.x.*`` is pending deprecation as of qiskit 1.3.*:PendingDeprecationWarning:',
+[tool.cibuildwheel]
+build = "cp3*"
+skip = [ "*-musllinux_*", "cp314t-*" ]
+archs = "auto64"
+build-frontend = "uv"
+test-command = "pytest test/python"
+test-groups = [ "test" ]
+test-sources = [
+  "test",
+  "json",
 ]
 
-[tool.coverage]
-run.source = ["mqt.qmap"]
-run.core = "sysmon"
-run.parallel = true
-run.omit = [
-  "*/visualization/*",
-  "*/_compat/*",
-]
-report.exclude_also = [
-    '\.\.\.',
-    'if TYPE_CHECKING:',
-    'raise AssertionError',
-    'raise NotImplementedError',
-    'def __dir__()',  # Ignore __dir__ method that exists mainly for better IDE support
-    '@overload'  # Overloads are only for static typing
-]
-run.disable_warnings = [
-  "no-sysmon",
+# The mqt-core shared libraries are provided by the mqt-core Python package.
+# They should not be vendorized into the mqt-qmap wheel. This requires
+# excluding the shared libraries from the repair process.
+[tool.cibuildwheel.linux]
+environment = { Z3_ROOT = "/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY = "ON" }
+before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
+repair-wheel-command = [
+  "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
+  """\
+  auditwheel repair -w {dest_dir} {wheel} --exclude libmqt-core-ir.so.3.10 --exclude libmqt-core-qdmi.so.3.10 \
+  --exclude libmqt-core-qdmi-common.so.3.10 --exclude libmqt-core-qdmi-driver.so.3.10 --exclude \
+  libmqt-core-qasm.so.3.10\
+  """,
 ]
 
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "13.3" }
+repair-wheel-command = """\
+  delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} --ignore-missing-dependencies\
+  """
 
-[tool.check-wheel-contents]
-ignore = ["W002"]  # Triggers on __init__.py's
+[tool.cibuildwheel.windows]
+repair-wheel-command = """\
+  delvewheel repair -w {dest_dir} {wheel} --namespace-pkg mqt --exclude mqt-core-ir.dll --exclude mqt-core-qdmi.dll \
+  --exclude mqt-core-qdmi-common.dll --exclude mqt-core-qdmi-driver.dll --exclude mqt-core-qasm.dll\
+  """
+before-test = "uv pip install --group test"
+# cibuildwheel 4.2 passes expanded dependency groups through cmd.exe, which interprets version
+# operators as redirections. Let uv resolve the group itself.
+test-groups = []
+
+[[tool.cibuildwheel.overrides]]
+select = [ "cp*-win_arm64", "cp315*" ]
+before-test = ""
+test-command = 'python -c "import mqt.qmap.clifford_synthesis, mqt.qmap.hybrid_mapper, mqt.qmap.na, mqt.qmap.sc"'
+test-groups = []
+test-sources = []
 
 
 [tool.ruff]
 line-length = 120
-namespace-packages = ["mqt"]
+namespace-packages = [ "mqt" ]
+src = [ "python" ]
 preview = true
 fix = true
 unsafe-fixes = true
 show-fixes = true
-src = ["python"]
 
 [tool.ruff.format]
 preview = true
 docstring-code-format = true
 
-[tool.ruff.lint]
-extend-select = [
-    "A",           # flake8-builtins
-    "ANN",         # flake8-annotations
-    "ARG",         # flake8-unused-arguments
-    "ASYNC",       # flake8-async
-    "B",           # flake8-bugbear
-    "C4",          # flake8-comprehensions
-    "D",           # pydocstyle
-    "EM",          # flake8-errmsg
-    "EXE",         # flake8-executable
-    "FA",          # flake8-future-annotations
-    "FLY",         # flynt
-    "FURB",        # refurb
-    "I",           # isort
-    "ICN",         # flake8-import-conventions
-    "ISC",         # flake8-implicit-str-concat
-    "LOG",         # flake8-logging-format
-    "N",           # flake8-naming
-    "NPY",         # numpy
-    "PERF",        # perflint
-    "PGH",         # pygrep-hooks
-    "PIE",         # flake8-pie
-    "PL",          # pylint
-    "PT",          # flake8-pytest-style
-    "PTH",         # flake8-use-pathlib
-    "PYI",         # flake8-pyi
-    "Q",           # flake8-quotes
-    "RET",         # flake8-return
-    "RSE",         # flake8-raise
-    "RUF",         # Ruff-specific
-    "S",           # flake8-bandit
-    "SLF",         # flake8-self
-    "SLOT",        # flake8-slots
-    "SIM",         # flake8-simplify
-    "T20",         # flake8-print
-    "TC",          # flake8-type-checking
-    "TID251",      # flake8-tidy-imports.banned-api
-    "TRY",         # tryceratops
-    "UP",          # pyupgrade
-    "YTT",         # flake8-2020
+[tool.ruff.lint.per-file-ignores]
+"test/python/**" = [ "ANN", "T20" ]
+"docs/**" = [ "T20" ]
+"eval/**" = [ "T20" ]
+"eval/ph/tests/**" = [ "ANN" ]
+"noxfile.py" = [ "T20", "TID251" ]
+"*.pyi" = [ "D301", "D418", "E501", "PYI021" ]
+"*.ipynb" = [
+  "D",    # pydocstyle
+  "E402", # Allow imports to appear anywhere in Jupyter notebooks
+  "I002", # Allow missing `from __future__ import annotations` import
 ]
-ignore = [
-    "PLR09",   # Too many <...>
-    "PLR2004", # Magic value used in comparison
-    "S101",    # Use of assert detected
-    "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
-]
-future-annotations = true
+"python/mqt/qmap/_compat/**.py" = [ "TID251" ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["mqt.qmap"]
-
-[tool.ruff.lint.per-file-ignores]
-"test/python/**" = ["T20", "ANN"]
-"docs/**" = ["T20"]
-"eval/**" = ["T20"]
-"eval/ph/tests/**" = ["ANN"]
-"noxfile.py" = ["T20", "TID251"]
-"*.pyi" = ["D301", "D418", "E501", "PYI021"]
-"*.ipynb" = [
-    "D",    # pydocstyle
-    "E402", # Allow imports to appear anywhere in Jupyter notebooks
-    "I002", # Allow missing `from __future__ import annotations` import
-]
-"python/mqt/qmap/_compat/**.py" = ["TID251"]
+known-first-party = [ "mqt.qmap" ]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.ruff.lint]
+extend-select = [
+  "A",      # flake8-builtins
+  "ANN",    # flake8-annotations
+  "ARG",    # flake8-unused-arguments
+  "ASYNC",  # flake8-async
+  "B",      # flake8-bugbear
+  "C4",     # flake8-comprehensions
+  "D",      # pydocstyle
+  "EM",     # flake8-errmsg
+  "EXE",    # flake8-executable
+  "FA",     # flake8-future-annotations
+  "FLY",    # flynt
+  "FURB",   # refurb
+  "I",      # isort
+  "ICN",    # flake8-import-conventions
+  "ISC",    # flake8-implicit-str-concat
+  "LOG",    # flake8-logging-format
+  "N",      # flake8-naming
+  "NPY",    # numpy
+  "PERF",   # perflint
+  "PGH",    # pygrep-hooks
+  "PIE",    # flake8-pie
+  "PL",     # pylint
+  "PT",     # flake8-pytest-style
+  "PTH",    # flake8-use-pathlib
+  "PYI",    # flake8-pyi
+  "Q",      # flake8-quotes
+  "RET",    # flake8-return
+  "RSE",    # flake8-raise
+  "RUF",    # Ruff-specific
+  "S",      # flake8-bandit
+  "SIM",    # flake8-simplify
+  "SLF",    # flake8-self
+  "SLOT",   # flake8-slots
+  "T20",    # flake8-print
+  "TC",     # flake8-type-checking
+  "TID251", # flake8-tidy-imports.banned-api
+  "TRY",    # tryceratops
+  "UP",     # pyupgrade
+  "YTT",    # flake8-2020
+]
+ignore = [
+  "PLR09",   # Too many <...>
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert detected
+  "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
+]
+future-annotations = true
+
+
+[tool.repo-review.ignore]
+GH200 = "We use Renovate instead of Dependabot"
+PC160 = "We use a mirror of crate-ci/typos"
+PC170 = "We do not use rST files anymore"
+
+
+[tool.check-sdist]
+sdist-only = [ "python/mqt/qmap/_version.py" ]
+git-only = [
+  "docs/*",
+  "eval/*",
+  "extern/*",
+  "test/*",
+  ".idea/*",
+]
+
+
+[tool.check-wheel-contents]
+ignore = [ "W002" ]  # Triggers on __init__.py's
+
+
+[tool.pyproject-fmt]
+generate_python_version_classifiers = false
+table_format = "long"
+sub_table_spacing = "\n"
+separate_root_table = "\n\n"
+
 
 [tool.typos]
-files.extend-exclude = [
-  "tableaus\\.json"
-]
-default.extend-ignore-re = [
+
+[tool.typos.default]
+extend-ignore-re = [
   '"id": ".*",',
-  "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",  # ignore line
+  "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",                      # ignore line
   "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on", # ignore block
 ]
+
 [tool.typos.default.extend-words]
 wille = "wille"
 anc = "anc"
@@ -295,137 +405,62 @@ iy = "iy"
 iz = "iz"
 ket = "ket"
 
-
-[tool.repo-review.ignore]
-GH200 = "We use Renovate instead of Dependabot"
-PC160 = "We use a mirror of crate-ci/typos"
-PC170 = "We do not use rST files anymore"
+[tool.typos.files]
+extend-exclude = [ "tableaus\\.json" ]
 
 
-[tool.cibuildwheel]
-build = "cp3*"
-skip = ["*-musllinux_*", "cp314t-*"]
-archs = "auto64"
-test-groups = ["test"]
-test-sources = [
-  "test",
-  "json",
+[tool.ty.src]
+exclude = [
+  "docs/**",
+  "eval/**",
 ]
-test-command = "pytest test/python"
-build-frontend = "uv"
-
-[[tool.cibuildwheel.overrides]]
-select = ["cp*-win_arm64", "cp315*"]
-before-test = ""
-test-groups = []
-test-sources = []
-test-command = "python -c \"import mqt.qmap.clifford_synthesis, mqt.qmap.hybrid_mapper, mqt.qmap.na, mqt.qmap.sc\""
-
-# The mqt-core shared libraries are provided by the mqt-core Python package.
-# They should not be vendorized into the mqt-qmap wheel. This requires
-# excluding the shared libraries from the repair process.
-
-[tool.cibuildwheel.linux]
-environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY="ON" }
-before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
-repair-wheel-command = [
-    "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
-    """auditwheel repair -w {dest_dir} {wheel} \
---exclude libmqt-core-ir.so.3.10 \
---exclude libmqt-core-qdmi.so.3.10 \
---exclude libmqt-core-qdmi-common.so.3.10 \
---exclude libmqt-core-qdmi-driver.so.3.10 \
---exclude libmqt-core-qasm.so.3.10""",
-]
-
-[tool.cibuildwheel.macos]
-environment = { MACOSX_DEPLOYMENT_TARGET = "13.3" }
-repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} --ignore-missing-dependencies"
-
-[tool.cibuildwheel.windows]
-repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pkg mqt \
---exclude mqt-core-ir.dll \
---exclude mqt-core-qdmi.dll \
---exclude mqt-core-qdmi-common.dll \
---exclude mqt-core-qdmi-driver.dll \
---exclude mqt-core-qasm.dll"""
-# cibuildwheel 4.2 passes expanded dependency groups through cmd.exe, which interprets version
-# operators as redirections. Let uv resolve the group itself.
-test-groups = []
-before-test = "uv pip install --group test"
-
-[tool.uv]
-required-version = ">=0.5.20"
-cache-keys = [
-  { file = "pyproject.toml" },
-  { git = { commit = true, tags = true } },
-  { file = "bindings/**/*.cpp"},
-]
-
-[tool.uv.sources]
-mqt-qmap = { workspace = true }
-
 
 [tool.ty.terminal]
 # Error if ty emits any warning-level diagnostics.
 error-on-warning = true
 
-[tool.ty.src]
-exclude = [
-    "docs/**",
-    "eval/**",
+
+[tool.pytest]
+addopts = [
+  "-ra",
+  "--showlocals",
+  "--numprocesses=auto", # Automatically use all available CPU cores for parallel testing
+]
+filterwarnings = [ "error" ]
+log_level = "INFO"
+minversion = "9.0"
+strict = true
+testpaths = [ "test/python" ]
+
+
+[tool.coverage]
+
+[tool.coverage.run]
+source = [ "mqt.qmap" ]
+omit = [
+  "*/_compat/*",
+  "*/visualization/*",
+]
+parallel = true
+disable_warnings = [
+  "no-sysmon",
+]
+core = "sysmon"
+
+[tool.coverage.report]
+exclude_also = [
+  "@overload",                 # Overloads are only for static typing
+  '\.\.\.',
+  "def __dir__()",             # Ignore __dir__ method that exists mainly for better IDE support
+  "if TYPE_CHECKING:",
+  "raise AssertionError",
+  "raise NotImplementedError"
 ]
 
 
-[dependency-groups]
-build = [
-  "cmake>=4.4.1",
-  "nanobind~=3.0.1",
-  "vcs-versioning>=2.3.0",
-  "scikit-build-core>=1.0.3",
-  "mqt.core~=3.10.0",
-]
-docs = [
-  "distinctipy>=1.3.4",
-  "furo>=2025.09.25",
-  "ipywidgets>=8.1.7",
-  "myst-nb>=1.3.0",
-  "networkx>=3.2.1",
-  "plotly>=6.0.1",
-  "sphinx>=8.2.3",
-  "sphinx-autoapi>=3.6.0",
-  "sphinx-copybutton>=0.5.2",
-  "sphinx-design>=0.6.1",
-  "sphinx-llm>=0.4.1",
-  "sphinxcontrib-bibtex>=2.6.5",
-  "sphinxext-opengraph>=0.13.0",
-  "walkerlayout>=1.0.2",
-  "qiskit[qasm3-import,visualization]>=2.1.0",
-  "torch>=2.9.0",
-]
-test = [
-  "torch>=2.9.0",
-  "pytest>=9.0.1",
-  "pytest-cov>=7.1.0",
-  "pytest-sugar>=1.1.1",
-  "pytest-xdist>=3.8.0",
-  "mqt.qcec>=3.10.0",
-  "distinctipy>=1.3.4",
-  "ipywidgets>=8.1.7",
-  "networkx>=3.2.1",
-  "plotly>=6.0.1",
-  "qiskit[qasm3-import]>=2.1.0",
-  "rustworkx[all]>=0.16.0",
-  "walkerlayout>=1.0.2",
-]
-evaluation = [
-  "numpy>=1.26.0",
-  "pandas>=2.3.3",
-  "perceval-quandela>=1.1.0",
-  "torch>=2.9.0",
-]
-dev = [
-  {include-group = "build"},
-  {include-group = "test"},
-  "nox>=2025.11.12",
-]
+[[tool.dynamic-metadata]]
+provider = "vcs_versioning"
+
+
+[tool.vcs-versioning]
+write_to = "python/mqt/qmap/_version.py"

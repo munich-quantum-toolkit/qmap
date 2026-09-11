@@ -8,7 +8,7 @@
 
 #
 # This file is part of the MQT QMAP library released under the MIT license. See README.md or go to
-# https://github.com/cda-tum/mqt-qmap for more information.
+# https://github.com/munich-quantum-toolkit/qmap for more information.
 #
 
 set(MQT_QMAP_SC_TARGET_NAME ${MQT_QMAP_TARGET_NAME}-sc)
