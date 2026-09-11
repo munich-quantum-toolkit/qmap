@@ -69,6 +69,7 @@ visualization = [
     "walkerlayout>=1.0.2",
     "ipywidgets>=8.1.7",
 ]
+photonics = ["torch>=2.9.0"]
 
 [project.urls]
 Homepage = "https://github.com/munich-quantum-toolkit/qmap"
@@ -262,6 +263,7 @@ known-first-party = ["mqt.qmap"]
 "test/python/**" = ["T20", "ANN"]
 "docs/**" = ["T20"]
 "eval/**" = ["T20"]
+"eval/ph/tests/**" = ["ANN"]
 "noxfile.py" = ["T20", "TID251"]
 "*.pyi" = ["D301", "D418", "E501", "PYI021"]
 "*.ipynb" = [
@@ -399,8 +401,10 @@ docs = [
   "sphinxext-opengraph>=0.13.0",
   "walkerlayout>=1.0.2",
   "qiskit[qasm3-import,visualization]>=2.1.0",
+  "torch>=2.9.0",
 ]
 test = [
+  "torch>=2.9.0",
   "pytest>=9.0.1",
   "pytest-cov>=7.1.0",
   "pytest-sugar>=1.1.1",
@@ -413,6 +417,12 @@ test = [
   "qiskit[qasm3-import]>=2.1.0",
   "rustworkx[all]>=0.16.0",
   "walkerlayout>=1.0.2",
+]
+evaluation = [
+  "numpy>=1.26.0",
+  "pandas>=2.3.3",
+  "perceval-quandela>=1.1.0",
+  "torch>=2.9.0",
 ]
 dev = [
   {include-group = "build"},

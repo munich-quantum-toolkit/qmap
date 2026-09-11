@@ -8,6 +8,14 @@ of changes including minor and patch releases, please refer to the
 
 This release updates the minimum required `mqt-core` version to 3.10.0.
 
+### Photonic subcircuit compiler
+
+Install `mqt.qmap[photonics]` to use `compile_subcircuit` from
+`mqt.qmap.ph.subcircuit_compilation`. The target and chip dimensions must be
+positive and even, and the target must be smaller than the chip. The compiler
+returns a flat list of phase angles in layer order and the physical input and
+output ports. Paper evaluation tools and their dependencies live in `eval/ph`.
+
 ### QDMI client API
 
 Include `na/qdmi/Client.hpp` for QMAP's neutral-atom client and
