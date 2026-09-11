@@ -274,7 +274,7 @@ before-test = "uv pip install --group test"
 test-groups = []
 
 [[tool.cibuildwheel.overrides]]
-select = [ "cp*-win_arm64", "cp*-manylinux_aarch64", "cp315*" ]
+select = [ "cp*-win_arm64", "cp315*" ]
 test-command = ""
 
 
