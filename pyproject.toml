@@ -82,7 +82,10 @@ visualization = [
   "plotly>=6.0.1",
   "walkerlayout>=1.0.2",
 ]
-photonics = [ "torch>=2.9" ]
+photonics = [
+  "torch!=2.14; sys_platform=='linux' and platform_machine=='aarch64'",
+  "torch>=2.9",
+]
 
 [project.urls]
 Homepage = "https://github.com/munich-quantum-toolkit/qmap"
@@ -109,6 +112,7 @@ test = [
   "pytest-xdist>=3.8",
   "qiskit[qasm3-import]>=2.1",
   "rustworkx[all]>=0.16",
+  "torch!=2.14; sys_platform=='linux' and platform_machine=='aarch64'",
   "torch>=2.9",
   "walkerlayout>=1.0.2",
 ]
@@ -127,6 +131,7 @@ docs = [
   "sphinx-llm>=1",
   "sphinxcontrib-bibtex>=2.7",
   "sphinxext-opengraph>=0.13",
+  "torch!=2.14; sys_platform=='linux' and platform_machine=='aarch64'",
   "torch>=2.9",
   "walkerlayout>=1.0.2",
 ]
@@ -141,6 +146,7 @@ evaluation = [
   "numpy>=1.26",
   "pandas>=2.3.3",
   "perceval-quandela>=1.1",
+  "torch!=2.14; sys_platform=='linux' and platform_machine=='aarch64'",
   "torch>=2.9",
 ]
 
