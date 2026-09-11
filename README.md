@@ -33,26 +33,26 @@ backbone of the MQT.
 - Exact and heuristic circuit mapping to superconducting devices: gate-optimal
   MaxSAT/SMT-based mapping with Z3 for small circuits and scalable
   A\*-search–based mapping for larger ones.
-  [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/mapping.html) •
-  [Exact](https://mqt.readthedocs.io/projects/qmap/en/latest/mapping.html#exact-mapping)
+  [Guide](https://mqt.readthedocs.io/projects/qmap/en/stable/mapping.html) •
+  [Exact](https://mqt.readthedocs.io/projects/qmap/en/stable/mapping.html#exact-mapping)
   •
-  [Heuristic](https://mqt.readthedocs.io/projects/qmap/en/latest/mapping.html#heuristic-mapping)
+  [Heuristic](https://mqt.readthedocs.io/projects/qmap/en/stable/mapping.html#heuristic-mapping)
 - Clifford circuit synthesis and optimization: SAT-based depth/gate-optimal
   Clifford synthesis with optional destabilizer preservation, plus a fast
   heuristic splitter for larger circuits.
-  [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/synthesis.html)
+  [Guide](https://mqt.readthedocs.io/projects/qmap/en/stable/synthesis.html)
 - Zoned neutral-atom compilers: routing-agnostic and routing-aware flows that
   place, route, and schedule atom transfers between storage/entanglement zones.
-  [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_zoned_compiler.html)
+  [Guide](https://mqt.readthedocs.io/projects/qmap/en/stable/na_zoned_compiler.html)
 - Neutral-atom logical state preparation (NASP): SMT-based generator for optimal
   preparation schedules of logical graph states on zoned architectures.
-  [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_state_prep.html)
+  [Guide](https://mqt.readthedocs.io/projects/qmap/en/stable/na_state_prep.html)
 - Hybrid circuit mapper for neutral atom quantum computers: a hybrid approach
   combining superconducting mapping techniques with atom shuttling.
-  [Guide](https://mqt.readthedocs.io/projects/qmap/en/latest/na_hybrid.html)
+  [Guide](https://mqt.readthedocs.io/projects/qmap/en/stable/na_hybrid.html)
 - Python-first API with Qiskit integration: pass `QuantumCircuit` or OpenQASM;
   one-call `compile()` or `optimize_clifford()` via plugin wrappers.
-  [API](https://mqt.readthedocs.io/projects/qmap/en/latest/api/mqt/qmap/index.html)
+  [API](https://mqt.readthedocs.io/projects/qmap/en/stable/api/mqt/qmap/index.html)
 - Efficient and portable: C++20 core with Z3-backed solvers, prebuilt wheels for
   Linux/macOS/Windows via [PyPI](https://pypi.org/project/mqt.qmap/).
 
@@ -98,7 +98,7 @@ To support this endeavor, please consider:
   requests
 - Citing the MQT in your publications (see [Cite This](#cite-this))
 - Citing our research in your publications (see
-  [References](https://mqt.readthedocs.io/projects/qmap/en/latest/references.html))
+  [References](https://mqt.readthedocs.io/projects/qmap/en/stable/references.html))
 - Using the MQT in research and teaching, and sharing feedback and use cases
 - Sponsoring us on GitHub: <https://github.com/sponsors/munich-quantum-toolkit>
 

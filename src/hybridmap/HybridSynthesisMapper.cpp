@@ -10,7 +10,8 @@
 
 //
 // This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
+// See README.md or go to https://github.com/munich-quantum-toolkit/qmap for
+// more information.
 //
 #include "hybridmap/HybridSynthesisMapper.hpp"
 

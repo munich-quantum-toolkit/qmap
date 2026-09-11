@@ -534,7 +534,8 @@ TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
 }
 
 TEST_F(ExactTest, RegressionTestDirectionReverseCost) {
-  // Regression test for https://github.com/cda-tum/qmap/issues/251
+  // Regression test for
+  // https://github.com/munich-quantum-toolkit/qmap/issues/251
   using namespace qc::literals;
 
   Architecture arch;
@@ -557,7 +558,8 @@ TEST_F(ExactTest, RegressionTestDirectionReverseCost) {
 }
 
 TEST_F(ExactTest, RegressionTestExactMapperPerformance) {
-  // Regression test for https://github.com/cda-tum/qmap/issues/256
+  // Regression test for
+  // https://github.com/munich-quantum-toolkit/qmap/issues/256
   qc = qasm3::Importer::imports("OPENQASM 2.0;\n"
                                 "include \"qelib1.inc\";\n"
                                 "qreg q[3];\n"
@@ -597,7 +599,8 @@ TEST_F(ExactTest, RegressionTestExactMapperPerformance) {
 }
 
 TEST_F(ExactTest, RegressionTestExactMapperPerformance2) {
-  // Regression test for https://github.com/cda-tum/qmap/issues/256
+  // Regression test for
+  // https://github.com/munich-quantum-toolkit/qmap/issues/256
   qc = qasm3::Importer::imports("OPENQASM 2.0;\n"
                                 "include \"qelib1.inc\";\n"
                                 "qreg q[4];\n"
