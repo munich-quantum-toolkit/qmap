@@ -1,5 +1,4 @@
 name: CD 🚀
-# Temporary comment to run wheel CI for the Linux ARM dependency fix.
 on:
   release:
     types: [published]
