@@ -10,7 +10,9 @@ releases may include breaking changes.
 
 ## [Unreleased]
 
-_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
+## [3.10.0] - 2026-09-12
+
+_If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#3100)._
 
 ### Added
 
@@ -26,6 +28,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#unreleased)._
 
 - 🔧 Use Ninja and shared CMake presets on all platforms, removing `-windows`
   from preset names ([#1158]) ([**@denialhaag**])
+- 💥 Require CMake 3.28 or newer for source builds and embedded projects
+  ([#1146]) ([**@burgholzer**])
 - ⬆️ Update `mqt-core` to version 3.10.0 ([#1144]) ([**@denialhaag**],
   [**@burgholzer**])
 - ⬆️ Update `nanobind` to version 3.0.1 ([#1144]) ([**@denialhaag**],
@@ -318,7 +322,8 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- Version links -->
 
-[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.9.0...HEAD
+[unreleased]: https://github.com/munich-quantum-toolkit/qmap/compare/v3.10.0...HEAD
+[3.10.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.10.0
 [3.9.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.9.0
 [3.8.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.8.0
 [3.7.0]: https://github.com/munich-quantum-toolkit/qmap/releases/tag/v3.7.0
@@ -341,6 +346,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 [#1154]: https://github.com/munich-quantum-toolkit/qmap/pull/1154
 [#1153]: https://github.com/munich-quantum-toolkit/qmap/pull/1153
 [#1152]: https://github.com/munich-quantum-toolkit/qmap/pull/1152
+[#1146]: https://github.com/munich-quantum-toolkit/qmap/pull/1146
 [#1144]: https://github.com/munich-quantum-toolkit/qmap/pull/1144
 [#1126]: https://github.com/munich-quantum-toolkit/qmap/pull/1126
 [#1125]: https://github.com/munich-quantum-toolkit/qmap/pull/1125
