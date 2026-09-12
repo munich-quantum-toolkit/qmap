@@ -61,7 +61,7 @@ repos:
 
   ## Ensure uv.lock is up to date
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.9
+    rev: 0.12.10
     hooks:
       - id: uv-lock
         priority: 0
@@ -121,7 +121,7 @@ repos:
 
   ## Format Markdown files with rumdl
   - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: v0.2.64
+    rev: v0.2.65
     hooks:
       - id: rumdl
         args: [--fix]
