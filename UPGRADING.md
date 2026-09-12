@@ -24,6 +24,25 @@ Include `na/qdmi/Client.hpp` for QMAP's neutral-atom client and
 `qdmi/Client.hpp` for MQT Core's generic client. The generic C++ namespace is
 `qdmi`, and its CMake target is `MQT::CoreQDMI`.
 
+### Neutral-atom stack
+
+The neutral-atom computation IR and circuit operations previously supplied by
+MQT Core now live in QMAP under the `na/ir` headers. This includes
+`NAComputation`, its entities and operations, and the move, bridge, and AOD
+circuit operations. Move and bridge operations use `NAStandardOperation` and
+remain custom operations to MQT Core. They do not support quantum controls.
+
+The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
+`origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
+`load1`, and `load2`, respectively.
+
+MQT QMAP now ships and registers the neutral-atom QDMI device and exposes its
+client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
+`mqt.qmap.na.default`. The provider reads its bundled description automatically
+and can be configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
+`MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables. Device discovery opens
+each registered ID once; separate devices may have the same display name.
+
 ### Neutral-atom OpenQASM serialization
 
 Include `na/ir/OpenQASMSerializer.hpp` and call
@@ -52,25 +71,6 @@ MQT QMAP now owns circuit transformations that MQT Core removed from
 
 For the QMAP-owned replacements, include
 `datastructures/CircuitOptimizations.hpp` and link `MQT::QMapDS`.
-
-### Neutral-atom stack
-
-The neutral-atom computation IR and circuit operations previously supplied by
-MQT Core now live in QMAP under the `na/ir` headers. This includes
-`NAComputation`, its entities and operations, and the move, bridge, and AOD
-circuit operations. Move and bridge operations use `NAStandardOperation` and
-remain custom operations to MQT Core. They do not support quantum controls.
-
-The hybrid mapper's `AtomMove` fields now describe their semantics explicitly:
-`origin`, `target`, `requiresLoad`, and `requiresStore` replace `c1`, `c2`,
-`load1`, and `load2`, respectively.
-
-MQT QMAP now ships and registers the neutral-atom QDMI device and exposes its
-client integration as `mqt.qmap.na.qdmi`. Its stable device ID is
-`mqt.qmap.na.default`. The provider reads its bundled description automatically
-and can be configured through the `MQT_QMAP_QDMI_NA_CONFIG_JSON` and
-`MQT_QMAP_QDMI_NA_CONFIG_FILE` environment variables. Device discovery opens
-each registered ID once; separate devices may have the same display name.
 
 ### Qiskit 2.1 minimum
 
