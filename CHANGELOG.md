@@ -28,6 +28,8 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#3100)._
 
 - 🔧 Use Ninja and shared CMake presets on all platforms, removing `-windows`
   from preset names ([#1158]) ([**@denialhaag**])
+- 💥 Require CMake 3.28 or newer for source builds and embedded projects
+  ([#1146]) ([**@burgholzer**])
 - ⬆️ Update `mqt-core` to version 3.10.0 ([#1144]) ([**@denialhaag**],
   [**@burgholzer**])
 - ⬆️ Update `nanobind` to version 3.0.1 ([#1144]) ([**@denialhaag**],
@@ -44,8 +46,6 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#3100)._
   [**@burgholzer**])
 - ♻️ Own the neutral-atom computation IR and circuit operations ([#1111])
   ([**@denialhaag**], [**@burgholzer**])
-- 💥 Require CMake 3.28 or newer for source builds and embedded projects
-  ([#1146]) ([**@burgholzer**])
 - 💥 Drop support for x86 macOS and stop publishing the respective wheels
   ([#1126]) ([**@denialhaag**])
 - ⬆️ Raise the macOS deployment target to 13.3 to enable `std::format` in libc++
