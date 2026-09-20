@@ -7,7 +7,7 @@ sphinx:
   configuration: docs/conf.py
 
 build:
-  os: ubuntu-24.04
+  os: ubuntu-26.04
   tools:
     python: "3.14"
   jobs:
@@ -31,7 +31,7 @@ build:
       - unzip z3-4.13.4-x64-glibc-2.35.zip -d ~/
       # Set up build-time dependencies
       - uv sync --only-group build --only-group docs
-      # Install CMake because the default version on Ubuntu 24.04 is too old
+      # Install CMake for the package build
       - uv pip install cmake
     build:
       html:
