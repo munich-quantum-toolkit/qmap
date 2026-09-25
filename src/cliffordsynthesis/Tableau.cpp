@@ -338,8 +338,8 @@ void Tableau::applyCX(const std::size_t control, const std::size_t target) {
     const unsigned xb = tableau[i][target];
     const unsigned zb = tableau[i][target + nQubits];
     tableau[i][2 * nQubits] ^= (xa & zb) & ((xb ^ za) ^ 1U);
-    tableau[i][control + nQubits] = za ^ zb;
-    tableau[i][target] = xb ^ xa;
+    tableau[i][control + nQubits] = static_cast<EntryType>(za ^ zb);
+    tableau[i][target] = static_cast<EntryType>(xb ^ xa);
   }
 }
 
