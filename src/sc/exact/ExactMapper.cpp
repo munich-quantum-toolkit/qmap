@@ -883,5 +883,5 @@ number of variables: (|L|-1) * m!
   } else {
     results.timeout = true;
   }
-  lb->reset();
+  (*lb).reset();
 }

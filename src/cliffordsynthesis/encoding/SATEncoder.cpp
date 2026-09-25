@@ -138,7 +138,7 @@ void SATEncoder::extractResultsFromModel(Results& res) const {
 
 void SATEncoder::cleanup() const {
   if (lb) {
-    lb->reset();
+    (*lb).reset();
   }
 }
 Results SATEncoder::run() {

@@ -383,7 +383,7 @@ TEST_F(TestZ3, AMOAndExactlyOneNaive) {
   }
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, AMOAndExactlyOneCMDR) {
@@ -425,7 +425,7 @@ TEST_F(TestZ3, AMOAndExactlyOneCMDR) {
   }
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, AMOAndExactlyOneBimander) {
@@ -466,7 +466,7 @@ TEST_F(TestZ3, AMOAndExactlyOneBimander) {
   }
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, TestBasicModel) {
@@ -490,7 +490,7 @@ TEST_F(TestZ3, TestBasicModel) {
   EXPECT_EQ(model->getIntValue(b, z3logic.get()), 1);
   EXPECT_EQ(model->getRealValue(c, z3logic.get()), 1.0);
   EXPECT_EQ(model->getBitvectorValue(d, z3logic.get()), 1);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, TestVariableConversionsToBool) {
@@ -507,7 +507,7 @@ TEST_F(TestZ3, TestVariableConversionsToBool) {
   z3logic->assertFormula(d);
 
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, TestVariableConversionsToBV) {
@@ -524,7 +524,7 @@ TEST_F(TestZ3, TestVariableConversionsToBV) {
   z3logic->assertFormula(LogicTerm::bvXor(d, b) == d);
 
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, TestVariableConversionsToInt) {
@@ -540,7 +540,7 @@ TEST_F(TestZ3, TestVariableConversionsToInt) {
   z3logic->assertFormula(LogicTerm::bvXor(d, b) == d);
 
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 TEST_F(TestZ3, TestVariableConversionsToReal) {
@@ -556,7 +556,7 @@ TEST_F(TestZ3, TestVariableConversionsToReal) {
   z3logic->assertFormula(LogicTerm::bvXor(d, b) == d);
 
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic.reset();
+  z3logic = nullptr;
 }
 
 class TestZ3Opt : public testing::TestWithParam<logicbase::OpType> {
@@ -580,7 +580,7 @@ TEST_F(TestZ3Opt, ConstructDestruct) {
   std::stringstream ss{};
   ss << opt;
 
-  z3logic->reset();
+  (*z3logic).reset();
 }
 
 TEST_F(TestZ3Opt, SimpleTrue) {
@@ -592,61 +592,61 @@ TEST_F(TestZ3Opt, SimpleTrue) {
   z3logic->assertFormula(a && b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(a || b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(a == b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(a != b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(a && !b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(!a || !b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(LogicTerm::implies(a, b));
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   z3logic->assertFormula(a);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(b);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -654,7 +654,7 @@ TEST_F(TestZ3Opt, SimpleTrue) {
   z3logic->assertFormula(a && b && c);
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
-  z3logic->reset();
+  (*z3logic).reset();
 }
 
 TEST_F(TestZ3Opt, SimpleFalse) {
@@ -667,7 +667,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   b = z3logic->makeVariable("b", CType::BOOL);
   z3logic->assertFormula(!b);
@@ -675,7 +675,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -685,7 +685,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -695,7 +695,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -705,7 +705,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -715,7 +715,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -725,7 +725,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -735,7 +735,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -745,7 +745,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::UNSAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::BOOL);
   b = z3logic->makeVariable("b", CType::BOOL);
@@ -758,7 +758,7 @@ TEST_F(TestZ3Opt, SimpleFalse) {
 
 TEST_F(TestZ3Opt, IntBase) {
   auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   LogicTerm a = z3logic->makeVariable("a", CType::INT);
   LogicTerm b = z3logic->makeVariable("b", CType::INT);
@@ -767,7 +767,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -776,7 +776,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -785,7 +785,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -794,7 +794,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -802,7 +802,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   c = z3logic->makeVariable("c", CType::INT);
@@ -810,7 +810,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -818,7 +818,7 @@ TEST_F(TestZ3Opt, IntBase) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   c = z3logic->makeVariable("c", CType::INT);
@@ -828,7 +828,7 @@ TEST_F(TestZ3Opt, IntBase) {
 }
 TEST_F(TestZ3Opt, IntNumbers) {
   auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   LogicTerm a = z3logic->makeVariable("a", CType::INT);
   LogicTerm b = z3logic->makeVariable("b", CType::INT);
@@ -840,7 +840,7 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -852,7 +852,7 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -865,7 +865,7 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   a = z3logic->makeVariable("a", CType::INT);
   b = z3logic->makeVariable("b", CType::INT);
@@ -878,7 +878,7 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   LogicTerm boolA = z3logic->makeVariable("bool_a", CType::BOOL);
   a = z3logic->makeVariable("a", CType::INT);
@@ -891,7 +891,7 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
   z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   boolA = z3logic->makeVariable("bool_a", CType::BOOL);
   a = z3logic->makeVariable("a", CType::INT);
@@ -907,7 +907,7 @@ TEST_F(TestZ3Opt, IntNumbers) {
 
 TEST_F(TestZ3Opt, AMOAndExactlyOneNaive) {
   auto z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
-  z3logic->reset();
+  (*z3logic).reset();
 
   std::vector<std::vector<LogicTerm>> aNodes;
   aNodes.reserve(4);
