@@ -696,10 +696,12 @@ NeutralAtomMapper::convertMoveCombToPassByComb(const MoveComb& moveComb) const {
   std::vector<AtomMove> bestPbs;
   for (const auto move : moveComb.moves) {
     if (usedCoords.contains(move.origin)) {
-      bestPbs.emplace_back(AtomMove{.origin = move.origin,
-                                    .target = move.target,
-                                    .requiresLoad = true,
-                                    .requiresStore = false});
+      bestPbs.emplace_back(AtomMove{
+          .origin = move.origin,
+          .target = move.target,
+          .requiresLoad = true,
+          .requiresStore = false,
+      });
     }
   }
   return PassByComb{.moves = bestPbs, .op = moveComb.op};
@@ -1447,10 +1449,12 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
       moveComb.append(moveAwayComb.moveCombs[0]);
       movedAwayCoords.emplace_back(moveAwayComb.moveCombs[0].moves[0].target);
     } else {
-      moveComb.append(AtomMove{.origin = currentGateQubit,
-                               .target = targetCoord,
-                               .requiresLoad = true,
-                               .requiresStore = true});
+      moveComb.append(AtomMove{
+          .origin = currentGateQubit,
+          .target = targetCoord,
+          .requiresLoad = true,
+          .requiresStore = true,
+      });
     }
     remainingGateCoords.erase(currentGateQubit);
     remainingCoords.erase(std::ranges::find(remainingCoords, targetCoord));
@@ -1468,14 +1472,18 @@ MoveCombs NeutralAtomMapper::getMoveAwayCombinations(
   const auto moveAwayTargets = this->hardwareQubits.findClosestFreeCoord(
       targetCoord, originalDirection, excludedCoords);
   for (const auto& moveAwayTarget : moveAwayTargets) {
-    const AtomMove move = {.origin = startCoord,
-                           .target = targetCoord,
-                           .requiresLoad = true,
-                           .requiresStore = true};
-    const AtomMove moveAway = {.origin = targetCoord,
-                               .target = moveAwayTarget,
-                               .requiresLoad = true,
-                               .requiresStore = true};
+    const AtomMove move = {
+        .origin = startCoord,
+        .target = targetCoord,
+        .requiresLoad = true,
+        .requiresStore = true,
+    };
+    const AtomMove moveAway = {
+        .origin = targetCoord,
+        .target = moveAwayTarget,
+        .requiresLoad = true,
+        .requiresStore = true,
+    };
     moveCombinations.addMoveComb(MoveComb({moveAway, move}));
   }
   if (moveCombinations.empty()) {

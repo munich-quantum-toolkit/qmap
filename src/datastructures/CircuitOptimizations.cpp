@@ -286,9 +286,11 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
            operation.getTargets().size() == 1U;
   };
   static const std::map<qc::OpType, qc::OpType> INVERSE_MAP = {
-      {qc::I, qc::I},   {qc::X, qc::X},     {qc::Y, qc::Y},    {qc::Z, qc::Z},
-      {qc::H, qc::H},   {qc::S, qc::Sdg},   {qc::Sdg, qc::S},  {qc::T, qc::Tdg},
-      {qc::Tdg, qc::T}, {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX}};
+      {qc::I, qc::I},     {qc::X, qc::X},     {qc::Y, qc::Y},
+      {qc::Z, qc::Z},     {qc::H, qc::H},     {qc::S, qc::Sdg},
+      {qc::Sdg, qc::S},   {qc::T, qc::Tdg},   {qc::Tdg, qc::T},
+      {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX},
+  };
 
   auto dag = DAG(qc.getHighestPhysicalQubitIndex() + 1U);
   for (auto& operation : qc) {

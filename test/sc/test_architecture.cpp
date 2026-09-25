@@ -199,8 +199,10 @@ TEST(TestArchitecture, MinimumNumberOfSwapsError) {
 
 TEST(TestArchitecture, TestCouplingLimitRing) {
   Architecture architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
-                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+      {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4},
+  };
   architecture.loadCouplingMap(5, cm);
   EXPECT_EQ(architecture.getCouplingLimit(), 2);
 }
@@ -232,7 +234,8 @@ TEST(TestArchitecture, opTypeFromString) {
       {"u2", qc::OpType::U2},
       {"u3", qc::OpType::U},
       {"reset", qc::OpType::Reset},
-      {"measure", qc::OpType::Measure}};
+      {"measure", qc::OpType::Measure},
+  };
 
   for (const auto& [opName, opType] : singleQubitGates) {
     const auto errorRate = dis(gen);
@@ -261,7 +264,8 @@ TEST(TestArchitecture, opTypeFromString) {
       {"ryy", qc::OpType::RYY},
       {"rzx", qc::OpType::RZX},
       {"xx_minus_yy", qc::OpType::XXminusYY},
-      {"xx_plus_yy", qc::OpType::XXplusYY}};
+      {"xx_plus_yy", qc::OpType::XXplusYY},
+  };
 
   for (const auto& [opName, opType] : twoQubitGates) {
     const auto errorRate = dis(gen);
@@ -289,8 +293,10 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
   []   ... 1-qubit error rates
   */
   Architecture architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
-                          {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+      {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5},
+  };
   architecture.loadCouplingMap(7, cm);
 
   auto props = Architecture::Properties();
@@ -318,19 +324,27 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
   architecture.loadProperties(props);
 
   const Matrix targetTable = {
-      {// distance from 0 to i
-       0., -3 * std::log2(1 - 0.9),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
-             std::log2(1 - 0.9))},
-      {// distance from 1 to i
-       -3 * std::log2(1 - 0.9), 0., -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), -3 * std::log2(1 - 0.1),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9))},
+      {
+          // distance from 0 to i
+          0.,
+          -3 * std::log2(1 - 0.9),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.9)),
+      },
+      {
+          // distance from 1 to i
+          -3 * std::log2(1 - 0.9),
+          0.,
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+      },
       {
           // distance from 2 to i
           -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
@@ -351,19 +365,27 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
           -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
       },
-      {// distance from 4 to i
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)), -3 * std::log2(1 - 0.1),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)), 0.,
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
-             std::log2(1 - 0.9))},
-      {// distance from 5 to i
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)), 0.,
-       -3 * std::log2(1 - 0.9)},
+      {
+          // distance from 4 to i
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)),
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.9)),
+      },
+      {
+          // distance from 5 to i
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          0.,
+          -3 * std::log2(1 - 0.9),
+      },
       {
           // distance from 6 to i
           -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
@@ -375,19 +397,32 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
                 std::log2(1 - 0.1)),
           -3 * std::log2(1 - 0.9),
           0.,
-      }};
+      },
+  };
   EXPECT_TRUE(
       matrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
 
   const Matrix targetTableSkip1Edge = {
-      {// distance from 0 to i
-       0., 0., -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), -3 * std::log2(1 - 0.1),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9))},
-      {// distance from 1 to i
-       0., 0., 0., -3 * std::log2(1 - 0.1), 0., -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5))},
+      {
+          // distance from 0 to i
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+      },
+      {
+          // distance from 1 to i
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1),
+          0.,
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+      },
       {
           // distance from 2 to i
           -3 * std::log2(1 - 0.5),
@@ -408,15 +443,26 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           -3 * std::log2(1 - 0.1),
           -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
       },
-      {// distance from 4 to i
-       -3 * std::log2(1 - 0.1), 0., -3 * std::log2(1 - 0.1),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)), 0.,
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5))},
-      {// distance from 5 to i
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
-       0., -3 * std::log2(1 - 0.1),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), 0., 0.},
+      {
+          // distance from 4 to i
+          -3 * std::log2(1 - 0.1),
+          0.,
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)),
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+      },
+      {
+          // distance from 5 to i
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          0.,
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          0.,
+          0.,
+      },
       {
           // distance from 6 to i
           -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
@@ -426,13 +472,22 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
           0.,
           0.,
-      }};
+      },
+  };
   EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(1),
                          targetTableSkip1Edge, 1e-6));
 
   const Matrix targetTableSkip3Edges = {
-      {// distance from 0 to i
-       0., 0., 0., 0., 0., 0., -3 * std::log2(1 - 0.5)},
+      {
+          // distance from 0 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.5),
+      },
       {
           // distance from 1 to i
           0.,
@@ -463,8 +518,16 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           0.,
           0.,
       },
-      {// distance from 4 to i
-       0., 0., 0., 0., 0., 0., -3 * std::log2(1 - 0.1)},
+      {
+          // distance from 4 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1),
+      },
       {
           // distance from 5 to i
           0.,
@@ -484,7 +547,8 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           -3 * std::log2(1 - 0.1),
           0.,
           0.,
-      }};
+      },
+  };
   EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(3),
                          targetTableSkip3Edges, 1e-6));
 
@@ -492,7 +556,8 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
-      {0., 0., 0., 0., 0., 0., 0.}};
+      {0., 0., 0., 0., 0., 0., 0.},
+  };
   EXPECT_TRUE(
       matrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
   EXPECT_TRUE(
@@ -525,8 +590,10 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
 []   ... 1-qubit error rates
 */
   Architecture architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
-                          {3, 2}, {1, 4}, {2, 5}, {5, 2}, {6, 5}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+      {3, 2}, {1, 4}, {2, 5}, {5, 2}, {6, 5},
+  };
   architecture.loadCouplingMap(7, cm);
 
   auto props = Architecture::Properties();
@@ -552,57 +619,73 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
   architecture.loadProperties(props);
 
   const Matrix targetTable = {
-      {// distance from 0 to i
-       0., -3 * std::log2(1 - 0.9),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
-             std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
-      {// distance from 1 to i
-       -3 * std::log2(1 - 0.9), 0., -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
-      {// distance from 2 to i
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
-       0., -3 * std::log2(1 - 0.1),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
-      {// distance from 3 to i
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), -3 * std::log2(1 - 0.1),
-       0.,
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
-      {// distance from 4 to i
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       0.,
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
-             std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03) +
-                std::log2(1 - 0.02) + std::log2(1 - 0.03))},
+      {
+          // distance from 0 to i
+          0.,
+          -3 * std::log2(1 - 0.9),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+      },
+      {
+          // distance from 1 to i
+          -3 * std::log2(1 - 0.9),
+          0.,
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+      },
+      {
+          // distance from 2 to i
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          0.,
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+      },
+      {
+          // distance from 3 to i
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1),
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+      },
+      {
+          // distance from 4 to i
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03) +
+                   std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+      },
       {
           // distance from 5 to i
           -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
@@ -615,61 +698,88 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
           -3 * std::log2(1 - 0.9) -
               2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
       },
-      {// distance from 6 to i
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
-             std::log2(1 - 0.9)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
-             std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03) +
-                std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * std::log2(1 - 0.9) -
-           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-       0.}};
+      {
+          // distance from 6 to i
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.9)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03) +
+                   std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * std::log2(1 - 0.9) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+          0.,
+      },
+  };
   EXPECT_TRUE(
       matrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
 
   const Matrix targetTableSkip1Edge = {
-      {// distance from 0 to i
-       0., 0., -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5))},
-      {// distance from 1 to i
-       0., 0., 0., -3 * std::log2(1 - 0.1), 0., -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5))},
-      {// distance from 2 to i
-       -3 * std::log2(1 - 0.5), 0., 0., 0.,
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       0., -3 * std::log2(1 - 0.5)},
-      {// distance from 3 to i
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.1),
-       0., 0.,
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * std::log2(1 - 0.1), -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5))},
-      {// distance from 4 to i
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       0.,
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       0.,
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03))},
+      {
+          // distance from 0 to i
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+      },
+      {
+          // distance from 1 to i
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1),
+          0.,
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+      },
+      {
+          // distance from 2 to i
+          -3 * std::log2(1 - 0.5),
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          -3 * std::log2(1 - 0.5),
+      },
+      {
+          // distance from 3 to i
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.1),
+          0.,
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+      },
+      {
+          // distance from 4 to i
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+      },
       {
           // distance from 5 to i
           -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
@@ -681,19 +791,32 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
           0.,
           0.,
       },
-      {// distance from 6 to i
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-       0., 0.}};
+      {
+          // distance from 6 to i
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          0.,
+      },
+  };
   EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(1),
                          targetTableSkip1Edge, 1e-6));
 
   const Matrix targetTableSkip3Edges = {
-      {// distance from 0 to i
-       0., 0., 0., 0., 0., 0., -3 * std::log2(1 - 0.5)},
+      {
+          // distance from 0 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.5),
+      },
       {
           // distance from 1 to i
           0.,
@@ -724,10 +847,17 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
           0.,
           0.,
       },
-      {// distance from 4 to i
-       0., 0., 0., 0., 0., 0.,
-       -3 * std::log2(1 - 0.1) -
-           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03))},
+      {
+          // distance from 4 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+      },
       {
           // distance from 5 to i
           0.,
@@ -748,7 +878,8 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
               2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
           0.,
           0.,
-      }};
+      },
+  };
   EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(3),
                          targetTableSkip3Edges, 1e-6));
 
@@ -756,7 +887,8 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
-      {0., 0., 0., 0., 0., 0., 0.}};
+      {0., 0., 0., 0., 0., 0., 0.},
+  };
   EXPECT_TRUE(
       matrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
   EXPECT_TRUE(
@@ -842,9 +974,10 @@ TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
   // tests if the distance measure actually finds the cheapest path and
   // not just the shortest
   Architecture architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {2, 1}, {2, 6}, {6, 2},
-                          {0, 5}, {5, 0}, {5, 6}, {6, 5}, {0, 3},
-                          {3, 0}, {3, 4}, {4, 3}, {4, 6}, {6, 4}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {2, 1}, {2, 6}, {6, 2}, {0, 5}, {5, 0}, {5, 6},
+      {6, 5}, {0, 3}, {3, 0}, {3, 4}, {4, 3}, {4, 6}, {6, 4},
+  };
   architecture.loadCouplingMap(7, cm);
 
   auto props = Architecture::Properties();
