@@ -48,7 +48,7 @@ namespace {
 // c++ binding function
 std::pair<qc::QuantumComputation, MappingResults>
 map(const qc::QuantumComputation& circ, Architecture& arch,
-    Configuration& config) {
+    const Configuration& config) {
   std::unique_ptr<Mapper> mapper;
   try {
     if (config.method == Method::Heuristic) {
@@ -70,7 +70,7 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
     throw std::invalid_argument(ss.str());
   }
 
-  auto& results = mapper->getResults();
+  const auto& results = mapper->getResults();
   auto&& qcMapped = mapper->moveMappedCircuit();
 
   return {std::move(qcMapped), results};

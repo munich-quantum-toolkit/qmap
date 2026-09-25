@@ -167,7 +167,7 @@ protected:
 };
 
 TEST_F(NeutralAtomMapperTest, Output) {
-  auto qcMapped = mapper.map(qc, initialMapping);
+  const auto qcMapped = mapper.map(qc, initialMapping);
   // write to file
   const auto tempDir = std::filesystem::temp_directory_path();
   const auto qasmPath = tempDir / "test.qasm";

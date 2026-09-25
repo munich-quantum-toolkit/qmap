@@ -177,7 +177,7 @@ TEST(TestArchitecture, FidelityTest) {
   architecture.getHighestFidelityCouplingMap(2, cm);
 
   const std::vector<std::uint16_t> highestFidelity{2, 3};
-  auto qubitList = Architecture::getQubitList(cm);
+  const auto qubitList = Architecture::getQubitList(cm);
 
   EXPECT_EQ(qubitList, highestFidelity);
 }

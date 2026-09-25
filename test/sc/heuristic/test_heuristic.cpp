@@ -206,7 +206,7 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   if (nodeId >= nodes.size() || nodes[nodeId].id != nodeId) {
     throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
   }
-  auto* node = &nodes[nodeId];
+  const auto* node = &nodes[nodeId];
   while (node->parent != node->id) {
     path.push_back(node->id);
     if (node->parent >= nodes.size() ||
@@ -654,7 +654,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
 
   for (std::size_t i = 0; i < allNodes.size(); ++i) {
     auto& nodes = allNodes.at(i);
-    auto& finalSolutionId = finalSolutionIds.at(i);
+    const auto& finalSolutionId = finalSolutionIds.at(i);
 
     if (finalSolutionId >= nodes.size()) {
       FAIL() << "Final solution id " << finalSolutionId << " out of bounds "
@@ -673,8 +673,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       // for principally admissible heuristics all nodes on the optimal
       // solution path should have
       // node.costFixed+node.costHeur <= finalSolutionNode.costFixed
-      auto solutionPath = getPathToRoot(nodes, finalSolutionId);
-      for (auto nodeId : solutionPath) {
+      const auto solutionPath = getPathToRoot(nodes, finalSolutionId);
+      for (const auto nodeId : solutionPath) {
         if (nodes.at(nodeId).id != nodeId) {
           throw std::runtime_error("Invalid node id " + std::to_string(nodeId) +
                                    " " + layerNames.at(i));
@@ -758,9 +758,9 @@ TEST_P(TestHeuristics, HeuristicProperties) {
           // since reachability in a directed tree is equivalent to the being
           // on the same path to the root, one can also check that all nodes on
           // the path to the root from any goal node fulfill this condition
-          auto path = getPathToRoot(nodes, node.id);
-          for (auto nodeId : path) {
-            auto& n = nodes.at(nodeId);
+          const auto path = getPathToRoot(nodes, node.id);
+          for (const auto nodeId : path) {
+            const auto& n = nodes.at(nodeId);
             EXPECT_LE(n.getTotalCost(), node.costFixed)
                 << "Heuristic " << toString(settings.heuristic)
                 << " is not admissible " << layerNames.at(i) << " in node "
@@ -1232,7 +1232,7 @@ TEST(Functionality, DataLogger) {
     }
     std::vector<std::pair<std::uint16_t, std::uint16_t>> swaps{};
     swaps.reserve(finalSolutionNode.swaps.size());
-    for (auto& swap : finalSolutionNode.swaps) {
+    for (const auto& swap : finalSolutionNode.swaps) {
       swaps.emplace_back(swap.first, swap.second);
     }
     EXPECT_EQ(layerJson["final_layout"], layout);
@@ -1321,7 +1321,7 @@ TEST(Functionality, earlyTermination) {
   props.setSingleQubitErrorRate(4, "x", 0.5);
   props.setSingleQubitErrorRate(5, "x", 0.5);
   props.setSingleQubitErrorRate(6, "x", 0.1);
-  for (auto edge : cm) {
+  for (const auto edge : cm) {
     props.setTwoQubitErrorRate(edge.first, edge.second, 0.01, "cx");
   }
   Architecture arch{7, cm, props};
@@ -1443,7 +1443,7 @@ TEST(Functionality, InitialLayoutDump) {
   std::stringstream qasmStream{};
   mapper.dumpResult(qasmStream);
   const std::string qasm = qasmStream.str();
-  auto qcMapped = qasm3::Importer::imports(qasm);
+  const auto qcMapped = qasm3::Importer::imports(qasm);
 
   qasmStream = std::stringstream(qasm);
   std::string line;
@@ -1507,7 +1507,7 @@ protected:
 TEST_F(LayeringTest, Disjoint2qBlocks) {
   settings.layering = Layering::Disjoint2qBlocks;
   mapper->map(settings);
-  auto result = mapper->getResults();
+  const auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 2);
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
@@ -1527,7 +1527,7 @@ TEST_F(LayeringTest, Disjoint2qBlocks) {
 TEST_F(LayeringTest, DisjointQubits) {
   settings.layering = Layering::DisjointQubits;
   mapper->map(settings);
-  auto result = mapper->getResults();
+  const auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 3);
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
@@ -1547,7 +1547,7 @@ TEST_F(LayeringTest, DisjointQubits) {
 TEST_F(LayeringTest, IndividualGates) {
   settings.layering = Layering::IndividualGates;
   mapper->map(settings);
-  auto result = mapper->getResults();
+  const auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 6);
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
@@ -1851,7 +1851,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   // 0 --e1-- 1 --e3-- 2 --e5-- 3 --e0-- 4 --e0-- 5
   // e5       e5       e5       e4       e4       e1
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
   /*
   expected output (order of gates may vary):
@@ -1932,7 +1932,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
   /*
   expected output (order of gates may vary):
@@ -1993,7 +1993,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
   EXPECT_EQ(result.output.swaps, 1);
 
@@ -2114,7 +2114,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 5); // originally 1 but split into 5 during A*
   /*
   expected output:

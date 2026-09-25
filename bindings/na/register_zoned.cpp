@@ -32,7 +32,7 @@ namespace nb = nanobind;
 using namespace nb::literals;
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
-void registerZoned(nb::module_& m) {
+void registerZoned(const nb::module_& m) {
   nb::module_::import_("mqt.core.ir");
 
   nb::class_<na::zoned::Architecture> architecture(

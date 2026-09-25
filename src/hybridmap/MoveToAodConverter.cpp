@@ -49,13 +49,13 @@ MoveToAodConverter::schedule(qc::QuantumComputation& circuit) {
     if (groupIt != moveGroups.end() &&
         circuitIndex == groupIt->getFirstCircuitIndex()) {
       // add move group
-      for (auto& aodOperation : groupIt->activationOperations) {
+      for (const auto& aodOperation : groupIt->activationOperations) {
         scheduledCircuit.emplace_back(
             std::make_unique<AodOperation>(aodOperation));
       }
       scheduledCircuit.emplace_back(
           std::make_unique<AodOperation>(groupIt->shuttlingOperation));
-      for (auto& aodOperation : groupIt->deactivationOperations) {
+      for (const auto& aodOperation : groupIt->deactivationOperations) {
         scheduledCircuit.emplace_back(
             std::make_unique<AodOperation>(aodOperation));
       }
@@ -457,7 +457,7 @@ void MoveToAodConverter::processMoveGroups() {
 
     const auto resultMoves =
         processMoves(groupIt->moves, activationBuilder, deactivationBuilder);
-    auto movesToRemove = resultMoves.first;
+    const auto movesToRemove = resultMoves.first;
     auto possibleNewMoveGroup = resultMoves.second;
 
     processFlyingAncillaMoves(groupIt->flyingAncillaMoves, activationBuilder,
@@ -498,8 +498,8 @@ MoveToAodConverter::processMoves(
   for (const auto& movePair : moves) {
     const auto& move = movePair.first;
     const auto circuitIndex = movePair.second;
-    auto origin = arch.getCoordinate(move.origin);
-    auto target = arch.getCoordinate(move.target);
+    const auto origin = arch.getCoordinate(move.origin);
+    const auto target = arch.getCoordinate(move.target);
     const auto moveVector = arch.getVector(move.origin, move.target);
     const auto reverseMoveVector = arch.getVector(move.target, move.origin);
     const auto xMergeTypes = canAddTransition(
@@ -536,8 +536,8 @@ void MoveToAodConverter::processFlyingAncillaMoves(
     AodTransitionBuilder& deactivationBuilder) const {
   for (const auto& key : flyingAncillaMoves | std::views::keys) {
     const auto& flyingAncillaMove = key;
-    auto origin = arch.getCoordinate(flyingAncillaMove.origin);
-    auto target = arch.getCoordinate(flyingAncillaMove.target);
+    const auto origin = arch.getCoordinate(flyingAncillaMove.origin);
+    const auto target = arch.getCoordinate(flyingAncillaMove.target);
     const auto moveVector =
         arch.getVector(flyingAncillaMove.origin, flyingAncillaMove.target);
     const auto reverseMoveVector =

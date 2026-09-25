@@ -163,7 +163,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
     }
 
     auto* previous0 = dag.at(q0).back()->get();
-    auto* previous1 = dag.at(q1).back()->get();
+    const auto* previous1 = dag.at(q1).back()->get();
     if (previous0 != previous1) {
       addToDAG(dag, &operation);
       continue;
@@ -193,8 +193,8 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
         operation->setGate(qc::I);
         operation->clearControls();
       } else {
-        auto beforePrevious0 = ++dag.at(q0).rbegin();
-        auto beforePrevious1 = ++dag.at(q1).rbegin();
+        const auto beforePrevious0 = ++dag.at(q0).rbegin();
+        const auto beforePrevious1 = ++dag.at(q1).rbegin();
         if (beforePrevious0 == dag.at(q0).rend() ||
             beforePrevious1 == dag.at(q1).rend()) {
           addToDAG(dag, &operation);
@@ -202,7 +202,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
         }
 
         auto* earlier0 = (*beforePrevious0)->get();
-        auto* earlier1 = (*beforePrevious1)->get();
+        const auto* earlier1 = (*beforePrevious1)->get();
         if (earlier0 != earlier1) {
           addToDAG(dag, &operation);
           continue;

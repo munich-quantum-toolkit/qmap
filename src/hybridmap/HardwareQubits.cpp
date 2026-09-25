@@ -53,7 +53,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, const HwQubit q2) {
   parent[q1] = q1;
   bool found = false;
   while (!q.empty() && !found) {
-    auto current = q.front();
+    const auto current = q.front();
     q.pop();
     for (const auto& nearbyQubit : nearbyQubits.at(current)) {
       if (!visited[nearbyQubit]) {
@@ -161,7 +161,8 @@ void HardwareQubits::move(HwQubit hwQubit, const CoordIndex newCoord) {
   const auto prevNearbyQubits = nearbyQubits.at(hwQubit);
   for (const auto& qubit : prevNearbyQubits) {
     auto& neigh = nearbyQubits.at(qubit);
-    if (auto it3 = std::ranges::find(neigh, hwQubit); it3 != neigh.end()) {
+    if (const auto it3 = std::ranges::find(neigh, hwQubit);
+        it3 != neigh.end()) {
       neigh.erase(it3);
     }
   }

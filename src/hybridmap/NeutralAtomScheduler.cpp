@@ -76,7 +76,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
       nCZs++;
     }
 
-    auto qubits = op->getUsedQubits();
+    const auto qubits = op->getUsedQubits();
     auto opTime = arch->getOpTime(op.get());
     if (isAodOperation(*op)) {
       opTime *= shuttlingSpeedFactor;
@@ -107,7 +107,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
       aodLastBlockedTime = maxTime + opTime;
     } else if (qubits.size() > 1) {
       // multi qubit gates -> take into consideration blocking
-      auto rydbergBlockedQubits = arch->getBlockedCoordIndices(op.get());
+      const auto rydbergBlockedQubits = arch->getBlockedCoordIndices(op.get());
       // get max execution time over all blocked qubits
       bool rydbergBlocked = true;
       while (rydbergBlocked) {

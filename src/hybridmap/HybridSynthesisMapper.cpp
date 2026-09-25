@@ -106,7 +106,7 @@ HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
   }
 
   // Make a copy of qc to avoid modifying the original
-  auto mappedQc = tempMapper.map(qcCopy, mapping);
+  const auto mappedQc = tempMapper.map(qcCopy, mapping);
   tempMapper.convertToAod();
   const auto results = tempMapper.schedule();
   return results.totalFidelities;

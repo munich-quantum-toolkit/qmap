@@ -15,7 +15,7 @@ namespace nb = nanobind;
 // forward declarations
 void registerQdmi(nb::module_& m);
 void registerStatePreparation(nb::module_& m);
-void registerZoned(nb::module_& m);
+void registerZoned(const nb::module_& m);
 
 NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
   auto qdmi = m.def_submodule("qdmi");

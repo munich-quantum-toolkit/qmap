@@ -128,7 +128,7 @@ void Mapper::processDisjoint2qBlockLayer(
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
 
       if (*lastLayer.at(*control) == *lastLayer.at(target)) {
-        for (auto& g : layers.at(layer - 1)) {
+        for (const auto& g : layers.at(layer - 1)) {
           if ((std::cmp_equal(g.control, *control) &&
                std::cmp_equal(g.target, target)) ||
               (std::cmp_equal(g.control, target) &&
@@ -387,7 +387,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
     even = !even;
   }
 
-  for (auto& gate : layers[index]) {
+  for (const auto& gate : layers[index]) {
     if (gate.singleQubit()) {
       if (singleQubitMultiplicity0[gate.target] > 0) {
         layer0.emplace_back(gate);

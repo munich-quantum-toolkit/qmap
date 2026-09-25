@@ -128,7 +128,7 @@ void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
     const auto it = std::ranges::find(gates, gate);
     if (it != gates.end()) {
       gates.erase(it);
-      auto usedQubits = gate->getUsedQubits();
+      const auto usedQubits = gate->getUsedQubits();
       qubitsToUpdate.insert(usedQubits.begin(), usedQubits.end());
     }
   }

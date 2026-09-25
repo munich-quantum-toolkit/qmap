@@ -75,8 +75,8 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       gateTimes.emplace(key, value);
     }
     // check if cz and h gates are present (require explicit fallback)
-    auto ensureGateWithFallback = [](auto& map, const std::string& gate,
-                                     const std::string& fallback) {
+    const auto ensureGateWithFallback = [](auto& map, const std::string& gate,
+                                           const std::string& fallback) {
       if (map.contains(gate)) {
         return;
       }

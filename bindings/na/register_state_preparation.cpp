@@ -32,7 +32,7 @@ void registerStatePreparation(nb::module_& m) {
   nb::module_::import_("mqt.core.ir");
 
   // Neutral Atom State Preparation
-  auto solver =
+  const auto solver =
       nb::class_<na::NASolver>(m, "NAStatePreparationSolver",
                                R"pb(Neutral atom state preparation solver.
 

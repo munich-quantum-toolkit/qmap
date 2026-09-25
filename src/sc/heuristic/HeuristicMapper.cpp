@@ -183,7 +183,7 @@ void HeuristicMapper::checkParameters() {
 }
 
 void HeuristicMapper::createInitialMapping() {
-  auto& config = results.config;
+  const auto& config = results.config;
 
   if (layers.empty()) {
     return;
@@ -648,7 +648,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   if (config.debug) {
     const auto end = std::chrono::steady_clock::now();
     results.layerHeuristicBenchmark.emplace_back();
-    auto layerResultsIt = results.layerHeuristicBenchmark.rbegin();
+    const auto layerResultsIt = results.layerHeuristicBenchmark.rbegin();
     layerResultsIt->expandedNodes = expandedNodes;
     results.heuristicBenchmark.expandedNodes += expandedNodes;
 
@@ -805,7 +805,7 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
   node.costFixed = 0;
 
   // swap costs
-  for (auto& swap : node.swaps) {
+  for (const auto& swap : node.swaps) {
     if (swap.op == qc::SWAP) {
       // branch clone intended for performance reasons (checking edge-wise for
       // bidirectionality is not O(1))
@@ -840,7 +840,7 @@ void HeuristicMapper::recalculateFixedCostFidelity(std::size_t layer,
                           static_cast<std::uint16_t>(node.locations.at(i)));
   }
   // adding cost of the swap gates
-  for (auto& swap : node.swaps) {
+  for (const auto& swap : node.swaps) {
     if (swap.op == qc::SWAP) {
       node.costFixed +=
           architecture->getSwapFidelityCost(swap.first, swap.second);

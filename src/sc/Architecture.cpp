@@ -341,7 +341,7 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
     start.permutation.emplace(i, i);
   }
 
-  auto priority = [](const Node& x, const Node& y) {
+  const auto priority = [](const Node& x, const Node& y) {
     return x.nswaps > y.nswaps;
   };
   std::priority_queue<Node, std::vector<Node>, decltype(priority)> queue(
@@ -435,7 +435,7 @@ void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
     start.permutation.emplace(i, i);
   }
 
-  auto priority = [](const Node& x, const Node& y) {
+  const auto priority = [](const Node& x, const Node& y) {
     return x.swaps.size() > y.swaps.size();
   };
   std::priority_queue<Node, std::vector<Node>, decltype(priority)> queue(
@@ -504,7 +504,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
     visited.clear();
     visited.resize(nQubits, false);
     findCouplingLimit(q, 0, connections, d, visited);
-    auto it = std::ranges::max_element(d);
+    const auto it = std::ranges::max_element(d);
     maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
@@ -535,7 +535,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
     visited.clear();
     visited.resize(nQubits, false);
     findCouplingLimit(q, 0, connections, d, visited);
-    auto it = std::ranges::max_element(d);
+    const auto it = std::ranges::max_element(d);
     maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
@@ -578,7 +578,7 @@ void Architecture::getHighestFidelityCouplingMap(
   }
 
   double bestFidelity = std::numeric_limits<double>::lowest();
-  auto allConnectedSubsets = getAllConnectedSubsets(subsetSize);
+  const auto allConnectedSubsets = getAllConnectedSubsets(subsetSize);
 
   for (const auto& qubitChoice : allConnectedSubsets) {
     CouplingMap map{};
@@ -599,7 +599,7 @@ Architecture::getAllConnectedSubsets(std::uint16_t subsetSize) const {
   } else if (nqubits < subsetSize) {
     throw QMAPException("Architecture too small!");
   } else {
-    auto filter = [&](const QubitSubset& subset) {
+    const auto filter = [&](const QubitSubset& subset) {
       CouplingMap cm = {};
       Architecture::getReducedCouplingMap(subset, cm);
       return isConnected(subset, cm);
