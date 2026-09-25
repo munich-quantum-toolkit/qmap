@@ -1,0 +1,93 @@
+name: PyTorch static TLS probe
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/torch-tls-probe.yml
+
+permissions: {}
+
+jobs:
+  probe:
+    if: github.event.pull_request.number == 1172
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04-arm, ubuntu-26.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
+      - name: Install the QMAP ARM test versions
+        run: |
+          if [ "${{ matrix.os }}" = ubuntu-26.04-arm ]; then
+            uv venv --python /usr/bin/python3.14 .venv
+          else
+            uv python install 3.14.4
+            uv venv --python 3.14.4 .venv
+          fi
+          uv pip install --python .venv/bin/python \
+            torch==2.13.0 numpy==2.5.3 scipy==1.18.1 rustworkx==0.18.1 \
+            qiskit==2.5.2 mqt-core==3.10.0 mqt-qcec==3.10.0 \
+            pytest==9.1.1 pytest-cov==7.1.0 pytest-sugar==1.1.1 pytest-xdist==3.8.0
+
+      - name: Probe imports without extra static TLS
+        shell: bash
+        env:
+          GLIBC_TUNABLES: ""
+        run: |
+          set -u
+          .venv/bin/python --version
+          .venv/bin/python -c 'import sys, sysconfig; print(sys.base_prefix, sysconfig.get_path("stdlib"))'
+          ldd --version
+          failed=0
+          for imports in \
+            'import torch' \
+            'import numpy; import torch' \
+            'import numpy; import scipy.linalg; import torch' \
+            'import numpy; import rustworkx; import torch' \
+            'import numpy; import scipy.linalg; import rustworkx; import torch' \
+            'import qiskit; import torch' \
+            'import qiskit; import mqt.core; import torch' \
+            'import mqt.qcec; import torch' \
+            'import qiskit; import mqt.qcec; import torch' \
+            'import mqt.core; import mqt.qcec; import torch' \
+            'import qiskit; import mqt.core; import mqt.qcec; import torch'; do
+            echo "Probe: $imports"
+            if .venv/bin/python -c "$imports"; then
+              echo "PASS: $imports"
+            else
+              echo "FAIL: $imports"
+              failed=1
+            fi
+          done
+
+          cat > "$RUNNER_TEMP/test_torch_tls.py" <<'PY'
+          import qiskit
+          import mqt.core
+          import mqt.qcec
+          import numpy
+          import scipy.linalg
+          import rustworkx
+          import torch
+
+          def test_import() -> None:
+              assert torch.__version__.startswith("2.13.")
+          PY
+          echo "Probe: pytest collection with four workers"
+          if .venv/bin/python -m pytest -q -n 4 "$RUNNER_TEMP/test_torch_tls.py"; then
+            echo "PASS: pytest"
+          else
+            echo "FAIL: pytest"
+            failed=1
+          fi
+
+          if [ "$failed" -ne 0 ]; then
+            echo "Control: repeat with extra static TLS"
+            GLIBC_TUNABLES=glibc.rtld.optional_static_tls=65536 \
+              .venv/bin/python -c 'import qiskit; import mqt.core; import mqt.qcec; import numpy; import scipy.linalg; import rustworkx; import torch'
+            GLIBC_TUNABLES=glibc.rtld.optional_static_tls=65536 \
+              .venv/bin/python -m pytest -q -n 4 "$RUNNER_TEMP/test_torch_tls.py"
+          fi
+          exit "$failed"
