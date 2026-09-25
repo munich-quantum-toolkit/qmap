@@ -24,6 +24,8 @@
 
 using namespace logicbase;
 
+namespace {
+
 class TestZ3 : public testing::TestWithParam<logicbase::OpType> {
 protected:
   void SetUp() override {}
@@ -938,3 +940,5 @@ TEST_F(TestZ3Opt, AMOAndExactlyOneNaive) {
   z3logic->produceInstance();
   EXPECT_EQ(z3logic->solve(), Result::SAT);
 }
+
+} // namespace

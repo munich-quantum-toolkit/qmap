@@ -26,6 +26,7 @@
 #include <vector>
 
 namespace {
+
 ::testing::AssertionResult matrixNear(const Matrix& a, const Matrix& b,
                                       double delta) {
   if (a.size() != b.size()) {
@@ -49,7 +50,6 @@ namespace {
   }
   return ::testing::AssertionSuccess();
 }
-} // namespace
 
 class TestArchitecture : public testing::TestWithParam<std::string> {
 protected:
@@ -958,3 +958,5 @@ TEST(TestArchitecture, DistanceCheapestPathTest) {
   EXPECT_EQ(distances[0].size(), 2 * nrEdges + 1);
   EXPECT_NEAR(distances[0][nrEdges], nrEdges * COST_BIDIRECTIONAL_SWAP, 1e-6);
 }
+
+} // namespace

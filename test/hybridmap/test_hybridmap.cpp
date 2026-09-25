@@ -23,6 +23,8 @@
 #include <string>
 #include <tuple>
 
+namespace {
+
 class NeutralAtomArchitectureTest : public testing::TestWithParam<std::string> {
 protected:
   std::string testArchitecturePath = "architectures/";
@@ -288,3 +290,5 @@ TEST(NeutralAtomMapperExceptions, LongShuttling) {
   const auto circ = mapper.map(qc, na::InitialMapping::Graph);
   mapper.convertToAod();
 }
+
+} // namespace

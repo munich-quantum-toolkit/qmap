@@ -25,6 +25,8 @@
 
 namespace cs {
 
+namespace {
+
 class TestTableau : public ::testing::Test {
 protected:
   // 0 0 | 1 0 | 0
@@ -685,4 +687,5 @@ TEST_F(TestTableau, ApplyCXH) {
   EXPECT_EQ(tableau, Tableau("[+ZII, +IXI, +ZXZ]"));
 }
 
+} // namespace
 } // namespace cs

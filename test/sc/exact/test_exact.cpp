@@ -33,6 +33,8 @@
 #include <sstream>
 #include <string>
 
+namespace {
+
 class ExactTest : public testing::TestWithParam<std::string> {
 protected:
   std::string testExampleDir = "../../../examples/";
@@ -629,3 +631,5 @@ TEST_F(ExactTest, RegressionTestExactMapperPerformance2) {
   EXPECT_EQ(mapper2.getResults().output.swaps, 1);
   EXPECT_EQ(mapper2.getResults().output.directionReverse, 1);
 }
+
+} // namespace

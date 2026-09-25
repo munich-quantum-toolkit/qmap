@@ -51,6 +51,7 @@ constexpr qc::OpType SWAP = qc::OpType::SWAP;
 constexpr double FLOAT_TOLERANCE = 1e-6;
 
 namespace {
+
 /**
  * @brief Get id of the final node in a given layer from a data log.
  */
@@ -219,7 +220,6 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   path.push_back(node->id);
   return path;
 }
-} // namespace
 
 class TestHeuristics
     : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
@@ -2255,3 +2255,5 @@ TEST(HeuristicDebug, MoreThan128Qubits) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 }
+
+} // namespace

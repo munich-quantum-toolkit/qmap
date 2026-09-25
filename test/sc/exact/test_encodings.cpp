@@ -23,6 +23,8 @@
 #include <memory>
 #include <utility>
 
+namespace {
+
 class TestEncodings
     : public testing::TestWithParam<std::pair<Encoding, CommanderGrouping>> {
 protected:
@@ -93,3 +95,5 @@ TEST_P(TestEncodings, FiveToSevenQubits) {
   ASSERT_FALSE(mapper->getResults().timeout);
   EXPECT_EQ(mapper->getResults().output.swaps, 1U);
 }
+
+} // namespace
