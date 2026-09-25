@@ -659,19 +659,18 @@ FlyingAncillaComb NeutralAtomMapper::convertMoveCombToFlyingAncillaComb(
       const auto nearSecondIdx =
           this->flyingAncillas.getClosestQubit(move.target, usedFA);
       const auto nearSecond = this->flyingAncillas.getCoordIndex(nearSecondIdx);
-      if (usedQubits.size() == 2) {
-        // both directions possible, check if reversed is better
-        if (this->arch->getEuclideanDistance(nearFirst, move.origin) <
-            this->arch->getEuclideanDistance(nearSecond, move.target)) {
-          bestFA.q1 = move.target;
-          bestFA.q2 = move.origin;
-          bestFA.origin = nearSecond;
-          bestFA.index = nearSecondIdx;
+      // both directions possible for two qubits, check if reversed is better
+      if (usedQubits.size() == 2 &&
+          this->arch->getEuclideanDistance(nearFirst, move.origin) <
+              this->arch->getEuclideanDistance(nearSecond, move.target)) {
+        bestFA.q1 = move.target;
+        bestFA.q2 = move.origin;
+        bestFA.origin = nearSecond;
+        bestFA.index = nearSecondIdx;
 
-          usedFA.emplace(bestFA.index);
-          bestFAs.emplace_back(bestFA);
-          continue;
-        }
+        usedFA.emplace(bestFA.index);
+        bestFAs.emplace_back(bestFA);
+        continue;
       }
       bestFA.q1 = move.origin;
       bestFA.q2 = move.target;
@@ -1080,7 +1079,7 @@ NeutralAtomMapper::getExactSwapsToPosition(const qc::Operation* op,
         if (std::ranges::none_of(
                 minimalDistances, [&posQubit](const auto& qubit) {
                   return std::get<0>(qubit) == posQubit &&
-                         *(std::get<1>(qubit).begin()) == posQubit;
+                         *std::get<1>(qubit).begin() == posQubit;
                 })) {
           assignedPosQubit = posQubit;
           break;
@@ -1539,7 +1538,7 @@ NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
   qc::fp minNumSwaps = 0;
   if (usedHwQubits.size() == 2) {
     minNumSwaps = this->hardwareQubits.getSwapDistance(
-        *usedHwQubits.begin(), *(usedHwQubits.rbegin()), true);
+        *usedHwQubits.begin(), *usedHwQubits.rbegin(), true);
   } else { // multi-qubit gates
     const auto bestPos = getBestMultiQubitPosition(opPointer);
     if (bestPos.empty()) {

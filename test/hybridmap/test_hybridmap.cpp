@@ -229,7 +229,7 @@ TEST(NeutralAtomMapperExceptions, NotEnoughQubitsForCircuitAndAncillas) {
   na::NeutralAtomMapper mapper(arch, p);
 
   // Circuit uses exactly all hardware qubits; +1 ancilla should trigger
-  qc::QuantumComputation qc1((arch.getNqubits()));
+  qc::QuantumComputation qc1(arch.getNqubits());
   EXPECT_THROW((void)mapper.map(qc1, na::InitialMapping::Identity),
                std::runtime_error);
 

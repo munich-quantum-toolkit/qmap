@@ -67,7 +67,7 @@ std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath,
                              "layer_" + std::to_string(layer) + ".json");
   }
   const auto layerJson = nlohmann::basic_json<>::parse(layerFile);
-  if (layerJson.find("final_node_id") == layerJson.end()) {
+  if (!layerJson.contains("final_node_id")) {
     throw std::runtime_error("Missing key \"final_node_id\" in " +
                              dataLoggingPath + "layer_" +
                              std::to_string(layer) + ".json");
@@ -725,18 +725,16 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         continue;
       }
 
-      if (isNonDecreasing(settings.heuristic)) {
-        if (node.parent != node.id) {
-          if (node.parent >= nodes.size() ||
-              nodes.at(node.parent).id != node.parent) {
-            FAIL() << "Invalid parent id " << node.parent << " for node "
-                   << node.id << " " << layerNames.at(i);
-          }
-          EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
-              << "Heuristic " << toString(settings.heuristic)
-              << " does not result in non-decreasing cost estimation "
-              << layerNames.at(i) << " in node " << node.id;
+      if (isNonDecreasing(settings.heuristic) && node.parent != node.id) {
+        if (node.parent >= nodes.size() ||
+            nodes.at(node.parent).id != node.parent) {
+          FAIL() << "Invalid parent id " << node.parent << " for node "
+                 << node.id << " " << layerNames.at(i);
         }
+        EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
+            << "Heuristic " << toString(settings.heuristic)
+            << " does not result in non-decreasing cost estimation "
+            << layerNames.at(i) << " in node " << node.id;
       }
 
       EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE)

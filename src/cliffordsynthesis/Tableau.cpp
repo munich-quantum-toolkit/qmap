@@ -337,7 +337,7 @@ void Tableau::applyCX(const std::size_t control, const std::size_t target) {
     const auto za = tableau[i][control + nQubits];
     const auto xb = tableau[i][target];
     const auto zb = tableau[i][target + nQubits];
-    tableau[i][2 * nQubits] ^= (xa & zb) & ((xb ^ za) ^ 1);
+    tableau[i][2 * nQubits] ^= (xa & zb) & ((xb ^ za) ^ 1U);
     tableau[i][control + nQubits] = za ^ zb;
     tableau[i][target] = xb ^ xa;
   }

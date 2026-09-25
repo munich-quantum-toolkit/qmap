@@ -519,7 +519,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& [q0, q1] : cm) {
-    if ((qubitChoice.contains(q0)) && (qubitChoice.contains(q1))) {
+    if (qubitChoice.contains(q0) && qubitChoice.contains(q1)) {
       connections.at(q0).emplace(q1);
       // make sure that the connections are bidirectional
       connections.at(q1).emplace(q0);
@@ -671,8 +671,8 @@ QubitSubset Architecture::getQubitSet(const CouplingMap& cm) {
 bool Architecture::isConnected(const QubitSubset& qubitChoice,
                                const CouplingMap& reducedCouplingMap) {
   QubitSubset reachedQubits{};
-  reachedQubits.emplace(*(qubitChoice.begin()));
-  dfs(*(qubitChoice.begin()), reachedQubits, reducedCouplingMap);
+  reachedQubits.emplace(*qubitChoice.begin());
+  dfs(*qubitChoice.begin(), reachedQubits, reducedCouplingMap);
   return (reachedQubits == qubitChoice);
 }
 

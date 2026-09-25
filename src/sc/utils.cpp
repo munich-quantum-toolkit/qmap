@@ -212,11 +212,9 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
         visited.insert(edge.second);
         dfs(edge.second, visited, rcm);
       }
-    } else if (edge.second == current) {
-      if (!visited.contains(edge.first)) {
-        visited.insert(edge.first);
-        dfs(edge.first, visited, rcm);
-      }
+    } else if (edge.second == current && !visited.contains(edge.first)) {
+      visited.insert(edge.first);
+      dfs(edge.first, visited, rcm);
     }
   }
 }

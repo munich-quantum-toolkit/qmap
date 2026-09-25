@@ -138,7 +138,8 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
       shuttlingAverageFidelities.emplace(naOpTypeFromString(key), value);
     }
-    parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
+    parameters.shuttlingAverageFidelities =
+        std::move(shuttlingAverageFidelities);
 
     parameters.decoherenceTimes = Parameters::DecoherenceTimes{
         .t1 = jsonDataParameters["decoherenceTimes"]["t1"],
@@ -343,11 +344,11 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   std::string opName;
   const auto nQubits = op->getNqubits();
   for (size_t i = 1; i < nQubits; ++i) {
-    opName += "c";
+    opName += 'c';
   }
   if (op->getType() == qc::OpType::P || op->getType() == qc::OpType::RZ) {
     // use time of theta = pi and linearly scale
-    opName += "z";
+    opName += 'z';
     auto param = std::abs(op->getParameter().back());
     constexpr auto twoPi = 2 * std::numbers::pi_v<qc::fp>;
     param = std::fmod(param, twoPi);
@@ -372,7 +373,7 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
   std::string opName;
   const auto nQubits = op->getNqubits();
   for (size_t i = 1; i < nQubits; ++i) {
-    opName += "c";
+    opName += 'c';
   }
   opName += op->getName();
   return getGateAverageFidelity(opName);

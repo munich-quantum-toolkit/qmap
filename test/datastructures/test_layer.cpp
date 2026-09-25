@@ -49,20 +49,20 @@ TEST(Layer, ExecutableSet1) {
 
   Layer const layer(qc);
   EXPECT_EQ(layer.getExecutableSet().size(), 1); // layer (1)
-  std::shared_ptr<Layer::DAGVertex> v = *(layer.getExecutableSet()).begin();
+  std::shared_ptr<Layer::DAGVertex> v = *layer.getExecutableSet().begin();
   v->execute();
   EXPECT_THROW(v->execute(), std::logic_error);
   EXPECT_EQ(layer.getExecutableSet().size(), 3); // layer (2)
-  v = *(layer.getExecutableSet()).begin();
+  v = *layer.getExecutableSet().begin();
   v->execute();
   EXPECT_EQ(layer.getExecutableSet().size(), 2); // rest of layer (2)
-  v = *(layer.getExecutableSet()).begin();
+  v = *layer.getExecutableSet().begin();
   v->execute();
   EXPECT_EQ(layer.getExecutableSet().size(), 1); // rest of layer (2)
-  v = *(layer.getExecutableSet()).begin();
+  v = *layer.getExecutableSet().begin();
   v->execute();
   EXPECT_EQ(layer.getExecutableSet().size(), 1); // layer (3)
-  v = *(layer.getExecutableSet()).begin();
+  v = *layer.getExecutableSet().begin();
   v->execute();
   EXPECT_EQ(layer.getExecutableSet().size(), 3); // layer (4), (5), (9)
   // execute layer (4) and (5), first pick those two vertices and then execute
@@ -70,7 +70,7 @@ TEST(Layer, ExecutableSet1) {
   // valid anymore
   std::vector<std::shared_ptr<Layer::DAGVertex>> vList;
   for (const auto& u : layer.getExecutableSet()) {
-    if (const auto& it = (u->getOperation())->getUsedQubits(); it.contains(0)) {
+    if (const auto& it = u->getOperation()->getUsedQubits(); it.contains(0)) {
       vList.emplace_back(u);
     }
   }

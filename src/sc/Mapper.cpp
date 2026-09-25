@@ -475,7 +475,7 @@ void Mapper::finalizeMappedCircuit() {
           qcMapped.initialLayout.end()) {
         // get the next unused physical qubit
         for (physicalQubit = 0; physicalQubit < architecture->getNqubits();
-             ++(physicalQubit)) {
+             ++physicalQubit) {
           if (qcMapped.initialLayout.find(physicalQubit) ==
               qcMapped.initialLayout.end()) {
             break;
@@ -507,8 +507,7 @@ void Mapper::placeRemainingArchitectureQubits() {
       if (qcMapped.initialLayout.find(static_cast<qc::Qubit>(logical)) !=
           qcMapped.initialLayout.end()) {
         // get the next unused physical qubit
-        for (physical = 0; physical < architecture->getNqubits();
-             ++(physical)) {
+        for (physical = 0; physical < architecture->getNqubits(); ++physical) {
           if (qcMapped.initialLayout.find(physical) ==
               qcMapped.initialLayout.end()) {
             break;
@@ -578,8 +577,7 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
         assert(g->getType() == qc::X);
         ++info.cnots;
         ++info.gates;
-        auto q1 =
-            static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
+        auto q1 = static_cast<std::uint16_t>((*g->getControls().begin()).qubit);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
         if (architecture->isFidelityAvailable()) {
           info.totalLogFidelity +=

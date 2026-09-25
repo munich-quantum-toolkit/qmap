@@ -543,7 +543,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
     // launch threads
     subCircuits.emplace_back(
         std::async(std::launch::async | std::launch::deferred,
-                   [this, startIdx, endIdx, &optimalConfig]() {
+                   [this, startIdx, endIdx, &optimalConfig] {
                      return cs::CliffordSynthesizer::synthesizeSubcircuit(
                          initialCircuit, startIdx, endIdx, optimalConfig);
                    }));
