@@ -128,7 +128,7 @@ void ExactMapper::map(const Configuration& settings) {
   std::vector<Swaps> swaps(reducedLayerIndices.size(), Swaps{});
   mappingSwaps.reserve(reducedLayerIndices.size());
   std::size_t runs = 1;
-  for (auto& choice : allPossibleQubitChoices) {
+  for (const auto& choice : allPossibleQubitChoices) {
     std::size_t limit = 0U;
     std::size_t maxLimit = 0U;
     const std::size_t upperLimit = config.swapLimit;
@@ -393,7 +393,7 @@ void ExactMapper::map(const Configuration& settings) {
   // 11) final post-processing
   finalizeMappedCircuit();
 
-  auto end = std::chrono::high_resolution_clock::now();
+  const auto end = std::chrono::high_resolution_clock::now();
   const std::chrono::duration<double> diff = end - start;
   results.time = diff.count();
 }
@@ -458,7 +458,7 @@ void ExactMapper::coreMappingRoutine(
   std::stringstream xName{};
   for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
     x.emplace_back();
-    for (auto qubit : qubitChoice) {
+    for (const auto qubit : qubitChoice) {
       x.back().emplace_back();
       for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
         xName.str("");
@@ -627,19 +627,22 @@ number of variables: (|L|-1) * m!
       auto coupling = LogicTerm(false);
       if (architecture->bidirectional()) {
         for (const auto& edge : rcm) {
-          auto indexFC = x[k][physicalQubitIndex[edge.first]]
-                          [static_cast<std::size_t>(gate.control)];
-          auto indexST = x[k][physicalQubitIndex[edge.second]][gate.target];
+          const auto indexFC = x[k][physicalQubitIndex[edge.first]]
+                                [static_cast<std::size_t>(gate.control)];
+          const auto indexST =
+              x[k][physicalQubitIndex[edge.second]][gate.target];
           coupling = coupling || (indexFC && indexST);
         }
       } else {
         for (const auto& edge : rcm) {
-          auto indexFC = x[k][physicalQubitIndex[edge.first]]
-                          [static_cast<std::size_t>(gate.control)];
-          auto indexST = x[k][physicalQubitIndex[edge.second]][gate.target];
-          auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-          auto indexSC = x[k][physicalQubitIndex[edge.second]]
-                          [static_cast<std::size_t>(gate.control)];
+          const auto indexFC = x[k][physicalQubitIndex[edge.first]]
+                                [static_cast<std::size_t>(gate.control)];
+          const auto indexST =
+              x[k][physicalQubitIndex[edge.second]][gate.target];
+          const auto indexFT =
+              x[k][physicalQubitIndex[edge.first]][gate.target];
+          const auto indexSC = x[k][physicalQubitIndex[edge.second]]
+                                [static_cast<std::size_t>(gate.control)];
 
           coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
         }
@@ -662,8 +665,8 @@ number of variables: (|L|-1) * m!
         auto equal = LogicTerm(true);
         for (const auto qubit : qubitChoice) {
           for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
-            auto before = i[physicalQubitIndex[qubit]][q];
-            auto after =
+            const auto before = i[physicalQubitIndex[qubit]][q];
+            const auto after =
                 j[physicalQubitIndex[pi[physicalQubitIndex[qubit]]]][q];
             equal = equal && (before == after);
           }
@@ -727,7 +730,7 @@ number of variables: (|L|-1) * m!
   // cost for permutations
   piCount = 0;
   internalPiCount = 0;
-  auto cost = LogicTerm(0);
+  const auto cost = LogicTerm(0);
   do {
     if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
       auto picost = architecture->minimumNumberOfSwaps(pi);
@@ -856,9 +859,10 @@ number of variables: (|L|-1) * m!
             continue;
           }
           for (const auto& edge : rcm) {
-            auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-            auto indexSC = x[k][physicalQubitIndex[edge.second]]
-                            [static_cast<std::size_t>(gate.control)];
+            const auto indexFT =
+                x[k][physicalQubitIndex[edge.first]][gate.target];
+            const auto indexSC = x[k][physicalQubitIndex[edge.second]]
+                                  [static_cast<std::size_t>(gate.control)];
             if (m->getBoolValue(indexFT, lb.get()) &&
                 m->getBoolValue(indexSC, lb.get())) {
               choiceResults.output.directionReverse++;
@@ -883,5 +887,5 @@ number of variables: (|L|-1) * m!
   } else {
     results.timeout = true;
   }
-  lb->reset();
+  (*lb).reset();
 }

@@ -163,7 +163,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
     }
 
     auto* previous0 = dag.at(q0).back()->get();
-    auto* previous1 = dag.at(q1).back()->get();
+    const auto* previous1 = dag.at(q1).back()->get();
     if (previous0 != previous1) {
       addToDAG(dag, &operation);
       continue;
@@ -193,8 +193,8 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
         operation->setGate(qc::I);
         operation->clearControls();
       } else {
-        auto beforePrevious0 = ++dag.at(q0).rbegin();
-        auto beforePrevious1 = ++dag.at(q1).rbegin();
+        const auto beforePrevious0 = ++dag.at(q0).rbegin();
+        const auto beforePrevious1 = ++dag.at(q1).rbegin();
         if (beforePrevious0 == dag.at(q0).rend() ||
             beforePrevious1 == dag.at(q1).rend()) {
           addToDAG(dag, &operation);
@@ -202,7 +202,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
         }
 
         auto* earlier0 = (*beforePrevious0)->get();
-        auto* earlier1 = (*beforePrevious1)->get();
+        const auto* earlier1 = (*beforePrevious1)->get();
         if (earlier0 != earlier1) {
           addToDAG(dag, &operation);
           continue;
@@ -286,9 +286,11 @@ void singleQubitGateFusion(qc::QuantumComputation& qc) {
            operation.getTargets().size() == 1U;
   };
   static const std::map<qc::OpType, qc::OpType> INVERSE_MAP = {
-      {qc::I, qc::I},   {qc::X, qc::X},     {qc::Y, qc::Y},    {qc::Z, qc::Z},
-      {qc::H, qc::H},   {qc::S, qc::Sdg},   {qc::Sdg, qc::S},  {qc::T, qc::Tdg},
-      {qc::Tdg, qc::T}, {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX}};
+      {qc::I, qc::I},     {qc::X, qc::X},     {qc::Y, qc::Y},
+      {qc::Z, qc::Z},     {qc::H, qc::H},     {qc::S, qc::Sdg},
+      {qc::Sdg, qc::S},   {qc::T, qc::Tdg},   {qc::Tdg, qc::T},
+      {qc::SX, qc::SXdg}, {qc::SXdg, qc::SX},
+  };
 
   auto dag = DAG(qc.getHighestPhysicalQubitIndex() + 1U);
   for (auto& operation : qc) {

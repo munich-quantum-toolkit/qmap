@@ -18,7 +18,6 @@
 #include <cstdint>
 #include <initializer_list>
 #include <limits>
-#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>

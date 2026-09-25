@@ -23,6 +23,8 @@
 #include <string>
 #include <tuple>
 
+namespace {
+
 class NeutralAtomArchitectureTest : public testing::TestWithParam<std::string> {
 protected:
   std::string testArchitecturePath = "architectures/";
@@ -165,7 +167,7 @@ protected:
 };
 
 TEST_F(NeutralAtomMapperTest, Output) {
-  auto qcMapped = mapper.map(qc, initialMapping);
+  const auto qcMapped = mapper.map(qc, initialMapping);
   // write to file
   const auto tempDir = std::filesystem::temp_directory_path();
   const auto qasmPath = tempDir / "test.qasm";
@@ -227,7 +229,7 @@ TEST(NeutralAtomMapperExceptions, NotEnoughQubitsForCircuitAndAncillas) {
   na::NeutralAtomMapper mapper(arch, p);
 
   // Circuit uses exactly all hardware qubits; +1 ancilla should trigger
-  qc::QuantumComputation qc1((arch.getNqubits()));
+  qc::QuantumComputation qc1(arch.getNqubits());
   EXPECT_THROW((void)mapper.map(qc1, na::InitialMapping::Identity),
                std::runtime_error);
 
@@ -288,3 +290,5 @@ TEST(NeutralAtomMapperExceptions, LongShuttling) {
   const auto circ = mapper.map(qc, na::InitialMapping::Graph);
   mapper.convertToAod();
 }
+
+} // namespace

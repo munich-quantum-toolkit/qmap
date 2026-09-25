@@ -51,7 +51,7 @@ LogicTerm atMostOneBiMander(const std::vector<LogicTerm>& vars,
   auto subords = groupVarsBimander(vars, vars.size() / 2);
   LogicTerm ret = LogicTerm(true);
   std::vector<LogicTerm> binaryVars{};
-  auto m = subords.size();
+  const auto m = subords.size();
   binaryVars.reserve(static_cast<size_t>(std::ceil(std::log2(m))));
   for (int32_t j = 0; j < std::ceil(std::log2(m)); j++) {
     binaryVars.emplace_back(
@@ -131,7 +131,7 @@ std::vector<NestedVar> groupVars(const std::vector<LogicTerm>& vars,
 
 std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars,
                                     std::size_t maxSize) {
-  auto numVars = vars.size();
+  const auto numVars = vars.size();
   if (numVars <= maxSize) {
     return vars;
   }
@@ -154,13 +154,13 @@ std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars,
 std::vector<std::vector<LogicTerm>>
 groupVarsBimander(const std::vector<LogicTerm>& vars, std::size_t groupCount) {
   std::vector<std::vector<LogicTerm>> result{};
-  auto chunkSize = vars.size() / groupCount;
+  const auto chunkSize = vars.size() / groupCount;
 
   for (size_t i = 0U; i < vars.size(); i += chunkSize) {
     auto from = vars.begin();
     std::advance(from, static_cast<int64_t>(i));
     auto to = vars.begin();
-    auto end = std::min(vars.size(), i + chunkSize);
+    const auto end = std::min(vars.size(), i + chunkSize);
     std::advance(to, static_cast<int64_t>(end));
     result.emplace_back(from, to);
   }

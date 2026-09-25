@@ -33,6 +33,8 @@
 #include <sstream>
 #include <string>
 
+namespace {
+
 class ExactTest : public testing::TestWithParam<std::string> {
 protected:
   std::string testExampleDir = "../../../examples/";
@@ -399,8 +401,9 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
 }
 
 TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
-  const CouplingMap cm{{0, 1}, {1, 0}, {1, 2}, {2, 1},
-                       {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+  const CouplingMap cm{
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, {1, 3}, {3, 1},
+  };
   Architecture arch(4U, cm);
 
   auto mapper = ExactMapper(qc, arch);
@@ -513,8 +516,10 @@ TEST_F(ExactTest, NoMeasurementsAdded) {
 
 TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
   Architecture arch;
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
-                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+      {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4},
+  };
   arch.loadCouplingMap(5, cm);
 
   qc = qasm3::Importer::imports("OPENQASM 2.0;\ninclude \"qelib1.inc\";\n"
@@ -629,3 +634,5 @@ TEST_F(ExactTest, RegressionTestExactMapperPerformance2) {
   EXPECT_EQ(mapper2.getResults().output.swaps, 1);
   EXPECT_EQ(mapper2.getResults().output.directionReverse, 1);
 }
+
+} // namespace

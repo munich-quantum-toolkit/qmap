@@ -49,13 +49,13 @@ MoveToAodConverter::schedule(qc::QuantumComputation& circuit) {
     if (groupIt != moveGroups.end() &&
         circuitIndex == groupIt->getFirstCircuitIndex()) {
       // add move group
-      for (auto& aodOperation : groupIt->activationOperations) {
+      for (const auto& aodOperation : groupIt->activationOperations) {
         scheduledCircuit.emplace_back(
             std::make_unique<AodOperation>(aodOperation));
       }
       scheduledCircuit.emplace_back(
           std::make_unique<AodOperation>(groupIt->shuttlingOperation));
-      for (auto& aodOperation : groupIt->deactivationOperations) {
+      for (const auto& aodOperation : groupIt->deactivationOperations) {
         scheduledCircuit.emplace_back(
             std::make_unique<AodOperation>(aodOperation));
       }
@@ -81,10 +81,12 @@ AtomMove MoveToAodConverter::convertOperationToMove(
   while (target >= arch.getNpositions()) {
     target -= arch.getNpositions();
   }
-  return {.origin = origin,
-          .target = target,
-          .requiresLoad = requiresLoad,
-          .requiresStore = requiresStore};
+  return {
+      .origin = origin,
+      .target = target,
+      .requiresLoad = requiresLoad,
+      .requiresStore = requiresStore,
+  };
 }
 void MoveToAodConverter::initFlyingAncillas() {
   if (ancillas.empty()) {
@@ -384,27 +386,37 @@ MoveToAodConverter::canAddTransition(
 
   // both empty
   if (activationDimensionMoves.empty() && deactivationDimensionMoves.empty()) {
-    return {.activation = TransitionMergeType::Trivial,
-            .deactivation = TransitionMergeType::Trivial};
+    return {
+        .activation = TransitionMergeType::Trivial,
+        .deactivation = TransitionMergeType::Trivial,
+    };
   }
   // one empty
   if (activationDimensionMoves.empty()) {
     if (deactivationBuilder.hasIntermediateSpaceAtInitialPosition(
             dimension, end, reverseMoveVector.direction.getSign(dimension))) {
-      return {.activation = TransitionMergeType::Trivial,
-              .deactivation = TransitionMergeType::Append};
+      return {
+          .activation = TransitionMergeType::Trivial,
+          .deactivation = TransitionMergeType::Append,
+      };
     }
-    return {.activation = TransitionMergeType::Trivial,
-            .deactivation = TransitionMergeType::Impossible};
+    return {
+        .activation = TransitionMergeType::Trivial,
+        .deactivation = TransitionMergeType::Impossible,
+    };
   }
   if (deactivationDimensionMoves.empty()) {
     if (activationBuilder.hasIntermediateSpaceAtInitialPosition(
             dimension, start, moveVector.direction.getSign(dimension))) {
-      return {.activation = TransitionMergeType::Append,
-              .deactivation = TransitionMergeType::Trivial};
+      return {
+          .activation = TransitionMergeType::Append,
+          .deactivation = TransitionMergeType::Trivial,
+      };
     }
-    return {.activation = TransitionMergeType::Impossible,
-            .deactivation = TransitionMergeType::Trivial};
+    return {
+        .activation = TransitionMergeType::Impossible,
+        .deactivation = TransitionMergeType::Trivial,
+    };
   }
   // both not empty
   // if same moves exist -> merge, else append
@@ -414,8 +426,10 @@ MoveToAodConverter::canAddTransition(
           deactivationDimensionMove->initialPosition == end &&
           std::abs(activationDimensionMove->delta) == std::abs(delta) &&
           std::abs(deactivationDimensionMove->delta) == std::abs(delta)) {
-        return {.activation = TransitionMergeType::Merge,
-                .deactivation = TransitionMergeType::Merge};
+        return {
+            .activation = TransitionMergeType::Merge,
+            .deactivation = TransitionMergeType::Merge,
+        };
       }
     }
   }
@@ -423,11 +437,15 @@ MoveToAodConverter::canAddTransition(
           dimension, start, moveVector.direction.getSign(dimension)) &&
       deactivationBuilder.hasIntermediateSpaceAtInitialPosition(
           dimension, end, reverseMoveVector.direction.getSign(dimension))) {
-    return {.activation = TransitionMergeType::Append,
-            .deactivation = TransitionMergeType::Append};
+    return {
+        .activation = TransitionMergeType::Append,
+        .deactivation = TransitionMergeType::Append,
+    };
   }
-  return {.activation = TransitionMergeType::Impossible,
-          .deactivation = TransitionMergeType::Impossible};
+  return {
+      .activation = TransitionMergeType::Impossible,
+      .deactivation = TransitionMergeType::Impossible,
+  };
 }
 
 void MoveToAodConverter::AodTransitionBuilder::reassignOffsets(
@@ -457,7 +475,7 @@ void MoveToAodConverter::processMoveGroups() {
 
     const auto resultMoves =
         processMoves(groupIt->moves, activationBuilder, deactivationBuilder);
-    auto movesToRemove = resultMoves.first;
+    const auto movesToRemove = resultMoves.first;
     auto possibleNewMoveGroup = resultMoves.second;
 
     processFlyingAncillaMoves(groupIt->flyingAncillaMoves, activationBuilder,
@@ -498,8 +516,8 @@ MoveToAodConverter::processMoves(
   for (const auto& movePair : moves) {
     const auto& move = movePair.first;
     const auto circuitIndex = movePair.second;
-    auto origin = arch.getCoordinate(move.origin);
-    auto target = arch.getCoordinate(move.target);
+    const auto origin = arch.getCoordinate(move.origin);
+    const auto target = arch.getCoordinate(move.target);
     const auto moveVector = arch.getVector(move.origin, move.target);
     const auto reverseMoveVector = arch.getVector(move.target, move.origin);
     const auto xMergeTypes = canAddTransition(
@@ -508,10 +526,14 @@ MoveToAodConverter::processMoves(
     const auto yMergeTypes = canAddTransition(
         activationBuilder, deactivationBuilder, origin, moveVector, target,
         reverseMoveVector, AodOperation::Dimension::Y);
-    const DimensionMergeTypes activationMergeTypes{.x = xMergeTypes.activation,
-                                                   .y = yMergeTypes.activation};
+    const DimensionMergeTypes activationMergeTypes{
+        .x = xMergeTypes.activation,
+        .y = yMergeTypes.activation,
+    };
     const DimensionMergeTypes deactivationMergeTypes{
-        .x = xMergeTypes.deactivation, .y = yMergeTypes.deactivation};
+        .x = xMergeTypes.deactivation,
+        .y = yMergeTypes.deactivation,
+    };
     if (activationMergeTypes.x == TransitionMergeType::Impossible ||
         activationMergeTypes.y == TransitionMergeType::Impossible ||
         deactivationMergeTypes.x == TransitionMergeType::Impossible ||
@@ -536,8 +558,8 @@ void MoveToAodConverter::processFlyingAncillaMoves(
     AodTransitionBuilder& deactivationBuilder) const {
   for (const auto& key : flyingAncillaMoves | std::views::keys) {
     const auto& flyingAncillaMove = key;
-    auto origin = arch.getCoordinate(flyingAncillaMove.origin);
-    auto target = arch.getCoordinate(flyingAncillaMove.target);
+    const auto origin = arch.getCoordinate(flyingAncillaMove.origin);
+    const auto target = arch.getCoordinate(flyingAncillaMove.target);
     const auto moveVector =
         arch.getVector(flyingAncillaMove.origin, flyingAncillaMove.target);
     const auto reverseMoveVector =
@@ -564,8 +586,10 @@ AodOperation MoveToAodConverter::MoveGroup::buildShuttlingOperation(
   const auto interD = activationBuilder.arch->getInterQubitDistance() /
                       activationBuilder.arch->getNAodIntermediateLevels();
 
-  constexpr std::array dimensions{AodOperation::Dimension::X,
-                                  AodOperation::Dimension::Y};
+  constexpr std::array dimensions{
+      AodOperation::Dimension::X,
+      AodOperation::Dimension::Y,
+  };
 
   // connect move operations
   for (const auto& activation : activationBuilder.transitions) {
@@ -778,8 +802,10 @@ MoveToAodConverter::AodTransitionBuilder::buildPhaseOperations(
     return {};
   }
 
-  return {AodOperation(phaseOperationType, transitionTargets, initialSegments),
-          AodOperation(NAOpType::AodMove, offsetTargets, offsetSegments)};
+  return {
+      AodOperation(phaseOperationType, transitionTargets, initialSegments),
+      AodOperation(NAOpType::AodMove, offsetTargets, offsetSegments),
+  };
 }
 
 std::vector<AodOperation>

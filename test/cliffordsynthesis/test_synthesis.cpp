@@ -28,6 +28,8 @@ using namespace qc::literals;
 
 namespace cs {
 
+namespace {
+
 struct TestConfiguration {
   // given input (either as tableau or as circuit)
   std::string description;
@@ -67,14 +69,12 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
           .get<std::size_t>();
 }
 
-namespace {
 std::vector<TestConfiguration> getTests(const std::string& path) {
   std::ifstream input(path);
   nlohmann::json j;
   input >> j;
   return j;
 }
-} // namespace
 
 class SynthesisTest : public ::testing::TestWithParam<TestConfiguration> {
 protected:
@@ -426,4 +426,6 @@ TEST(HeuristicTest, fourLayers) {
   synth.synthesize(config);
   EXPECT_EQ(synth.getResults().getDepth(), 2);
 }
+
+} // namespace
 } // namespace cs

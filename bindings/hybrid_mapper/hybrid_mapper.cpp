@@ -199,8 +199,8 @@ NB_MODULE(MQT_QMAP_MODULE_NAME, m) {
           "schedule",
           [](na::NeutralAtomMapper& mapper, const bool verbose,
              const bool createAnimationCsv, const double shuttlingSpeedFactor) {
-            auto results = mapper.schedule(verbose, createAnimationCsv,
-                                           shuttlingSpeedFactor);
+            const auto results = mapper.schedule(verbose, createAnimationCsv,
+                                                 shuttlingSpeedFactor);
             return results.toMap();
           },
           "Schedule the mapped circuit.", "verbose"_a = false,

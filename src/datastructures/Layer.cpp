@@ -73,8 +73,8 @@ auto Layer::constructDAG(const QuantumComputation& qc, const bool commutable)
         if (current->getOperation()->isInverseOf(
                 *lookahead[qubit]->getOperation()) &&
             (currentGroup[qubit].empty() ||
-             !(currentGroup[qubit][0]->getOperation())
-                  ->commutesAtQubit(*current->getOperation(), qubit))) {
+             !currentGroup[qubit][0]->getOperation()->commutesAtQubit(
+                 *current->getOperation(), qubit))) {
           // here: the current operation is the inverse of the lookahead
           // add an enabling edge from the lookahead to all operations on this
           // qubit including the destructive ones
@@ -116,8 +116,8 @@ auto Layer::constructDAG(const QuantumComputation& qc, const bool commutable)
           // cause problems later on, e.g., when generating interaction graphs
           if (!currentGroup[qubit].empty() &&
               (!commutable ||
-               !(currentGroup[qubit][0]->getOperation())
-                    ->commutesAtQubit(*current->getOperation(), qubit) ||
+               !currentGroup[qubit][0]->getOperation()->commutesAtQubit(
+                   *current->getOperation(), qubit) ||
                std::find_if(
                    currentGroup[qubit].cbegin(), currentGroup[qubit].cend(),
                    [&current](const auto& v) {
@@ -158,8 +158,8 @@ auto Layer::constructDAG(const QuantumComputation& qc, const bool commutable)
       // group members
       if (!currentGroup[qubit].empty() and
           (!commutable or
-           !(currentGroup[qubit][0]->getOperation())
-                ->commutesAtQubit(*current->getOperation(), qubit))) {
+           !currentGroup[qubit][0]->getOperation()->commutesAtQubit(
+               *current->getOperation(), qubit))) {
         // here: the current operation does not commute with the current
         // group members and is not the inverse of the lookahead
         // --> start a new group
@@ -233,8 +233,8 @@ auto Layer::getExecutablesOfType(const OpType opType,
     -> std::vector<std::shared_ptr<DAGVertex>> {
   std::vector<std::shared_ptr<DAGVertex>> executables;
   for (const auto& vertex : executableSet) {
-    if ((vertex->getOperation())->getType() == opType and
-        (vertex->getOperation())->getNcontrols() == nControls) {
+    if (vertex->getOperation()->getType() == opType and
+        vertex->getOperation()->getNcontrols() == nControls) {
       executables.emplace_back(vertex);
     }
   }

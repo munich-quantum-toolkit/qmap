@@ -206,17 +206,15 @@ std::string printPi(std::vector<std::uint16_t>& pi) {
 /// architecture
 void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
          const CouplingMap& rcm) {
-  for (auto edge : rcm) {
+  for (const auto edge : rcm) {
     if (edge.first == current) {
       if (!visited.contains(edge.second)) {
         visited.insert(edge.second);
         dfs(edge.second, visited, rcm);
       }
-    } else if (edge.second == current) {
-      if (!visited.contains(edge.first)) {
-        visited.insert(edge.first);
-        dfs(edge.first, visited, rcm);
-      }
+    } else if (edge.second == current && !visited.contains(edge.first)) {
+      visited.insert(edge.first);
+      dfs(edge.first, visited, rcm);
     }
   }
 }

@@ -51,6 +51,7 @@ constexpr qc::OpType SWAP = qc::OpType::SWAP;
 constexpr double FLOAT_TOLERANCE = 1e-6;
 
 namespace {
+
 /**
  * @brief Get id of the final node in a given layer from a data log.
  */
@@ -66,7 +67,7 @@ std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath,
                              "layer_" + std::to_string(layer) + ".json");
   }
   const auto layerJson = nlohmann::basic_json<>::parse(layerFile);
-  if (layerJson.find("final_node_id") == layerJson.end()) {
+  if (!layerJson.contains("final_node_id")) {
     throw std::runtime_error("Missing key \"final_node_id\" in " +
                              dataLoggingPath + "layer_" +
                              std::to_string(layer) + ".json");
@@ -205,7 +206,7 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   if (nodeId >= nodes.size() || nodes[nodeId].id != nodeId) {
     throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
   }
-  auto* node = &nodes[nodeId];
+  const auto* node = &nodes[nodeId];
   while (node->parent != node->id) {
     path.push_back(node->id);
     if (node->parent >= nodes.size() ||
@@ -219,7 +220,6 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   path.push_back(node->id);
   return path;
 }
-} // namespace
 
 class TestHeuristics
     : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
@@ -237,10 +237,6 @@ protected:
   Architecture ibmQX5; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
   Configuration settings;
-
-  static const std::unordered_map<std::string,
-                                  std::vector<std::vector<std::int16_t>>>
-      OPTIMAL_SOLUTIONS;
 
   void SetUp() override {
     std::string cn = std::get<1>(GetParam());
@@ -273,288 +269,6 @@ protected:
   }
 };
 
-const std::unordered_map<std::string, std::vector<std::vector<std::int16_t>>>
-    TestHeuristics::OPTIMAL_SOLUTIONS{
-        {"3_17_13",
-         {{0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {1, 0, 2},
-          {1, 2, 0},
-          {1, 2, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 0, 1},
-          {2, 1, 0},
-          {1, 0, 2},
-          {1, 2, 0},
-          {1, 2, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
-          {2, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
-          {0, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2},
-          {0, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2},
-          {0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2},
-          {2, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0}}},
-        {"ex-1_166",
-         {{0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {1, 0, 2},
-          {1, 0, 2},
-          {1, 2, 0},
-          {1, 2, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {0, 1, 2},
-          {0, 1, 2},
-          {1, 0, 2},
-          {1, 0, 2},
-          {0, 1, 2},
-          {1, 0, 2},
-          {1, 0, 2},
-          {1, 2, 0},
-          {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0}}},
-        {"ham3_102",
-         {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2},
-          {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {1, 0, 2}, {1, 0, 2},
-          {1, 2, 0}, {1, 2, 0}, {2, 1, 0}, {2, 1, 0}, {2, 0, 1}, {2, 1, 0},
-          {0, 1, 2}, {1, 0, 2}, {1, 0, 2}, {0, 1, 2}, {1, 0, 2}, {1, 0, 2},
-          {1, 2, 0}, {1, 2, 0}, {1, 2, 0}}},
-        {"miller_11",
-         {{0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 1, 2},
-          {1, 0, 2},
-          {1, 2, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {2, 1, 0},
-          {0, 1, 2},
-          {0, 1, 2},
-          {0, 2, 1},
-          {0, 2, 1},
-          {0, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1},
-          {0, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1},
-          {2, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1},
-          {2, 0, 1},
-          {2, 1, 0},
-          {2, 1, 0},
-          {1, 2, 0},
-          {1, 2, 0},
-          {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
-          {1, 2, 0},
-          {1, 2, 0},
-          {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
-          {1, 2, 0},
-          {1, 2, 0},
-          {2, 1, 0},
-          {1, 2, 0},
-          {1, 2, 0},
-          {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
-          {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0}}},
-        {"4gt11_84", {{0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                      {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                      {2, 1, 0, 3, 4},  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                      {1, 0, 2, -1, 4}, {1, 2, 0, -1, 4}, {2, 1, 0, -1, 4},
-                      {2, 0, 1, -1, 4}, {4, 2, 1, 0, 3},  {0, 1, 2, -1, 4},
-                      {0, 1, 2, -1, 4}, {0, 2, 1, -1, 4}, {0, 2, 1, -1, 4},
-                      {2, 0, 1, -1, 4}, {2, 0, 1, -1, 4}, {2, 1, 0, 3, 4}}},
-        {"4mod5-v0_20",
-         {{0, 2, 1, 3, 4}, {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4}, {0, 2, 4, 3, 1},
-          {0, 4, 2, 3, 1}, {0, 4, 1, 3, 2}, {0, 4, 2, 3, 1}, {0, 4, 2, 3, 1},
-          {4, 0, 2, 1, 3}, {4, 2, 0, 1, 3}, {4, 1, 0, 2, 3}, {4, 2, 0, 1, 3},
-          {4, 2, 0, 1, 3}, {4, 1, 0, 2, 3}, {4, 2, 0, 1, 3}, {4, 2, 0, 1, 3},
-          {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4}, {0, 2, 3, 1, 4}, {0, 3, 2, 4, 1},
-          {0, 3, 4, 2, 1}, {0, 3, 4, 1, 2}, {0, 3, 4, 2, 1}, {0, 3, 4, 2, 1}}},
-        {"mod5d1_63",
-         {{0, 2, 1, 3, 4},
-          {0, 2, 1, 3, 4},
-          {1, 2, 0, 3, 4},
-          {1, 2, 0, 3, 4},
-          {1, 2, 0, 3, 4},
-          {1, 2, 4, 3, 0},
-          {4, 2, 1, 3, 0},
-          {4, 2, 0, 3, 1},
-          {4, 2, 1, 3, 0},
-          {4, 2, 1, 3, 0},
-          {4, 2, 0, 3, 1},
-          {4, 0, 2, 1, 3},
-          {4, 1, 2, 0, 3},
-          {4, 0, 2, 1, 3},
-          {4, 0, 2, 1, 3},
-          {4, 0, 2, 1, 3},
-          {4, 1, 2, 0, 3},
-          {4, 1, 2, 0, 3},
-          {4, 0, 2, 1, 3},
-          {4, 1, 2, 0, 3},
-          {4, 1, 2, 0, 3},
-          {4, 0, 2, 1, 3},
-          {0, 2, 1, 3, 4},
-          {0, 2, 3, 1, 4},
-          {2, 3, 1, 0, 4},
-          {2, 3, 1, 0, 4},
-          {2, 3, 1, 0, 4},
-          {2, 3, 1, 4, 0},
-          {2, 3, 4, 1, 0},
-          {2, 3, 4, 0, 1},
-          {2, 3, 4, 1, 0},
-          {2, 3, 4, 1, 0},
-          {-1, 3, 1, 2, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4}}},
-        {"ising_model_10",
-         {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}},
-        {"rd73_140",
-         {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-          {0, 2, 3, 4, 5, 1, 7, 6, 8, 9},
-          {2, 3, 4, 0, 7, 5, 1, 6, 8, 9},
-          {2, 3, 4, 0, 1, 7, 5, 6, 8, 9},
-          {2, 3, 4, 0, 1, 7, 5, 6, 8, 9},
-          {2, 3, 4, 0, 7, 1, 5, 6, 8, 9},
-          {2, 7, 3, 4, 0, 1, 5, 6, 8, 9},
-          {2, 3, 4, 0, 7, 8, 1, 5, 6, 9},
-          {3, 4, 2, 8, 0, 7, 1, 5, 6, 9},
-          {3, 4, 8, 2, 7, 0, 1, 5, 6, 9},
-          {3, 4, 8, 7, 2, 0, 1, 5, 6, 9},
-          {3, 4, 8, 2, 7, 0, 1, 5, 6, 9},
-          {3, 8, 4, 2, 7, 0, 1, 5, 6, 9},
-          {3, 8, 9, 4, 7, 2, 1, 5, 6, -1, -1, -1, 0},
-          {8, 3, 9, 4, 7, 2, 1, 5, 6, -1, -1, -1, 0},
-          {8, 3, 9, 4, 7, 1, 2, 5, 6, -1, -1, -1, 0},
-          {8, 9, 3, 4, 7, 1, 2, 5, 6, -1, -1, -1, 0},
-          {8, 9, 3, 4, 7, 2, 1, 5, 6, -1, -1, -1, 0},
-          {9, 8, 3, 4, 7, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 4, 3, 7, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 7, 4, 3, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 3, 7, 4, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 3, 7, 4, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 7, 3, 4, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 3, 7, 4, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 4, 3, 7, 1, 2, 5, 6, -1, -1, -1, 0},
-          {9, 8, 4, 3, 2, 7, 1, 5, 6, -1, -1, -1, 0},
-          {9, 8, -1, 2, 3, 7, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
-          {9, -1, 8, 2, 7, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
-          {4, -1, 8, 2, 3, 7, 1, 5, 6, -1, -1, -1, 0, -1, -1, 9},
-          {4, -1, 8, 2, 3, 7, 1, 5, 6, -1, -1, -1, 0, -1, -1, 9},
-          {4, 8, -1, 2, 7, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 9},
-          {9, 8, -1, 7, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, 4},
-          {9, 8, 7, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, 4},
-          {9, 7, 8, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
-          {9, 8, 7, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
-          {9, 8, 7, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
-          {9, 7, 8, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
-          {4, 7, 8, 5, -1, 2, 3, 1, 6, -1, -1, -1, 0, -1, -1, 9},
-          {9, 7, 5, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 8, 7, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 4},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 4, 5, 7, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 8, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 7},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
-          {9, 5, 8, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 7},
-          {5, 9, 8, 6, 4, 3, -1, 2, 1, -1, -1, -1, 0, -1, -1, 7},
-          {7, 9, 8, 6, 4, 3, -1, 2, 1, -1, -1, -1, 0, 5},
-          {-1, 9, 6, 8, 4, 3, -1, 2, 1, -1, -1, -1, 0, -1, 5, 7},
-          {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 7, 5},
-          {-1, 9, 8, 6, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 5, 7},
-          {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 5, 7},
-          {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 7, 5},
-          {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 4, 5},
-          {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 4, 5},
-          {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
-          {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 6, 7, 5},
-          {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
-          {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
-          {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 6, 7, 5},
-          {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5}}}};
-
 INSTANTIATE_TEST_SUITE_P(
     Heuristic, TestHeuristics,
     testing::Combine(
@@ -582,6 +296,330 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST_P(TestHeuristics, HeuristicProperties) {
+  static const std::unordered_map<std::string,
+                                  std::vector<std::vector<std::int16_t>>>
+      OPTIMAL_SOLUTIONS{
+          {
+              "3_17_13",
+              {
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {1, 0, 2},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {1, 0, 2},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+                  {2, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+                  {0, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2},
+                  {0, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2},
+                  {0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2},
+                  {2, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+              },
+          },
+          {
+              "ex-1_166",
+              {
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {1, 0, 2},
+                  {1, 0, 2},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {1, 0, 2},
+                  {1, 0, 2},
+                  {0, 1, 2},
+                  {1, 0, 2},
+                  {1, 0, 2},
+                  {1, 2, 0},
+                  {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+              },
+          },
+          {
+              "ham3_102",
+              {
+                  {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2},
+                  {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2},
+                  {1, 0, 2}, {1, 0, 2}, {1, 2, 0}, {1, 2, 0}, {2, 1, 0},
+                  {2, 1, 0}, {2, 0, 1}, {2, 1, 0}, {0, 1, 2}, {1, 0, 2},
+                  {1, 0, 2}, {0, 1, 2}, {1, 0, 2}, {1, 0, 2}, {1, 2, 0},
+                  {1, 2, 0}, {1, 2, 0},
+              },
+          },
+          {
+              "miller_11",
+              {
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {1, 0, 2},
+                  {1, 2, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {0, 1, 2},
+                  {0, 1, 2},
+                  {0, 2, 1},
+                  {0, 2, 1},
+                  {0, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1},
+                  {0, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1},
+                  {2, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1},
+                  {2, 0, 1},
+                  {2, 1, 0},
+                  {2, 1, 0},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {2, 1, 0},
+                  {1, 2, 0},
+                  {1, 2, 0},
+                  {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+                  {1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0},
+              },
+          },
+          {
+              "4gt11_84",
+              {
+                  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
+                  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
+                  {2, 1, 0, 3, 4},  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
+                  {1, 0, 2, -1, 4}, {1, 2, 0, -1, 4}, {2, 1, 0, -1, 4},
+                  {2, 0, 1, -1, 4}, {4, 2, 1, 0, 3},  {0, 1, 2, -1, 4},
+                  {0, 1, 2, -1, 4}, {0, 2, 1, -1, 4}, {0, 2, 1, -1, 4},
+                  {2, 0, 1, -1, 4}, {2, 0, 1, -1, 4}, {2, 1, 0, 3, 4},
+              },
+          },
+          {
+              "4mod5-v0_20",
+              {
+                  {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4},
+                  {0, 2, 4, 3, 1}, {0, 4, 2, 3, 1}, {0, 4, 1, 3, 2},
+                  {0, 4, 2, 3, 1}, {0, 4, 2, 3, 1}, {4, 0, 2, 1, 3},
+                  {4, 2, 0, 1, 3}, {4, 1, 0, 2, 3}, {4, 2, 0, 1, 3},
+                  {4, 2, 0, 1, 3}, {4, 1, 0, 2, 3}, {4, 2, 0, 1, 3},
+                  {4, 2, 0, 1, 3}, {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4},
+                  {0, 2, 3, 1, 4}, {0, 3, 2, 4, 1}, {0, 3, 4, 2, 1},
+                  {0, 3, 4, 1, 2}, {0, 3, 4, 2, 1}, {0, 3, 4, 2, 1},
+              },
+          },
+          {
+              "mod5d1_63",
+              {
+                  {0, 2, 1, 3, 4},
+                  {0, 2, 1, 3, 4},
+                  {1, 2, 0, 3, 4},
+                  {1, 2, 0, 3, 4},
+                  {1, 2, 0, 3, 4},
+                  {1, 2, 4, 3, 0},
+                  {4, 2, 1, 3, 0},
+                  {4, 2, 0, 3, 1},
+                  {4, 2, 1, 3, 0},
+                  {4, 2, 1, 3, 0},
+                  {4, 2, 0, 3, 1},
+                  {4, 0, 2, 1, 3},
+                  {4, 1, 2, 0, 3},
+                  {4, 0, 2, 1, 3},
+                  {4, 0, 2, 1, 3},
+                  {4, 0, 2, 1, 3},
+                  {4, 1, 2, 0, 3},
+                  {4, 1, 2, 0, 3},
+                  {4, 0, 2, 1, 3},
+                  {4, 1, 2, 0, 3},
+                  {4, 1, 2, 0, 3},
+                  {4, 0, 2, 1, 3},
+                  {0, 2, 1, 3, 4},
+                  {0, 2, 3, 1, 4},
+                  {2, 3, 1, 0, 4},
+                  {2, 3, 1, 0, 4},
+                  {2, 3, 1, 0, 4},
+                  {2, 3, 1, 4, 0},
+                  {2, 3, 4, 1, 0},
+                  {2, 3, 4, 0, 1},
+                  {2, 3, 4, 1, 0},
+                  {2, 3, 4, 1, 0},
+                  {-1, 3, 1, 2, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4},
+              },
+          },
+          {
+              "ising_model_10",
+              {
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+              },
+          },
+          {
+              "rd73_140",
+              {
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                  {0, 2, 3, 4, 5, 1, 7, 6, 8, 9},
+                  {2, 3, 4, 0, 7, 5, 1, 6, 8, 9},
+                  {2, 3, 4, 0, 1, 7, 5, 6, 8, 9},
+                  {2, 3, 4, 0, 1, 7, 5, 6, 8, 9},
+                  {2, 3, 4, 0, 7, 1, 5, 6, 8, 9},
+                  {2, 7, 3, 4, 0, 1, 5, 6, 8, 9},
+                  {2, 3, 4, 0, 7, 8, 1, 5, 6, 9},
+                  {3, 4, 2, 8, 0, 7, 1, 5, 6, 9},
+                  {3, 4, 8, 2, 7, 0, 1, 5, 6, 9},
+                  {3, 4, 8, 7, 2, 0, 1, 5, 6, 9},
+                  {3, 4, 8, 2, 7, 0, 1, 5, 6, 9},
+                  {3, 8, 4, 2, 7, 0, 1, 5, 6, 9},
+                  {3, 8, 9, 4, 7, 2, 1, 5, 6, -1, -1, -1, 0},
+                  {8, 3, 9, 4, 7, 2, 1, 5, 6, -1, -1, -1, 0},
+                  {8, 3, 9, 4, 7, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {8, 9, 3, 4, 7, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {8, 9, 3, 4, 7, 2, 1, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 3, 4, 7, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 4, 3, 7, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 7, 4, 3, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 3, 7, 4, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 3, 7, 4, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 7, 3, 4, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 3, 7, 4, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 4, 3, 7, 1, 2, 5, 6, -1, -1, -1, 0},
+                  {9, 8, 4, 3, 2, 7, 1, 5, 6, -1, -1, -1, 0},
+                  {9, 8, -1, 2, 3, 7, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {9, -1, 8, 2, 7, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {4, -1, 8, 2, 3, 7, 1, 5, 6, -1, -1, -1, 0, -1, -1, 9},
+                  {4, -1, 8, 2, 3, 7, 1, 5, 6, -1, -1, -1, 0, -1, -1, 9},
+                  {4, 8, -1, 2, 7, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 9},
+                  {9, 8, -1, 7, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, 4},
+                  {9, 8, 7, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, 4},
+                  {9, 7, 8, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {9, 8, 7, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {9, 8, 7, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {9, 7, 8, -1, 2, 3, 1, 5, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {4, 7, 8, 5, -1, 2, 3, 1, 6, -1, -1, -1, 0, -1, -1, 9},
+                  {9, 7, 5, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 8, 7, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 4},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 4, 5, 7, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 8, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 7},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 7, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 8},
+                  {9, 5, 8, 4, 3, -1, 2, 1, 6, -1, -1, -1, 0, -1, -1, 7},
+                  {5, 9, 8, 6, 4, 3, -1, 2, 1, -1, -1, -1, 0, -1, -1, 7},
+                  {7, 9, 8, 6, 4, 3, -1, 2, 1, -1, -1, -1, 0, 5},
+                  {-1, 9, 6, 8, 4, 3, -1, 2, 1, -1, -1, -1, 0, -1, 5, 7},
+                  {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 7, 5},
+                  {-1, 9, 8, 6, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 5, 7},
+                  {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 5, 7},
+                  {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 4, 7, 5},
+                  {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 4, 5},
+                  {-1, 9, 6, 8, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 4, 5},
+                  {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
+                  {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 6, 7, 5},
+                  {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
+                  {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
+                  {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 6, 7, 5},
+                  {-1, 9, 8, 4, -1, 3, -1, 2, 1, -1, -1, -1, 0, 7, 6, 5},
+              },
+          },
+  };
+
   EXPECT_TRUE(!isAdmissible(settings.heuristic) ||
               isPrincipallyAdmissible(settings.heuristic))
       << "Admissible heuristics are by definition also principally admissible: "
@@ -656,7 +694,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
 
   for (std::size_t i = 0; i < allNodes.size(); ++i) {
     auto& nodes = allNodes.at(i);
-    auto& finalSolutionId = finalSolutionIds.at(i);
+    const auto& finalSolutionId = finalSolutionIds.at(i);
 
     if (finalSolutionId >= nodes.size()) {
       FAIL() << "Final solution id " << finalSolutionId << " out of bounds "
@@ -675,8 +713,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       // for principally admissible heuristics all nodes on the optimal
       // solution path should have
       // node.costFixed+node.costHeur <= finalSolutionNode.costFixed
-      auto solutionPath = getPathToRoot(nodes, finalSolutionId);
-      for (auto nodeId : solutionPath) {
+      const auto solutionPath = getPathToRoot(nodes, finalSolutionId);
+      for (const auto nodeId : solutionPath) {
         if (nodes.at(nodeId).id != nodeId) {
           throw std::runtime_error("Invalid node id " + std::to_string(nodeId) +
                                    " " + layerNames.at(i));
@@ -727,18 +765,16 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         continue;
       }
 
-      if (isNonDecreasing(settings.heuristic)) {
-        if (node.parent != node.id) {
-          if (node.parent >= nodes.size() ||
-              nodes.at(node.parent).id != node.parent) {
-            FAIL() << "Invalid parent id " << node.parent << " for node "
-                   << node.id << " " << layerNames.at(i);
-          }
-          EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
-              << "Heuristic " << toString(settings.heuristic)
-              << " does not result in non-decreasing cost estimation "
-              << layerNames.at(i) << " in node " << node.id;
+      if (isNonDecreasing(settings.heuristic) && node.parent != node.id) {
+        if (node.parent >= nodes.size() ||
+            nodes.at(node.parent).id != node.parent) {
+          FAIL() << "Invalid parent id " << node.parent << " for node "
+                 << node.id << " " << layerNames.at(i);
         }
+        EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
+            << "Heuristic " << toString(settings.heuristic)
+            << " does not result in non-decreasing cost estimation "
+            << layerNames.at(i) << " in node " << node.id;
       }
 
       EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE)
@@ -760,9 +796,9 @@ TEST_P(TestHeuristics, HeuristicProperties) {
           // since reachability in a directed tree is equivalent to the being
           // on the same path to the root, one can also check that all nodes on
           // the path to the root from any goal node fulfill this condition
-          auto path = getPathToRoot(nodes, node.id);
-          for (auto nodeId : path) {
-            auto& n = nodes.at(nodeId);
+          const auto path = getPathToRoot(nodes, node.id);
+          for (const auto nodeId : path) {
+            const auto& n = nodes.at(nodeId);
             EXPECT_LE(n.getTotalCost(), node.costFixed)
                 << "Heuristic " << toString(settings.heuristic)
                 << " is not admissible " << layerNames.at(i) << " in node "
@@ -783,8 +819,10 @@ TEST(Functionality, HeuristicBenchmark) {
     0---1
   */
   Architecture architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
-                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+      {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4},
+  };
   architecture.loadCouplingMap(5, cm);
 
   qc::QuantumComputation qc{5, 5};
@@ -1234,7 +1272,7 @@ TEST(Functionality, DataLogger) {
     }
     std::vector<std::pair<std::uint16_t, std::uint16_t>> swaps{};
     swaps.reserve(finalSolutionNode.swaps.size());
-    for (auto& swap : finalSolutionNode.swaps) {
+    for (const auto& swap : finalSolutionNode.swaps) {
       swaps.emplace_back(swap.first, swap.second);
     }
     EXPECT_EQ(layerJson["final_layout"], layout);
@@ -1291,13 +1329,20 @@ TEST(Functionality, terminationStrategyFromString) {
       terminationStrategies = {
           {"none", EarlyTermination::None},
           {"expanded_nodes", EarlyTermination::ExpandedNodes},
-          {"expanded_nodes_after_first_solution",
-           EarlyTermination::ExpandedNodesAfterFirstSolution},
-          {"expanded_nodes_after_current_optimal_solution",
-           EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution},
+          {
+              "expanded_nodes_after_first_solution",
+              EarlyTermination::ExpandedNodesAfterFirstSolution,
+          },
+          {
+              "expanded_nodes_after_current_optimal_solution",
+              EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution,
+          },
           {"solution_nodes", EarlyTermination::SolutionNodes},
-          {"solution_nodes_after_current_optimal_solution",
-           EarlyTermination::SolutionNodesAfterCurrentOptimalSolution}};
+          {
+              "solution_nodes_after_current_optimal_solution",
+              EarlyTermination::SolutionNodesAfterCurrentOptimalSolution,
+          },
+  };
 
   for (const auto& [str, termination] : terminationStrategies) {
     EXPECT_EQ(earlyTerminationFromString(str), termination);
@@ -1313,8 +1358,10 @@ TEST(Functionality, earlyTermination) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
-                          {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+      {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5},
+  };
   Architecture::Properties props{};
   props.setSingleQubitErrorRate(0, "x", 0.9);
   props.setSingleQubitErrorRate(1, "x", 0.5);
@@ -1323,7 +1370,7 @@ TEST(Functionality, earlyTermination) {
   props.setSingleQubitErrorRate(4, "x", 0.5);
   props.setSingleQubitErrorRate(5, "x", 0.5);
   props.setSingleQubitErrorRate(6, "x", 0.1);
-  for (auto edge : cm) {
+  for (const auto edge : cm) {
     props.setTwoQubitErrorRate(edge.first, edge.second, 0.01, "cx");
   }
   Architecture arch{7, cm, props};
@@ -1428,12 +1475,14 @@ TEST(Functionality, InitialLayoutDump) {
   qc.cx(8, 7);
 
   // subgraph of IBM's Brisbane Backend
-  Architecture arch{27U,
-                    {{1, 0},   {2, 1},   {3, 2},   {4, 3},   {4, 5},   {4, 15},
-                     {6, 5},   {6, 7},   {7, 8},   {8, 9},   {10, 9},  {10, 11},
-                     {11, 12}, {12, 17}, {13, 12}, {14, 0},  {14, 18}, {15, 22},
-                     {16, 8},  {16, 26}, {18, 19}, {20, 19}, {21, 20}, {21, 22},
-                     {22, 23}, {24, 23}, {25, 24}, {26, 25}}};
+  Architecture arch{
+      27U,
+      {
+          {1, 0},   {2, 1},   {3, 2},   {4, 3},   {4, 5},   {4, 15},  {6, 5},
+          {6, 7},   {7, 8},   {8, 9},   {10, 9},  {10, 11}, {11, 12}, {12, 17},
+          {13, 12}, {14, 0},  {14, 18}, {15, 22}, {16, 8},  {16, 26}, {18, 19},
+          {20, 19}, {21, 20}, {21, 22}, {22, 23}, {24, 23}, {25, 24}, {26, 25},
+      }};
 
   Configuration config{};
   config.method = Method::Heuristic;
@@ -1445,7 +1494,7 @@ TEST(Functionality, InitialLayoutDump) {
   std::stringstream qasmStream{};
   mapper.dumpResult(qasmStream);
   const std::string qasm = qasmStream.str();
-  auto qcMapped = qasm3::Importer::imports(qasm);
+  const auto qcMapped = qasm3::Importer::imports(qasm);
 
   qasmStream = std::stringstream(qasm);
   std::string line;
@@ -1509,7 +1558,7 @@ protected:
 TEST_F(LayeringTest, Disjoint2qBlocks) {
   settings.layering = Layering::Disjoint2qBlocks;
   mapper->map(settings);
-  auto result = mapper->getResults();
+  const auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 2);
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
@@ -1529,7 +1578,7 @@ TEST_F(LayeringTest, Disjoint2qBlocks) {
 TEST_F(LayeringTest, DisjointQubits) {
   settings.layering = Layering::DisjointQubits;
   mapper->map(settings);
-  auto result = mapper->getResults();
+  const auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 3);
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
@@ -1549,7 +1598,7 @@ TEST_F(LayeringTest, DisjointQubits) {
 TEST_F(LayeringTest, IndividualGates) {
   settings.layering = Layering::IndividualGates;
   mapper->map(settings);
-  auto result = mapper->getResults();
+  const auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 6);
   // get mapped circuit
   auto qcMapped = qc::QuantumComputation();
@@ -1853,7 +1902,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   // 0 --e1-- 1 --e3-- 2 --e5-- 3 --e0-- 4 --e0-- 5
   // e5       e5       e5       e4       e4       e1
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
   /*
   expected output (order of gates may vary):
@@ -1877,8 +1926,10 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
 
 TEST(HeuristicTestFidelity, QubitRideAlong) {
   Architecture architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
-                          {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5}};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+      {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5},
+  };
   architecture.loadCouplingMap(7, cm);
 
   const double e5 = 0.99;
@@ -1934,7 +1985,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
   /*
   expected output (order of gates may vary):
@@ -1995,7 +2046,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
   EXPECT_EQ(result.output.swaps, 1);
 
@@ -2010,13 +2061,14 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   const CouplingMap cm = {
       {0, 1}, {1, 0}, {1, 2},  {2, 1},  {2, 3},   {3, 2},
 
-      {0, 4}, {4, 0}, {1, 5},  {5, 1},  {2, 6},   {6, 2},  {3, 7},  {7, 3},
+      {0, 4}, {4, 0}, {1, 5},  {5, 1},  {2, 6},   {6, 2},   {3, 7},  {7, 3},
 
       {4, 5}, {5, 4}, {5, 6},  {6, 5},  {6, 7},   {7, 6},
 
-      {4, 8}, {8, 4}, {5, 9},  {9, 5},  {6, 10},  {10, 6}, {7, 11}, {11, 7},
+      {4, 8}, {8, 4}, {5, 9},  {9, 5},  {6, 10},  {10, 6},  {7, 11}, {11, 7},
 
-      {8, 9}, {9, 8}, {9, 10}, {10, 9}, {10, 11}, {11, 10}};
+      {8, 9}, {9, 8}, {9, 10}, {10, 9}, {10, 11}, {11, 10},
+  };
   architecture.loadCouplingMap(12, cm);
 
   const double e5 = 0.99;
@@ -2116,7 +2168,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 
-  auto& result = mapper->getResults();
+  const auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 5); // originally 1 but split into 5 during A*
   /*
   expected output:
@@ -2178,8 +2230,11 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
 
   // check data log
   const std::array<std::string, 4> layerNodeFilePaths = {
-      "nodes_layer_0.presplit-0.csv", "nodes_layer_0.presplit-1.csv",
-      "nodes_layer_1.presplit-0.csv", "nodes_layer_3.presplit-0.csv"};
+      "nodes_layer_0.presplit-0.csv",
+      "nodes_layer_0.presplit-1.csv",
+      "nodes_layer_1.presplit-0.csv",
+      "nodes_layer_3.presplit-0.csv",
+  };
   for (const auto& path : layerNodeFilePaths) {
     auto layerNodeFile = std::ifstream(settings.dataLoggingPath + path);
     if (!layerNodeFile.is_open()) {
@@ -2255,3 +2310,5 @@ TEST(HeuristicDebug, MoreThan128Qubits) {
   mapper->map(settings);
   mapper->printResult(std::cout);
 }
+
+} // namespace

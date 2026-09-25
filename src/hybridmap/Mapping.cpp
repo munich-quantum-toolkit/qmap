@@ -53,7 +53,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
   // make hardware graph
   std::unordered_map<HwQubit, HwQubitsVector> hwGraph;
   for (HwQubit i = 0; i < hwQubits.getNumQubits(); ++i) {
-    auto neighbors = hwQubits.getNearbyQubits(i);
+    const auto neighbors = hwQubits.getNearbyQubits(i);
     hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
   for (auto& neighbors : hwGraph | std::views::values) {
@@ -76,9 +76,9 @@ std::vector<HwQubit> Mapping::graphMatching() {
     std::unordered_map<qc::Qubit, double> weightMap;
     for (const auto& opPtr : dag[qubit]) {
       const auto* op = opPtr->get();
-      auto usedQubits = op->getUsedQubits();
+      const auto usedQubits = op->getUsedQubits();
       if (usedQubits.size() > 1) {
-        for (auto i : usedQubits) {
+        for (const auto i : usedQubits) {
           if (i != qubit) {
             weightMap[i] += 1.0;
           }
@@ -118,7 +118,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
   size_t nMapped = 0;
   bool firstCenter = true;
   while (!circGraphQueue.empty() && nMapped != dag.size()) {
-    auto qi = circGraphQueue.front();
+    const auto qi = circGraphQueue.front();
     HwQubit qI = invalidHw;
     //  center mapping
     if (qubitIndices[qi] == invalidHw) {
@@ -139,8 +139,8 @@ std::vector<HwQubit> Mapping::graphMatching() {
           }
           auto weightDistance = 0.0;
           for (const auto& qnPair : circGraph[qi]) {
-            auto qn = qnPair.first;
-            auto qnWeight = qnPair.second;
+            const auto qn = qnPair.first;
+            const auto qnWeight = qnPair.second;
             HwQubit const qN = qubitIndices[qn];
             if (qN == invalidHw) {
               continue;
@@ -165,7 +165,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
       qI = qubitIndices[qi];
     }
     // neighbor mapping
-    for (auto& key : circGraph[qi] | std::views::keys) {
+    for (const auto& key : circGraph[qi] | std::views::keys) {
       auto const qn = key;
       if (qubitIndices[qn] != invalidHw) {
         continue;

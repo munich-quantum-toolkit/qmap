@@ -32,7 +32,7 @@ namespace nb = nanobind;
 using namespace nb::literals;
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
-void registerZoned(nb::module_& m) {
+void registerZoned(const nb::module_& m) {
   nb::module_::import_("mqt.core.ir");
 
   nb::class_<na::zoned::Architecture> architecture(
@@ -134,11 +134,15 @@ Returns:
           config.layoutSynthesizerConfig.placerConfig = {
               .useWindow = useWindow,
               .windowSize = windowSize,
-              .dynamicPlacement = dynamicPlacement};
+              .dynamicPlacement = dynamicPlacement,
+          };
           config.layoutSynthesizerConfig.routerConfig = {
-              .method = routingMethod, .preferSplit = preferSplit};
-          config.codeGeneratorConfig = {.warnUnsupportedGates =
-                                            warnUnsupportedGates};
+              .method = routingMethod,
+              .preferSplit = preferSplit,
+          };
+          config.codeGeneratorConfig = {
+              .warnUnsupportedGates = warnUnsupportedGates,
+          };
           new (self) na::zoned::RoutingAgnosticCompiler{arch, config};
         },
         nb::keep_alive<1, 2>(), "arch"_a,
@@ -260,9 +264,12 @@ Returns:
               .queueCapacity = queueCapacity,
           };
           config.layoutSynthesizerConfig.routerConfig = {
-              .method = routingMethod, .preferSplit = preferSplit};
-          config.codeGeneratorConfig = {.warnUnsupportedGates =
-                                            warnUnsupportedGates};
+              .method = routingMethod,
+              .preferSplit = preferSplit,
+          };
+          config.codeGeneratorConfig = {
+              .warnUnsupportedGates = warnUnsupportedGates,
+          };
           new (self) na::zoned::RoutingAwareCompiler{arch, config};
         },
         nb::keep_alive<1, 2>(), "arch"_a,

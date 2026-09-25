@@ -75,8 +75,8 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       gateTimes.emplace(key, value);
     }
     // check if cz and h gates are present (require explicit fallback)
-    auto ensureGateWithFallback = [](auto& map, const std::string& gate,
-                                     const std::string& fallback) {
+    const auto ensureGateWithFallback = [](auto& map, const std::string& gate,
+                                           const std::string& fallback) {
       if (map.contains(gate)) {
         return;
       }
@@ -115,9 +115,12 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     // compute values for Bridge gate
     // precompute bridge circuits
-    const auto maxIdx =
-        std::min({bridgeCircuits.czDepth.size(), bridgeCircuits.hDepth.size(),
-                  bridgeCircuits.czs.size(), bridgeCircuits.hs.size()});
+    const auto maxIdx = std::min({
+        bridgeCircuits.czDepth.size(),
+        bridgeCircuits.hDepth.size(),
+        bridgeCircuits.czs.size(),
+        bridgeCircuits.hs.size(),
+    });
     for (size_t i = 3; i < std::min<std::size_t>(10, maxIdx); ++i) {
       qc::fp const bridgeGateTime =
           (static_cast<qc::fp>(bridgeCircuits.czDepth[i]) *
@@ -138,11 +141,13 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
       shuttlingAverageFidelities.emplace(naOpTypeFromString(key), value);
     }
-    parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
+    parameters.shuttlingAverageFidelities =
+        std::move(shuttlingAverageFidelities);
 
     parameters.decoherenceTimes = Parameters::DecoherenceTimes{
         .t1 = jsonDataParameters["decoherenceTimes"]["t1"],
-        .t2 = jsonDataParameters["decoherenceTimes"]["t2"]};
+        .t2 = jsonDataParameters["decoherenceTimes"]["t2"],
+    };
 
   } catch (std::exception& e) {
     throw std::runtime_error("Could not parse JSON file " + filename + ": " +
@@ -159,10 +164,11 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 void NeutralAtomArchitecture::createCoordinates() {
   coordinates.reserve(properties.getNpositions());
   for (std::uint16_t i = 0; i < properties.getNpositions(); i++) {
-    coordinates.emplace_back(
-        Location{.x = static_cast<double>(i % properties.getNcolumns()),
-                 // NOLINTNEXTLINE(bugprone-integer-division)
-                 .y = static_cast<double>(i / properties.getNcolumns())});
+    coordinates.emplace_back(Location{
+        .x = static_cast<double>(i % properties.getNcolumns()),
+        // NOLINTNEXTLINE(bugprone-integer-division)
+        .y = static_cast<double>(i / properties.getNcolumns()),
+    });
   }
 }
 NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
@@ -343,11 +349,11 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   std::string opName;
   const auto nQubits = op->getNqubits();
   for (size_t i = 1; i < nQubits; ++i) {
-    opName += "c";
+    opName += 'c';
   }
   if (op->getType() == qc::OpType::P || op->getType() == qc::OpType::RZ) {
     // use time of theta = pi and linearly scale
-    opName += "z";
+    opName += 'z';
     auto param = std::abs(op->getParameter().back());
     constexpr auto twoPi = 2 * std::numbers::pi_v<qc::fp>;
     param = std::fmod(param, twoPi);
@@ -372,7 +378,7 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
   std::string opName;
   const auto nQubits = op->getNqubits();
   for (size_t i = 1; i < nQubits; ++i) {
-    opName += "c";
+    opName += 'c';
   }
   opName += op->getName();
   return getGateAverageFidelity(opName);

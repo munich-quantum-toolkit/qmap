@@ -27,6 +27,8 @@
 
 namespace na {
 
+namespace {
+
 struct TestParams {
   std::string architecture;
   bool completeRemap;
@@ -155,4 +157,5 @@ TEST_F(TestHybridSynthesisMapper, Output) {
   std::filesystem::remove(qasmPath);
 }
 
+} // namespace
 } // namespace na
