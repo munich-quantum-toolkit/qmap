@@ -134,11 +134,15 @@ Returns:
           config.layoutSynthesizerConfig.placerConfig = {
               .useWindow = useWindow,
               .windowSize = windowSize,
-              .dynamicPlacement = dynamicPlacement};
+              .dynamicPlacement = dynamicPlacement,
+          };
           config.layoutSynthesizerConfig.routerConfig = {
-              .method = routingMethod, .preferSplit = preferSplit};
-          config.codeGeneratorConfig = {.warnUnsupportedGates =
-                                            warnUnsupportedGates};
+              .method = routingMethod,
+              .preferSplit = preferSplit,
+          };
+          config.codeGeneratorConfig = {
+              .warnUnsupportedGates = warnUnsupportedGates,
+          };
           new (self) na::zoned::RoutingAgnosticCompiler{arch, config};
         },
         nb::keep_alive<1, 2>(), "arch"_a,
@@ -260,9 +264,12 @@ Returns:
               .queueCapacity = queueCapacity,
           };
           config.layoutSynthesizerConfig.routerConfig = {
-              .method = routingMethod, .preferSplit = preferSplit};
-          config.codeGeneratorConfig = {.warnUnsupportedGates =
-                                            warnUnsupportedGates};
+              .method = routingMethod,
+              .preferSplit = preferSplit,
+          };
+          config.codeGeneratorConfig = {
+              .warnUnsupportedGates = warnUnsupportedGates,
+          };
           new (self) na::zoned::RoutingAwareCompiler{arch, config};
         },
         nb::keep_alive<1, 2>(), "arch"_a,

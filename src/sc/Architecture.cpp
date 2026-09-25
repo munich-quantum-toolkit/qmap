@@ -106,8 +106,9 @@ void Architecture::loadProperties(const std::string& filename) {
 }
 
 void Architecture::loadProperties(std::istream& is) {
-  static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3",
-                                          "rz", "sx", "x"};
+  static const auto SINGLE_QUBIT_GATES = {
+      "id", "u1", "u2", "u3", "rz", "sx", "x",
+  };
 
   properties.clear();
 
