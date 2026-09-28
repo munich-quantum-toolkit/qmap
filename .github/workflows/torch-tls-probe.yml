@@ -39,8 +39,10 @@ jobs:
             pytest==9.1.1 pytest-cov==7.1.0 pytest-sugar==1.1.1 pytest-xdist==3.8.0
 
       - name: Collect PyTorch environment
+        shell: bash
         run: |
-          .venv/bin/python -m torch.utils.collect_env
+          source .venv/bin/activate
+          curl -sL https://raw.githubusercontent.com/pytorch/pytorch/main/torch/utils/collect_env.py | python
           uv pip list --python .venv/bin/python
 
       - name: Probe imports without extra static TLS
