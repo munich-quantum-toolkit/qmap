@@ -1,24 +1,24 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11, !=3.14.1"
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
     "(python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -534,18 +534,18 @@ version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -1759,7 +1759,8 @@ dependencies = [
 
 [package.optional-dependencies]
 photonics = [
-    { name = "torch" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 visualization = [
     { name = "distinctipy" },
@@ -1780,34 +1781,20 @@ build = [
 ]
 dev = [
     { name = "cmake" },
-    { name = "distinctipy" },
-    { name = "ipywidgets" },
     { name = "mqt-core" },
     { name = "mqt-qcec" },
     { name = "nanobind" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "nox" },
-    { name = "plotly" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-sugar" },
     { name = "pytest-xdist" },
-    { name = "qiskit", extra = ["qasm3-import"] },
-    { name = "rustworkx", extra = ["all"] },
     { name = "scikit-build-core" },
-    { name = "torch" },
     { name = "vcs-versioning" },
-    { name = "walkerlayout" },
 ]
 docs = [
-    { name = "distinctipy" },
     { name = "furo" },
-    { name = "ipywidgets" },
     { name = "myst-nb" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "plotly" },
     { name = "qiskit", extra = ["qasm3-import", "visualization"] },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -1817,31 +1804,21 @@ docs = [
     { name = "sphinx-llm" },
     { name = "sphinxcontrib-bibtex" },
     { name = "sphinxext-opengraph" },
-    { name = "torch" },
-    { name = "walkerlayout" },
 ]
 evaluation = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pandas" },
     { name = "perceval-quandela" },
-    { name = "torch" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 test = [
-    { name = "distinctipy" },
-    { name = "ipywidgets" },
     { name = "mqt-qcec" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "plotly" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-sugar" },
     { name = "pytest-xdist" },
-    { name = "qiskit", extra = ["qasm3-import"] },
-    { name = "rustworkx", extra = ["all"] },
-    { name = "torch" },
-    { name = "walkerlayout" },
 ]
 
 [package.metadata]
@@ -1854,7 +1831,7 @@ requires-dist = [
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import"], specifier = ">=2.1,<3" },
     { name = "rustworkx", extras = ["all"], specifier = ">=0.16" },
-    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'photonics'", specifier = "!=2.14" },
+    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'photonics'", specifier = "!=2.14,!=2.14.1" },
     { name = "torch", marker = "extra == 'photonics'", specifier = ">=2.9" },
     { name = "walkerlayout", marker = "extra == 'visualization'", specifier = ">=1.0.2" },
 ]
@@ -1870,33 +1847,20 @@ build = [
 ]
 dev = [
     { name = "cmake", specifier = ">=4.4.1" },
-    { name = "distinctipy", specifier = ">=1.3.4" },
-    { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "mqt-core", specifier = "~=3.10.0" },
     { name = "mqt-qcec", specifier = ">=3.10" },
     { name = "nanobind", specifier = "~=3.1.0" },
-    { name = "networkx", specifier = ">=3.2.1" },
     { name = "nox", specifier = ">=2025.11.12" },
-    { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "pytest-cov", specifier = ">=7.1" },
     { name = "pytest-sugar", specifier = ">=1.1.1" },
     { name = "pytest-xdist", specifier = ">=3.8" },
-    { name = "qiskit", extras = ["qasm3-import"], specifier = ">=2.1,<3" },
-    { name = "rustworkx", extras = ["all"], specifier = ">=0.16" },
     { name = "scikit-build-core", specifier = ">=1.0.3" },
-    { name = "torch", specifier = ">=2.9" },
-    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14" },
     { name = "vcs-versioning", specifier = ">=2.3" },
-    { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 docs = [
-    { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "furo", specifier = ">=2025.12.19" },
-    { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "myst-nb", specifier = ">=1.4" },
-    { name = "networkx", specifier = ">=3.2.1" },
-    { name = "plotly", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import", "visualization"], specifier = ">=2.1,<3" },
     { name = "sphinx", specifier = ">=9" },
     { name = "sphinx-autoapi", specifier = ">=3.6" },
@@ -1905,9 +1869,6 @@ docs = [
     { name = "sphinx-llm", specifier = ">=1" },
     { name = "sphinxcontrib-bibtex", specifier = ">=2.7" },
     { name = "sphinxext-opengraph", specifier = ">=0.13" },
-    { name = "torch", specifier = ">=2.9" },
-    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14" },
-    { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 evaluation = [
     { name = "numpy", specifier = ">=1.26" },
@@ -1917,20 +1878,11 @@ evaluation = [
     { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14" },
 ]
 test = [
-    { name = "distinctipy", specifier = ">=1.3.4" },
-    { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "mqt-qcec", specifier = ">=3.10" },
-    { name = "networkx", specifier = ">=3.2.1" },
-    { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "pytest-cov", specifier = ">=7.1" },
     { name = "pytest-sugar", specifier = ">=1.1.1" },
     { name = "pytest-xdist", specifier = ">=3.8" },
-    { name = "qiskit", extras = ["qasm3-import"], specifier = ">=2.1,<3" },
-    { name = "rustworkx", extras = ["all"], specifier = ">=0.16" },
-    { name = "torch", specifier = ">=2.9" },
-    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14" },
-    { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 
 [[package]]
@@ -2109,18 +2061,18 @@ version = "3.7"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -2241,18 +2193,18 @@ version = "2.5.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -2367,8 +2319,33 @@ wheels = [
 
 [[package]]
 name = "nvidia-cudnn-cu13"
+version = "9.20.0.48"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "nvidia-cublas" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/c5/83384d846b2fd17c44bd499b36c75a45ed4f095fbbb2252294e89cea5c5c/nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:e31454ae00094b0c55319d9d15b6fa2fc50a9e1c0f5c8c80fb75258234e731e1", size = 444574296, upload-time = "2026-03-09T19:28:27.751Z" },
+]
+
+[[package]]
+name = "nvidia-cudnn-cu13"
 version = "9.24.0.43"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
 dependencies = [
     { name = "nvidia-cublas" },
 ]
@@ -2444,8 +2421,30 @@ wheels = [
 
 [[package]]
 name = "nvidia-nccl-cu13"
+version = "2.29.7"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/0d/daf50d44177ee0cbc7ff0a0c91eb5ff676c82be42f9a970bc7597f440c3a/nvidia_nccl_cu13-2.29.7-py3-none-manylinux_2_18_aarch64.whl", hash = "sha256:674a12383e3c38a1bcccae7d4f3633b37852230b6047883cb2f4c2d1b36d9bf5", size = 206014712, upload-time = "2026-03-03T05:34:20.843Z" },
+]
+
+[[package]]
+name = "nvidia-nccl-cu13"
 version = "2.30.7"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/21/a73174c6157101bdf1ffc22b517f76ff0082613989dd9bc8f43e8034caac/nvidia_nccl_cu13-2.30.7-py3-none-manylinux_2_18_aarch64.whl", hash = "sha256:ca786ffa5a647c75d4d1f5cc72a6c4f537947e2ba8823d7c8aaf768e7a7b9f77", size = 215983881, upload-time = "2026-06-09T03:23:15.633Z" },
     { url = "https://files.pythonhosted.org/packages/3f/34/c500f90c7ae641b8e0f98965b36b8a7ac79cc8b296e8d251fe3eb592ee54/nvidia_nccl_cu13-2.30.7-py3-none-manylinux_2_18_x86_64.whl", hash = "sha256:cefa7fdb9710efd0f39c5f1be1d61ff6fc9a996c451265bd7fbdcf9455ed4b50", size = 215965170, upload-time = "2026-06-09T03:23:39.73Z" },
@@ -3447,18 +3446,18 @@ version = "1.18.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -3621,18 +3620,18 @@ version = "9.1.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -4020,8 +4019,61 @@ wheels = [
 
 [[package]]
 name = "torch"
+version = "2.13.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+dependencies = [
+    { name = "cuda-bindings", marker = "python_full_version < '3.15'" },
+    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"] },
+    { name = "filelock" },
+    { name = "fsspec" },
+    { name = "jinja2" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "nvidia-cudnn-cu13", version = "9.20.0.48", source = { registry = "https://pypi.org/simple" } },
+    { name = "nvidia-cusparselt-cu13" },
+    { name = "nvidia-nccl-cu13", version = "2.29.7", source = { registry = "https://pypi.org/simple" } },
+    { name = "nvidia-nvshmem-cu13" },
+    { name = "setuptools" },
+    { name = "sympy" },
+    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.15'" },
+    { name = "typing-extensions" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/59/1e3160e18e12aa3038390efab3ce02b36a9d4d6a527ecdd8520dca2e68d8/torch-2.13.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:092790c696a760c729fd5722835f50b9d81fd7c8f141571f3f3cf4081a8f664c", size = 427199369, upload-time = "2026-07-08T16:04:51.054Z" },
+    { url = "https://files.pythonhosted.org/packages/df/a9/f6a2a4d763ff1df02e9a64c477029db614295bc9367f4131223791ccc243/torch-2.13.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:572df8be8ffb4599c88cbd6a0726f1f854f4da65d2e3c09f0e2c2283333cd6d4", size = 427210998, upload-time = "2026-07-08T16:04:37.708Z" },
+    { url = "https://files.pythonhosted.org/packages/11/18/9ecb37b56293a0be8d80f810bf672a72fe7e02f8b475d5ef1b9bf8a0d748/torch-2.13.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:1e09d6a722504957c694faceca843acde562786df1144ebcc5a74075ec7f6005", size = 427213008, upload-time = "2026-07-08T16:03:44.106Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/09/2c10e8cd0e00fa5d23c052df6ce467eaa7182399f5e0f824f1e4ff42ccae/torch-2.13.0-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:a3893dc2da0a972a8ca5d698c85a9f967559ac5f8ee1797b77408aa8734d073c", size = 427226309, upload-time = "2026-07-08T16:02:53.127Z" },
+    { url = "https://files.pythonhosted.org/packages/69/d1/491e3a0389430946145888b0203f2b6a759ce2a61481b96a85c2da4f2ced/torch-2.13.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:31061ff56ed8fbf26c749806905aeb749ebeb819810fd5d52508aa5afd90dddc", size = 427219769, upload-time = "2026-07-08T16:02:31.18Z" },
+]
+
+[[package]]
+name = "torch"
 version = "2.14.1"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15' and sys_platform == 'win32'",
+    "python_full_version >= '3.15' and sys_platform == 'emscripten'",
+    "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
+    "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and sys_platform == 'win32'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
+    "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
+    "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.12' and sys_platform == 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten'",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
 dependencies = [
     { name = "cuda-bindings", marker = "python_full_version < '3.15' and sys_platform == 'linux'" },
     { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "sys_platform == 'linux'" },
@@ -4030,13 +4082,13 @@ dependencies = [
     { name = "jinja2" },
     { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "nvidia-cudnn-cu13", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-cudnn-cu13", version = "9.24.0.43", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
     { name = "nvidia-cusparselt-cu13", marker = "sys_platform == 'linux'" },
-    { name = "nvidia-nccl-cu13", marker = "sys_platform == 'linux'" },
+    { name = "nvidia-nccl-cu13", version = "2.30.7", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'linux'" },
     { name = "nvidia-nvshmem-cu13", marker = "sys_platform == 'linux'" },
     { name = "setuptools" },
     { name = "sympy" },
-    { name = "triton", marker = "python_full_version < '3.15' and sys_platform == 'linux'" },
+    { name = "triton", version = "3.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.15' and sys_platform == 'linux'" },
     { name = "typing-extensions" },
 ]
 wheels = [
@@ -4102,8 +4154,32 @@ wheels = [
 
 [[package]]
 name = "triton"
+version = "3.7.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/f9/19d842d06a08559534fa1eaab6ca551b1bcf40f06620bddec1babaa2772d/triton-3.7.1-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d4a0e1cd4c4a76370ed74a8432a53cea28716827d19e40ffc732233e35ceb3f6", size = 184664887, upload-time = "2026-06-17T20:03:42.913Z" },
+    { url = "https://files.pythonhosted.org/packages/94/fa/f856e24deb462d5f18bd4b5a746957862ab9b6ee5834bda60605ec348366/triton-3.7.1-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9497f2e696ee368862a181a90b2dcc03ca978cc4f602abd67c7d81022a6988e1", size = 184692359, upload-time = "2026-06-17T20:03:48.288Z" },
+    { url = "https://files.pythonhosted.org/packages/00/42/c5089d4d9327fcd1e862c599cc2927f39418f84dd11a84cb2ccff9d4787a/triton-3.7.1-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cdbfc09d9ec58bc5e68321525653220de7515c199e7a8097a97c85e62b52cd0a", size = 184694629, upload-time = "2026-06-17T20:03:53.444Z" },
+    { url = "https://files.pythonhosted.org/packages/40/71/e01aa7ad573883ed9456f130226babdec70b005e098c4d6226a6238e761b/triton-3.7.1-cp314-cp314-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:fe4ea396a06171f1f1f58cbd39c70b09294398f7dd7c620939bab54ad6f934fa", size = 184705764, upload-time = "2026-06-17T20:03:59.064Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/f8/448220c3092019f9fdfab39ec47985968181d67da34b44f6a7f6280a5cbb/triton-3.7.1-cp314-cp314t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c58e4c61f0c73b5dba3b5d19b4a7093c32f90dc18b2a7f121a7c16ccd31107b7", size = 184814760, upload-time = "2026-06-17T20:04:04.984Z" },
+]
+
+[[package]]
+name = "triton"
 version = "3.8.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "(python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/cf/d21c9b1a4d1df9ba3aed218069f24f762a4b9565c5a362bef6f110c08e72/triton-3.8.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:372285307d4c44ee74cee32de0b4f04bd157e071427e38c6f4ee3e3beb2194f4", size = 226467015, upload-time = "2026-08-28T16:08:05.871Z" },
     { url = "https://files.pythonhosted.org/packages/6f/9a/2c3d3823726d5ad5359f7065b02b984925158b74611c1e3987f6a37461fb/triton-3.8.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:68988ac85d5e7086baeda0ddc175af9667db7529b3c5e11a5c0601b8bef2200a", size = 247945226, upload-time = "2026-08-28T15:55:43.795Z" },
