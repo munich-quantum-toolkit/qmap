@@ -64,7 +64,7 @@ def _run_tests(
     install_args: Sequence[str] = (),
     extra_command: Sequence[str] = (),
     pytest_run_args: Sequence[str] = (),
-    optional_dependencies: Sequence[str] = ("--extra", "photonics"),
+    optional_dependencies: Sequence[str] = (),
 ) -> None:
     env = {"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     if shutil.which("cmake") is None:
@@ -89,6 +89,7 @@ def _run_tests(
         "sync",
         "--inexact",
         "--no-dev",  # do not auto-install dev dependencies
+        "--all-extras",
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
         *optional_dependencies,
@@ -195,6 +196,7 @@ def docs(session: nox.Session) -> None:
         "uv",
         "run",
         "--no-dev",  # do not auto-install dev dependencies
+        "--all-extras",
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
         "sphinx-autobuild" if serve else "sphinx-build",
