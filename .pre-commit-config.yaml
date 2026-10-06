@@ -170,5 +170,5 @@ repos:
     rev: v0.0.84
     hooks:
       - id: ty
-        args: [--all-extras, --no-install-project]
+        args: [--no-install-project]
         priority: 8

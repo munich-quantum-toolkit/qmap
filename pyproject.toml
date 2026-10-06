@@ -101,15 +101,26 @@ dev = [
   "nox>=2025.11.12",
 ]
 test = [
+  "distinctipy>=1.3.4",
+  "ipywidgets>=8.1.7",
   "mqt-qcec>=3.10",
+  "networkx>=3.2.1",
+  "plotly>=6.0.1",
   "pytest>=9.0.1",
   "pytest-cov>=7.1",
   "pytest-sugar>=1.1.1",
   "pytest-xdist>=3.8",
+  "torch!=2.14,!=2.14.1; sys_platform=='linux' and platform_machine=='aarch64'",
+  "torch>=2.9",
+  "walkerlayout>=1.0.2",
 ]
 docs = [
+  "distinctipy>=1.3.4",
   "furo>=2025.12.19",
+  "ipywidgets>=8.1.7",
   "myst-nb>=1.4",
+  "networkx>=3.2.1",
+  "plotly>=6.0.1",
   "qiskit[qasm3-import,visualization]>=2.1,<3",
   "sphinx>=9",
   "sphinx-autoapi>=3.6",
@@ -118,6 +129,9 @@ docs = [
   "sphinx-llm>=1",
   "sphinxcontrib-bibtex>=2.7",
   "sphinxext-opengraph>=0.13",
+  "torch!=2.14,!=2.14.1; sys_platform=='linux' and platform_machine=='aarch64'",
+  "torch>=2.9",
+  "walkerlayout>=1.0.2",
 ]
 build = [
   "cmake>=4.4.1",
@@ -220,7 +234,6 @@ skip = [ "*-musllinux_*", "cp314t-*" ]
 archs = "auto64"
 build-frontend = "uv"
 test-command = "pytest test/python"
-test-extras = [ "photonics", "visualization" ]
 test-groups = [ "test" ]
 test-sources = [
   "test",
