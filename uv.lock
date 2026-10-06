@@ -1781,20 +1781,33 @@ build = [
 ]
 dev = [
     { name = "cmake" },
+    { name = "distinctipy" },
+    { name = "ipywidgets" },
     { name = "mqt-core" },
     { name = "mqt-qcec" },
     { name = "nanobind" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "nox" },
+    { name = "plotly" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-sugar" },
     { name = "pytest-xdist" },
     { name = "scikit-build-core" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
     { name = "vcs-versioning" },
+    { name = "walkerlayout" },
 ]
 docs = [
+    { name = "distinctipy" },
     { name = "furo" },
+    { name = "ipywidgets" },
     { name = "myst-nb" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "plotly" },
     { name = "qiskit", extra = ["qasm3-import", "visualization"] },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -1804,6 +1817,9 @@ docs = [
     { name = "sphinx-llm" },
     { name = "sphinxcontrib-bibtex" },
     { name = "sphinxext-opengraph" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "walkerlayout" },
 ]
 evaluation = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -1814,11 +1830,19 @@ evaluation = [
     { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
 ]
 test = [
+    { name = "distinctipy" },
+    { name = "ipywidgets" },
     { name = "mqt-qcec" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "plotly" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-sugar" },
     { name = "pytest-xdist" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'aarch64' or sys_platform != 'linux'" },
+    { name = "walkerlayout" },
 ]
 
 [package.metadata]
@@ -1847,20 +1871,31 @@ build = [
 ]
 dev = [
     { name = "cmake", specifier = ">=4.4.1" },
+    { name = "distinctipy", specifier = ">=1.3.4" },
+    { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "mqt-core", specifier = "~=3.10.0" },
     { name = "mqt-qcec", specifier = ">=3.10" },
     { name = "nanobind", specifier = "~=3.1.0" },
+    { name = "networkx", specifier = ">=3.2.1" },
     { name = "nox", specifier = ">=2025.11.12" },
+    { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "pytest-cov", specifier = ">=7.1" },
     { name = "pytest-sugar", specifier = ">=1.1.1" },
     { name = "pytest-xdist", specifier = ">=3.8" },
     { name = "scikit-build-core", specifier = ">=1.0.3" },
+    { name = "torch", specifier = ">=2.9" },
+    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14,!=2.14.1" },
     { name = "vcs-versioning", specifier = ">=2.3" },
+    { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 docs = [
+    { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "furo", specifier = ">=2025.12.19" },
+    { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "myst-nb", specifier = ">=1.4" },
+    { name = "networkx", specifier = ">=3.2.1" },
+    { name = "plotly", specifier = ">=6.0.1" },
     { name = "qiskit", extras = ["qasm3-import", "visualization"], specifier = ">=2.1,<3" },
     { name = "sphinx", specifier = ">=9" },
     { name = "sphinx-autoapi", specifier = ">=3.6" },
@@ -1869,6 +1904,9 @@ docs = [
     { name = "sphinx-llm", specifier = ">=1" },
     { name = "sphinxcontrib-bibtex", specifier = ">=2.7" },
     { name = "sphinxext-opengraph", specifier = ">=0.13" },
+    { name = "torch", specifier = ">=2.9" },
+    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14,!=2.14.1" },
+    { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 evaluation = [
     { name = "numpy", specifier = ">=1.26" },
@@ -1878,11 +1916,18 @@ evaluation = [
     { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14" },
 ]
 test = [
+    { name = "distinctipy", specifier = ">=1.3.4" },
+    { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "mqt-qcec", specifier = ">=3.10" },
+    { name = "networkx", specifier = ">=3.2.1" },
+    { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "pytest-cov", specifier = ">=7.1" },
     { name = "pytest-sugar", specifier = ">=1.1.1" },
     { name = "pytest-xdist", specifier = ">=3.8" },
+    { name = "torch", specifier = ">=2.9" },
+    { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14,!=2.14.1" },
+    { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 
 [[package]]

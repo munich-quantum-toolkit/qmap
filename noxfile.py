@@ -89,7 +89,6 @@ def _run_tests(
         "sync",
         "--inexact",
         "--no-dev",  # do not auto-install dev dependencies
-        "--all-extras",
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
         *optional_dependencies,
@@ -196,7 +195,6 @@ def docs(session: nox.Session) -> None:
         "uv",
         "run",
         "--no-dev",  # do not auto-install dev dependencies
-        "--all-extras",
         "--no-build-isolation-package",
         "mqt-qmap",  # build the project without isolation
         "sphinx-autobuild" if serve else "sphinx-build",
