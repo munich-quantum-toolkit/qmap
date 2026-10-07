@@ -97,6 +97,9 @@ def _run_tests(
     )
     if extra_command:
         session.run(*extra_command, env=env)
+    # Reserve extra static TLS for PyTorch's libgomp on Ubuntu 26.04 ARM
+    if os.environ.get("RUNNER_OS") == "Linux" and os.environ.get("RUNNER_ARCH") == "ARM64":
+        env["GLIBC_TUNABLES"] = "glibc.rtld.optional_static_tls=65536"
     session.run(
         "uv",
         "run",
