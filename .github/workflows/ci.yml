@@ -28,12 +28,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+        runs-on: [ubuntu-26.04, ubuntu-26.04-arm]
         compiler: [gcc]
         preset: [release]
         run-on-draft: [false]
         include:
-          - runs-on: ubuntu-24.04
+          - runs-on: ubuntu-26.04
             compiler: gcc
             preset: debug
             run-on-draft: true
@@ -133,7 +133,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-24.04, ubuntu-24.04-arm, macos-26, windows-2025]
+        runs-on: [ubuntu-26.04, ubuntu-26.04-arm, macos-26, windows-2025]
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@17f5c58e46c51027501e7d8d38dc182654ed035c # v2.5.0
     with:
       runs-on: ${{ matrix.runs-on }}
@@ -183,8 +183,8 @@ jobs:
       matrix:
         runs-on:
           [
-            ubuntu-24.04,
-            ubuntu-24.04-arm,
+            ubuntu-26.04,
+            ubuntu-26.04-arm,
             macos-26,
             windows-2025,
             windows-11-arm,
