@@ -424,7 +424,10 @@ addopts = [
   "--showlocals",
   "--numprocesses=auto", # Automatically use all available CPU cores for parallel testing
 ]
-filterwarnings = [ "error" ]
+filterwarnings = [
+  "error",
+  "ignore:.*Skipping device Apple Paravirtual device that does not support Metal 2.0.*:UserWarning:",
+]
 log_level = "INFO"
 minversion = "9.0"
 strict = true
