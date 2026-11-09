@@ -340,6 +340,12 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryDeviceProperty(
   if (status_ != Status::INITIALIZED) {
     return QDMI_ERROR_BADSTATE;
   }
+  if (prop == QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS) {
+    if (sizeRet != nullptr) {
+      *sizeRet = 0;
+    }
+    return QDMI_SUCCESS;
+  }
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(prop, QDMI_DEVICE_PROPERTY)) {
     return QDMI_ERROR_INVALIDARGUMENT;
@@ -369,15 +375,6 @@ auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::queryDeviceProperty(
                     prop, size, value, sizeRet)
   ADD_LIST_PROPERTY(QDMI_DEVICE_PROPERTY_OPERATIONS, MQT_QMAP_NA_QDMI_Operation,
                     operations_, prop, size, value, sizeRet)
-  if (prop == QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS) {
-    if (value != nullptr && size > 0) {
-      return QDMI_ERROR_INVALIDARGUMENT;
-    }
-    if (sizeRet != nullptr) {
-      *sizeRet = 0;
-    }
-    return QDMI_SUCCESS;
-  }
   return QDMI_ERROR_NOTSUPPORTED;
 }
 auto MQT_QMAP_NA_QDMI_Device_Session_impl_d::querySiteProperty(
@@ -433,18 +430,20 @@ auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::setParameter(
 auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::queryProperty(
     // NOLINTNEXTLINE(readability-non-const-parameter)
     const QDMI_Device_Job_Property prop, const size_t size, void* value,
-    size_t* sizeRet) -> int {
+    [[maybe_unused]] size_t* sizeRet) -> int {
   if ((value != nullptr && size == 0) ||
       IS_INVALID_ARGUMENT(prop, QDMI_DEVICE_JOB_PROPERTY)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  ADD_SINGLE_VALUE_PROPERTY(QDMI_DEVICE_JOB_PROPERTY_PROGRAMSNUM, size_t, 0,
-                            prop, size, value, sizeRet)
+  if (prop == QDMI_DEVICE_JOB_PROPERTY_PROGRAMFORMAT ||
+      prop == QDMI_DEVICE_JOB_PROPERTY_PROGRAMSNUM) {
+    return QDMI_ERROR_BADSTATE;
+  }
   return QDMI_ERROR_NOTSUPPORTED;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::submit() -> int {
-  return QDMI_ERROR_NOTSUPPORTED;
+  return QDMI_ERROR_BADSTATE;
 }
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 auto MQT_QMAP_NA_QDMI_Device_Job_impl_d::cancel() -> int {
@@ -812,7 +811,7 @@ auto MQT_QMAP_NA_QDMI_device_job_get_program(
   if (job == nullptr || (data != nullptr && size == 0)) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  return QDMI_ERROR_OUTOFRANGE;
+  return QDMI_ERROR_BADSTATE;
 }
 
 auto MQT_QMAP_NA_QDMI_device_job_get_program_status(
@@ -821,7 +820,7 @@ auto MQT_QMAP_NA_QDMI_device_job_get_program_status(
   if (job == nullptr) {
     return QDMI_ERROR_INVALIDARGUMENT;
   }
-  return QDMI_ERROR_OUTOFRANGE;
+  return QDMI_ERROR_BADSTATE;
 }
 
 auto MQT_QMAP_NA_QDMI_device_job_query_property(
