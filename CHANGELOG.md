@@ -13,7 +13,7 @@ releases may include breaking changes.
 ### Changed
 
 - ⬆️ Update `mqt-core` to version 3.12.0 ([#1217]) ([**@denialhaag**])
-- ⬆️ Update `QDMI` to version 1.4.0 ([#1217]) ([**@denialhaag**])
+- ⬆️ Update QDMI to version 1.4.0 ([#1217]) ([**@denialhaag**])
 
 ## [3.11.0] - 2026-10-12
 
