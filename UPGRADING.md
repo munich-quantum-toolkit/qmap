@@ -6,6 +6,14 @@ of changes including minor and patch releases, please refer to the
 
 ## [Unreleased]
 
+This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
+C++ libraries and Python extensions against the MQT Core 3.12 shared-library
+ABI.
+
+Rebuild neutral-atom QDMI device libraries against QDMI 1.4.0. QDMI 1.3 device
+libraries are incompatible. The device interface no longer exposes calibration
+submission or pulse-support metadata.
+
 ## [3.11.0]
 
 This release updates the minimum required `mqt-core` version to 3.11.0. Rebuild

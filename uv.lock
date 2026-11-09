@@ -3,28 +3,28 @@ revision = 5
 requires-python = ">=3.11, !=3.14.1"
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.11.5' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11.5' and sys_platform == 'win32'",
+    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version < '3.11.5' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11.5' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 
@@ -451,12 +451,12 @@ version = "1.3.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.11.5' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11.5' and sys_platform == 'win32'",
+    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version < '3.11.5' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11.5' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 dependencies = [
@@ -543,18 +543,18 @@ version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -1729,28 +1729,28 @@ wheels = [
 
 [[package]]
 name = "mqt-core"
-version = "3.11.0"
+version = "3.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nanobind-backend" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/51/241b6d2960d727a4098ce5a0f842264deb957eee08510be95fb4f3e76469/mqt_core-3.11.0.tar.gz", hash = "sha256:a2a3ffee0155d5292e60c9034ce889aedda549312ec26a8f3dba4188fea2ad77", size = 660063, upload-time = "2026-10-08T09:36:31.615Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b8/ab/d3267beaa5037cb24526784024c316e580f69c3850125704186fda7e32c3/mqt_core-3.12.0.tar.gz", hash = "sha256:894e2fbdb67fce3618fa4a07bbec4890385bcc4134916e7726d43f9006bbdca9", size = 670710, upload-time = "2026-11-08T01:11:45.801Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/33/170a20c3a70ccee76ca71f663e510826e8c29c9290ebf44e1481e4d93cc9/mqt_core-3.11.0-cp311-abi3-macosx_13_0_arm64.whl", hash = "sha256:4b81781eb63c3bf9367af1cdf1c8aa74e117f99811622e4f2d1386b3ea7d0f78", size = 3093660, upload-time = "2026-10-08T09:36:11.097Z" },
-    { url = "https://files.pythonhosted.org/packages/04/0a/49d118d181dfc4c93b9f850964306b6856c43f980e264d993331865bd94d/mqt_core-3.11.0-cp311-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9c1a236b17e97556619454d262ccdfd0c5fecbe383a6e44a74fdbc7474b92910", size = 4422395, upload-time = "2026-10-08T09:36:13.228Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/8b/f46a75ef3292c9ee106cb5c624cb6cbcb47f5b9b1c97774f589ecc1d1ae6/mqt_core-3.11.0-cp311-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ca3d0f4a5330f8c1264b079bdc96a789c13bd3ed3944e054ef2ea55974b8b668", size = 4755719, upload-time = "2026-10-08T09:36:14.966Z" },
-    { url = "https://files.pythonhosted.org/packages/27/7c/d3e0f81958ba7d33cbfe84f6b173762ce99f88eb03a63616a6d862756290/mqt_core-3.11.0-cp311-abi3-win_amd64.whl", hash = "sha256:a83c2a5e17f2da2c9f92670e2eae8433df453ae9b21b32f0333a744a71e2c00c", size = 5668113, upload-time = "2026-10-08T09:36:17.199Z" },
-    { url = "https://files.pythonhosted.org/packages/47/e4/0988d39508f70a321df2af07f912fe83b77885819875ddde46cb44a46861/mqt_core-3.11.0-cp311-abi3-win_arm64.whl", hash = "sha256:66ba964830f40ac093a716a318948d1623d5d6a67b6d986a2d6870fa70da60f2", size = 5762682, upload-time = "2026-10-08T09:36:19.046Z" },
-    { url = "https://files.pythonhosted.org/packages/65/78/3dcc74c1129dd24efe5c14db36ae2f0151128954cee123962636518f8f5d/mqt_core-3.11.0-cp315-abi3t-macosx_13_0_arm64.whl", hash = "sha256:a6b96fc29a1d02efc532c830a3c14e23cd000d2bd3210b4a6e6fa40aa8cb30a9", size = 3094981, upload-time = "2026-10-08T09:36:20.738Z" },
-    { url = "https://files.pythonhosted.org/packages/b3/7a/1438649f659c403893ff46231c8420497eefd18fdcb6928810662e00d8b4/mqt_core-3.11.0-cp315-abi3t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4ad421da3fc1166ea9697910f88c2d199cd50faf7384338ed1b34b054458f0bc", size = 4423179, upload-time = "2026-10-08T09:36:22.508Z" },
-    { url = "https://files.pythonhosted.org/packages/0b/5c/de3cd5799702620f7878605608314f89a5d3a2680379420384e71d73e0cc/mqt_core-3.11.0-cp315-abi3t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:449a627799f80ce0ba9d8076958f246a7d8a4e9ddc2ca8770d74e0b295b32477", size = 4756317, upload-time = "2026-10-08T09:36:24.587Z" },
-    { url = "https://files.pythonhosted.org/packages/f3/3c/bb8140d017a8f07587c2216af7b24fd3ccf06f9bae3ed1646bdae457696b/mqt_core-3.11.0-cp315-abi3t-win_amd64.whl", hash = "sha256:444da8110863ca1d351c6ceda49c172dd8e47511f456a0b8556317bda0ef8999", size = 5719562, upload-time = "2026-10-08T09:36:26.807Z" },
-    { url = "https://files.pythonhosted.org/packages/67/87/fe99f89792089acb122f0175c8ac1bac15c7a9ffecc008ddcab6a4ea7b47/mqt_core-3.11.0-cp315-abi3t-win_arm64.whl", hash = "sha256:333b90201b8aa98df578904d512fa5fef5c604db9bcbd414562508dcec861b4d", size = 5816673, upload-time = "2026-10-08T09:36:29.335Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/17/cf9288f355625b71f40368fe907b6fab56a0f07807cacb17f0b6aa82e90a/mqt_core-3.12.0-cp311-abi3-macosx_13_0_arm64.whl", hash = "sha256:40d460ee81315a73546943412a4a4e9e94f70a5e0628aa8b9f78ae4a16cb6b65", size = 1431916, upload-time = "2026-11-08T01:11:28.047Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/89/75f585ed084c55b6bd21dd507d823a6d8f40dc741aaff35be2c8c80d5ee1/mqt_core-3.12.0-cp311-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:72685843ff73079ea217d8cfd54baefbb674bbb17e1b91050376a6dc2922f1a1", size = 1970776, upload-time = "2026-11-08T01:11:30.128Z" },
+    { url = "https://files.pythonhosted.org/packages/19/33/98154cdf46a33891ab4d896914b750d08f72154aa0fdefc1fd7e4f628b58/mqt_core-3.12.0-cp311-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:70af5764d73e0781c7be8c8417a9d2a8830c0358c23fad7f8396a5ecd9b6c34f", size = 2105150, upload-time = "2026-11-08T01:11:31.672Z" },
+    { url = "https://files.pythonhosted.org/packages/13/3f/ae09797c986588f591c215279251147148d709325d42e36af4ed95d66f5c/mqt_core-3.12.0-cp311-abi3-win_amd64.whl", hash = "sha256:88ddec250e46ab24bacf15a448e7f3f67b8b83208077c7dad8d286eb9a8867fe", size = 5801527, upload-time = "2026-11-08T01:11:33.498Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/b5/835eb6e85006b932b5b707e77179f9d8a720e055f6dd449d24ee27627297/mqt_core-3.12.0-cp311-abi3-win_arm64.whl", hash = "sha256:2fb7d9e5d174f21ea6f53223882ceb109dbebb60f99f5062ee523ec11b2c6fee", size = 5894626, upload-time = "2026-11-08T01:11:35.661Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/67/d1b0e792c37624ca77ce17520315c55b05eec4304395d4b3884b30c7702c/mqt_core-3.12.0-cp315-abi3t-macosx_13_0_arm64.whl", hash = "sha256:bc9d8c0f19f80c5587da509ae16b7220127883c707232a1eb05a0dcc0c3990f4", size = 1433722, upload-time = "2026-11-08T01:11:37.749Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/ea/64499e048b20ec35f6c5ce7657ec416c6e0503393a2ac24e4111ae277b14/mqt_core-3.12.0-cp315-abi3t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:be0195113141559b11ac73c0ab614d645380a7e33fb527aa91ebb5456357759b", size = 1971764, upload-time = "2026-11-08T01:11:39.204Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/8d/439092c5bce2dcfe1806d1df2923c0fcab9c8c59f8f1168eaa88fd967c7e/mqt_core-3.12.0-cp315-abi3t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:344d8fc9ec5572e9a0c5c9e589e6738c21220476b3a8989160147b2661839ca0", size = 2106281, upload-time = "2026-11-08T01:11:40.831Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/04/3e99c0a87161c27c340b20d8479a1c520ac45eac57dcef96b0bff8e7dde8/mqt_core-3.12.0-cp315-abi3t-win_amd64.whl", hash = "sha256:385e1fdba948b3d77edb1833ccd1ffcd5ffbf5efa901d6a2733b4bb183066983", size = 5859169, upload-time = "2026-11-08T01:11:42.313Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/2d/ab11b7789285e1337a8858ab5c1afac9f189339d43de319c8a023f4b0011/mqt_core-3.12.0-cp315-abi3t-win_arm64.whl", hash = "sha256:02fed09a37cd59a17b53cbc7009667a58ee328a25f01cdce927621dfd0e86de4", size = 5950871, upload-time = "2026-11-08T01:11:44.394Z" },
 ]
 
 [[package]]
 name = "mqt-qcec"
-version = "3.11.0"
+version = "3.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mqt-core" },
@@ -1758,18 +1758,18 @@ dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b3/eb/9ac2986c52aaa17d914c45d4bca1c91f1ad922546827b7ce2e8b0d6b19a5/mqt_qcec-3.11.0.tar.gz", hash = "sha256:9fac941fbf72bbae61a0323881eb5604b3371a7aad60c236ab3f2ec8668da052", size = 340985, upload-time = "2026-10-09T16:47:48.608Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/3c/33d052d88f13e2cc0c1346ecd6e9c9fc74d32658f01afeedb50d9e2c4559/mqt_qcec-3.12.0.tar.gz", hash = "sha256:6014160c67f2a15b7bbe6b6f2712b76aaa70ac7ec0f1477fcc04702effeaed0c", size = 340695, upload-time = "2026-11-08T18:09:45.047Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/a1/c70a8d92c4b7574ea1e90885795d1796b29c926572a8b5680c57faed886e/mqt_qcec-3.11.0-cp311-abi3-macosx_13_0_arm64.whl", hash = "sha256:f4bb39703d56da866a085303b25f870812f10edb0fb15eda2a50cb35d500a573", size = 275062, upload-time = "2026-10-09T16:47:34.098Z" },
-    { url = "https://files.pythonhosted.org/packages/6f/ce/6ef12a827408c36972553ba2896d57d7a8e90f67a5b461cd50733d549470/mqt_qcec-3.11.0-cp311-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3717f0ed1fc3187635a5e4a3d941aae73e4134b34a87bb3586269fe50455614d", size = 296952, upload-time = "2026-10-09T16:47:36.106Z" },
-    { url = "https://files.pythonhosted.org/packages/ec/ad/1f6262f080ebbf64f249ff978edbb95723aae8bf4ae0cd633aa29d9b8519/mqt_qcec-3.11.0-cp311-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:42f5c1cda3444b973ce2246fe1ad3f396c0265711392f46ee060b090e6bf7906", size = 318159, upload-time = "2026-10-09T16:47:37.597Z" },
-    { url = "https://files.pythonhosted.org/packages/a8/ee/bb3dad9641182afc22b388ec05deba3bb4ec3e298307b9f02e3fecc7d6f7/mqt_qcec-3.11.0-cp311-abi3-win_amd64.whl", hash = "sha256:cef1d125a936ffba5324dcdd219755b760f0969286124baabc24d24abce0bdd5", size = 499049, upload-time = "2026-10-09T16:47:38.797Z" },
-    { url = "https://files.pythonhosted.org/packages/c9/d3/6101fd5e68d385fd73368d66f1526c78ab33036ac13bf11ec246bf1f4607/mqt_qcec-3.11.0-cp311-abi3-win_arm64.whl", hash = "sha256:28225348de1b99cfdce15de0836e6e6d3002d3c4d1b13566e7a066f0864229f1", size = 690791, upload-time = "2026-10-09T16:47:40.155Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/cd/d5251d8d27ed18569058e6f2a1594882029fd37bfcccb6e92a0ce03cf2fe/mqt_qcec-3.11.0-cp315-abi3t-macosx_13_0_arm64.whl", hash = "sha256:2a0f049eb566b31020b991854f83ab9891d550f22bbbd88138f4da92845c28b1", size = 274817, upload-time = "2026-10-09T16:47:41.717Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/af/d7f53d85f7b2b62daf621de205f091dc1482545a733327e261445268365a/mqt_qcec-3.11.0-cp315-abi3t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ecb037680c6f2388e37ba802c956e295eaea64f8422110e0682b3acb88c50ad2", size = 297144, upload-time = "2026-10-09T16:47:42.964Z" },
-    { url = "https://files.pythonhosted.org/packages/49/e5/dbf5d7804f339993b8407040bed8eabec2906e546f7a94179cd0ee6d0919/mqt_qcec-3.11.0-cp315-abi3t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6c928bba48510a4e9f1f188fd62b37e94f39e506ab3c18201a5ff97cacd100f7", size = 318509, upload-time = "2026-10-09T16:47:44.431Z" },
-    { url = "https://files.pythonhosted.org/packages/7b/70/187644104f3b406035273bfca71cf0cbc8e034a4a49cdb8e98cbd468ca97/mqt_qcec-3.11.0-cp315-abi3t-win_amd64.whl", hash = "sha256:628181f8a6908146d27ec7941a3bcfa948575844406f9403b74bac4f7c23227e", size = 513604, upload-time = "2026-10-09T16:47:45.814Z" },
-    { url = "https://files.pythonhosted.org/packages/49/68/d29dae4dfdd0e2aa5675da1bf2caad2f6ee66e63002fe321e206718af402/mqt_qcec-3.11.0-cp315-abi3t-win_arm64.whl", hash = "sha256:4a17634d8c79cd3fbc46a0521d803d8d29d7decfe61303698fc1d1e3bac73e8c", size = 712156, upload-time = "2026-10-09T16:47:47.183Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/92/765b0b0d247e41126747faae99aebc49306fd3f78576dbd82b29f7c45030/mqt_qcec-3.12.0-cp311-abi3-macosx_13_0_arm64.whl", hash = "sha256:3338e83cb1aaab4efbb71dc41be530c104275c8c9834fee60e5623cce51ae27a", size = 272279, upload-time = "2026-11-08T18:09:30.17Z" },
+    { url = "https://files.pythonhosted.org/packages/71/b5/377cfb96c5f1193b34e5064019d81067c8d2b1551bef7d980ddbdc0f2aac/mqt_qcec-3.12.0-cp311-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:01c564c8f6a4e334ea7acf87aaa071e26cb4cbf29d0275f20cf7e407fc630df1", size = 375586, upload-time = "2026-11-08T18:09:32.091Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/59/30b4caf1dcf22bf2578eeb2d3b468cb7b58a89bef35c1f6617d2b847e2e9/mqt_qcec-3.12.0-cp311-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8e5a18dcf7f613d5086505d773aca79290c3d0cb10f577917c4eca15d1a671bf", size = 413542, upload-time = "2026-11-08T18:09:33.383Z" },
+    { url = "https://files.pythonhosted.org/packages/47/d4/07729f43b9603420a0ad98e5069c26f070cbfa290952ca0caea9b2fa2664/mqt_qcec-3.12.0-cp311-abi3-win_amd64.whl", hash = "sha256:e122fba65851b4eee0a7812fde2bf18facf012c1c8aa58e31e45239372ff47bf", size = 509815, upload-time = "2026-11-08T18:09:34.883Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/54/9613c9ac443665cf501548dcd17d369cfcb5d7c56fd08a65ad5d059db464/mqt_qcec-3.12.0-cp311-abi3-win_arm64.whl", hash = "sha256:7b1c0dcb6f7c0962a7adc8b6a7a6bc8f33e0be921ef973c5c1e9aa04d1758bb4", size = 686410, upload-time = "2026-11-08T18:09:36.464Z" },
+    { url = "https://files.pythonhosted.org/packages/81/27/c574727c5741058f93279fd4eaf5f96701273146b2825ee89cd9baffd69f/mqt_qcec-3.12.0-cp315-abi3t-macosx_13_0_arm64.whl", hash = "sha256:386e378c239c313a7ef880c0c174f88df29fdcf7c232fd7861d09e01df03a928", size = 272131, upload-time = "2026-11-08T18:09:37.689Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/ca/d1e554a4a796e00d7329938651bedd61ee4dd81d8bc53406f680f88ee221/mqt_qcec-3.12.0-cp315-abi3t-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:2594b60ed3eede0e1fc2ecedae031eadd88a1b9b48b89c1c62d8b3e7756d1e7c", size = 375888, upload-time = "2026-11-08T18:09:39.11Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/dd/84b411acff73bec281bcccaa02fcdf11c1d648ba5c20bf4b4f3c4ac95685/mqt_qcec-3.12.0-cp315-abi3t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0d3989dc30f05b618e75be082763b7e28531fcfb2d6bcd2e04ece0b358a8ddc7", size = 413696, upload-time = "2026-11-08T18:09:40.699Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/81/22f52ceddac32188c6fce47e9bea8fdc15acdec693eb9449b2a7ec3ba097/mqt_qcec-3.12.0-cp315-abi3t-win_amd64.whl", hash = "sha256:27362deec92194b1afd4d32d92c523d8d5a0267fe31ca543959a50773c8b5497", size = 525894, upload-time = "2026-11-08T18:09:42.009Z" },
+    { url = "https://files.pythonhosted.org/packages/52/27/2a594a616b94f095e32f225b9e93d1068e8c16f0335b5c7b280c9357a111/mqt_qcec-3.12.0-cp315-abi3t-win_arm64.whl", hash = "sha256:7457cbc572aff8b0283ff5ac287544bcfe55489e91de983b79e6c0e3d3a90acf", size = 708559, upload-time = "2026-11-08T18:09:43.427Z" },
 ]
 
 [[package]]
@@ -1870,7 +1870,7 @@ test = [
 requires-dist = [
     { name = "distinctipy", marker = "extra == 'visualization'", specifier = ">=1.3.4" },
     { name = "ipywidgets", marker = "extra == 'visualization'", specifier = ">=8.1.7" },
-    { name = "mqt-core", specifier = "~=3.11.0" },
+    { name = "mqt-core", specifier = "~=3.12.0" },
     { name = "nanobind-backend", specifier = ">=1" },
     { name = "networkx", marker = "extra == 'visualization'", specifier = ">=3.2.1" },
     { name = "plotly", marker = "extra == 'visualization'", specifier = ">=6.0.1" },
@@ -1885,7 +1885,7 @@ provides-extras = ["visualization", "photonics"]
 [package.metadata.requires-dev]
 build = [
     { name = "cmake", specifier = ">=4.4.1" },
-    { name = "mqt-core", specifier = "~=3.11.0" },
+    { name = "mqt-core", specifier = "~=3.12.0" },
     { name = "nanobind", specifier = "~=3.1.0" },
     { name = "scikit-build-core", specifier = ">=1.1" },
     { name = "vcs-versioning", specifier = ">=2.3" },
@@ -1894,8 +1894,8 @@ dev = [
     { name = "cmake", specifier = ">=4.4.1" },
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-    { name = "mqt-core", specifier = "~=3.11.0" },
-    { name = "mqt-qcec", specifier = ">=3.11" },
+    { name = "mqt-core", specifier = "~=3.12.0" },
+    { name = "mqt-qcec", specifier = ">=3.12" },
     { name = "nanobind", specifier = "~=3.1.0" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "nox", specifier = ">=2025.11.12" },
@@ -1939,7 +1939,7 @@ evaluation = [
 test = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
-    { name = "mqt-qcec", specifier = ">=3.11" },
+    { name = "mqt-qcec", specifier = ">=3.12" },
     { name = "networkx", specifier = ">=3.2.1" },
     { name = "plotly", specifier = ">=6.0.1" },
     { name = "pytest", specifier = ">=9.0.1" },
@@ -2114,12 +2114,12 @@ version = "3.6.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.11.5' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11.5' and sys_platform == 'win32'",
+    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version < '3.11.5' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11.5' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6a/51/63fe664f3908c97be9d2e4f1158eb633317598cfa6e1fc14af5383f17512/networkx-3.6.1.tar.gz", hash = "sha256:26b7c357accc0c8cde558ad486283728b65b6a95d85ee1cd66bafab4c8168509", size = 2517025, upload-time = "2025-12-08T17:02:39.908Z" }
@@ -2133,18 +2133,18 @@ version = "3.7"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -2180,12 +2180,12 @@ version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.11.5' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11.5' and sys_platform == 'win32'",
+    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version < '3.11.5' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11.5' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d0/ad/fed0499ce6a338d2a03ebae59cd15093910c8875328855781952abf6c2fe/numpy-2.4.6.tar.gz", hash = "sha256:f3a3570c4a2a16746ac2c31a7c7c7b0c186b95ce902e33db6f28094ed7387dda", size = 20735807, upload-time = "2026-05-18T23:37:14.07Z" }
@@ -2269,18 +2269,18 @@ version = "2.5.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -3412,12 +3412,12 @@ version = "1.17.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.11.5' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11.5' and sys_platform == 'win32'",
+    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version < '3.11.5' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11.5' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 dependencies = [
@@ -3493,18 +3493,18 @@ version = "1.18.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -3630,22 +3630,22 @@ version = "4.0.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
@@ -3661,12 +3661,12 @@ version = "9.0.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.11.5' and sys_platform == 'win32'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.11.5' and python_full_version < '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.11.5' and python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version < '3.11.5' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version < '3.11.5' and sys_platform == 'win32'",
+    "python_full_version < '3.11.5' and sys_platform == 'emscripten'",
     "(python_full_version < '3.11.5' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11.5' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 dependencies = [
@@ -3733,14 +3733,14 @@ version = "9.2.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version >= '3.15' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
     "(python_full_version >= '3.15' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.14.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.14.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "(python_full_version == '3.13.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
