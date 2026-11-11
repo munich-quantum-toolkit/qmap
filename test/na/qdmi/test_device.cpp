@@ -503,11 +503,11 @@ TEST_F(NaQDMISpecificationTest, JobSetParameter) {
 }
 
 TEST_F(NaQDMIJobSpecificationTest, JobSetParameter) {
-  QDMI_Program_Format value = QDMI_PROGRAM_FORMAT_QASM2;
-  EXPECT_THAT(MQT_QMAP_NA_QDMI_device_job_set_parameter(
-                  job, QDMI_DEVICE_JOB_PARAMETER_PROGRAMFORMAT,
-                  sizeof(QDMI_Program_Format), &value),
-              testing::AnyOf(QDMI_SUCCESS, QDMI_ERROR_NOTSUPPORTED));
+  size_t value = 1024;
+  EXPECT_THAT(
+      MQT_QMAP_NA_QDMI_device_job_set_parameter(
+          job, QDMI_DEVICE_JOB_PARAMETER_SHOTSNUM, sizeof(value), &value),
+      testing::AnyOf(QDMI_SUCCESS, QDMI_ERROR_NOTSUPPORTED));
   EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_set_parameter(
                 job, QDMI_DEVICE_JOB_PARAMETER_MAX, 0, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
@@ -517,6 +517,31 @@ TEST_F(NaQDMISpecificationTest, JobQueryProperty) {
   EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_query_property(
                 nullptr, QDMI_DEVICE_JOB_PROPERTY_MAX, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
+}
+
+TEST_F(NaQDMIJobSpecificationTest, ProgramInterface) {
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_set_programs(
+                job, QDMI_PROGRAM_FORMAT_QASM2, 0, nullptr, nullptr),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_set_programs(
+                job, QDMI_PROGRAM_FORMAT_QASM2, 1, nullptr, nullptr),
+            QDMI_ERROR_NOTSUPPORTED);
+  for (const auto property : {QDMI_DEVICE_JOB_PROPERTY_PROGRAMFORMAT,
+                              QDMI_DEVICE_JOB_PROPERTY_PROGRAMSNUM}) {
+    EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_query_property(job, property, 0,
+                                                         nullptr, nullptr),
+              QDMI_ERROR_BADSTATE);
+  }
+  EXPECT_EQ(
+      MQT_QMAP_NA_QDMI_device_job_get_program(nullptr, 0, 0, nullptr, nullptr),
+      QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(
+      MQT_QMAP_NA_QDMI_device_job_get_program(job, 0, 0, nullptr, nullptr),
+      QDMI_ERROR_BADSTATE);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_get_program_status(nullptr, 0, nullptr),
+            QDMI_ERROR_INVALIDARGUMENT);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_get_program_status(job, 0, nullptr),
+            QDMI_ERROR_BADSTATE);
 }
 
 TEST_F(NaQDMIJobSpecificationTest, JobQueryProperty) {
@@ -549,8 +574,7 @@ TEST_F(NaQDMISpecificationTest, JobSubmit) {
 }
 
 TEST_F(NaQDMIJobSpecificationTest, JobSubmit) {
-  const auto status = MQT_QMAP_NA_QDMI_device_job_submit(job);
-  ASSERT_THAT(status, testing::AnyOf(QDMI_SUCCESS, QDMI_ERROR_NOTSUPPORTED));
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_submit(job), QDMI_ERROR_BADSTATE);
 }
 
 TEST_F(NaQDMISpecificationTest, JobCancel) {
@@ -588,16 +612,16 @@ TEST_F(NaQDMIJobSpecificationTest, JobWait) {
 
 TEST_F(NaQDMISpecificationTest, JobGetResults) {
   EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_get_results(
-                nullptr, QDMI_JOB_RESULT_MAX, 0, nullptr, nullptr),
+                nullptr, 0, QDMI_JOB_RESULT_MAX, 0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
 
 TEST_F(NaQDMIJobSpecificationTest, JobGetResults) {
-  EXPECT_THAT(MQT_QMAP_NA_QDMI_device_job_get_results(
-                  job, QDMI_JOB_RESULT_SHOTS, 0, nullptr, nullptr),
-              testing::AnyOf(QDMI_SUCCESS, QDMI_ERROR_NOTSUPPORTED));
-  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_get_results(job, QDMI_JOB_RESULT_MAX, 0,
-                                                    nullptr, nullptr),
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_get_results(
+                job, 0, QDMI_JOB_RESULT_SHOTS, 0, nullptr, nullptr),
+            QDMI_ERROR_OUTOFRANGE);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_job_get_results(job, 0, QDMI_JOB_RESULT_MAX,
+                                                    0, nullptr, nullptr),
             QDMI_ERROR_INVALIDARGUMENT);
 }
 
@@ -619,6 +643,14 @@ TEST_F(NaQDMISpecificationTest, QueryDeviceProperty) {
       MQT_QMAP_NA_QDMI_device_session_query_device_property(
           session, QDMI_DEVICE_PROPERTY_COUPLINGMAP, 0, nullptr, nullptr),
       testing::AnyOf(QDMI_SUCCESS, QDMI_ERROR_NOTSUPPORTED));
+
+  QDMI_Program_Format format{};
+  size_t size = sizeof(format);
+  EXPECT_EQ(MQT_QMAP_NA_QDMI_device_session_query_device_property(
+                session, QDMI_DEVICE_PROPERTY_SUPPORTEDPROGRAMFORMATS,
+                sizeof(format), &format, &size),
+            QDMI_SUCCESS);
+  EXPECT_EQ(size, 0);
 }
 
 TEST_F(NaQDMISpecificationTest, QuerySiteProperty) {

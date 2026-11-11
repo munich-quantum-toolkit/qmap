@@ -10,6 +10,11 @@ releases may include breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- ⬆️ Update `mqt-core` to version 3.12.0 ([#1217]) ([**@denialhaag**])
+- ⬆️ Update QDMI to version 1.4.0 ([#1217]) ([**@denialhaag**])
+
 ## [3.11.0] - 2026-10-12
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#3110)._
@@ -352,6 +357,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1217]: https://github.com/munich-quantum-toolkit/qmap/pull/1217
 [#1188]: https://github.com/munich-quantum-toolkit/qmap/pull/1188
 [#1176]: https://github.com/munich-quantum-toolkit/qmap/pull/1176
 [#1158]: https://github.com/munich-quantum-toolkit/qmap/pull/1158
