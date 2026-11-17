@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
-import platform
 import shutil
 import tempfile
 from pathlib import Path
@@ -34,9 +33,6 @@ nox.needs_version = ">=2025.10.16"
 nox.options.default_venv_backend = "uv"
 
 PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
-
-if platform.system() == "Linux":
-    os.environ["GLIBC_TUNABLES"] = "glibc.rtld.optional_static_tls=65536"
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
