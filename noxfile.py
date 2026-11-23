@@ -10,7 +10,7 @@
 # /// script
 # dependencies = [
 #   "nox>=2026.10.20",
-#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@fb97d4b296be234feb9a373df60874012cf90ece",
+#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@aa3af05513ba6522453c8f59f0db2623acbe2146",
 # ]
 # ///
 
@@ -18,7 +18,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import nox
@@ -28,9 +27,6 @@ nox.needs_version = ">=2026.10.20"
 nox.options.default_venv_backend = "uv"
 
 PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
-
-if os.environ.get("CI", None):
-    nox.options.error_on_missing_interpreters = True
 
 
 @nox.session(reuse_venv=True, default=True)
@@ -55,8 +51,8 @@ def evaluation(session: nox.Session) -> None:
     compiler's contract, so it runs on demand (``nox -s evaluation``) rather than
     in the default CI matrix.
     """
-    cpp.install(session, package="mqt-qmap", groups=("test", "evaluation"))
-    common.run_pytest(session, pytest_args=("eval/ph/tests",))
+    cpp.install(session, package="mqt-qmap", groups=["test", "evaluation"])
+    common.run_pytest(session, pytest_args=["eval/ph/tests"])
 
 
 @nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, venv_backend="uv", default=True)
@@ -68,11 +64,7 @@ def minimums(session: nox.Session) -> None:
 @nox.session(reuse_venv=True, venv_backend="uv", python=PYTHON_ALL_VERSIONS)
 def qiskit(session: nox.Session) -> None:
     """Tests against the latest version of Qiskit."""
-    cpp.tests(
-        session,
-        package="mqt-qmap",
-        extra_deps=("qiskit[qasm3-import] @ git+https://github.com/Qiskit/qiskit.git",),
-    )
+    cpp.qiskit(session, package="mqt-qmap")
 
 
 @nox.session(python="3.14", reuse_venv=True)
@@ -87,7 +79,7 @@ def stubs(session: nox.Session) -> None:
     cpp.stubs(
         session,
         package="mqt-qmap",
-        modules=("mqt.qmap.na", "mqt.qmap.clifford_synthesis", "mqt.qmap.hybrid_mapper", "mqt.qmap.sc"),
+        modules=["mqt.qmap.na", "mqt.qmap.clifford_synthesis", "mqt.qmap.hybrid_mapper", "mqt.qmap.sc"],
         output_dir=Path(__file__).parent / "python" / "mqt" / "qmap",
     )
 
