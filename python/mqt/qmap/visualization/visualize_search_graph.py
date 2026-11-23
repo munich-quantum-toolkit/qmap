@@ -908,7 +908,7 @@ def _load_layer_data(
     for q in considered_qubit_color_groups:
         considered_qubit_colors[q] = considered_qubits_color_codes[considered_qubit_color_groups[q]]
 
-    return (  # ty: ignore[invalid-return-type]
+    return (  # ty: ignore[invalid-explicit-return]
         graph,
         initial_layout,
         initial_positions,
@@ -1526,7 +1526,7 @@ def _visualize_search_graph_check_parameters(
             msg = "search_node_height must be a list of cost functions or a single cost function."
             raise TypeError(msg)
 
-    return (  # ty: ignore[invalid-return-type]
+    return (  # ty: ignore[invalid-explicit-return]
         data_logging_path,
         hide_layout,
         draw_stems,
@@ -1932,13 +1932,13 @@ def visualize_search_graph(
         if current_node_layout_visualized == point_inds[0]:
             return
         current_node_layout_visualized = point_inds[0]
-        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # ty: ignore[unresolved-attribute]
+        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # ty: ignore[missing-union-attribute]
 
         # this function is only called if hide_layout==False, therefore all variables are defined
         assert arch_node_trace is not None
         _visualize_layout(
             fig,
-            search_graph.nodes[node_index]["data"],  # ty: ignore[unresolved-attribute]
+            search_graph.nodes[node_index]["data"],  # ty: ignore[missing-union-attribute]
             arch_node_trace,
             architecture_node_positions,  # ty: ignore[invalid-argument-type]
             initial_layout,
