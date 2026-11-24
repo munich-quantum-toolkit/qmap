@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 from mqt.core import load
+from qiskit import QuantumCircuit
 
 from mqt.qmap.na.zoned import RoutingAwareCompiler, ZonedNeutralAtomArchitecture
 
@@ -68,3 +69,15 @@ def test_na_routing_aware_compiler(compiler: RoutingAwareCompiler, circuit_filen
     stats = compiler.stats()
     assert "totalTime" in stats
     assert stats["totalTime"] > 0
+
+
+def test_global_hadamard(compiler: RoutingAwareCompiler) -> None:
+    """Apply the Hadamard from a Qiskit custom gate to every atom."""
+    gates = QuantumCircuit(5)
+    gates.h(range(5))
+    circuit = QuantumCircuit(5)
+    circuit.append(gates.to_gate(), range(5))
+
+    output = compiler.compile(load(circuit))
+    for qubit in range(5):
+        assert output.count(f"1.57080 0.00000 3.14159 atom{qubit}\n") == 1
