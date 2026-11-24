@@ -12,6 +12,10 @@ ABI.
 
 ### Zoned neutral-atom placement
 
+When a preferred storage column is full, the routing-aware placer uses the
+nearest column with a free site on the same array to estimate movement. It uses
+the lower column number in a tie. This can change the placement of a circuit.
+
 If you match the A* placement error by message, use `queued nodes` to identify
 the `max_nodes` limit.
 
