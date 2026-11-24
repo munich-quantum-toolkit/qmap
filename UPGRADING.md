@@ -10,6 +10,11 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Zoned neutral-atom placement
+
+If you match the A* placement error by message, use `queued nodes` to identify
+the `max_nodes` limit.
+
 ### Superconducting mapping
 
 When the input circuit fits the device, the heuristic and exact mappers keep

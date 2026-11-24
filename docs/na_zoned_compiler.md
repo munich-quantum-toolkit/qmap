@@ -183,11 +183,9 @@ print(code)
 ```
 
 ```{note}
-The A* search in the placer of the routing-aware compiler is quite memory
-intensive. Right now, the maximum number of nodes considered in the A* search is
-limited to 50M. If this limit is hit, you will get an error message. You can
-freely adapt this limit by setting the argument `max_nodes` in the constructor
-of the `RoutingAwareCompiler`, see below.
+The A* placer checks the number of queued nodes after each expansion. By
+default, it stops with an error if the queue holds 10 million or more nodes. Set
+`max_nodes` in the `RoutingAwareCompiler` constructor to change this limit.
 ```
 
 Above, we have used the default settings for the compiler. However, the

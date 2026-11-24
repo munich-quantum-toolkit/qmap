@@ -177,10 +177,7 @@ class RoutingAwareCompiler:
             deepening_value: Is added to the sum of standard deviations before it is multiplied with the number of unplaced nodes and :attr:`deepening_factor`
             lookahead_factor: Controls the lookahead's influence that considers the distance of atoms to their interaction partner in the next layer
             reuse_level: The reuse level that corresponds to the estimated extra fidelity loss due to the extra trap transfers when the atom is not reused and instead moved to the storage zone and back to the entanglement zone
-            max_nodes: The maximum number of nodes that are considered in the A* search.
-                If this number is exceeded, the search is aborted and an error is raised.
-                In the current implementation, one node roughly consumes 120 Byte.
-                Hence, allowing 50,000,000 nodes results in memory consumption of about 6 GB plus the size of the rest of the data structures.
+            max_nodes: A* placement stops with an error if an expansion leaves at least this many nodes in the queue.
             trials: The number of restarts during IDS.
             queue_capacity: The maximum capacity of the priority queue used during IDS.
             routing_method: The routing method that should be used for the independent set router

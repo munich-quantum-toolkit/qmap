@@ -151,12 +151,7 @@ public:
      * this option over the non-reuse options.
      */
     float reuseLevel = 5.0F;
-    /**
-     * @brief The maximum number of nodes that are allowed to be visited in the
-     * A* search tree.
-     * @detsils If this number is exceeded, the search is aborted and an error
-     * is raised.
-     */
+    /// A* stops if an expansion leaves at least this many nodes in the queue.
     size_t maxNodes = 10'000'000;
     /**
      * @brief The number of trials determines the number of restarts during IDS.
@@ -792,9 +787,9 @@ private:
       }
       if (openSet.size() >= maxNodes) {
         throw std::runtime_error(
-            "Maximum number of nodes reached. Increase max_nodes or increase "
-            "deepening_value and deepening_factor to reduce the number of "
-            "explored nodes.");
+            "A* placement reached the limit on queued nodes. "
+            "Increase max_nodes or try larger deepening_value and "
+            "deepening_factor settings.");
       }
     }
     throw std::runtime_error(
