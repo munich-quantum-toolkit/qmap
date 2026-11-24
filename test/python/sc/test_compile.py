@@ -177,6 +177,30 @@ def test_controlled_gate_direction(method: Method, swap_reduction: SwapReduction
             assert [mapped.find_bit(q).index for q in instruction.qubits] == [0, 1]
 
 
+@pytest.mark.parametrize("control", [0, 1])
+def test_exact_counts_repeated_cnot_reversals_in_block(control: int) -> None:
+    """Choose the direction that reverses one CNOT in a mixed block."""
+    circuit = QuantumCircuit(2)
+    target = 1 - control
+    circuit.cx(control, target)
+    circuit.rxx(0.37, 1, 0)
+    circuit.cx(target, control)
+    circuit.cx(control, target)
+    mapped, results = compile_(
+        circuit,
+        Architecture(2, {(0, 1)}),
+        method=Method.exact,
+        layering=Layering.disjoint_2q_blocks,
+        post_mapping_optimizations=False,
+        add_measurements_to_mapped_circuit=False,
+    )
+
+    assert results.input_.layers == 1
+    assert results.output.swaps == 0
+    assert results.output.direction_reverse == 1
+    assert Operator.from_circuit(mapped).equiv(Operator(circuit))
+
+
 def test_exact_keeps_solution_when_later_subset_is_unsatisfiable() -> None:
     """Only the triangle supports all three interactions with zero SWAPs."""
     circuit = QuantumCircuit(4)
@@ -336,14 +360,21 @@ def test_native_gate_calibration(
 
 @pytest.mark.parametrize("swap_error", [0.08, None])
 def test_swap_calibration(swap_error: float | None) -> None:
-    """Use the native SWAP rate when available and the CX model otherwise."""
-    properties = Architecture.Properties()
-    properties.set_two_qubit_error(0, 1, 0.02, "cx")
+    """Price SWAP from native or CX calibration supplied through live properties."""
+    architecture = Architecture(2, {(0, 1)})
+    architecture.properties.set_two_qubit_error(0, 1, 0.02, "cx")
     if swap_error is not None:
-        properties.set_two_qubit_error(0, 1, swap_error, "swap")
+        architecture.properties.set_two_qubit_error(0, 1, swap_error, "swap")
     circuit = QuantumCircuit(2)
+    circuit.h(0)
     circuit.swap(1, 0)
-    _, results = compile_(circuit, Architecture(2, {(0, 1)}, properties), add_measurements_to_mapped_circuit=False)
+    _, results = compile_(
+        circuit,
+        architecture,
+        heuristic=Heuristic.fidelity_best_location,
+        lookahead_heuristic=LookaheadHeuristic.none,
+        add_measurements_to_mapped_circuit=False,
+    )
 
     expected = 0.98**3 if swap_error is None else 1.0 - swap_error
     assert results.output.total_fidelity == pytest.approx(expected)

@@ -982,20 +982,26 @@ TEST(TestArchitecture, SparseCalibrationCosts) {
   const Architecture architecture(4, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}},
                                   props);
 
-  EXPECT_NEAR(architecture.singleQubitCost(qc::H, 0), -std::log2(0.97), 1e-12);
-  EXPECT_NEAR(architecture.singleQubitCost(qc::Z, 0), -std::log2(0.98), 1e-12);
-  EXPECT_TRUE(std::isinf(architecture.singleQubitCost(qc::H, 1)));
-  EXPECT_NEAR(architecture.nativeTwoQubitCost(qc::RXX, 2, 3), -std::log2(0.92),
-              1e-12);
-  EXPECT_TRUE(std::isinf(architecture.nativeTwoQubitCost(qc::RXX, 3, 2)));
+  const auto assumeIdeal = architecture.hasCompleteCnotCalibration();
+  EXPECT_FALSE(assumeIdeal);
+  EXPECT_NEAR(architecture.singleQubitCost(qc::H, 0, assumeIdeal),
+              -std::log2(0.97), 1e-12);
+  EXPECT_NEAR(architecture.singleQubitCost(qc::Z, 0, assumeIdeal),
+              -std::log2(0.98), 1e-12);
+  EXPECT_TRUE(std::isinf(architecture.singleQubitCost(qc::H, 1, assumeIdeal)));
+  EXPECT_NEAR(architecture.nativeTwoQubitCost(qc::RXX, {2, 3}),
+              -std::log2(0.92), 1e-12);
+  EXPECT_TRUE(std::isinf(architecture.nativeTwoQubitCost(qc::RXX, {3, 2})));
 
-  const auto [decomposed, decomposedReversed] = architecture.swapFidelity(0, 1);
-  const auto [native, nativeReversed] = architecture.swapFidelity(1, 2);
+  const auto [decomposed, decomposedReversed] =
+      architecture.swapFidelity({0, 1}, assumeIdeal);
+  const auto [native, nativeReversed] =
+      architecture.swapFidelity({1, 2}, assumeIdeal);
   EXPECT_FALSE(decomposedReversed);
   EXPECT_NEAR(decomposed, -std::log2(0.9 * 0.9 * 0.8), 1e-12);
   EXPECT_TRUE(nativeReversed);
   EXPECT_NEAR(native, -std::log2(0.94), 1e-12);
-  EXPECT_TRUE(std::isinf(architecture.swapFidelity(2, 3).cost));
+  EXPECT_TRUE(std::isinf(architecture.swapFidelity({2, 3}, assumeIdeal).cost));
 }
 
 TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {

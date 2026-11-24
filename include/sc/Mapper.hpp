@@ -99,6 +99,7 @@ protected:
   };
   std::vector<Layer> layers;
   bool fidelityAwareHeur = false;
+  bool assumeIdealSingleQubits = false;
 
   /**
    * @brief containing the logical qubit currently mapped to each physical
@@ -123,9 +124,8 @@ protected:
    */
   virtual void initResults();
 
-  [[nodiscard]] Architecture::GateFidelity
-  gateFidelity(const Gate& gate, std::uint16_t first,
-               std::uint16_t second) const;
+  [[nodiscard]] Architecture::GateFidelity gateFidelity(const Gate& gate,
+                                                        const Edge& edge) const;
 
   /// Emit the gate on its physical operands.
   void appendMappedGate(const Gate& gate, std::uint16_t first);

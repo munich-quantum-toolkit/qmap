@@ -281,15 +281,22 @@ public:
 
   [[nodiscard]] bool isFidelityAvailable() const { return fidelityAvailable; }
 
+  /// Check live properties for CNOT rates on every directed edge.
+  [[nodiscard]] bool hasCompleteCnotCalibration() const;
+
   /// Native gate costs use negative log2 fidelity. Missing costs are infinite.
-  [[nodiscard]] double singleQubitCost(qc::OpType type,
-                                       std::uint16_t qubit) const;
-  [[nodiscard]] double nativeTwoQubitCost(qc::OpType type, std::uint16_t first,
-                                          std::uint16_t second) const;
+  [[nodiscard]] double singleQubitCost(qc::OpType type, std::uint16_t qubit,
+                                       bool assumeIdealSingleQubits) const;
+  [[nodiscard]] double nativeTwoQubitCost(qc::OpType type,
+                                          const Edge& edge) const;
+
+  /// Cost of the four Hadamards that reverse a CNOT.
+  [[nodiscard]] double reversalCost(const Edge& edge,
+                                    bool assumeIdealSingleQubits) const;
 
   /// Select a calibrated native SWAP or a calibrated CX decomposition.
-  [[nodiscard]] GateFidelity swapFidelity(std::uint16_t first,
-                                          std::uint16_t second) const;
+  [[nodiscard]] GateFidelity swapFidelity(const Edge& edge,
+                                          bool assumeIdealSingleQubits) const;
 
   [[nodiscard]] const std::vector<Matrix>& getFidelityDistanceTables() const {
     if (!fidelityAvailable) {

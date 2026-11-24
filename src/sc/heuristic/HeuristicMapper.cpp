@@ -397,7 +397,8 @@ void HeuristicMapper::prepareRoutingSwaps() {
       routingSwaps.emplace_back(edge, cost);
       continue;
     }
-    const auto [cost, reversed] = architecture->swapFidelity(first, second);
+    const auto [cost, reversed] =
+        architecture->swapFidelity(edge, assumeIdealSingleQubits);
     if (std::isfinite(cost)) {
       routingSwaps.emplace_back(reversed ? Edge{second, first} : edge, cost);
       calibratedSwapDistances[first][second] = cost;
@@ -445,17 +446,22 @@ bool HeuristicMapper::prepareCalibratedInteractions(const Layer& layer) {
   calibratedInteractions.clear();
   minLayerExecutionCost = 0.;
   for (const auto& [logical, gates] : groups) {
-    CalibratedInteraction interaction{logical, {}, infinity};
+    CalibratedInteraction interaction{
+        .logical = logical,
+        .placements = {},
+        .minExecutionCost = infinity,
+    };
     const auto addPlacement = [&](const Edge& physical) {
       double cost = 0.;
       for (const auto* gate : gates) {
         const bool forward = gate->first == logical.first;
         const auto first = forward ? physical.first : physical.second;
         if (gate->singleQubit()) {
-          cost += architecture->singleQubitCost(gate->op->getType(), first);
+          cost += architecture->singleQubitCost(gate->op->getType(), first,
+                                                assumeIdealSingleQubits);
         } else {
           const auto second = forward ? physical.second : physical.first;
-          cost += gateFidelity(*gate, first, second).cost;
+          cost += gateFidelity(*gate, {first, second}).cost;
         }
         if (!std::isfinite(cost)) {
           return;
@@ -539,7 +545,8 @@ bool HeuristicMapper::mapUnmappedCalibratedGates(const std::size_t index) {
   };
   const auto tryPlacements = [&](auto& candidates) {
     std::ranges::sort(candidates);
-    for (const auto& [cost, physical] : candidates) {
+    return std::ranges::any_of(candidates, [&](const auto& candidate) {
+      const auto& physical = candidate.second;
       place(q1, physical.first);
       place(q2, physical.second);
       if (mapUnmappedCalibratedGates(index + 1)) {
@@ -547,8 +554,8 @@ bool HeuristicMapper::mapUnmappedCalibratedGates(const std::size_t index) {
       }
       restore(q1, physical.first, first);
       restore(q2, physical.second, second);
-    }
-    return false;
+      return false;
+    });
   };
 
   std::vector<std::pair<double, Edge>> candidates;
@@ -575,7 +582,7 @@ bool HeuristicMapper::mapUnmappedCalibratedGates(const std::size_t index) {
       continue;
     }
     const auto start = single ? i : std::uint16_t{0};
-    const auto end = single ? static_cast<std::size_t>(i) + 1 : n;
+    const auto end = single ? static_cast<std::uint16_t>(i + 1U) : n;
     for (auto j = start; j < end; ++j) {
       const Edge physical{i, j};
       if ((!single && i == j) || !available(second, j) ||
@@ -749,9 +756,11 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       SingleQubitMultiplicity singles;
       TwoQubitMultiplicity pairs;
     };
-    LayerLog data{qc::CompoundOperation{},
-                  SingleQubitMultiplicity(architecture->getNqubits()),
-                  {}};
+    LayerLog data{
+        .ops = qc::CompoundOperation{},
+        .singles = SingleQubitMultiplicity(architecture->getNqubits()),
+        .pairs = {},
+    };
     for (const auto& gate : layers.at(layer).gates) {
       data.ops.emplace_back(gate.op->clone());
       if (gate.second) {
@@ -775,9 +784,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
                                    0, {}, {}, 0);
       dataLogger->splitLayer();
     }
-    while (!nodes.empty()) {
-      nodes.pop();
-    }
+    nodes.clear();
     if (fidelityAwareHeur) {
       qubits = initialQubits;
       locations = initialLocations;
@@ -839,7 +846,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
                               node.validMapping, node.swaps, node.depth);
   }
   if (std::isfinite(node.getTotalCost())) {
-    nodes.push(node);
+    nodes.push(std::move(node));
   }
 
   const auto start = std::chrono::steady_clock::now();
@@ -862,7 +869,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     if (splittable && expandedNodes >= config.automaticLayerSplitsNodeLimit) {
       return retrySplitLayer(false);
     }
-    Node current = nodes.top();
+    Node current = nodes.takeTop();
     if (fidelityAwareHeur) {
       std::vector<std::int16_t> placement;
       for (const auto logical : layers.at(layer).activeQubits) {
@@ -871,7 +878,6 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       const auto [it, inserted] = expandedFidelityPlacements.try_emplace(
           std::move(placement), current.swapFidelityCost);
       if (!inserted && it->second <= current.swapFidelityCost) {
-        nodes.pop();
         continue;
       }
       it->second = current.swapFidelityCost;
@@ -891,7 +897,6 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
         break;
       }
     }
-    nodes.pop();
     expandNode(current, layer);
     ++expandedNodes;
     if (validMapping) {
@@ -984,10 +989,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
                                  result.swaps, result.depth);
   }
 
-  // clear nodes
-  while (!nodes.empty()) {
-    nodes.pop();
-  }
+  nodes.clear();
 
   return result;
 }
@@ -1015,15 +1017,15 @@ void HeuristicMapper::expandNodeAddOneSwap(const Edge& swap, const Node& node,
   newNode.swapFidelityCost = node.swapFidelityCost;
   applySWAP(swap, layer, newNode, swapCost);
 
-  if (std::isfinite(newNode.getTotalCost())) {
-    nodes.push(newNode);
-  }
   if (results.config.dataLoggingEnabled()) {
     dataLogger->logSearchNode(layer, newNode.id, newNode.parent,
                               newNode.costFixed + newNode.costFixedReversals,
                               newNode.costHeur, newNode.lookaheadPenalty,
                               newNode.qubits, newNode.validMapping,
                               newNode.swaps, newNode.depth);
+  }
+  if (std::isfinite(newNode.getTotalCost())) {
+    nodes.push(std::move(newNode));
   }
 }
 
@@ -1071,7 +1073,10 @@ void HeuristicMapper::applySWAP(const Edge& swap, const std::size_t layer,
   const auto q1 = node.qubits.at(swap.first);
   const auto q2 = node.qubits.at(swap.second);
 
-  if (!fidelityAwareHeur) {
+  const auto heuristic = results.config.heuristic;
+  if (heuristic == Heuristic::GateCountSumDistanceMinusSharedSwaps ||
+      heuristic ==
+          Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps) {
     updateSharedSwaps(swap, layer, node);
   }
 
@@ -1150,27 +1155,16 @@ void HeuristicMapper::updateSharedSwaps(const Edge& swap, std::size_t layer,
       std::cmp_not_equal(logEdge2.second, q2) &&
       // if it is not the same 2q gate acting on both qubits
       std::cmp_not_equal(logEdge1.second, q2)) {
-    auto physQ3 =
+    const auto physQ3 =
         static_cast<std::uint16_t>(node.locations.at(logEdge1.second));
-    auto physQ4 =
+    const auto physQ4 =
         static_cast<std::uint16_t>(node.locations.at(logEdge2.second));
 
-    double logEdge1DistanceBefore = 0.;
-    double logEdge1DistanceNew = 0.;
-    double logEdge2DistanceBefore = 0.;
-    double logEdge2DistanceNew = 0.;
-    logEdge1DistanceBefore =
-        std::min(architecture->distance(swap.first, physQ3, false),
-                 architecture->distance(physQ3, swap.first, false));
-    logEdge1DistanceNew =
-        std::min(architecture->distance(swap.second, physQ3, false),
-                 architecture->distance(physQ3, swap.second, false));
-    logEdge2DistanceBefore =
-        std::min(architecture->distance(swap.second, physQ4, false),
-                 architecture->distance(physQ4, swap.second, false));
-    logEdge2DistanceNew =
-        std::min(architecture->distance(swap.first, physQ4, false),
-                 architecture->distance(physQ4, swap.first, false));
+    const auto& distances = architecture->getDistanceTable(false);
+    const auto logEdge1DistanceBefore = distances.at(swap.first).at(physQ3);
+    const auto logEdge1DistanceNew = distances.at(swap.second).at(physQ3);
+    const auto logEdge2DistanceBefore = distances.at(swap.second).at(physQ4);
+    const auto logEdge2DistanceNew = distances.at(swap.first).at(physQ4);
     if (logEdge1DistanceNew < logEdge1DistanceBefore &&
         logEdge2DistanceNew < logEdge2DistanceBefore) {
       ++node.sharedSwaps;

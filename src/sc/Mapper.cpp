@@ -30,6 +30,7 @@
 #include <limits>
 #include <optional>
 #include <set>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -67,6 +68,7 @@ void Mapper::initResults() {
     throw QMAPException(
         "The circuit has more active qubits than the architecture.");
   }
+  assumeIdealSingleQubits = architecture->hasCompleteCnotCalibration();
   countGates(qc, results.input, false);
   results.input.name = qc.getName();
   results.input.qubits = static_cast<std::uint16_t>(qc.getNqubits());
@@ -146,28 +148,26 @@ Mapper::Reversal Mapper::reversalFor(const qc::Operation& op) {
 }
 
 Architecture::GateFidelity Mapper::gateFidelity(const Gate& gate,
-                                                std::uint16_t first,
-                                                std::uint16_t second) const {
+                                                const Edge& edge) const {
   const auto& op = *gate.op;
   if (op.getType() == qc::SWAP) {
-    return architecture->swapFidelity(first, second);
+    return architecture->swapFidelity(edge, assumeIdealSingleQubits);
   }
   if (op.isControlled() &&
       op.getControls().begin()->type == qc::Control::Type::Neg) {
-    return {std::numeric_limits<double>::infinity(), false};
+    return {.cost = std::numeric_limits<double>::infinity(), .reversed = false};
   }
-  const auto direct =
-      architecture->nativeTwoQubitCost(op.getType(), first, second);
+  const auto direct = architecture->nativeTwoQubitCost(op.getType(), edge);
   if (gate.reversal == Reversal::None) {
-    return {direct, false};
+    return {.cost = direct, .reversed = false};
   }
-  auto reverse = architecture->nativeTwoQubitCost(op.getType(), second, first);
+  const auto [first, second] = edge;
+  auto reverse =
+      architecture->nativeTwoQubitCost(op.getType(), {second, first});
   if (gate.reversal == Reversal::CNOT) {
-    reverse += 2 * (architecture->singleQubitCost(qc::H, first) +
-                    architecture->singleQubitCost(qc::H, second));
+    reverse += architecture->reversalCost(edge, assumeIdealSingleQubits);
   }
-  return reverse < direct ? Architecture::GateFidelity{reverse, true}
-                          : Architecture::GateFidelity{direct, false};
+  return {.cost = std::min(direct, reverse), .reversed = reverse < direct};
 }
 
 void Mapper::appendMappedGate(const Gate& gate, std::uint16_t first) {
@@ -180,7 +180,7 @@ void Mapper::appendMappedGate(const Gate& gate, std::uint16_t first) {
 
   auto second = static_cast<std::uint16_t>(locations.at(*gate.second));
   const bool reversed = fidelityAwareHeur
-                            ? gateFidelity(gate, first, second).reversed
+                            ? gateFidelity(gate, {first, second}).reversed
                             : !architecture->isEdgeConnected({first, second});
   if (reversed) {
     if (gate.reversal == Reversal::None ||
@@ -252,8 +252,12 @@ void Mapper::createLayers() {
     const auto& targets = op->getTargets();
     const auto first =
         op->isControlled() ? op->getControls().begin()->qubit : targets.front();
-    Gate gate{static_cast<std::uint16_t>(qc.initialLayout.at(first)),
-              std::nullopt, op.get(), Reversal::None};
+    Gate gate{
+        .first = static_cast<std::uint16_t>(qc.initialLayout.at(first)),
+        .second = std::nullopt,
+        .op = op.get(),
+        .reversal = Reversal::None,
+    };
     if (op->getNqubits() == 2) {
       gate.second =
           static_cast<std::uint16_t>(qc.initialLayout.at(targets.back()));
@@ -375,10 +379,12 @@ void Mapper::splitLayer(std::size_t index) {
       take = !take;
     }
   }
-  const auto second = std::stable_partition(
-      layer.gates.begin(), layer.gates.end(),
-      [&](const Gate& gate) { return firstHalf.contains(gate.first); });
-  splitLayerAt(index, static_cast<std::size_t>(second - layer.gates.begin()));
+  const auto second =
+      std::ranges::stable_partition(layer.gates, [&](const Gate& gate) {
+        return firstHalf.contains(gate.first);
+      });
+  splitLayerAt(index,
+               static_cast<std::size_t>(second.begin() - layer.gates.begin()));
 }
 
 void Mapper::splitLayerAt(std::size_t index, std::size_t offset) {
@@ -497,7 +503,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
         ++info.gates;
         const auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
         if (mapped && calibrated) {
-          addCost(architecture->singleQubitCost(g->getType(), q1));
+          addCost(architecture->singleQubitCost(g->getType(), q1,
+                                                assumeIdealSingleQubits));
         } else if (!mapped && cnotCalibrated) {
           addCost(architecture->getSingleQubitFidelityCost(q1));
         }
@@ -534,9 +541,11 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
           info.totalLogFidelity = unavailable;
         } else {
           const auto cost =
-              architecture->nativeTwoQubitCost(g->getType(), q1, q2);
+              architecture->nativeTwoQubitCost(g->getType(), {q1, q2});
           addCost(swap && !std::isfinite(cost)
-                      ? architecture->swapFidelity(q1, q2).cost
+                      ? architecture
+                            ->swapFidelity({q1, q2}, assumeIdealSingleQubits)
+                            .cost
                       : cost);
         }
       } else if (!mapped && cnot && cnotCalibrated) {

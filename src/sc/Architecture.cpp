@@ -244,15 +244,23 @@ void Architecture::createDistanceTable() {
   }
 }
 
+bool Architecture::hasCompleteCnotCalibration() const {
+  return !couplingMap.empty() &&
+         std::ranges::all_of(couplingMap, [this](const auto& edge) {
+           return std::isfinite(nativeTwoQubitCost(qc::X, edge));
+         });
+}
+
 double Architecture::singleQubitCost(const qc::OpType type,
-                                     const std::uint16_t qubit) const {
+                                     const std::uint16_t qubit,
+                                     const bool assumeIdealSingleQubits) const {
   if (qubit >= nqubits) {
     return UNAVAILABLE_COST;
   }
   const auto& rates = properties.singleQubitErrorRate;
   if (!rates.available(qubit) || rates.get(qubit).empty()) {
     // Keep the ideal default of the complete CX calibration model.
-    return fidelityAvailable && !couplingMap.empty() ? 0. : UNAVAILABLE_COST;
+    return assumeIdealSingleQubits ? 0. : UNAVAILABLE_COST;
   }
   const auto& gateRates = rates.get(qubit);
   return logFidelityCost(
@@ -262,11 +270,11 @@ double Architecture::singleQubitCost(const qc::OpType type,
 }
 
 double Architecture::nativeTwoQubitCost(const qc::OpType type,
-                                        const std::uint16_t first,
-                                        const std::uint16_t second) const {
+                                        const Edge& edge) const {
+  const auto [first, second] = edge;
   const auto& rates = properties.twoQubitErrorRate;
-  if (first == second || !isEdgeConnected({first, second}) ||
-      !rates.available(first) || !rates.get(first).available(second)) {
+  if (first == second || !isEdgeConnected(edge) || !rates.available(first) ||
+      !rates.get(first).available(second)) {
     return UNAVAILABLE_COST;
   }
   const auto& gateRates = rates.get(first).get(second);
@@ -274,38 +282,52 @@ double Architecture::nativeTwoQubitCost(const qc::OpType type,
                                    : UNAVAILABLE_COST;
 }
 
+double Architecture::reversalCost(const Edge& edge,
+                                  const bool assumeIdealSingleQubits) const {
+  return 2 * (singleQubitCost(qc::H, edge.first, assumeIdealSingleQubits) +
+              singleQubitCost(qc::H, edge.second, assumeIdealSingleQubits));
+}
+
 Architecture::GateFidelity
-Architecture::swapFidelity(const std::uint16_t first,
-                           const std::uint16_t second) const {
-  const auto native = nativeTwoQubitCost(qc::SWAP, first, second);
-  const auto reversedNative = nativeTwoQubitCost(qc::SWAP, second, first);
+Architecture::swapFidelity(const Edge& edge,
+                           const bool assumeIdealSingleQubits) const {
+  const auto [first, second] = edge;
+  const Edge reversedEdge{second, first};
+  const auto native = nativeTwoQubitCost(qc::SWAP, edge);
+  const auto reversedNative = nativeTwoQubitCost(qc::SWAP, reversedEdge);
   if (std::isfinite(native) || std::isfinite(reversedNative)) {
-    return {std::min(native, reversedNative), reversedNative < native};
+    return {
+        .cost = std::min(native, reversedNative),
+        .reversed = reversedNative < native,
+    };
   }
 
-  const auto cx = nativeTwoQubitCost(qc::X, first, second);
-  const auto reversedCx = nativeTwoQubitCost(qc::X, second, first);
+  const auto cx = nativeTwoQubitCost(qc::X, edge);
+  const auto reversedCx = nativeTwoQubitCost(qc::X, reversedEdge);
   const auto cheapestCx = std::min(cx, reversedCx);
   const auto reversed = reversedCx < cx;
   if (!std::isfinite(cheapestCx)) {
-    return {UNAVAILABLE_COST, !isEdgeConnected({first, second})};
+    return {.cost = UNAVAILABLE_COST, .reversed = !isEdgeConnected(edge)};
   }
   if (std::isfinite(cx) && std::isfinite(reversedCx)) {
-    return {2 * cheapestCx + std::max(cx, reversedCx), reversed};
+    return {
+        .cost = 2 * cheapestCx + std::max(cx, reversedCx),
+        .reversed = reversed,
+    };
   }
   // Use three CXs in the available direction and conjugate the middle one.
-  const auto h = singleQubitCost(qc::H, first) + singleQubitCost(qc::H, second);
-  return {3 * cheapestCx + 2 * h, reversed};
+  return {
+      .cost = 3 * cheapestCx + reversalCost(edge, assumeIdealSingleQubits),
+      .reversed = reversed,
+  };
 }
 
 void Architecture::createFidelityTable() {
+  const auto assumeIdealSingleQubits = hasCompleteCnotCalibration();
   fidelityAvailable =
-      (!properties.twoQubitErrorRate.empty() ||
-       !properties.singleQubitErrorRate.empty()) &&
-      std::ranges::all_of(couplingMap, [this](const auto& edge) {
-        return std::isfinite(
-            nativeTwoQubitCost(qc::X, edge.first, edge.second));
-      });
+      assumeIdealSingleQubits ||
+      (couplingMap.empty() && (!properties.twoQubitErrorRate.empty() ||
+                               !properties.singleQubitErrorRate.empty()));
   fidelityTable.clear();
   singleQubitFidelities.clear();
   singleQubitFidelityCosts.clear();
@@ -344,9 +366,10 @@ void Architecture::createFidelityTable() {
       // Conjugate a CX with a Hadamard on each endpoint to reverse its order.
       twoQubitFidelityCosts[second][first] =
           twoQubitFidelityCosts[first][second] +
-          2 * (singleQubitCost(qc::H, first) + singleQubitCost(qc::H, second));
+          reversalCost({first, second}, assumeIdealSingleQubits);
     }
-    const auto swapCost = swapFidelity(first, second).cost;
+    const auto swapCost =
+        swapFidelity({first, second}, assumeIdealSingleQubits).cost;
     swapFidelityCosts[first][second] = swapCost;
     swapFidelityCosts[second][first] = swapCost;
   }

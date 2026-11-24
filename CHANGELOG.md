@@ -12,6 +12,9 @@ releases may include breaking changes.
 
 ### Changed
 
+- ⚡️ Reuse exact-mapper transitions across layers and avoid rebuilding the
+  heuristic search queue when a better placement is found ([#1235])
+  ([**@burgholzer**])
 - ⬆️ Require Python 3.11.5 or newer ([#1226]) ([**@denialhaag**])
 - ⬆️ Update `mqt-core` to version 3.12.0 ([#1217]) ([**@denialhaag**])
 - ⬆️ Update QDMI to version 1.4.0 ([#1217]) ([**@denialhaag**])

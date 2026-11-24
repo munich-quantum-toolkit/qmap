@@ -37,14 +37,11 @@
 #include <set>
 #include <sstream>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
-void ExactMapper::map(const Configuration& settings) {
-  results.config = settings;
-  const auto& config = settings;
+void ExactMapper::map(const Configuration& config) {
+  results.config = config;
 
   const std::chrono::high_resolution_clock::time_point start =
       std::chrono::high_resolution_clock::now();
@@ -105,6 +102,7 @@ void ExactMapper::map(const Configuration& settings) {
     }
 
     architecture->setCouplingMap(reducedCouplingMap);
+    assumeIdealSingleQubits = architecture->hasCompleteCnotCalibration();
   }
 
   // 2b) If configured to use subsets, collect all k (=m over n) possibilities
@@ -122,7 +120,7 @@ void ExactMapper::map(const Configuration& settings) {
 
   // 3) determine exact mapping for this qubit choice
   std::vector<Swaps> swaps(reducedLayerIndices.size(), Swaps{});
-  mappingSwaps.reserve(reducedLayerIndices.size());
+  std::vector<Swaps> mappingSwaps;
   for (const auto& choice : allPossibleQubitChoices) {
     auto maxLimit = config.useSubsets ? architecture->getCouplingLimit(choice)
                                       : architecture->getCouplingLimit();
@@ -145,16 +143,16 @@ void ExactMapper::map(const Configuration& settings) {
     do {
       if (config.swapReduction == SwapReduction::Increasing) {
         timeout += static_cast<std::size_t>(
-            static_cast<double>(settings.timeout) *
+            static_cast<double>(config.timeout) *
             (static_cast<double>(limit) * 0.5) /
             static_cast<double>(std::max<std::size_t>(1, maxLimit)));
         timeout = std::max(timeout, static_cast<std::size_t>(10000U));
-        if (settings.verbose) {
+        if (config.verbose) {
           std::cout << "Timeout: " << timeout
-                    << "  Max-Timeout: " << settings.timeout << '\n';
+                    << "  Max-Timeout: " << config.timeout << '\n';
         }
       } else {
-        timeout = settings.timeout;
+        timeout = config.timeout;
       }
 
       // reset swaps
@@ -236,50 +234,34 @@ void ExactMapper::map(const Configuration& settings) {
 
   // 8) Write best result and statistics
   results.output.directionReverse = 0U;
-  auto layerIterator = reducedLayerIndices.begin();
-  auto swapsIterator = mappingSwaps.begin();
-
-  if (settings.verbose) {
-    auto it = reducedLayerIndices.begin();
-    for (const auto& layer : mappingSwaps) {
-      std::cout << *it << ": ";
-      for (const auto& swap : layer) {
-        std::cout << "(" << swap.first << "<->" << swap.second << ") ";
+  if (config.verbose) {
+    for (std::size_t k = 0; k < mappingSwaps.size(); ++k) {
+      std::cout << reducedLayerIndices[k] << ": ";
+      for (const auto& [first, second] : mappingSwaps[k]) {
+        std::cout << "(" << first << "<->" << second << ") ";
       }
-      ++it;
       std::cout << '\n';
     }
   }
 
-  for (std::size_t i = 0U; i < layers.size(); ++i) {
-    if (i == 0U) {
-      for (const auto& [physical, logical] : *swapsIterator) {
-        locations.at(logical) = static_cast<std::int16_t>(physical);
-        qubits.at(physical) = static_cast<std::int16_t>(logical);
-        qcMapped.initialLayout[physical] = logical;
-      }
-      placeRemainingArchitectureQubits();
+  for (const auto& [physical, logical] : mappingSwaps.front()) {
+    locations.at(logical) = static_cast<std::int16_t>(physical);
+    qubits.at(physical) = static_cast<std::int16_t>(logical);
+    qcMapped.initialLayout[physical] = logical;
+  }
+  placeRemainingArchitectureQubits();
+  if (config.verbose) {
+    printQubits(std::cout);
+    printLocations(std::cout);
+  }
 
-      if (settings.verbose) {
-        std::cout << "Qubits: ";
-        for (auto q = 0U; q < architecture->getNqubits(); ++q) {
-          std::cout << qubits.at(q) << " ";
-        }
-        std::cout << " Locations: ";
-        for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
-          std::cout << locations.at(q) << " ";
-        }
-        std::cout << "\n";
-      }
-      ++swapsIterator;
-    }
-
-    // apply all gates of layer
-    for (const auto& gate : layers.at(i).gates) {
+  std::size_t k = 0;
+  for (std::size_t i = 0; i < layers.size(); ++i) {
+    for (const auto& gate : layers[i].gates) {
       const auto first = qcMapped.size();
       appendMappedGate(gate,
                        static_cast<std::uint16_t>(locations.at(gate.first)));
-      if (settings.verbose) {
+      if (config.verbose) {
         for (auto j = first; j < qcMapped.size(); ++j) {
           qcMapped.at(j)->print(std::cout << i << ": ", qcMapped.getNqubits())
               << '\n';
@@ -287,10 +269,10 @@ void ExactMapper::map(const Configuration& settings) {
       }
     }
 
-    if (!mappingSwaps.empty() && swapsIterator != mappingSwaps.end() &&
-        layerIterator != reducedLayerIndices.end() && i == *layerIterator) {
-      // apply swaps before layer
-      for (auto [q0, q1] : std::ranges::reverse_view(*swapsIterator)) {
+    if (k + 1 < mappingSwaps.size() && i == reducedLayerIndices[k]) {
+      // Move to the placement for the next routed layer.
+      for (const auto& [q0, q1] :
+           std::ranges::reverse_view(mappingSwaps[++k])) {
         const auto logical0 = static_cast<qc::Qubit>(qubits.at(q0));
         const auto logical1 = static_cast<qc::Qubit>(qubits.at(q1));
         qcMapped.swap(q0, q1);
@@ -298,21 +280,11 @@ void ExactMapper::map(const Configuration& settings) {
         locations.at(logical0) = static_cast<std::int16_t>(q1);
         locations.at(logical1) = static_cast<std::int16_t>(q0);
 
-        if (settings.verbose) {
-          std::cout << "Qubits: ";
-          for (auto q = 0U; q < architecture->getNqubits(); ++q) {
-            std::cout << qubits.at(q) << " ";
-          }
-          std::cout << " Locations: ";
-          for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
-            std::cout << locations.at(q) << " ";
-          }
-          std::cout << "\n";
+        if (config.verbose) {
+          printQubits(std::cout);
+          printLocations(std::cout);
         }
       }
-
-      ++swapsIterator;
-      ++layerIterator;
     }
   }
 
@@ -340,11 +312,13 @@ void ExactMapper::map(const Configuration& settings) {
   results.time = diff.count();
 }
 
-void ExactMapper::coreMappingRoutine(
-    const QubitChoice& qubitChoice, const QubitChoice& logicalQubits,
-    const CouplingMap& rcm, MappingResults& choiceResults,
-    std::vector<std::vector<std::pair<std::uint16_t, std::uint16_t>>>& swaps,
-    const std::size_t limit, const std::size_t timeout) {
+void ExactMapper::coreMappingRoutine(const QubitChoice& qubitChoice,
+                                     const QubitChoice& logicalQubits,
+                                     const CouplingMap& rcm,
+                                     MappingResults& choiceResults,
+                                     std::vector<Swaps>& swaps,
+                                     const std::size_t limit,
+                                     const std::size_t timeout) {
   const auto& config = results.config;
   using namespace logicbase;
   // LogicBlock
@@ -361,30 +335,34 @@ void ExactMapper::coreMappingRoutine(
     throw QMAPException("Could not initialize Z3 logic block optimizer");
   }
 
-  std::vector<std::uint16_t> pi(qubitChoice.begin(), qubitChoice.end());
-  std::uint64_t piCount{};
-  std::uint64_t internalPiCount{};
-  std::unordered_set<std::uint64_t> skippedPi{};
-  std::unordered_map<std::uint16_t, std::uint16_t> physicalQubitIndex{};
-  std::uint16_t qIdx = 0;
-  for (const auto& qubit : qubitChoice) {
-    physicalQubitIndex[qubit] = qIdx;
-    ++qIdx;
+  std::vector<std::uint16_t> sites(qubitChoice.begin(), qubitChoice.end());
+  std::vector<std::size_t> physicalQubitIndex(architecture->getNqubits());
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    physicalQubitIndex.at(sites[i]) = i;
   }
 
-  //////////////////////////////////////////
-  /// 	Check necessary permutations	//
-  //////////////////////////////////////////
-  if (config.swapLimitsEnabled()) {
+  // Each transition between layers can use the same set of permutations.
+  struct Transition {
+    std::vector<std::uint16_t> sites;
+    std::uint64_t swaps;
+    std::size_t rank;
+  };
+  std::vector<Transition> transitions;
+  if (reducedLayerIndices.size() > 1) {
+    auto permutation = sites;
+    std::size_t rank = 0;
     do {
-      auto picost = architecture->minimumNumberOfSwaps(
-          pi, static_cast<std::int64_t>(limit));
-      if (picost > limit) {
-        skippedPi.insert(piCount);
+      const auto swapsNeeded = architecture->minimumNumberOfSwaps(
+          permutation,
+          config.swapLimitsEnabled() ? static_cast<std::int64_t>(limit) : -1);
+      if (!config.swapLimitsEnabled() || swapsNeeded <= limit) {
+        transitions.push_back(
+            {.sites = permutation, .swaps = swapsNeeded, .rank = rank});
       }
-      ++piCount;
-    } while (std::ranges::next_permutation(pi).found);
+      ++rank;
+    } while (std::ranges::next_permutation(permutation).found);
   }
+
   //////////////////////////////////////////
   /// 	Boolean Variable Definitions	//
   //////////////////////////////////////////
@@ -404,136 +382,63 @@ void ExactMapper::coreMappingRoutine(
     }
   }
 
-  /*
-permutation variables y_k_pi
-k	before layer k
-pi	arbitrary permutation of the m qubits
-number of variables: (|L|-1) * m!
-*/
-  LogicMatrix y{};
-  std::stringstream yName{};
-  for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-    y.emplace_back();
-    piCount = 0;
-    do {
-      if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
-        yName.str("");
-        yName << "y_" << k << '_' << piCount;
-        y.back().emplace_back(lb->makeVariable(yName.str(), CType::BOOL));
-      }
-      ++piCount;
-    } while (std::ranges::next_permutation(pi).found);
+  // y[k][p] selects transition p between routed layers k and k + 1.
+  LogicMatrix y(reducedLayerIndices.size() - 1);
+  for (std::size_t k = 0; k < y.size(); ++k) {
+    for (const auto& transition : transitions) {
+      const auto name =
+          "y_" + std::to_string(k + 1) + "_" + std::to_string(transition.rank);
+      y[k].emplace_back(lb->makeVariable(name, CType::BOOL));
+    }
   }
 
-  //////////////////////////////////////////
-  /// 	Consistency Constraints			//
-  //////////////////////////////////////////
-  if (config.encoding == Encoding::Naive) {
-    for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
-      for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-        auto rowConsistency = LogicTerm(0);
-        for (const auto j : logicalQubits) {
-          rowConsistency =
-              rowConsistency +
-              LogicTerm::ite(x[k][j][i], LogicTerm(1), LogicTerm(0));
-        }
-        lb->assertFormula(rowConsistency <= LogicTerm(1));
+  // Each logical qubit occupies one site. Each site holds at most one logical
+  // qubit.
+  const auto cardinality = [&](const std::vector<LogicTerm>& vars,
+                               bool exactlyOne) {
+    if (config.encoding == Encoding::Naive) {
+      auto count = LogicTerm(0);
+      for (const auto& var : vars) {
+        count = count + LogicTerm::ite(var, LogicTerm(1), LogicTerm(0));
       }
-
-      for (const auto j : logicalQubits) {
-        auto colConsistency = LogicTerm(0);
-        for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          colConsistency =
-              colConsistency +
-              LogicTerm::ite(x[k][j][i], LogicTerm(1), LogicTerm(0));
-        }
-        lb->assertFormula(colConsistency == LogicTerm(1));
-      }
+      return exactlyOne ? count == LogicTerm(1) : count <= LogicTerm(1);
     }
-  } else if (config.encoding == Encoding::Commander) {
-    for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
-      for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-        std::vector<LogicTerm> varIDs;
-        varIDs.reserve(logicalQubits.size());
-        for (const auto j : logicalQubits) {
-          varIDs.emplace_back(x[k][j][i]);
-        }
-        if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-          lb->assertFormula(
-              encodings::atMostOneCmdr(encodings::groupVars(varIDs, 2),
-                                       LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-          lb->assertFormula(
-              encodings::atMostOneCmdr(encodings::groupVars(varIDs, 3),
-                                       LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-          lb->assertFormula(encodings::atMostOneCmdr(
-              encodings::groupVars(
-                  varIDs, static_cast<std::size_t>(std::log(varIDs.size()))),
-              LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-          lb->assertFormula(encodings::atMostOneCmdr(
-              encodings::groupVars(varIDs, varIDs.size() / 2),
-              LogicTerm::noneTerm(), lb.get()));
-        }
-      }
-
-      for (const auto j : logicalQubits) {
-        const auto& varIDs = x[k][j];
-
-        if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-          lb->assertFormula(
-              encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 2),
-                                        LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-          lb->assertFormula(
-              encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 3),
-                                        LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-          lb->assertFormula(encodings::exactlyOneCmdr(
-              encodings::groupVars(
-                  varIDs, static_cast<std::size_t>(std::log(varIDs.size()))),
-              LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-          lb->assertFormula(encodings::exactlyOneCmdr(
-              encodings::groupVars(varIDs, varIDs.size() / 2),
-              LogicTerm::noneTerm(), lb.get()));
-        }
-      }
+    if (!exactlyOne && config.encoding == Encoding::Bimander) {
+      return encodings::atMostOneBiMander(vars, lb.get());
     }
-  } else if (config.encoding == Encoding::Bimander) {
-    for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
-      for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-        std::vector<LogicTerm> vars;
-        vars.reserve(logicalQubits.size());
-        for (const auto j : logicalQubits) {
-          vars.emplace_back(x[k][j][i]);
-        }
-        lb->assertFormula(encodings::atMostOneBiMander(vars, lb.get()));
+    std::size_t groupSize = 0;
+    switch (config.commanderGrouping) {
+    case CommanderGrouping::Fixed2:
+      groupSize = 2;
+      break;
+    case CommanderGrouping::Fixed3:
+      groupSize = 3;
+      break;
+    case CommanderGrouping::Logarithm:
+      groupSize = std::max<std::size_t>(
+          2, static_cast<std::size_t>(std::log(vars.size())));
+      break;
+    case CommanderGrouping::Halves:
+      groupSize = vars.size() / 2;
+      break;
+    }
+    const auto groups = encodings::groupVars(vars, groupSize);
+    return exactlyOne ? encodings::exactlyOneCmdr(groups, LogicTerm::noneTerm(),
+                                                  lb.get())
+                      : encodings::atMostOneCmdr(groups, LogicTerm::noneTerm(),
+                                                 lb.get());
+  };
+  for (const auto& assignment : x) {
+    for (std::size_t i = 0; i < sites.size(); ++i) {
+      std::vector<LogicTerm> column;
+      column.reserve(logicalQubits.size());
+      for (const auto q : logicalQubits) {
+        column.emplace_back(assignment[q][i]);
       }
-
-      for (const auto j : logicalQubits) { // There is no exactly one Bimander
-        const auto& varIDs = x[k][j];
-
-        if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-          lb->assertFormula(
-              encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 2),
-                                        LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-          lb->assertFormula(
-              encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 3),
-                                        LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-          lb->assertFormula(encodings::exactlyOneCmdr(
-              encodings::groupVars(
-                  varIDs, static_cast<std::size_t>(std::log(varIDs.size()))),
-              LogicTerm::noneTerm(), lb.get()));
-        } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-          lb->assertFormula(encodings::exactlyOneCmdr(
-              encodings::groupVars(varIDs, varIDs.size() / 2),
-              LogicTerm::noneTerm(), lb.get()));
-        }
-      }
+      lb->assertFormula(cardinality(column, false));
+    }
+    for (const auto q : logicalQubits) {
+      lb->assertFormula(cardinality(assignment[q], true));
     }
   }
 
@@ -541,129 +446,64 @@ number of variables: (|L|-1) * m!
   ///		Coupling Constraints			//
   //////////////////////////////////////////
   for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
-    auto allCouplings = LogicTerm(true);
-    for (const auto& gate : layers.at(reducedLayerIndices.at(k)).gates) {
-      if (gate.singleQubit()) {
+    const auto supported = [&](const Edge& logical) {
+      const auto& first = x[k][logical.first];
+      const auto& second = x[k][logical.second];
+      auto allowed = LogicTerm(false);
+      for (const auto& [from, to] : rcm) {
+        allowed = allowed || (first[physicalQubitIndex[from]] &&
+                              second[physicalQubitIndex[to]]);
+      }
+      return allowed;
+    };
+    for (const auto& [pair, counts] :
+         layers[reducedLayerIndices[k]].interactions) {
+      const auto forward = supported(pair);
+      if (architecture->bidirectional()) {
+        lb->assertFormula(forward);
         continue;
       }
-
-      const auto& first = x[k][gate.first];
-      const auto& second = x[k][*gate.second];
-      auto coupling = LogicTerm(false);
-      auto reverse = LogicTerm(false);
-      for (const auto& [from, to] : rcm) {
-        const auto i = physicalQubitIndex.at(from);
-        const auto j = physicalQubitIndex.at(to);
-        coupling = coupling || (first[i] && second[j]);
-        if (gate.reversal != Reversal::None && !rcm.contains({to, from})) {
-          reverse = reverse || (second[i] && first[j]);
-        }
+      const auto backward = supported({pair.second, pair.first});
+      if (counts.forward.requiresOrder) {
+        lb->assertFormula(forward);
       }
-      coupling = coupling || reverse;
-      if (!architecture->bidirectional() && gate.reversal == Reversal::CNOT) {
-        lb->weightedTerm(reverse, GATES_OF_DIRECTION_REVERSE);
+      if (counts.backward.requiresOrder) {
+        lb->assertFormula(backward);
       }
-      allCouplings = allCouplings && coupling;
-    }
-    lb->assertFormula(allCouplings);
-  }
-
-  //////////////////////////////////////////
-  /// 	Permutation Constraints			//
-  //////////////////////////////////////////
-  for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-    piCount = 0;
-    internalPiCount = 0;
-    auto& i = x[k - 1];
-    auto& j = x[k];
-    do {
-      if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
-        auto equal = LogicTerm(true);
-        for (const auto qubit : qubitChoice) {
-          for (const auto q : logicalQubits) {
-            const auto before = i[q][physicalQubitIndex[qubit]];
-            const auto after =
-                j[q][physicalQubitIndex[pi[physicalQubitIndex[qubit]]]];
-            equal = equal && (before == after);
-          }
-        }
-        lb->assertFormula(LogicTerm::implies(y[k - 1][internalPiCount], equal));
-        ++internalPiCount;
+      if (!counts.forward.requiresOrder && !counts.backward.requiresOrder) {
+        lb->assertFormula(forward || backward);
       }
-      ++piCount;
-    } while (std::ranges::next_permutation(pi).found);
-  }
-
-  // Allow only 1 y_k_pi to be true
-  if (config.encoding == Encoding::Naive) {
-    for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      auto onlyOne = LogicTerm(0);
-      piCount = 0;
-      internalPiCount = 0;
-      do {
-        if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
-          onlyOne = onlyOne + LogicTerm::ite(y[k - 1][internalPiCount],
-                                             LogicTerm(1), LogicTerm(0));
-          ++internalPiCount;
-        }
-        ++piCount;
-      } while (std::ranges::next_permutation(pi).found);
-      lb->assertFormula(onlyOne == LogicTerm(1));
-    }
-  } else {
-    for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      std::vector<LogicTerm> varIDs;
-      piCount = 0;
-      internalPiCount = 0;
-      do {
-        if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
-          varIDs.push_back(y[k - 1][internalPiCount]);
-          ++internalPiCount;
-        }
-        ++piCount;
-      } while (std::ranges::next_permutation(pi).found);
-      if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-        lb->assertFormula(encodings::exactlyOneCmdr(
-            encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
-      } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-        lb->assertFormula(encodings::exactlyOneCmdr(
-            encodings::groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
-      } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-        lb->assertFormula(encodings::exactlyOneCmdr(
-            encodings::groupVars(
-                varIDs, static_cast<std::size_t>(std::log(varIDs.size()))),
-            LogicTerm::noneTerm(), lb.get()));
-      } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-        lb->assertFormula(encodings::exactlyOneCmdr(
-            encodings::groupVars(varIDs, varIDs.size() / 2),
-            LogicTerm::noneTerm(), lb.get()));
+      if (counts.forward.cnots != 0) {
+        lb->weightedTerm(!forward, static_cast<double>(counts.forward.cnots) *
+                                       GATES_OF_DIRECTION_REVERSE);
+      }
+      if (counts.backward.cnots != 0) {
+        lb->weightedTerm(!backward, static_cast<double>(counts.backward.cnots) *
+                                        GATES_OF_DIRECTION_REVERSE);
       }
     }
   }
-  //////////////////////////////////////////
-  /// 	Objective Function				//
-  //////////////////////////////////////////
-  // cost for permutations
-  piCount = 0;
-  internalPiCount = 0;
-  const auto cost = LogicTerm(0);
-  do {
-    if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
-      auto picost = architecture->minimumNumberOfSwaps(pi);
-      if (architecture->bidirectional()) {
-        picost *= GATES_OF_BIDIRECTIONAL_SWAP;
-      } else {
-        picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
-      }
-      for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-        lb->weightedTerm(y[k - 1][internalPiCount],
-                         static_cast<double>(picost));
-      }
-      ++internalPiCount;
-    }
-    ++piCount;
-  } while (std::ranges::next_permutation(pi).found);
 
+  // Apply one permutation to the placement between successive layers.
+  const auto swapGates = architecture->bidirectional()
+                             ? GATES_OF_BIDIRECTIONAL_SWAP
+                             : GATES_OF_UNIDIRECTIONAL_SWAP;
+  for (std::size_t k = 0; k < y.size(); ++k) {
+    for (std::size_t p = 0; p < transitions.size(); ++p) {
+      const auto& transition = transitions[p];
+      auto equal = LogicTerm(true);
+      for (std::size_t from = 0; from < sites.size(); ++from) {
+        const auto to = physicalQubitIndex[transition.sites[from]];
+        for (const auto q : logicalQubits) {
+          equal = equal && (x[k][q][from] == x[k + 1][q][to]);
+        }
+      }
+      lb->assertFormula(LogicTerm::implies(y[k][p], equal));
+      lb->weightedTerm(y[k][p],
+                       static_cast<double>(transition.swaps * swapGates));
+    }
+    lb->assertFormula(cardinality(y[k], true));
+  }
   lb->makeMinimize();
 
   if (config.includeWCNF) {
@@ -686,74 +526,52 @@ number of variables: (|L|-1) * m!
     choiceResults.output.gates = choiceResults.input.gates;
     assert(choiceResults.output.swaps == 0U);
     assert(choiceResults.output.directionReverse == 0U);
-    // Decode each logical qubit's physical position once per layer.
-    std::vector<std::vector<std::uint16_t>> placements(
-        reducedLayerIndices.size(),
-        std::vector<std::uint16_t>(qc.getNqubits()));
-    for (std::size_t k = 0; k < placements.size(); ++k) {
-      for (const auto logical : logicalQubits) {
-        for (const auto physical : qubitChoice) {
-          if (m->getBoolValue(x[k][logical][physicalQubitIndex.at(physical)],
-                              lb.get())) {
-            placements[k][logical] = physical;
-            break;
-          }
+    // Read the initial placement and the transitions selected by the solver.
+    std::vector<std::uint16_t> placement(qc.getNqubits());
+    for (const auto logical : logicalQubits) {
+      for (const auto physical : sites) {
+        if (m->getBoolValue(x.front()[logical][physicalQubitIndex[physical]],
+                            lb.get())) {
+          placement[logical] = physical;
+          swaps.front().emplace_back(physical, logical);
+          break;
+        }
+      }
+    }
+    for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
+      if (k != 0) {
+        const auto& choices = y[k - 1];
+        const auto chosen =
+            std::ranges::find_if(choices, [&](const LogicTerm& term) {
+              return m->getBoolValue(term, lb.get());
+            });
+        assert(chosen != choices.end());
+        auto& permutation =
+            transitions[static_cast<std::size_t>(chosen - choices.begin())]
+                .sites;
+        architecture->minimumNumberOfSwaps(permutation, swaps[k]);
+        choiceResults.output.swaps += swaps[k].size();
+        for (const auto q : logicalQubits) {
+          placement[q] = permutation[physicalQubitIndex[placement[q]]];
         }
       }
       if (!architecture->bidirectional()) {
-        for (const auto& gate : layers[reducedLayerIndices[k]].gates) {
-          if (gate.reversal == Reversal::CNOT &&
-              !rcm.contains(
-                  {placements[k][gate.first], placements[k][*gate.second]})) {
-            ++choiceResults.output.directionReverse;
+        for (const auto& [pair, counts] :
+             layers[reducedLayerIndices[k]].interactions) {
+          const auto first = placement[pair.first];
+          const auto second = placement[pair.second];
+          if (!rcm.contains({first, second})) {
+            choiceResults.output.directionReverse += counts.forward.cnots;
+          }
+          if (!rcm.contains({second, first})) {
+            choiceResults.output.directionReverse += counts.backward.cnots;
           }
         }
       }
     }
     choiceResults.output.gates +=
+        choiceResults.output.swaps * swapGates +
         choiceResults.output.directionReverse * GATES_OF_DIRECTION_REVERSE;
-    for (const auto logical : logicalQubits) {
-      swaps.front().emplace_back(placements.front()[logical], logical);
-    }
-
-    for (std::size_t k = 1; k < placements.size(); ++k) {
-      if (qubitChoice.size() == logicalQubits.size()) {
-        for (const auto logical : logicalQubits) {
-          pi[physicalQubitIndex.at(placements[k - 1][logical])] =
-              placements[k][logical];
-        }
-      } else {
-        // When more qubits of the architecture are being considered than are in
-        // the circuit, the assignment of the logical to the physical qubits
-        // cannot be a bijection. Hence, the permutation variables y have to be
-        // used to infer the permutation of the qubits in each layer. This is
-        // mainly because the additional qubits movement cannot be inferred
-        // from the assignment matrices X.
-        piCount = 0;
-        internalPiCount = 0;
-        // sort the permutation of the qubits to start fresh
-        std::ranges::sort(pi);
-        do {
-          if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
-            if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
-              break;
-            }
-            ++internalPiCount;
-          }
-          ++piCount;
-        } while (std::ranges::next_permutation(pi).found);
-      }
-
-      architecture->minimumNumberOfSwaps(pi, swaps.at(k));
-      choiceResults.output.swaps += swaps.at(k).size();
-      if (architecture->bidirectional()) {
-        choiceResults.output.gates +=
-            GATES_OF_BIDIRECTIONAL_SWAP * swaps.at(k).size();
-      } else {
-        choiceResults.output.gates +=
-            GATES_OF_UNIDIRECTIONAL_SWAP * swaps.at(k).size();
-      }
-    }
   }
   (*lb).reset();
 }
