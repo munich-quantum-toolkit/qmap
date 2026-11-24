@@ -10,6 +10,12 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Zoned neutral-atom placement
+
+When a preferred storage column is full, the routing-aware placer uses the
+nearest column with a free site on the same array to estimate movement. It uses
+the lower column number in a tie. This can change the placement of a circuit.
+
 ### Superconducting mapping
 
 When the input circuit fits the device, the heuristic and exact mappers keep

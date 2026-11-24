@@ -284,7 +284,7 @@ TEST(HeuristicPlacerTest, WindowExpansion) {
                           {{0U, 3U}, {1U, 2U}}},
                       std::vector<std::unordered_set<qc::Qubit>>{}));
 }
-TEST(HeuristicPlacerTest, InitialPlacementForTwoSLMs) {
+TEST(HeuristicPlacerTest, PlacementForTwoStorageSLMs) {
   const auto architecture = Architecture::fromJSON(R"({
   "name": "a_star_placer_architecture",
   "storage_zones": [{
@@ -307,18 +307,41 @@ TEST(HeuristicPlacerTest, InitialPlacementForTwoSLMs) {
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })"_json);
-  HeuristicPlacer placer(architecture, nlohmann::json::parse(configJson));
+  auto config =
+      nlohmann::json::parse(configJson).get<HeuristicPlacer::Config>();
+  config.useWindow = false;
+  HeuristicPlacer placer(architecture, config);
   constexpr size_t nQubits = 50;
-  const auto& placement = placer.place(
-      nQubits, std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
-      std::vector<std::unordered_set<qc::Qubit>>{});
-  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits)));
-  // check that there exists a qubit that is placed in SLM with ID 1
-  EXPECT_THAT(placement,
-              ::testing::ElementsAre(::testing::Contains(::testing::FieldsAre(
-                  ::testing::Field(&SLM::id, ::testing::Eq(1)),
-                  ::testing::Lt(18), ::testing::Lt(20)))));
+  const auto placement = placer.place(nQubits, {{{0U, 49U}}}, {});
+  ASSERT_THAT(placement, ::testing::SizeIs(3));
+  EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placement.front(), ::testing::Contains(::testing::FieldsAre(
+                                     ::testing::Field(&SLM::id, 1U),
+                                     ::testing::Lt(18), ::testing::Lt(20))));
+  const auto& storage = placement.back();
+  EXPECT_EQ(SiteSet(storage.begin(), storage.end()).size(), nQubits);
+  EXPECT_TRUE(std::get<0>(storage[0]).get().isStorage());
+  EXPECT_TRUE(std::get<0>(storage[49]).get().isStorage());
 }
+TEST_F(AStarPlacerPlaceTest, NearestFreeStorageColumn) {
+  const auto& slm = *architecture.storageZones.front();
+  SiteSet occupied;
+  for (size_t c = 0; c < slm.nCols; ++c) {
+    if (c != 2 && c != 8 && c != 10) {
+      for (size_t r = 0; r < slm.nRows; ++r) {
+        occupied.emplace(slm, r, c);
+      }
+    }
+  }
+  const auto indices = placer.discretizeNonOccupiedStorageSites(occupied);
+  const auto& nearest = indices.second.at(slm).nearest;
+  EXPECT_EQ(nearest.at(0), 0);
+  EXPECT_EQ(nearest.at(5), 0); // Halfway between columns 2 and 8.
+  EXPECT_EQ(nearest.at(6), 1);
+  EXPECT_EQ(nearest.at(8), 1);
+  EXPECT_EQ(nearest.back(), 2);
+}
+
 TEST(HeuristicPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use
   // their respective address to identify a location in a 4x4 grid that looks
