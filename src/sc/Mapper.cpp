@@ -12,6 +12,7 @@
 
 #include "datastructures/CircuitOptimizations.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/Permutation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
@@ -48,6 +49,10 @@ void appendMeasurementsAccordingToOutputPermutation(
 } // namespace
 
 void Mapper::initResults() {
+  if (qc.getNqubits() > architecture->getNqubits()) {
+    throw QMAPException(
+        "The circuit has more active qubits than the architecture.");
+  }
   countGates(qc, results.input);
   results.input.name = qc.getName();
   results.input.qubits = static_cast<std::uint16_t>(qc.getNqubits());
@@ -61,13 +66,28 @@ void Mapper::initResults() {
 
 Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
     : qc(std::move(quantumComputation)), architecture(&arch) {
+  // Compact idle wires only when the input exceeds the device width.
+  if (qc.getNqubits() > arch.getNqubits()) {
+    qc.stripIdleQubits(true);
+    // stripIdleQubits keeps the physical indices on operations and registers.
+    // Use the compact logical numbering for the remaining wires.
+    for (const auto& op : qc) {
+      op->apply(qc.initialLayout);
+    }
+    qc::Permutation outputs;
+    for (const auto& [physical, output] : qc.outputPermutation) {
+      outputs.emplace(qc.initialLayout.at(physical), output);
+    }
+    qc.outputPermutation.swap(outputs);
+    qc.initialLayout.clear();
+    for (qc::Qubit q = 0; q < qc.getNqubits(); ++q) {
+      qc.initialLayout.emplace(q, q);
+    }
+    qc.unifyQuantumRegisters();
+  }
+  qc.removeFinalMeasurements();
   qubits.resize(architecture->getNqubits(), DEFAULT_POSITION);
   locations.resize(architecture->getNqubits(), DEFAULT_POSITION);
-
-  // strip away qubits that are not used in the circuit
-  qc.stripIdleQubits(true);
-  // strip away final measurement gates
-  qc.removeFinalMeasurements();
 }
 
 void Mapper::processDisjointQubitLayer(
@@ -492,35 +512,26 @@ void Mapper::finalizeMappedCircuit() {
   qcMapped.unifyQuantumRegisters();
 
   // append measurements according to output permutation
-  if (results.config.addMeasurementsToMappedCircuit) {
+  if (results.config.addMeasurementsToMappedCircuit &&
+      !qcMapped.outputPermutation.empty()) {
     appendMeasurementsAccordingToOutputPermutation(qcMapped);
   }
 }
 
 void Mapper::placeRemainingArchitectureQubits() {
-  if (qc.getNqubits() < architecture->getNqubits()) {
-    for (auto logical = qc.getNqubits(); logical < architecture->getNqubits();
-         ++logical) {
-      auto physical = static_cast<qc::Qubit>(logical);
-
-      // check if the corresponding physical qubit is already in use
-      if (qcMapped.initialLayout.find(static_cast<qc::Qubit>(logical)) !=
-          qcMapped.initialLayout.end()) {
-        // get the next unused physical qubit
-        for (physical = 0; physical < architecture->getNqubits(); ++physical) {
-          if (qcMapped.initialLayout.find(physical) ==
-              qcMapped.initialLayout.end()) {
-            break;
-          }
-        }
+  qc::Qubit nextLogical = 0;
+  for (qc::Qubit physical = 0; physical < qubits.size(); ++physical) {
+    if (qubits.at(physical) == DEFAULT_POSITION) {
+      while (locations.at(nextLogical) != DEFAULT_POSITION) {
+        ++nextLogical;
       }
-
-      qubits.at(physical) = static_cast<std::int16_t>(logical);
-
-      // mark architecture qubit as ancillary and garbage
-      qcMapped.initialLayout[physical] = static_cast<qc::Qubit>(logical);
-      qcMapped.setLogicalQubitAncillary(static_cast<qc::Qubit>(logical));
-      qcMapped.setLogicalQubitGarbage(static_cast<qc::Qubit>(logical));
+      qubits.at(physical) = static_cast<std::int16_t>(nextLogical);
+      locations.at(nextLogical) = static_cast<std::int16_t>(physical);
+      qcMapped.initialLayout[physical] = nextLogical;
+      if (nextLogical >= qc.getNqubits()) {
+        qcMapped.setLogicalQubitAncillary(nextLogical);
+        qcMapped.setLogicalQubitGarbage(nextLogical);
+      }
     }
   }
 }

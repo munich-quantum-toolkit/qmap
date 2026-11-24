@@ -14,6 +14,7 @@ import locale
 from pathlib import Path
 
 import pytest
+from mqt.core import load
 from mqt.qcec import verify
 from qiskit import QuantumCircuit
 
@@ -22,6 +23,7 @@ from mqt.qmap.sc import (
     Arch,
     Architecture,
     CommanderGrouping,
+    Configuration,
     Encoding,
     Heuristic,
     InitialLayout,
@@ -29,6 +31,7 @@ from mqt.qmap.sc import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
+    map_,
 )
 from mqt.qmap.visualization import SearchVisualizer
 
@@ -57,6 +60,57 @@ def test_circuit_name_is_preserved(example_circuit: QuantumCircuit) -> None:
     mapped, _ = compile_(example_circuit, arch=Arch.IBM_QX4, method=Method.exact)
 
     assert mapped.name == example_circuit.name
+
+
+@pytest.mark.parametrize(
+    ("method", "layout"),
+    [
+        (Method.heuristic, InitialLayout.dynamic),
+        (Method.heuristic, InitialLayout.identity),
+        (Method.exact, InitialLayout.dynamic),
+    ],
+)
+@pytest.mark.parametrize("identity_gate", [False, True])
+def test_layout_with_idle_qubit(method: Method, layout: InitialLayout, identity_gate: bool) -> None:
+    """Keep the idle logical wire in the layout, including when routing moves it."""
+    qc = QuantumCircuit(3)
+    qc.h(0)
+    if identity_gate:
+        qc.id(1)
+    qc.cx(0, 2)
+
+    line = Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)})
+    config = Configuration()
+    config.method = method
+    config.initial_layout = layout
+    config.add_measurements_to_mapped_circuit = False
+    circuit = load(qc)
+    mapped, _ = map_(circuit, line, config)
+
+    assert sorted(mapped.output_permutation[q] for q in range(qc.num_qubits)) == [0, 1, 2]
+    assert verify(circuit, mapped).considered_equivalent()
+
+
+@pytest.mark.parametrize("method", [Method.heuristic, Method.exact])
+def test_compact_circuit_on_narrow_device(method: Method) -> None:
+    """Place a high-index input wire on a device that fits only the active circuit."""
+    qc = QuantumCircuit(4)
+    qc.h(3)
+    compact = QuantumCircuit(1)
+    compact.h(0)
+
+    mapped, _ = compile_(
+        qc, arch=Architecture(2, {(0, 1), (1, 0)}), method=method, add_measurements_to_mapped_circuit=False
+    )
+    assert verify(compact, mapped).considered_equivalent()
+
+
+@pytest.mark.parametrize("method", [Method.heuristic, Method.exact])
+def test_empty_circuit_on_narrow_device(method: Method) -> None:
+    """A fully compacted circuit has no outputs to measure."""
+    mapped, _ = compile_(QuantumCircuit(4), arch=Architecture(2, {(0, 1), (1, 0)}), method=method)
+    assert mapped.num_clbits == 0
+    assert mapped.size() == 0
 
 
 # test that all available architecture enumerations can be properly used

@@ -90,12 +90,18 @@ void ExactMapper::map(const Configuration& settings) {
     return;
   }
 
+  // Only qubits used by gates need assignment variables in the solver.
+  QubitChoice logicalQubits;
+  for (const auto& layerQubits : activeQubits) {
+    logicalQubits.insert(layerQubits.begin(), layerQubits.end());
+  }
+
   // 2a) If only a subgraph should be considered, reduce the architecture.
   if (!config.subgraph.empty()) {
     const auto subgraphQubits = config.subgraph.size();
-    if (subgraphQubits < qc.getNqubits()) {
+    if (subgraphQubits < logicalQubits.size()) {
       std::cerr << "The subgraph must contain at least as many qubits as the "
-                   "circuit has physical qubits.\n";
+                   "circuit has active qubits.\n";
       return;
     }
 
@@ -119,7 +125,7 @@ void ExactMapper::map(const Configuration& settings) {
   std::vector<QubitChoice> allPossibleQubitChoices{};
   if (config.useSubsets) {
     allPossibleQubitChoices = architecture->getAllConnectedSubsets(
-        static_cast<std::uint16_t>(qc.getNqubits()));
+        static_cast<std::uint16_t>(logicalQubits.size()));
   } else {
     allPossibleQubitChoices.emplace_back(qubitRange.begin(), qubitRange.end());
   }
@@ -200,8 +206,8 @@ void ExactMapper::map(const Configuration& settings) {
       }
 
       // 6) call actual mapping routine
-      coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps,
-                         limit, timeout);
+      coreMappingRoutine(choice, logicalQubits, reducedCouplingMap,
+                         choiceResults, swaps, limit, timeout);
 
       if (config.verbose) {
         if (!choiceResults.timeout) {
@@ -260,23 +266,13 @@ void ExactMapper::map(const Configuration& settings) {
     }
   }
 
-  for (const auto& q : qubitRange) {
-    locations.at(q) = static_cast<std::int16_t>(q);
-  }
-
   for (std::size_t i = 0U; i < layers.size(); ++i) {
     if (i == 0U) {
-      qcMapped.initialLayout.clear();
-
-      // no swaps but initial permutation
       for (const auto& [physical, logical] : *swapsIterator) {
         locations.at(logical) = static_cast<std::int16_t>(physical);
         qubits.at(physical) = static_cast<std::int16_t>(logical);
-        qcMapped.initialLayout[static_cast<qc::Qubit>(physical)] =
-            static_cast<qc::Qubit>(logical);
+        qcMapped.initialLayout[physical] = logical;
       }
-
-      // place remaining architecture qubits
       placeRemainingArchitectureQubits();
 
       if (settings.verbose) {
@@ -399,8 +395,8 @@ void ExactMapper::map(const Configuration& settings) {
 }
 
 void ExactMapper::coreMappingRoutine(
-    const std::set<std::uint16_t>& qubitChoice, const CouplingMap& rcm,
-    MappingResults& choiceResults,
+    const QubitChoice& qubitChoice, const QubitChoice& logicalQubits,
+    const CouplingMap& rcm, MappingResults& choiceResults,
     std::vector<std::vector<std::pair<std::uint16_t, std::uint16_t>>>& swaps,
     const std::size_t limit, const std::size_t timeout) {
   const auto& config = results.config;
@@ -447,24 +443,17 @@ void ExactMapper::coreMappingRoutine(
   /// 	Boolean Variable Definitions	//
   //////////////////////////////////////////
 
-  /*
-  locical/physical qubit variables x_k_i_j
-  k	before layer k
-  i	physical qubit i
-  j	logical qubit j
-  number of variables: (|L|) * m * n
-  */
+  // Store assignment variables by layer, logical qubit, and physical index.
+  // Idle logical qubits have empty rows.
   LogicMatrix3D x{};
   std::stringstream xName{};
   for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
-    x.emplace_back();
+    x.emplace_back(qc.getNqubits());
     for (const auto qubit : qubitChoice) {
-      x.back().emplace_back();
-      for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
+      for (const auto q : logicalQubits) {
         xName.str("");
         xName << "x_" << k << '_' << qubit << '_' << q;
-        x.back().back().emplace_back(
-            lb->makeVariable(xName.str(), CType::BOOL));
+        x.back()[q].emplace_back(lb->makeVariable(xName.str(), CType::BOOL));
       }
     }
   }
@@ -497,20 +486,20 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         auto rowConsistency = LogicTerm(0);
-        for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
+        for (const auto j : logicalQubits) {
           rowConsistency =
               rowConsistency +
-              LogicTerm::ite(x[k][i][j], LogicTerm(1), LogicTerm(0));
+              LogicTerm::ite(x[k][j][i], LogicTerm(1), LogicTerm(0));
         }
         lb->assertFormula(rowConsistency <= LogicTerm(1));
       }
 
-      for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
+      for (const auto j : logicalQubits) {
         auto colConsistency = LogicTerm(0);
         for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
           colConsistency =
               colConsistency +
-              LogicTerm::ite(x[k][i][j], LogicTerm(1), LogicTerm(0));
+              LogicTerm::ite(x[k][j][i], LogicTerm(1), LogicTerm(0));
         }
         lb->assertFormula(colConsistency == LogicTerm(1));
       }
@@ -519,9 +508,9 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         std::vector<LogicTerm> varIDs;
-        varIDs.reserve(qc.getNqubits());
-        for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
-          varIDs.emplace_back(x[k][i][j]);
+        varIDs.reserve(logicalQubits.size());
+        for (const auto j : logicalQubits) {
+          varIDs.emplace_back(x[k][j][i]);
         }
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
           lb->assertFormula(
@@ -543,12 +532,8 @@ number of variables: (|L|-1) * m!
         }
       }
 
-      for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
-        std::vector<LogicTerm> varIDs;
-        varIDs.reserve(qubitChoice.size());
-        for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          varIDs.emplace_back(x[k][i][j]);
-        }
+      for (const auto j : logicalQubits) {
+        const auto& varIDs = x[k][j];
 
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
           lb->assertFormula(
@@ -574,23 +559,15 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         std::vector<LogicTerm> vars;
-        vars.reserve(qc.getNqubits());
-        std::vector<std::size_t> varIDs;
-        varIDs.reserve(qc.getNqubits());
-        for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
-          vars.emplace_back(x[k][i][j]);
-          varIDs.emplace_back(j);
+        vars.reserve(logicalQubits.size());
+        for (const auto j : logicalQubits) {
+          vars.emplace_back(x[k][j][i]);
         }
         lb->assertFormula(encodings::atMostOneBiMander(vars, lb.get()));
       }
 
-      for (std::size_t j = 0; j < qc.getNqubits();
-           ++j) { // There is no exactly one Bimander
-        std::vector<LogicTerm> varIDs;
-        varIDs.reserve(qubitChoice.size());
-        for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          varIDs.emplace_back(x[k][i][j]);
-        }
+      for (const auto j : logicalQubits) { // There is no exactly one Bimander
+        const auto& varIDs = x[k][j];
 
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
           lb->assertFormula(
@@ -624,27 +601,15 @@ number of variables: (|L|-1) * m!
         continue;
       }
 
+      const auto& control = x[k][static_cast<std::size_t>(gate.control)];
+      const auto& target = x[k][gate.target];
       auto coupling = LogicTerm(false);
-      if (architecture->bidirectional()) {
-        for (const auto& edge : rcm) {
-          const auto indexFC = x[k][physicalQubitIndex[edge.first]]
-                                [static_cast<std::size_t>(gate.control)];
-          const auto indexST =
-              x[k][physicalQubitIndex[edge.second]][gate.target];
-          coupling = coupling || (indexFC && indexST);
-        }
-      } else {
-        for (const auto& edge : rcm) {
-          const auto indexFC = x[k][physicalQubitIndex[edge.first]]
-                                [static_cast<std::size_t>(gate.control)];
-          const auto indexST =
-              x[k][physicalQubitIndex[edge.second]][gate.target];
-          const auto indexFT =
-              x[k][physicalQubitIndex[edge.first]][gate.target];
-          const auto indexSC = x[k][physicalQubitIndex[edge.second]]
-                                [static_cast<std::size_t>(gate.control)];
-
-          coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
+      for (const auto& [from, to] : rcm) {
+        const auto i = physicalQubitIndex.at(from);
+        const auto j = physicalQubitIndex.at(to);
+        coupling = coupling || (control[i] && target[j]);
+        if (!architecture->bidirectional()) {
+          coupling = coupling || (target[i] && control[j]);
         }
       }
       allCouplings = allCouplings && coupling;
@@ -664,10 +629,10 @@ number of variables: (|L|-1) * m!
       if (!skippedPi.contains(piCount) || !config.swapLimitsEnabled()) {
         auto equal = LogicTerm(true);
         for (const auto qubit : qubitChoice) {
-          for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
-            const auto before = i[physicalQubitIndex[qubit]][q];
+          for (const auto q : logicalQubits) {
+            const auto before = i[q][physicalQubitIndex[qubit]];
             const auto after =
-                j[physicalQubitIndex[pi[physicalQubitIndex[qubit]]]][q];
+                j[q][physicalQubitIndex[pi[physicalQubitIndex[qubit]]]];
             equal = equal && (before == after);
           }
         }
@@ -757,12 +722,12 @@ number of variables: (|L|-1) * m!
           continue;
         }
 
+        const auto& control = x[k][static_cast<std::size_t>(gate.control)];
+        const auto& target = x[k][gate.target];
         auto reverse = LogicTerm(false);
         for (const auto& [q0, q1] : rcm) {
-          const auto indexFT = x[k][physicalQubitIndex[q0]][gate.target];
-          const auto indexSC = x[k][physicalQubitIndex[q1]]
-                                [static_cast<std::size_t>(gate.control)];
-          reverse = reverse || (indexFT && indexSC);
+          reverse = reverse || (target[physicalQubitIndex.at(q0)] &&
+                                control[physicalQubitIndex.at(q1)]);
         }
         lb->weightedTerm(reverse, ::GATES_OF_DIRECTION_REVERSE);
       }
@@ -793,7 +758,7 @@ number of variables: (|L|-1) * m!
     assert(choiceResults.output.directionReverse == 0U);
     // swaps
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      if (qubitChoice.size() == qc.getNqubits()) {
+      if (qubitChoice.size() == logicalQubits.size()) {
         // When as many qubits of the architecture are being considered
         // as in the circuit, the assignment of the logical to the physical
         // qubits is a bijection. Hence, we the assignment matrices X can be
@@ -801,14 +766,13 @@ number of variables: (|L|-1) * m!
         auto& oldAssignment = x[k - 1];
         auto& newAssignment = x[k];
         for (const auto physicalQubit : qubitChoice) {
-          for (std::size_t logicalQubit = 0; logicalQubit < qc.getNqubits();
-               ++logicalQubit) {
+          for (const auto logicalQubit : logicalQubits) {
             if (const auto oldIndex = physicalQubitIndex[physicalQubit];
-                m->getBoolValue(oldAssignment[oldIndex][logicalQubit],
+                m->getBoolValue(oldAssignment[logicalQubit][oldIndex],
                                 lb.get())) {
               for (const auto newPhysicalQubit : qubitChoice) {
                 if (const auto newIndex = physicalQubitIndex[newPhysicalQubit];
-                    m->getBoolValue(newAssignment[newIndex][logicalQubit],
+                    m->getBoolValue(newAssignment[logicalQubit][newIndex],
                                     lb.get())) {
                   pi[oldIndex] = newPhysicalQubit;
                   break;
@@ -858,13 +822,12 @@ number of variables: (|L|-1) * m!
           if (gate.singleQubit()) {
             continue;
           }
-          for (const auto& edge : rcm) {
-            const auto indexFT =
-                x[k][physicalQubitIndex[edge.first]][gate.target];
-            const auto indexSC = x[k][physicalQubitIndex[edge.second]]
-                                  [static_cast<std::size_t>(gate.control)];
-            if (m->getBoolValue(indexFT, lb.get()) &&
-                m->getBoolValue(indexSC, lb.get())) {
+          const auto& control = x[k][static_cast<std::size_t>(gate.control)];
+          const auto& target = x[k][gate.target];
+          for (const auto& [from, to] : rcm) {
+            if (m->getBoolValue(target[physicalQubitIndex.at(from)],
+                                lb.get()) &&
+                m->getBoolValue(control[physicalQubitIndex.at(to)], lb.get())) {
               choiceResults.output.directionReverse++;
               choiceResults.output.gates += GATES_OF_DIRECTION_REVERSE;
             }
@@ -875,9 +838,9 @@ number of variables: (|L|-1) * m!
 
     // save initial layout for later
     for (const auto& qubit : qubitChoice) {
-      for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
+      for (const auto q : logicalQubits) {
         const bool set =
-            m->getBoolValue(x[0][physicalQubitIndex[qubit]][q], lb.get());
+            m->getBoolValue(x[0][q][physicalQubitIndex[qubit]], lb.get());
         if (set) {
           swaps.at(0).emplace_back(qubit, q);
         }

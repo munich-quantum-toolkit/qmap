@@ -472,13 +472,13 @@ TEST_P(TestHeuristics, HeuristicProperties) {
           {
               "4gt11_84",
               {
-                  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                  {2, 1, 0, 3, 4},  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                  {1, 0, 2, -1, 4}, {1, 2, 0, -1, 4}, {2, 1, 0, -1, 4},
-                  {2, 0, 1, -1, 4}, {4, 2, 1, 0, 3},  {0, 1, 2, -1, 4},
-                  {0, 1, 2, -1, 4}, {0, 2, 1, -1, 4}, {0, 2, 1, -1, 4},
-                  {2, 0, 1, -1, 4}, {2, 0, 1, -1, 4}, {2, 1, 0, 3, 4},
+                  {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4},
+                  {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4},
+                  {2, 1, 0, 3, 4}, {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4},
+                  {1, 0, 2, 3, 4}, {1, 2, 0, 3, 4}, {2, 1, 0, 3, 4},
+                  {2, 0, 1, 3, 4}, {3, 2, 1, 0, 4}, {0, 1, 2, 3, 4},
+                  {0, 1, 2, 3, 4}, {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4},
+                  {2, 0, 1, 3, 4}, {2, 0, 1, 3, 4}, {2, 1, 3, 0, 4},
               },
           },
           {
@@ -989,10 +989,9 @@ TEST(Functionality, NoMeasurementsAdded) {
 TEST(Functionality, MeasurementsFollowOutputPermutation) {
   using namespace qc::literals;
   qc::QuantumComputation qc{3U};
-  qc.cx(0_pc, 1);
-  qc.cx(1_pc, 2);
+  qc.cx(0_pc, 2);
 
-  Architecture arch{3U, {{0, 1}, {1, 2}}};
+  Architecture arch{4U, {{0, 1}, {1, 2}, {2, 3}}};
   HeuristicMapper mapper(qc, arch);
   Configuration config{};
   config.initialLayout = InitialLayout::Identity;
@@ -1000,6 +999,7 @@ TEST(Functionality, MeasurementsFollowOutputPermutation) {
   mapper.map(config);
 
   const auto mapped = mapper.moveMappedCircuit();
+  EXPECT_EQ(mapped.getNcbits(), qc.getNqubits());
   EXPECT_EQ(mapped.getNcbits(), mapped.outputPermutation.size());
   EXPECT_EQ(
       std::ranges::count_if(

@@ -16,6 +16,12 @@ releases may include breaking changes.
 - ⬆️ Update `mqt-core` to version 3.12.0 ([#1217]) ([**@denialhaag**])
 - ⬆️ Update QDMI to version 1.4.0 ([#1217]) ([**@denialhaag**])
 
+### Fixed
+
+- 🐛 Preserve idle input qubits in the initial layout and output permutation of
+  both superconducting mappers when the circuit fits the device ([#1234])
+  ([**@burgholzer**])
+
 ## [3.11.0] - 2026-10-12
 
 _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#3110)._
@@ -358,6 +364,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1234]: https://github.com/munich-quantum-toolkit/qmap/pull/1234
 [#1226]: https://github.com/munich-quantum-toolkit/qmap/pull/1226
 [#1217]: https://github.com/munich-quantum-toolkit/qmap/pull/1217
 [#1188]: https://github.com/munich-quantum-toolkit/qmap/pull/1188
