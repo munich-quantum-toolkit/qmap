@@ -16,11 +16,13 @@
 #include "qasm3/Importer.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <limits>
 #include <plog/Severity.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -363,6 +365,39 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
 
     synthesizer.synthesize(config);
     results = synthesizer.getResults();
+  }
+}
+
+TEST(CliffordSynthesis, RedundantInputGatesDoNotIncreaseSearch) {
+  const auto optimize = [](const std::size_t pairs, const TargetMetric target) {
+    qc::QuantumComputation circuit(1);
+    circuit.h(0);
+    for (std::size_t i = 0; i < pairs; ++i) {
+      circuit.x(0);
+      circuit.x(0);
+    }
+    Configuration config;
+    config.target = target;
+    CliffordSynthesizer synth(circuit, true);
+    synth.synthesize(config);
+    EXPECT_EQ(synth.getResults().getGates(), 1);
+    return synth.getResults().getSolverCalls();
+  };
+  for (const auto target : {TargetMetric::Gates, TargetMetric::Depth}) {
+    EXPECT_EQ(optimize(2, target), optimize(32, target));
+  }
+}
+
+TEST(CliffordSynthesis, StopsAtSolverResourceLimit) {
+  qc::QuantumComputation circuit(2);
+  circuit.h(0);
+  circuit.cx(0, 1);
+  for (const auto useMaxSAT : {false, true}) {
+    Configuration config;
+    config.useMaxSAT = useMaxSAT;
+    config.solverParameters["rlimit"] = std::uint32_t{1};
+    CliffordSynthesizer synth(circuit, true);
+    EXPECT_THROW(synth.synthesize(config), std::runtime_error);
   }
 }
 

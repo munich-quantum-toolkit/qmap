@@ -172,12 +172,23 @@ qc_opt.draw(output="mpl")
 The `include_destabilizers` flag guarantees that the unitary of the circuit is
 preserved during optimization.
 
-By default _QMAP_ generates optimal Clifford circuits with respect to the target
-metric. This might lead to runtime problems when trying to optimize larger
-circuits. When optimizing for depth, _QMAP_ provides a heuristic that splits the
-circuits into several independent parts and optimizes them separately. This
-allows optimizing larger circuits while not guaranteeing that the depth-optimal
-circuit is synthesized.
+By default, MQT QMAP searches for a circuit with the fewest gates. Exact
+synthesis can take substantial time and memory even for ten qubits. To limit
+each Z3 check to one second, pass `solver_parameters={"timeout": 1000}` to
+`optimize_clifford`. The timeout excludes the time spent building the SAT
+instance. If Z3 returns `unknown`, MQT QMAP raises a `RuntimeError`.
+
+If you need a circuit that implements a large Clifford and can forgo a proof of
+optimality, Qiskit can synthesize one directly from the tableau.
+
+```{code-cell} ipython3
+from qiskit.quantum_info import Clifford
+
+qc_compact = Clifford(qc).to_circuit()
+```
+
+To optimize for depth in smaller pieces, MQT QMAP can split the input into
+blocks of layers and optimize each block separately.
 
 The heuristic synthesizer can be used as follows:
 
