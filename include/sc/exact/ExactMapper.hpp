@@ -35,6 +35,7 @@ protected:
   std::vector<std::size_t> reducedLayerIndices;
   std::vector<Swaps> mappingSwaps;
   void coreMappingRoutine(const QubitChoice& qubitChoice,
+                          const QubitChoice& logicalQubits,
                           const CouplingMap& rcm, MappingResults& choiceResults,
                           std::vector<Swaps>& swaps, std::size_t limit,
                           std::size_t timeout);

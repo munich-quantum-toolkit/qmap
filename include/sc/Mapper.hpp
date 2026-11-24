@@ -227,10 +227,7 @@ protected:
    */
   [[gnu::pure]] virtual std::size_t getNextLayer(std::size_t idx);
 
-  /**
-   * @brief adding additional qubits to the result circuit if architecture has
-   * more physical qubits than the original circuit has logical qubits
-   */
+  /// Assign free physical positions to idle inputs and spare device qubits.
   virtual void placeRemainingArchitectureQubits();
 
   /**

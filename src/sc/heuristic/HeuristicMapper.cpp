@@ -14,6 +14,7 @@
 #include "ir/Permutation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/DataLogger.hpp"
@@ -38,6 +39,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <utility>
 #include <vector>
@@ -107,20 +109,6 @@ void HeuristicMapper::map(const Configuration& configuration) {
   }
 }
 
-namespace {
-// search for current position of target value in map and afterward exchange
-// it with the value at new position
-void findAndSWAP(const qc::Qubit targetValue, const qc::Qubit newPosition,
-                 qc::Permutation& map) {
-  for (const auto& q : map) {
-    if (q.second == targetValue) {
-      std::swap(map.at(newPosition), map.at(q.first));
-      break;
-    }
-  }
-}
-} // namespace
-
 void HeuristicMapper::staticInitialMapping() {
   for (const auto& gate : layers.at(0U)) {
     if (gate.singleQubit()) {
@@ -135,26 +123,18 @@ void HeuristicMapper::staticInitialMapping() {
         locations.at(static_cast<std::uint16_t>(gate.control)) =
             static_cast<std::int16_t>(q0);
         locations.at(gate.target) = static_cast<std::int16_t>(q1);
-        findAndSWAP(static_cast<qc::Qubit>(gate.control), q0,
-                    qcMapped.initialLayout);
-        findAndSWAP(gate.target, q1, qcMapped.initialLayout);
-        findAndSWAP(static_cast<qc::Qubit>(gate.control), q0,
-                    qcMapped.outputPermutation);
-        findAndSWAP(gate.target, q1, qcMapped.outputPermutation);
         break;
       }
     }
   }
 
   // assign remaining logical qubits
-  for (qc::Qubit i = 0U; i < architecture->getNqubits(); ++i) {
-    if (qc.initialLayout.count(i) > 0 && locations.at(i) == DEFAULT_POSITION) {
+  for (qc::Qubit i = 0U; i < qc.getNqubits(); ++i) {
+    if (locations.at(i) == DEFAULT_POSITION) {
       for (qc::Qubit j = 0U; j < architecture->getNqubits(); ++j) {
         if (qubits.at(j) == DEFAULT_POSITION) {
           locations.at(i) = static_cast<std::int16_t>(j);
           qubits.at(j) = static_cast<std::int16_t>(i);
-          findAndSWAP(i, j, qcMapped.initialLayout);
-          findAndSWAP(i, j, qcMapped.outputPermutation);
           break;
         }
       }
@@ -191,11 +171,9 @@ void HeuristicMapper::createInitialMapping() {
 
   switch (config.initialLayout) {
   case InitialLayout::Identity:
-    for (qc::Qubit i = 0; i < architecture->getNqubits(); ++i) {
-      if (qc.initialLayout.count(i) > 0) {
-        locations.at(i) = static_cast<std::int16_t>(i);
-        qubits.at(i) = static_cast<std::int16_t>(i);
-      }
+    for (qc::Qubit i = 0; i < qc.getNqubits(); ++i) {
+      locations.at(i) = static_cast<std::int16_t>(i);
+      qubits.at(i) = static_cast<std::int16_t>(i);
     }
     break;
   case InitialLayout::Static:
@@ -225,10 +203,6 @@ void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
           if (qubits.at(physQbit) == -1) {
             locations.at(q) = static_cast<std::int16_t>(physQbit);
             qubits.at(physQbit) = static_cast<std::int16_t>(q);
-            findAndSWAP(static_cast<qc::Qubit>(q), physQbit,
-                        qcMapped.initialLayout);
-            findAndSWAP(static_cast<qc::Qubit>(q), physQbit,
-                        qcMapped.outputPermutation);
             break;
           }
         }
@@ -278,10 +252,6 @@ void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
       locations.at(q2) = static_cast<std::int16_t>(chosenEdge.second);
       qubits.at(chosenEdge.first) = static_cast<std::int16_t>(q1);
       qubits.at(chosenEdge.second) = static_cast<std::int16_t>(q2);
-      findAndSWAP(q1, chosenEdge.first, qcMapped.initialLayout);
-      findAndSWAP(q2, chosenEdge.second, qcMapped.initialLayout);
-      findAndSWAP(q1, chosenEdge.first, qcMapped.outputPermutation);
-      findAndSWAP(q2, chosenEdge.second, qcMapped.outputPermutation);
     } else if (q1Location == DEFAULT_POSITION) {
       mapToMinDistance(q2, q1);
     } else if (q2Location == DEFAULT_POSITION) {
@@ -308,8 +278,6 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
   assert(pos.has_value());
   qubits.at(*pos) = static_cast<std::int16_t>(target);
   locations.at(target) = static_cast<std::int16_t>(*pos);
-  findAndSWAP(target, *pos, qcMapped.initialLayout);
-  findAndSWAP(target, *pos, qcMapped.outputPermutation);
 }
 
 void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
@@ -352,8 +320,7 @@ void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
 void HeuristicMapper::routeCircuit() {
   const auto& config = results.config;
 
-  std::size_t gateidx = 0;
-  std::vector<std::size_t> gatesToAdjust{};
+  std::vector<qc::Operation*> swapsAndDeferredGates;
   results.output.gates = 0U;
   for (std::size_t layerIndex = 0; layerIndex < layers.size(); ++layerIndex) {
     const Node result = aStarMap(layerIndex, false);
@@ -368,7 +335,6 @@ void HeuristicMapper::routeCircuit() {
 
     if (layerIndex != 0 && config.addBarriersBetweenLayers) {
       qcMapped.barrier();
-      gateidx++;
     }
 
     // initial layer needs no swaps
@@ -383,9 +349,9 @@ void HeuristicMapper::routeCircuit() {
           assert(
               architecture->isEdgeConnected({swap.first, swap.second}, false));
           qcMapped.swap(swap.first, swap.second);
+          swapsAndDeferredGates.push_back(qcMapped.back().get());
           results.output.swaps++;
         }
-        gateidx++;
       }
     }
 
@@ -402,12 +368,10 @@ void HeuristicMapper::routeCircuit() {
         if (locations.at(gate.target) == DEFAULT_POSITION) {
           qcMapped.emplace_back<qc::StandardOperation>(
               gate.target, op->getType(), op->getParameter());
-          gatesToAdjust.push_back(gateidx);
-          gateidx++;
+          swapsAndDeferredGates.push_back(qcMapped.back().get());
         } else {
           qcMapped.emplace_back<qc::StandardOperation>(
               locations.at(gate.target), op->getType(), op->getParameter());
-          gateidx++;
         }
       } else {
         const Edge cnot = {
@@ -425,11 +389,9 @@ void HeuristicMapper::routeCircuit() {
           qcMapped.h(reversed.first);
 
           results.output.directionReverse++;
-          gateidx += 5;
         } else {
           qcMapped.cx(qc::Control{static_cast<qc::Qubit>(cnot.first)},
                       cnot.second);
-          gateidx++;
         }
       }
     }
@@ -449,78 +411,28 @@ void HeuristicMapper::routeCircuit() {
     }
   }
 
-  // infer output permutation from qubit locations
   qcMapped.outputPermutation.clear();
-  for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
-    if (const auto lq = qubits.at(i); lq != -1) {
-      const auto logicalQubit = static_cast<qc::Qubit>(lq);
-      // check whether this is a qubit from the original circuit
-      if (logicalQubit < qc.getNqubits()) {
-        qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
-            static_cast<qc::Qubit>(qubits.at(i));
-      } else {
-        qcMapped.setLogicalQubitGarbage(logicalQubit);
-      }
-    }
+  placeRemainingArchitectureQubits();
+  for (qc::Qubit logical = 0; logical < qc.getNqubits(); ++logical) {
+    const auto physical = static_cast<qc::Qubit>(locations.at(logical));
+    qcMapped.outputPermutation.emplace(physical, logical);
   }
 
-  // fix single qubit gates
-  if (!gatesToAdjust.empty()) {
-    gateidx--; // index of last operation
-    for (auto it = qcMapped.rbegin(); it != qcMapped.rend(); ++it, --gateidx) {
-      auto* op = dynamic_cast<qc::StandardOperation*>(it->get());
-      if (op == nullptr) {
-        throw QMAPException(
-            "Cast to StandardOperation not possible during mapping. Check that "
-            "circuit contains only StandardOperations");
-      }
-      if (op->getType() == qc::SWAP) {
-        const auto q0 = qubits.at(op->getTargets().at(0));
-        const auto q1 = qubits.at(op->getTargets().at(1));
-        qubits.at(op->getTargets().at(0)) = q1;
-        qubits.at(op->getTargets().at(1)) = q0;
-
-        if (q0 != DEFAULT_POSITION) {
-          locations.at(static_cast<std::size_t>(q0)) =
-              static_cast<std::int16_t>(op->getTargets().at(1));
-        }
-        if (q1 != DEFAULT_POSITION) {
-          locations.at(static_cast<std::size_t>(q1)) =
-              static_cast<std::int16_t>(op->getTargets().at(0));
-        }
-      }
-      if (!gatesToAdjust.empty() && gatesToAdjust.back() == gateidx) {
-        gatesToAdjust.pop_back();
-        const auto target = op->getTargets().at(0);
-        const auto targetLocation = locations.at(target);
-
-        if (targetLocation == -1) {
-          // qubit only occurs in single qubit gates, can be mapped to an
-          // arbitrary free qubit
-          std::uint16_t loc = 0;
-          while (qubits.at(loc) != DEFAULT_POSITION) {
-            ++loc;
-          }
-          locations.at(target) = static_cast<std::int16_t>(loc);
-          qubits.at(loc) = static_cast<std::int16_t>(target);
-          op->setTargets({static_cast<qc::Qubit>(loc)});
-          findAndSWAP(target, loc, qcMapped.initialLayout);
-          qcMapped.outputPermutation[static_cast<qc::Qubit>(loc)] = target;
-        } else {
-          op->setTargets({static_cast<qc::Qubit>(targetLocation)});
-        }
-      }
+  // Undo routing SWAPs to locate deferred gates and recover the initial layout.
+  for (auto* op : std::views::reverse(swapsAndDeferredGates)) {
+    if (op->getType() == qc::SWAP) {
+      auto& logical0 = qubits.at(op->getTargets().at(0));
+      auto& logical1 = qubits.at(op->getTargets().at(1));
+      std::swap(locations.at(static_cast<std::size_t>(logical0)),
+                locations.at(static_cast<std::size_t>(logical1)));
+      std::swap(logical0, logical1);
+    } else {
+      const auto target = op->getTargets().at(0);
+      op->setTargets({static_cast<qc::Qubit>(locations.at(target))});
     }
   }
-
-  // mark every qubit that is not mapped to a logical qubit as garbage
-  std::size_t count = 0U;
-  for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
-    if (const auto lq = qubits.at(i); lq == -1) {
-      qcMapped.setLogicalQubitGarbage(
-          static_cast<qc::Qubit>(qc.getNqubits() + count));
-      ++count;
-    }
+  for (auto& [physical, logical] : qcMapped.initialLayout) {
+    logical = static_cast<qc::Qubit>(qubits.at(physical));
   }
 }
 

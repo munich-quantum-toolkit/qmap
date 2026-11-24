@@ -457,10 +457,14 @@ TEST_F(ExactTest, WCNFNotAvailable) {
 TEST_F(ExactTest, MapToSubgraph) {
   const auto connectedSubset = std::set<std::uint16_t>{0U, 1U, 2U};
 
+  qc.addQubitRegister(1U, "idle");
+  ExactMapper mapper(qc, ibmqLondon);
   settings.subgraph = connectedSubset;
-  ibmqLondonMapper->map(settings);
-  const auto& results = ibmqLondonMapper->getResults();
+  mapper.map(settings);
+  const auto& results = mapper.getResults();
   EXPECT_FALSE(results.timeout);
+  EXPECT_EQ(mapper.moveMappedCircuit().outputPermutation.size(),
+            qc.getNqubits());
 }
 
 TEST_F(ExactTest, MapToSubgraphTooSmall) {

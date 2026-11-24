@@ -10,6 +10,13 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Superconducting mapping
+
+When the input circuit fits the device, the heuristic and exact mappers keep
+idle qubits in both layouts. If you request final measurements, each input qubit
+gets a classical bit. On narrower devices, both mappers remove idle qubits and
+number the remaining logical qubits consecutively.
+
 ### QDMI 1.4.0
 
 Rebuild QDMI device libraries against QDMI 1.4.0. QDMI 1.3 device libraries are
