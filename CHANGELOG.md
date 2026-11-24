@@ -12,12 +12,18 @@ releases may include breaking changes.
 
 ### Changed
 
+- ⚡️ Reuse exact-mapper transitions across layers and avoid rebuilding the
+  heuristic search queue when a better placement is found ([#1235])
+  ([**@burgholzer**])
 - ⬆️ Require Python 3.11.5 or newer ([#1226]) ([**@denialhaag**])
 - ⬆️ Update `mqt-core` to version 3.12.0 ([#1217]) ([**@denialhaag**])
 - ⬆️ Update QDMI to version 1.4.0 ([#1217]) ([**@denialhaag**])
 
 ### Fixed
 
+- 🐛 Preserve controlled and native two-qubit gates in both superconducting
+  mappers. Use either operand order for symmetric gates and use gate-specific
+  error rates in fidelity-aware routing ([#1235]) ([**@burgholzer**])
 - 🐛 Preserve idle input qubits in the initial layout and output permutation of
   both superconducting mappers when the circuit fits the device ([#1234])
   ([**@burgholzer**])
@@ -364,6 +370,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1235]: https://github.com/munich-quantum-toolkit/qmap/pull/1235
 [#1234]: https://github.com/munich-quantum-toolkit/qmap/pull/1234
 [#1226]: https://github.com/munich-quantum-toolkit/qmap/pull/1226
 [#1217]: https://github.com/munich-quantum-toolkit/qmap/pull/1217

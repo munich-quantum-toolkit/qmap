@@ -17,6 +17,25 @@ idle qubits in both layouts. If you request final measurements, each input qubit
 gets a classical bit. On narrower devices, both mappers remove idle qubits and
 number the remaining logical qubits consecutively.
 
+The exact and heuristic mappers accept singly controlled one-target gates and
+all 13 two-target gates in MQT Core 3.12. Both mappers can exchange the operands
+of symmetric gates such as CZ, RXX, RYY, and RZZ to use a one-way coupling. For
+XX+YY, exchanging the operands negates the phase parameter. Ordered gates such
+as RZX, ECR, and controlled RZ require a coupling in the specified order.
+
+Gate-count routing uses the coupling map for all two-qubit gates. Fidelity-aware
+routing also checks the gate's error rate on each candidate coupling. A device
+can supply RXX or RZZ rates without any CNOT rates. Routing a SWAP requires a
+native SWAP calibration or a calibrated CNOT decomposition. Two-qubit error
+rates for controlled gates describe positive controls.
+
+Both mappers estimate output fidelity from the emitted gates. A calibrated
+device with a missing gate cost gives an unknown estimate. For single-qubit
+gates, the mappers prefer the gate's own error rate, then the qubit's average.
+With full CNOT calibration, a qubit with no single-qubit rates retains its ideal
+single-qubit fidelity. The `cnots` count includes each positive-control X and
+three CNOTs per SWAP.
+
 ### QDMI 1.4.0
 
 Rebuild QDMI device libraries against QDMI 1.4.0. QDMI 1.3 device libraries are

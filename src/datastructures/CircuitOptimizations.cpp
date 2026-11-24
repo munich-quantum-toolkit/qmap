@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <deque>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -135,7 +136,17 @@ void decomposeSWAP(qc::QuantumComputation& qc,
   decomposeSWAPIn(qc, isDirectedArchitecture);
 }
 
-void cancelCNOTs(qc::QuantumComputation& qc) {
+bool isCNOT(const qc::Operation& op) {
+  return op.getType() == qc::X && op.getNtargets() == 1U &&
+         op.getNcontrols() == 1U &&
+         op.getControls().begin()->type == qc::Control::Type::Pos;
+}
+
+void cancelCNOTs(qc::QuantumComputation& qc) { cancelCNOTs(qc, {}); }
+
+void cancelCNOTs(
+    qc::QuantumComputation& qc,
+    const std::function<bool(qc::Qubit, qc::Qubit)>& allowSwapRewrite) {
   auto dag = DAG(qc.getHighestPhysicalQubitIndex() + 1U);
 
   for (auto& operation : qc) {
@@ -144,12 +155,10 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
       continue;
     }
 
-    const auto isCNOT =
-        operation->getType() == qc::X && operation->getNcontrols() == 1U &&
-        operation->getControls().begin()->type == qc::Control::Type::Pos;
+    const auto currentIsCNOT = isCNOT(*operation);
     const auto isSWAP =
         operation->getType() == qc::SWAP && operation->getNcontrols() == 0U;
-    if (!isCNOT && !isSWAP) {
+    if (!currentIsCNOT && !isSWAP) {
       addToDAG(dag, &operation);
       continue;
     }
@@ -169,9 +178,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
       continue;
     }
 
-    const auto previousIsCNOT =
-        previous0->getType() == qc::X && previous0->getNcontrols() == 1U &&
-        previous0->getControls().begin()->type == qc::Control::Type::Pos;
+    const auto previousIsCNOT = isCNOT(*previous0);
     const auto previousIsSWAP =
         previous0->getType() == qc::SWAP && previous0->getNcontrols() == 0U;
     if (!previousIsCNOT && !previousIsSWAP) {
@@ -184,7 +191,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
                                 ? previous0->getTargets().at(1)
                                 : previous0->getControls().begin()->qubit;
 
-    if (isCNOT && previousIsCNOT) {
+    if (currentIsCNOT && previousIsCNOT) {
       if (q0 == previousQ0 && q1 == previousQ1) {
         dag.at(q0).pop_back();
         dag.at(q1).pop_back();
@@ -193,6 +200,10 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
         operation->setGate(qc::I);
         operation->clearControls();
       } else {
+        if (allowSwapRewrite && !allowSwapRewrite(q0, q1)) {
+          addToDAG(dag, &operation);
+          continue;
+        }
         const auto beforePrevious0 = ++dag.at(q0).rbegin();
         const auto beforePrevious1 = ++dag.at(q1).rbegin();
         if (beforePrevious0 == dag.at(q0).rend() ||
@@ -208,10 +219,7 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
           continue;
         }
 
-        const auto earlierIsCNOT =
-            earlier0->getType() == qc::X && earlier0->getNcontrols() == 1U &&
-            earlier0->getControls().begin()->type == qc::Control::Type::Pos;
-        if (!earlierIsCNOT) {
+        if (!isCNOT(*earlier0)) {
           addToDAG(dag, &operation);
           continue;
         }
@@ -254,7 +262,11 @@ void cancelCNOTs(qc::QuantumComputation& qc) {
       continue;
     }
 
-    if (isCNOT && previousIsSWAP) {
+    if (allowSwapRewrite && !allowSwapRewrite(q0, q1)) {
+      addToDAG(dag, &operation);
+      continue;
+    }
+    if (currentIsCNOT && previousIsSWAP) {
       previous0->setGate(qc::X);
       previous0->setTargets({q0});
       previous0->setControls({qc::Control{q1}});

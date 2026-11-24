@@ -13,12 +13,12 @@
 #include "Architecture.hpp"
 #include "MappingResults.hpp"
 #include "configuration/Configuration.hpp"
-#include "ir//QuantumComputation.hpp"
 #include "ir/Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 #include "utils.hpp"
 
-#include <cctype>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -30,18 +30,19 @@
 #include <utility>
 #include <vector>
 
-/**
- * number of two-qubit gates acting on pairs of logical qubits in some layer
- * where the keys correspond to logical qubit pairs ({q1, q2}, with q1<=q2)
- * and the values to the number of gates acting on a pair in each direction
- * (the first number with control=q1, target=q2 and the second the reverse).
- *
- * e.g., with multiplicity {{0,1},{2,3}} there are 2 gates with logical
- * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control
- * and 0 as target.
- */
+/// Number of gates in each operand order for each logical qubit pair.
 using TwoQubitMultiplicity =
     std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
+
+/// Gate counts for a pair of logical qubits in ascending order.
+struct TwoQubitGateCounts {
+  struct Direction {
+    std::uint32_t cnots = 0;
+    bool requiresOrder = false;
+  };
+  Direction forward;
+  Direction backward;
+};
 
 /**
  * number of single-qubit gates acting on each logical qubit in some
@@ -56,26 +57,24 @@ constexpr std::int16_t DEFAULT_POSITION = -1;
 
 class Mapper {
 protected:
-  // internal structures
+  enum class Reversal { None, Exchange, NegateBeta, CNOT };
 
-  /**
-   * @brief Structure to store an operation on 1 or 2 logical qubits.
-   *
-   * For a single-qubit operation `control` is set to `-1`
-   */
+  /// Logical operands in the order used by the source operation.
   struct Gate {
-    std::int16_t control = -1;
-    std::uint16_t target = 0;
+    std::uint16_t first;
+    std::optional<std::uint16_t> second;
+    const qc::Operation* op;
+    Reversal reversal;
 
-    qc::Operation* op = nullptr;
-
-    Gate(const std::int16_t c, const std::uint16_t t)
-        : control(c), target(t) {};
-    Gate(const std::int16_t c, const std::uint16_t t, qc::Operation* operation)
-        : control(c), target(t), op(operation) {};
-
-    [[nodiscard]] bool singleQubit() const { return control == -1; }
+    [[nodiscard]] bool singleQubit() const { return !second.has_value(); }
+    [[nodiscard]] Edge pair() const {
+      return std::minmax(first, second.value());
+    }
+    [[nodiscard]] bool conflictsWith(const Edge& edge,
+                                     const TwoQubitGateCounts& counts) const;
   };
+
+  static Reversal reversalFor(const qc::Operation& op);
 
   /**
    * @brief The quantum circuit to be mapped
@@ -90,42 +89,17 @@ protected:
    * @brief The resulting quantum circuit after mapping
    */
   qc::QuantumComputation qcMapped;
-  /**
-   * @brief The gates of the circuit split into layers
-   *
-   * Each entry in the outer vector corresponds to 1 layer, containing all its
-   * gates in an inner vector
-   */
-  std::vector<std::vector<Gate>> layers;
+  struct Layer {
+    void add(const Gate& gate);
 
-  /**
-   * @brief The number of 1Q-gates acting on each logical qubit in each layer
-   */
-  std::vector<SingleQubitMultiplicity> singleQubitMultiplicities;
-
-  /**
-   * @brief The number of 2Q-gates acting on each pair of logical qubits in each
-   * layer
-   */
-  std::vector<TwoQubitMultiplicity> twoQubitMultiplicities;
-
-  /**
-   * @brief For each layer the set of all logical qubits, which are acted on by
-   * a gate in the layer
-   */
-  std::vector<std::set<std::uint16_t>> activeQubits;
-
-  /**
-   * @brief For each layer the set of all logical qubits, which are acted on by
-   * a 1Q-gate in the layer
-   */
-  std::vector<std::set<std::uint16_t>> activeQubits1QGates;
-
-  /**
-   * @brief For each layer the set of all logical qubits, which are acted on by
-   * a 2Q-gate in the layer
-   */
-  std::vector<std::set<std::uint16_t>> activeQubits2QGates;
+    std::vector<Gate> gates;
+    std::map<Edge, TwoQubitGateCounts> interactions;
+    std::set<std::uint16_t> activeQubits;
+    std::set<std::uint16_t> activeQubits2QGates;
+  };
+  std::vector<Layer> layers;
+  bool fidelityAwareHeur = false;
+  bool assumeIdealSingleQubits = false;
 
   /**
    * @brief containing the logical qubit currently mapped to each physical
@@ -149,6 +123,12 @@ protected:
    * the output circuit, gate counts, etc.
    */
   virtual void initResults();
+
+  [[nodiscard]] Architecture::GateFidelity gateFidelity(const Gate& gate,
+                                                        const Edge& edge) const;
+
+  /// Emit the gate on its physical operands.
+  void appendMappedGate(const Gate& gate, std::uint16_t first);
 
   /**
    * @brief Splits the circuit into layers according to the method set in
@@ -186,40 +166,9 @@ protected:
    * many qubits acted on by gates in each layer
    *
    * @param index the index of the layer to be split
-   * @param arch architecture on which the circuit is mapped
    */
-  virtual void splitLayer(std::size_t index, Architecture& arch);
-
-  /**
-   * gates are put in the last layer (from the back of the circuit) in which
-   * all of its qubits are not yet used by another gate in a circuit diagram
-   * this can be thought of shifting all gates as far left as possible and
-   * defining each column of gates as one layer.
-   *
-   * @param lastLayer the array storing the last layer each qubit is used in
-   * @param control the (potential) control qubit of the gate
-   * @param target the target qubit of the gate
-   * @param gate the gate to be added to the layer
-   */
-  void
-  processDisjointQubitLayer(std::vector<std::optional<std::size_t>>& lastLayer,
-                            const std::optional<std::uint16_t>& control,
-                            std::uint16_t target, qc::Operation* gate);
-
-  /**
-   * Similar to processDisjointQubitLayer, but instead of treating each gate
-   * individually, gates are collected in 2Q-blocks, which are layered
-   * disjointly to each other
-   *
-   * @param lastLayer the array storing the last layer each qubit is used in
-   * @param control the (potential) control qubit of the gate
-   * @param target the target qubit of the gate
-   * @param gate the gate to be added to the layer
-   */
-  void processDisjoint2qBlockLayer(
-      std::vector<std::optional<std::size_t>>& lastLayer,
-      const std::optional<std::uint16_t>& control, std::uint16_t target,
-      qc::Operation* gate);
+  virtual void splitLayer(std::size_t index);
+  void splitLayerAt(std::size_t index, std::size_t offset);
 
   /**
    * @brief Get the index of the next layer after the given index containing a
@@ -240,10 +189,12 @@ protected:
   /**
    * @brief count number of elementary gates and cnots in circuit and save the
    * results in `info.gates` and `info.cnots`
+   * @param mapped Whether circuit operands identify physical qubits.
    */
   virtual void countGates(const qc::QuantumComputation& circuit,
-                          MappingResults::CircuitInfo& info) {
-    countGates(circuit.cbegin(), circuit.cend(), info);
+                          MappingResults::CircuitInfo& info,
+                          bool mapped = true) {
+    countGates(circuit.cbegin(), circuit.cend(), info, mapped);
   }
   /**
    * @brief count number of elementary gates and cnots in circuit and save the
@@ -251,7 +202,7 @@ protected:
    */
   virtual void countGates(decltype(qcMapped.cbegin()) it,
                           const decltype(qcMapped.cend())& end,
-                          MappingResults::CircuitInfo& info);
+                          MappingResults::CircuitInfo& info, bool mapped);
 
   /**
    * @brief performs optimizations on the circuit before mapping
@@ -310,13 +261,13 @@ public:
 
   std::ostream& printLayering(std::ostream& out) {
     out << "---------------- Layering -------------------\n";
-    for (auto& layer : layers) {
-      for (auto& gate : layer) {
-        if (gate.singleQubit()) {
-          out << "(" << gate.target << ") ";
-        } else {
-          out << "(" << gate.control << " " << gate.target << ") ";
+    for (const auto& layer : layers) {
+      for (const auto& gate : layer.gates) {
+        out << "(" << gate.first;
+        if (gate.second) {
+          out << " " << *gate.second;
         }
+        out << ") ";
       }
       out << "\n";
     }

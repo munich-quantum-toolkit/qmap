@@ -970,6 +970,40 @@ TEST(TestArchitecture, FidelitySwapCostTest) {
                QMAPException);
 }
 
+TEST(TestArchitecture, SparseCalibrationCosts) {
+  Architecture::Properties props;
+  props.setSingleQubitErrorRate(0, "h", 0.03);
+  props.setSingleQubitErrorRate(0, "x", 0.01);
+  props.setTwoQubitErrorRate(0, 1, 0.1);
+  props.setTwoQubitErrorRate(1, 0, 0.2);
+  props.setTwoQubitErrorRate(1, 2, 0.4);
+  props.setTwoQubitErrorRate(2, 1, 0.06, "swap");
+  props.setTwoQubitErrorRate(2, 3, 0.08, "rxx");
+  const Architecture architecture(4, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}},
+                                  props);
+
+  const auto assumeIdeal = architecture.hasCompleteCnotCalibration();
+  EXPECT_FALSE(assumeIdeal);
+  EXPECT_NEAR(architecture.singleQubitCost(qc::H, 0, assumeIdeal),
+              -std::log2(0.97), 1e-12);
+  EXPECT_NEAR(architecture.singleQubitCost(qc::Z, 0, assumeIdeal),
+              -std::log2(0.98), 1e-12);
+  EXPECT_TRUE(std::isinf(architecture.singleQubitCost(qc::H, 1, assumeIdeal)));
+  EXPECT_NEAR(architecture.nativeTwoQubitCost(qc::RXX, {2, 3}),
+              -std::log2(0.92), 1e-12);
+  EXPECT_TRUE(std::isinf(architecture.nativeTwoQubitCost(qc::RXX, {3, 2})));
+
+  const auto [decomposed, decomposedReversed] =
+      architecture.swapFidelity({0, 1}, assumeIdeal);
+  const auto [native, nativeReversed] =
+      architecture.swapFidelity({1, 2}, assumeIdeal);
+  EXPECT_FALSE(decomposedReversed);
+  EXPECT_NEAR(decomposed, -std::log2(0.9 * 0.9 * 0.8), 1e-12);
+  EXPECT_TRUE(nativeReversed);
+  EXPECT_NEAR(native, -std::log2(0.94), 1e-12);
+  EXPECT_TRUE(std::isinf(architecture.swapFidelity({2, 3}, assumeIdeal).cost));
+}
+
 TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
   // tests if the distance measure actually finds the cheapest path and
   // not just the shortest
