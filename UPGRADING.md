@@ -10,6 +10,12 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Zoned neutral-atom compilation
+
+Regenerate compiled circuits that apply a Hadamard or another supported
+single-qubit gate to every atom in a custom gate. MQT QMAP emits a global Y
+rotation for Y and RY, and local RZ or U3 operations for the other gates.
+
 ### Zoned neutral-atom placement
 
 When a preferred storage column is full, the routing-aware placer uses the

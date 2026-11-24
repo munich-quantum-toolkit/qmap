@@ -49,120 +49,110 @@
 #include <vector>
 
 namespace na::zoned {
+namespace {
+auto appendLocalGate(const qc::Operation& gate,
+                     std::vector<const Atom*> targets,
+                     bool warnUnsupportedGates, NAComputation& code) -> void {
+  const auto type = gate.getType();
+  const auto& params = gate.getParameter();
+  const auto rz = [&](qc::fp angle) {
+    code.emplaceBack<NAComputationLocalRZOperation>(std::move(targets), angle);
+  };
+  if (type == qc::RZ || type == qc::P) {
+    rz(params.front());
+  } else if (type == qc::Z) {
+    rz(qc::PI);
+  } else if (type == qc::S) {
+    rz(qc::PI_2);
+  } else if (type == qc::Sdg) {
+    rz(-qc::PI_2);
+  } else if (type == qc::T) {
+    rz(qc::PI_4);
+  } else if (type == qc::Tdg) {
+    rz(-qc::PI_4);
+  } else {
+    if (warnUnsupportedGates) {
+      SPDLOG_WARN(
+          "Gate not part of basis gates will be inserted as U3 gate: {}",
+          qc::toString(type));
+    }
+    const auto u3 = [&](qc::fp theta, qc::fp phi, qc::fp lambda) {
+      code.emplaceBack<NAComputationLocalUOperation>(std::move(targets), theta,
+                                                     phi, lambda);
+    };
+    if (type == qc::U) {
+      u3(params.front(), params.at(1), params.at(2));
+    } else if (type == qc::U2) {
+      u3(qc::PI_2, params.front(), params.at(1));
+    } else if (type == qc::RX) {
+      u3(params.front(), -qc::PI_2, qc::PI_2);
+    } else if (type == qc::RY) {
+      u3(params.front(), 0, 0);
+    } else if (type == qc::H) {
+      u3(qc::PI_2, 0, qc::PI);
+    } else if (type == qc::X) {
+      u3(qc::PI, 0, qc::PI);
+    } else if (type == qc::Y) {
+      u3(qc::PI, qc::PI_2, qc::PI_2);
+    } else if (type == qc::Vdg) {
+      u3(-qc::PI_2, qc::PI_2, -qc::PI_2);
+    } else if (type == qc::SX) {
+      u3(qc::PI_2, -qc::PI_2, qc::PI_2);
+    } else if (type == qc::SXdg || type == qc::V) {
+      u3(-qc::PI_2, -qc::PI_2, qc::PI_2);
+    } else {
+      std::ostringstream oss;
+      oss << "\033[1;31m[ERROR]\033[0m Unsupported single-qubit gate: " << type
+          << "\n";
+      throw std::invalid_argument(oss.str());
+    }
+  }
+}
+} // namespace
+
 auto CodeGenerator::appendSingleQubitGates(
-    const size_t nQubits, const SingleQubitGateLayer& singleQubitGates,
+    const SingleQubitGateLayer& singleQubitGates,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const Zone& globalZone, NAComputation& code) const -> void {
+  const auto append = [&](const qc::Operation& gate, const auto& qubits) {
+    if (!gate.isSingleQubitGate()) {
+      throw std::invalid_argument("Expected a single-qubit gate, got " +
+                                  qc::toString(gate.getType()));
+    }
+    const auto type = gate.getType();
+    if (qubits.size() == atoms.size() && (type == qc::RY || type == qc::Y)) {
+      const auto angle = type == qc::Y ? qc::PI : gate.getParameter().front();
+      code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, angle);
+      return;
+    }
+    std::vector<const Atom*> targets;
+    targets.reserve(qubits.size());
+    for (const auto qubit : qubits) {
+      targets.emplace_back(&atoms.at(qubit).get());
+    }
+    appendLocalGate(gate, std::move(targets), config_.warnUnsupportedGates,
+                    code);
+  };
+
   for (const auto& op : singleQubitGates) {
-    // A flag to indicate if the gate is a gate on one qubit.
-    // This flag is used for circuit consisting of only one qubit since in this
-    // case, global and local gates are the same.
-    bool singleQubitGate = false;
-    if (op->isGlobal(nQubits)) {
-      // a global operation can be wrapped in a compound operation or a standard
-      // operation acting on all qubits
-      if (op->isCompoundOperation()) {
-        const auto& compOp = dynamic_cast<const qc::CompoundOperation&>(*op);
-        const auto opType = compOp.front()->getType();
-        if (opType == qc::RY) {
-          code.emplaceBack<NAComputationGlobalRYOperation>(
-              globalZone, compOp.front()->getParameter().front());
-        } else if (opType == qc::Y) {
-          code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, qc::PI);
-        } else {
-          // this case should never occur since the scheduler should filter out
-          // other global gates that are not supported already.
-          assert(false);
-        }
+    if (const auto* compound =
+            dynamic_cast<const qc::CompoundOperation*>(op.get())) {
+      // Emit one instruction when each atom receives the same gate exactly
+      // once.
+      if (!compound->empty() && compound->size() == atoms.size() &&
+          compound->isGlobal(atoms.size()) &&
+          std::ranges::all_of(*compound, [](const auto& gate) {
+            return gate->isSingleQubitGate() && gate->getNtargets() == 1;
+          })) {
+        append(*compound->front(),
+               std::views::iota(std::size_t{0}, atoms.size()));
       } else {
-        if (const auto opType = op->getType(); opType == qc::RY) {
-          code.emplaceBack<NAComputationGlobalRYOperation>(
-              globalZone, op->getParameter().front());
-        } else if (opType == qc::Y) {
-          code.emplaceBack<NAComputationGlobalRYOperation>(globalZone, qc::PI);
-        } else if (nQubits == 1) {
-          // special case for one qubit, fall through to local gates
-          singleQubitGate = true;
-        } else {
-          // this case should never occur since the scheduler should filter out
-          // other global gates that are not supported already.
-          assert(false);
+        for (const auto& gate : *compound) {
+          append(*gate, gate->getTargets());
         }
       }
     } else {
-      // if a gate is not global, it is assumed to be a local gate.
-      singleQubitGate = true;
-    }
-    if (singleQubitGate) {
-      // one qubit gates act exactly on one qubit and are converted to local
-      // gates
-      assert(op->getNqubits() == 1);
-      const qc::Qubit qubit = op->getTargets().front();
-      // By default, all variants of rotational z-gates are supported
-      if (op->getType() == qc::RZ || op->getType() == qc::P) {
-        code.emplaceBack<NAComputationLocalRZOperation>(
-            atoms[qubit], op->getParameter().front());
-      } else if (op->getType() == qc::Z) {
-        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit], qc::PI);
-      } else if (op->getType() == qc::S) {
-        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit], qc::PI_2);
-      } else if (op->getType() == qc::Sdg) {
-        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit],
-                                                        -qc::PI_2);
-      } else if (op->getType() == qc::T) {
-        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit], qc::PI_4);
-      } else if (op->getType() == qc::Tdg) {
-        code.emplaceBack<NAComputationLocalRZOperation>(atoms[qubit],
-                                                        -qc::PI_4);
-      } else {
-        // in this case, the gate is not any variant of a rotational z-gate.
-        // depending on the settings, a warning is printed.
-        if (config_.warnUnsupportedGates) {
-          SPDLOG_WARN(
-              "Gate not part of basis gates will be inserted as U3 gate: {}",
-              qc::toString(op->getType()));
-        }
-        if (op->getType() == qc::U) {
-          code.emplaceBack<NAComputationLocalUOperation>(
-              atoms[qubit], op->getParameter().front(),
-              op->getParameter().at(1), op->getParameter().at(2));
-        } else if (op->getType() == qc::U2) {
-          code.emplaceBack<NAComputationLocalUOperation>(
-              atoms[qubit], qc::PI_2, op->getParameter().front(),
-              op->getParameter().at(1));
-        } else if (op->getType() == qc::RX) {
-          code.emplaceBack<NAComputationLocalUOperation>(
-              atoms[qubit], op->getParameter().front(), -qc::PI_2, qc::PI_2);
-        } else if (op->getType() == qc::RY) {
-          code.emplaceBack<NAComputationLocalUOperation>(
-              atoms[qubit], op->getParameter().front(), 0, 0);
-        } else if (op->getType() == qc::H) {
-          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI_2,
-                                                         0, qc::PI);
-        } else if (op->getType() == qc::X) {
-          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI,
-                                                         0, qc::PI);
-        } else if (op->getType() == qc::Y) {
-          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI,
-                                                         qc::PI_2, qc::PI_2);
-        } else if (op->getType() == qc::Vdg) {
-          code.emplaceBack<NAComputationLocalUOperation>(
-              atoms[qubit], -qc::PI_2, qc::PI_2, -qc::PI_2);
-        } else if (op->getType() == qc::SX) {
-          code.emplaceBack<NAComputationLocalUOperation>(atoms[qubit], qc::PI_2,
-                                                         -qc::PI_2, qc::PI_2);
-        } else if (op->getType() == qc::SXdg || op->getType() == qc::V) {
-          code.emplaceBack<NAComputationLocalUOperation>(
-              atoms[qubit], -qc::PI_2, -qc::PI_2, qc::PI_2);
-        } else {
-          // if the gate type is not recognized, an error is printed and the
-          // gate is not included in the output.
-          std::ostringstream oss;
-          oss << "\033[1;31m[ERROR]\033[0m Unsupported single-qubit gate: "
-              << op->getType() << "\n";
-          throw std::invalid_argument(oss.str());
-        }
-      }
+      append(*op, op->getTargets());
     }
   }
 }
@@ -690,14 +680,14 @@ auto CodeGenerator::generate(
   }
   assert(2 * singleQubitGateLayers.size() == placement.size() + 1);
   assert(placement.size() == routing.size() + 1);
-  appendSingleQubitGates(atoms.size(), singleQubitGateLayers.front(), atoms,
-                         globalZone, code);
+  appendSingleQubitGates(singleQubitGateLayers.front(), atoms, globalZone,
+                         code);
   for (size_t layer = 0; layer + 1 < singleQubitGateLayers.size(); ++layer) {
     appendTwoQubitGates(placement[2 * layer], routing[2 * layer],
                         placement[(2 * layer) + 1], routing[(2 * layer) + 1],
                         placement[2 * (layer + 1)], atoms, rydbergZones, code);
-    appendSingleQubitGates(atoms.size(), singleQubitGateLayers[layer + 1],
-                           atoms, globalZone, code);
+    appendSingleQubitGates(singleQubitGateLayers[layer + 1], atoms, globalZone,
+                           code);
   }
   return code;
 }

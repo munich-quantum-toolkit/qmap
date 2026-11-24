@@ -146,6 +146,19 @@ TEST_F(CodeGeneratorGenerateTest, GlobalCompoundYGate) {
       "atom (0.000, 0.000) atom0\n"
       "@+ ry 3.14159 global\n");
 }
+TEST_F(CodeGeneratorGenerateTest, RepeatedTargetInCompound) {
+  const auto& slm = *architecture.storageZones.front();
+  qc::CompoundOperation gates;
+  for (const auto qubit : {0U, 1U, 0U}) {
+    gates.emplace_back<qc::StandardOperation>(qubit, qc::S);
+  }
+  const auto code = codeGenerator.generate(
+      makeSingleOpLayer<qc::CompoundOperation>(std::move(gates)),
+      {Placement{{slm, 0, 0}, {slm, 0, 1}}}, {});
+  EXPECT_THAT(code.toString(), ::testing::EndsWith("@+ rz 1.57080 atom0\n"
+                                                   "@+ rz 1.57080 atom1\n"
+                                                   "@+ rz 1.57080 atom0\n"));
+}
 TEST_F(CodeGeneratorGenerateTest, RZGate) {
   const auto& slm = *architecture.storageZones.front();
   EXPECT_EQ(

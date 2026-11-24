@@ -16,7 +16,7 @@
 #include "na/zoned/Architecture.hpp"
 #include "na/zoned/Types.hpp"
 
-#include <cstddef>
+#include <functional>
 #include <vector>
 
 namespace na::zoned {
@@ -73,7 +73,7 @@ public:
 private:
   /// Append all single-qubit gates of a layer to the code
   auto appendSingleQubitGates(
-      size_t nQubits, const SingleQubitGateLayer& singleQubitGates,
+      const SingleQubitGateLayer& singleQubitGates,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       const Zone& globalZone, NAComputation& code) const -> void;
 

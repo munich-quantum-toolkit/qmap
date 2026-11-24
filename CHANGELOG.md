@@ -25,6 +25,8 @@ releases may include breaking changes.
 
 ### Fixed
 
+- 🐛 Preserve global Hadamards and other supported single-qubit gates in zoned
+  neutral-atom compilation ([#1240]) ([**@burgholzer**])
 - 🐛 Select the nearest free storage column in constant time during zoned
   neutral-atom placement, including on arrays that share column coordinates
   ([#1238]) ([**@burgholzer**])
@@ -379,6 +381,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1240]: https://github.com/munich-quantum-toolkit/qmap/pull/1240
 [#1238]: https://github.com/munich-quantum-toolkit/qmap/pull/1238
 [#1237]: https://github.com/munich-quantum-toolkit/qmap/pull/1237
 [#1236]: https://github.com/munich-quantum-toolkit/qmap/pull/1236
