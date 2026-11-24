@@ -10,11 +10,19 @@
 
 #pragma once
 
+#include "ir/Definitions.hpp"
+
+#include <functional>
+
 namespace qc {
+class Operation;
 class QuantumComputation;
-}
+} // namespace qc
 
 namespace qmap {
+
+/// Return whether the operation is an X gate with one positive control.
+[[nodiscard]] bool isCNOT(const qc::Operation& op);
 
 /**
  * @brief Decompose uncontrolled SWAP gates into CNOT gates.
@@ -29,6 +37,11 @@ void decomposeSWAP(qc::QuantumComputation& qc, bool isDirectedArchitecture);
  * @param qc Quantum circuit to transform.
  */
 void cancelCNOTs(qc::QuantumComputation& qc);
+
+/// Restrict rewrites between SWAP and CNOT gates to the given edges.
+void cancelCNOTs(
+    qc::QuantumComputation& qc,
+    const std::function<bool(qc::Qubit, qc::Qubit)>& allowSwapRewrite);
 
 /**
  * @brief Fuse adjacent single-qubit gates.

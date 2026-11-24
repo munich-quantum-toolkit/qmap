@@ -10,6 +10,7 @@
 
 #include "sc/Architecture.hpp"
 
+#include "ir/operations/OpType.hpp"
 #include "sc/configuration/AvailableArchitecture.hpp"
 #include "sc/utils.hpp"
 
@@ -31,6 +32,17 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+namespace {
+constexpr auto UNAVAILABLE_COST = std::numeric_limits<double>::infinity();
+
+double logFidelityCost(const double errorRate) {
+  if (errorRate >= 0. && errorRate < 1.) {
+    return -std::log2(1. - errorRate);
+  }
+  return UNAVAILABLE_COST;
+}
+} // namespace
 
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
   std::stringstream ss{getCouplingMapSpecification(architecture)};
@@ -80,6 +92,7 @@ void Architecture::loadCouplingMap(std::istream& is) {
     }
   }
   createDistanceTable();
+  createFidelityTable();
 }
 
 void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
@@ -88,6 +101,7 @@ void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
   properties.clear();
   name = "generic_" + std::to_string(nQ);
   createDistanceTable();
+  createFidelityTable();
 }
 
 void Architecture::loadProperties(const std::string& filename) {
@@ -230,15 +244,104 @@ void Architecture::createDistanceTable() {
   }
 }
 
+bool Architecture::hasCompleteCnotCalibration() const {
+  return !couplingMap.empty() &&
+         std::ranges::all_of(couplingMap, [this](const auto& edge) {
+           return std::isfinite(nativeTwoQubitCost(qc::X, edge));
+         });
+}
+
+double Architecture::singleQubitCost(const qc::OpType type,
+                                     const std::uint16_t qubit,
+                                     const bool assumeIdealSingleQubits) const {
+  if (qubit >= nqubits) {
+    return UNAVAILABLE_COST;
+  }
+  const auto& rates = properties.singleQubitErrorRate;
+  if (!rates.available(qubit) || rates.get(qubit).empty()) {
+    // Keep the ideal default of the complete CX calibration model.
+    return assumeIdealSingleQubits ? 0. : UNAVAILABLE_COST;
+  }
+  const auto& gateRates = rates.get(qubit);
+  return logFidelityCost(
+      gateRates.available(type)
+          ? gateRates.get(type)
+          : properties.getAverageSingleQubitErrorRate(qubit));
+}
+
+double Architecture::nativeTwoQubitCost(const qc::OpType type,
+                                        const Edge& edge) const {
+  const auto [first, second] = edge;
+  const auto& rates = properties.twoQubitErrorRate;
+  if (first == second || !isEdgeConnected(edge) || !rates.available(first) ||
+      !rates.get(first).available(second)) {
+    return UNAVAILABLE_COST;
+  }
+  const auto& gateRates = rates.get(first).get(second);
+  return gateRates.available(type) ? logFidelityCost(gateRates.get(type))
+                                   : UNAVAILABLE_COST;
+}
+
+double Architecture::reversalCost(const Edge& edge,
+                                  const bool assumeIdealSingleQubits) const {
+  return 2 * (singleQubitCost(qc::H, edge.first, assumeIdealSingleQubits) +
+              singleQubitCost(qc::H, edge.second, assumeIdealSingleQubits));
+}
+
+Architecture::GateFidelity
+Architecture::swapFidelity(const Edge& edge,
+                           const bool assumeIdealSingleQubits) const {
+  const auto [first, second] = edge;
+  const Edge reversedEdge{second, first};
+  const auto native = nativeTwoQubitCost(qc::SWAP, edge);
+  const auto reversedNative = nativeTwoQubitCost(qc::SWAP, reversedEdge);
+  if (std::isfinite(native) || std::isfinite(reversedNative)) {
+    return {
+        .cost = std::min(native, reversedNative),
+        .reversed = reversedNative < native,
+    };
+  }
+
+  const auto cx = nativeTwoQubitCost(qc::X, edge);
+  const auto reversedCx = nativeTwoQubitCost(qc::X, reversedEdge);
+  const auto cheapestCx = std::min(cx, reversedCx);
+  const auto reversed = reversedCx < cx;
+  if (!std::isfinite(cheapestCx)) {
+    return {.cost = UNAVAILABLE_COST, .reversed = !isEdgeConnected(edge)};
+  }
+  if (std::isfinite(cx) && std::isfinite(reversedCx)) {
+    return {
+        .cost = 2 * cheapestCx + std::max(cx, reversedCx),
+        .reversed = reversed,
+    };
+  }
+  // Use three CXs in the available direction and conjugate the middle one.
+  return {
+      .cost = 3 * cheapestCx + reversalCost(edge, assumeIdealSingleQubits),
+      .reversed = reversed,
+  };
+}
+
 void Architecture::createFidelityTable() {
-  fidelityAvailable = true;
+  const auto assumeIdealSingleQubits = hasCompleteCnotCalibration();
+  fidelityAvailable =
+      assumeIdealSingleQubits ||
+      (couplingMap.empty() && (!properties.twoQubitErrorRate.empty() ||
+                               !properties.singleQubitErrorRate.empty()));
   fidelityTable.clear();
-  fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
+  singleQubitFidelities.clear();
+  singleQubitFidelityCosts.clear();
   twoQubitFidelityCosts.clear();
+  swapFidelityCosts.clear();
+  fidelityDistanceTables.clear();
+  if (!fidelityAvailable) {
+    return;
+  }
+
+  fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
   twoQubitFidelityCosts.resize(
       nqubits,
       std::vector<double>(nqubits, std::numeric_limits<double>::max()));
-  swapFidelityCosts.clear();
   swapFidelityCosts.resize(
       nqubits,
       std::vector<double>(nqubits, std::numeric_limits<double>::max()));
@@ -248,48 +351,29 @@ void Architecture::createFidelityTable() {
 
   for (const auto& [qubit, operationProps] :
        properties.singleQubitErrorRate.get()) {
-    singleQubitFidelities[qubit] =
+    singleQubitFidelities.at(qubit) =
         1.0 - properties.getAverageSingleQubitErrorRate(qubit);
-    singleQubitFidelityCosts[qubit] = -std::log2(singleQubitFidelities[qubit]);
+    singleQubitFidelityCosts.at(qubit) =
+        -std::log2(singleQubitFidelities.at(qubit));
   }
 
   for (const auto& [first, second] : couplingMap) {
-    if (properties.twoQubitErrorRateAvailable(first, second)) {
-      fidelityTable[first][second] =
-          1.0 - properties.getTwoQubitErrorRate(first, second);
-      twoQubitFidelityCosts[first][second] =
-          -std::log2(fidelityTable[first][second]);
-      if (!couplingMap.contains({second, first})) {
-        // CNOT reversal (unidirectional edge q1 -> q2):
-        // CX(q2,q1) = H(q1) H(q2) CX(q1,q2) H(q1) H(q2)
-        twoQubitFidelityCosts[second][first] =
-            twoQubitFidelityCosts[first][second] +
-            2 * singleQubitFidelityCosts[first] +
-            2 * singleQubitFidelityCosts[second];
-        // SWAP decomposition (unidirectional edge q1 -> q2):
-        // SWAP(q1,q2) = CX(q1,q2) H(q1) H(q2) CX(q1,q2) H(q1) H(q2) CX(q1,q2)
-        swapFidelityCosts[first][second] =
-            3 * twoQubitFidelityCosts[first][second] +
-            2 * singleQubitFidelityCosts[first] +
-            2 * singleQubitFidelityCosts[second];
-        swapFidelityCosts[second][first] = swapFidelityCosts[first][second];
-      } else {
-        // SWAP decomposition (bidirectional edge q1 <-> q2):
-        // SWAP(q1,q2) = CX(q1,q2) CX(q2,q1) CX(q1,q2)
-        swapFidelityCosts[first][second] =
-            3 * twoQubitFidelityCosts[first][second];
-      }
-    } else {
-      fidelityAvailable = false;
-      fidelityTable.clear();
-      singleQubitFidelities.clear();
-      twoQubitFidelityCosts.clear();
-      swapFidelityCosts.clear();
-      return;
+    fidelityTable[first][second] =
+        1.0 - properties.getTwoQubitErrorRate(first, second);
+    twoQubitFidelityCosts[first][second] =
+        -std::log2(fidelityTable[first][second]);
+    if (!couplingMap.contains({second, first})) {
+      // Conjugate a CX with a Hadamard on each endpoint to reverse its order.
+      twoQubitFidelityCosts[second][first] =
+          twoQubitFidelityCosts[first][second] +
+          reversalCost({first, second}, assumeIdealSingleQubits);
     }
+    const auto swapCost =
+        swapFidelity({first, second}, assumeIdealSingleQubits).cost;
+    swapFidelityCosts[first][second] = swapCost;
+    swapFidelityCosts[second][first] = swapCost;
   }
 
-  fidelityDistanceTables.clear();
   Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables,
                                swapFidelityCosts);
 }

@@ -14,21 +14,25 @@
 #include "ir/Definitions.hpp"
 #include "ir/Permutation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/Control.hpp"
+#include "ir/operations/Expression.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "ir/operations/SymbolicOperation.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/configuration/Layering.hpp"
 #include "sc/utils.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
 #include <set>
+#include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace {
@@ -46,6 +50,17 @@ void appendMeasurementsAccordingToOutputPermutation(
     circuit.measure(qubit, clbit);
   }
 }
+
+void negateXXPlusYYPhase(qc::Operation& op) {
+  if (auto* symbolic = dynamic_cast<qc::SymbolicOperation*>(&op)) {
+    const auto beta = symbolic->getParameter(1);
+    if (const auto* expr = std::get_if<qc::Symbolic>(&beta)) {
+      symbolic->setSymbolicParameter(-*expr, 1);
+      return;
+    }
+  }
+  op.getParameter().at(1) *= -1.;
+}
 } // namespace
 
 void Mapper::initResults() {
@@ -53,7 +68,8 @@ void Mapper::initResults() {
     throw QMAPException(
         "The circuit has more active qubits than the architecture.");
   }
-  countGates(qc, results.input);
+  assumeIdealSingleQubits = architecture->hasCompleteCnotCalibration();
+  countGates(qc, results.input, false);
   results.input.name = qc.getName();
   results.input.qubits = static_cast<std::uint16_t>(qc.getNqubits());
   results.architecture = architecture->getName();
@@ -61,6 +77,9 @@ void Mapper::initResults() {
   results.output.qubits = architecture->getNqubits();
   results.output.gates = std::numeric_limits<std::size_t>::max();
   qcMapped.setName(qc.getName());
+  for (const auto& variable : qc.getVariables()) {
+    qcMapped.addVariable(qc::Symbolic{variable});
+  }
   qcMapped.addQubitRegister(architecture->getNqubits());
 }
 
@@ -90,394 +109,300 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
   locations.resize(architecture->getNqubits(), DEFAULT_POSITION);
 }
 
-void Mapper::processDisjointQubitLayer(
-    std::vector<std::optional<std::size_t>>& lastLayer,
-    const std::optional<std::uint16_t>& control, const std::uint16_t target,
-    qc::Operation* gate) {
-  std::size_t layer = 0;
-  if (!control.has_value()) {
-    if (lastLayer.at(target).has_value()) {
-      layer = *lastLayer.at(target) + 1;
+Mapper::Reversal Mapper::reversalFor(const qc::Operation& op) {
+  if (op.isControlled()) {
+    if (op.getType() == qc::I) {
+      return Reversal::Exchange;
     }
-    lastLayer.at(target) = layer;
-  } else {
-    if (!lastLayer.at(*control).has_value() &&
-        !lastLayer.at(target).has_value()) {
-      layer = 0;
-    } else if (!lastLayer.at(*control).has_value()) {
-      layer = *lastLayer.at(target) + 1;
-    } else if (!lastLayer.at(target).has_value()) {
-      layer = *lastLayer.at(*control) + 1;
-    } else {
-      layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+    if (op.getControls().begin()->type == qc::Control::Type::Neg) {
+      return Reversal::None;
     }
-    lastLayer.at(*control) = layer;
-    lastLayer.at(target) = layer;
+    switch (op.getType()) {
+    case qc::X:
+      return Reversal::CNOT;
+    case qc::Z:
+    case qc::S:
+    case qc::Sdg:
+    case qc::T:
+    case qc::Tdg:
+    case qc::P:
+      return Reversal::Exchange;
+    default:
+      return Reversal::None;
+    }
   }
-
-  if (layers.size() <= layer) {
-    layers.emplace_back();
-  }
-  if (control.has_value()) {
-    layers.at(layer).emplace_back(*control, target, gate);
-  } else {
-    layers.at(layer).emplace_back(-1, target, gate);
+  switch (op.getType()) {
+  case qc::SWAP:
+  case qc::iSWAP:
+  case qc::iSWAPdg:
+  case qc::RXX:
+  case qc::RYY:
+  case qc::RZZ:
+  case qc::XXminusYY:
+    return Reversal::Exchange;
+  case qc::XXplusYY:
+    return Reversal::NegateBeta;
+  default:
+    return Reversal::None;
   }
 }
 
-void Mapper::processDisjoint2qBlockLayer(
-    std::vector<std::optional<std::size_t>>& lastLayer,
-    const std::optional<std::uint16_t>& control, const std::uint16_t target,
-    qc::Operation* gate) {
-  std::size_t layer = 0;
-  if (!control.has_value()) {
-    // single qubit gates can always be added to the last 2Q block and should
-    // not affect placings of future 2Q blocks
-    if (lastLayer.at(target).has_value()) {
-      layer = *lastLayer.at(target);
-    }
-  } else {
-    if (!lastLayer.at(*control).has_value() &&
-        !lastLayer.at(target).has_value()) {
-      layer = 0;
-    } else if (!lastLayer.at(*control).has_value()) {
-      layer = *lastLayer.at(target) + 1;
-    } else if (!lastLayer.at(target).has_value()) {
-      layer = *lastLayer.at(*control) + 1;
-    } else {
-      layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+Architecture::GateFidelity Mapper::gateFidelity(const Gate& gate,
+                                                const Edge& edge) const {
+  const auto& op = *gate.op;
+  if (op.getType() == qc::SWAP) {
+    return architecture->swapFidelity(edge, assumeIdealSingleQubits);
+  }
+  if (op.isControlled() &&
+      op.getControls().begin()->type == qc::Control::Type::Neg) {
+    return {.cost = std::numeric_limits<double>::infinity(), .reversed = false};
+  }
+  const auto direct = architecture->nativeTwoQubitCost(op.getType(), edge);
+  if (gate.reversal == Reversal::None) {
+    return {.cost = direct, .reversed = false};
+  }
+  const auto [first, second] = edge;
+  auto reverse =
+      architecture->nativeTwoQubitCost(op.getType(), {second, first});
+  if (gate.reversal == Reversal::CNOT) {
+    reverse += architecture->reversalCost(edge, assumeIdealSingleQubits);
+  }
+  return {.cost = std::min(direct, reverse), .reversed = reverse < direct};
+}
 
-      if (*lastLayer.at(*control) == *lastLayer.at(target)) {
-        for (const auto& g : layers.at(layer - 1)) {
-          if ((std::cmp_equal(g.control, *control) &&
-               std::cmp_equal(g.target, target)) ||
-              (std::cmp_equal(g.control, target) &&
-               std::cmp_equal(g.target, *control))) {
-            // if last layer contained gate with equivalent qubit set, use that
-            // layer
-            --layer;
-            break;
-          }
-        }
-      }
-    }
-    lastLayer.at(*control) = layer;
-    lastLayer.at(target) = layer;
+void Mapper::appendMappedGate(const Gate& gate, std::uint16_t first) {
+  auto op = gate.op->clone();
+  if (gate.singleQubit()) {
+    op->setTargets({first});
+    qcMapped.emplace_back(std::move(op));
+    return;
   }
 
-  if (layers.size() <= layer) {
-    layers.emplace_back();
+  auto second = static_cast<std::uint16_t>(locations.at(*gate.second));
+  const bool reversed = fidelityAwareHeur
+                            ? gateFidelity(gate, {first, second}).reversed
+                            : !architecture->isEdgeConnected({first, second});
+  if (reversed) {
+    if (gate.reversal == Reversal::None ||
+        !architecture->isEdgeConnected({second, first})) {
+      throw QMAPException("Cannot place " + op->getName() + " on qubits " +
+                          std::to_string(first) + " and " +
+                          std::to_string(second));
+    }
+    std::swap(first, second);
+    if (gate.reversal == Reversal::CNOT) {
+      qcMapped.h(first);
+      qcMapped.h(second);
+      qcMapped.cx(first, second);
+      qcMapped.h(second);
+      qcMapped.h(first);
+      ++results.output.directionReverse;
+      return;
+    }
+    if (gate.reversal == Reversal::NegateBeta) {
+      negateXXPlusYYPhase(*op);
+    }
   }
-  if (control.has_value()) {
-    layers.at(layer).emplace_back(*control, target, gate);
+  if (op->isControlled()) {
+    op->setTargets({second});
+    op->setControls({qc::Control{first, gate.op->getControls().begin()->type}});
   } else {
-    layers.at(layer).emplace_back(-1, target, gate);
+    op->setTargets({first, second});
   }
+  qcMapped.emplace_back(std::move(op));
+}
+
+bool Mapper::Gate::conflictsWith(const Edge& edge,
+                                 const TwoQubitGateCounts& counts) const {
+  if (pair() == edge) {
+    const auto& opposite =
+        first == edge.first ? counts.backward : counts.forward;
+    return reversal == Reversal::None && opposite.requiresOrder;
+  }
+  // Distinct pairs with a common qubit can require incompatible edge
+  // directions.
+  const bool ordered = reversal == Reversal::None ||
+                       counts.forward.requiresOrder ||
+                       counts.backward.requiresOrder;
+  return ordered && (first == edge.first || first == edge.second ||
+                     second == edge.first || second == edge.second);
 }
 
 void Mapper::createLayers() {
-  const auto& config = results.config;
-  auto lastLayer = std::vector<std::optional<std::size_t>>(
-      architecture->getNqubits(), std::nullopt);
+  const auto layering = results.config.layering;
+  const bool directed = !architecture->bidirectional();
+  std::vector<std::optional<std::size_t>> lastLayer(architecture->getNqubits());
 
-  auto qubitsInLayer = std::set<std::uint16_t>{};
-
-  bool even = true;
-  for (auto& gate : qc) {
-    // skip over barrier instructions
-    if (gate->getType() == qc::Barrier || gate->getType() == qc::Measure) {
+  for (const auto& op : qc) {
+    if (op->getType() == qc::Barrier || op->getType() == qc::Measure) {
       continue;
     }
-
-    if (!gate->isUnitary()) {
+    if (!op->isUnitary()) {
       throw QMAPException(
           "Mapping not possible: circuit contains non-unitary operation: " +
-          std::string(gate->getName()));
+          std::string(op->getName()));
+    }
+    if ((!op->isStandardOperation() && !op->isSymbolicOperation()) ||
+        op->getNtargets() == 0 || op->getNqubits() > 2) {
+      throw QMAPException("Decompose " + op->getName() +
+                          " into one- or two-qubit gates with at least one "
+                          "target before mapping.");
     }
 
-    if (gate->getControls().size() > 1 || gate->getTargets().size() > 1) {
-      throw QMAPException("Circuit contains gates with more than one control. "
-                          "Please make sure that the input circuit's gates are "
-                          "decomposed to the appropriate gate set!");
+    const auto& targets = op->getTargets();
+    const auto first =
+        op->isControlled() ? op->getControls().begin()->qubit : targets.front();
+    Gate gate{
+        .first = static_cast<std::uint16_t>(qc.initialLayout.at(first)),
+        .second = std::nullopt,
+        .op = op.get(),
+        .reversal = Reversal::None,
+    };
+    if (op->getNqubits() == 2) {
+      gate.second =
+          static_cast<std::uint16_t>(qc.initialLayout.at(targets.back()));
+      gate.reversal = reversalFor(*op);
     }
 
-    const bool singleQubit = !gate->isControlled();
-    std::optional<std::uint16_t> control = std::nullopt;
-    if (!singleQubit) {
-      control = static_cast<std::uint16_t>(
-          qc.initialLayout.at((*gate->getControls().begin()).qubit));
-    }
-    const auto target = static_cast<std::uint16_t>(
-        qc.initialLayout.at(gate->getTargets().at(0)));
-
-    // methods of layering described in
-    // https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
-    switch (config.layering) {
+    std::size_t layer = layers.size();
+    switch (layering) {
     case Layering::IndividualGates:
-      // each gate is put in a new layer
-      layers.emplace_back();
-      if (control.has_value()) {
-        layers.back().emplace_back(*control, target, gate.get());
-      } else {
-        layers.back().emplace_back(-1, target, gate.get());
-      }
       break;
     case Layering::DisjointQubits:
-      processDisjointQubitLayer(lastLayer, control, target, gate.get());
-      break;
-    case Layering::Disjoint2qBlocks:
-      processDisjoint2qBlockLayer(lastLayer, control, target, gate.get());
-      break;
-    case Layering::OddGates:
-      // every other gate is put in a new layer
-      if (even) {
-        layers.emplace_back();
-        if (control.has_value()) {
-          layers.back().emplace_back(*control, target, gate.get());
+    case Layering::Disjoint2qBlocks: {
+      const auto blocks = layering == Layering::Disjoint2qBlocks;
+      auto& lastFirst = lastLayer.at(gate.first);
+      if (gate.singleQubit()) {
+        if (blocks) {
+          // A single-qubit gate can join the preceding or following block.
+          layer = lastFirst.value_or(0);
         } else {
-          layers.back().emplace_back(-1, target, gate.get());
+          layer = lastFirst ? *lastFirst + 1 : 0;
+          lastFirst = layer;
         }
-      } else {
-        if (control.has_value()) {
-          layers.back().emplace_back(*control, target, gate.get());
-        } else {
-          layers.back().emplace_back(-1, target, gate.get());
-        }
-      }
-      even = !even;
-      break;
-    case Layering::QubitTriangle:
-      if (layers.empty()) {
-        layers.emplace_back();
+        break;
       }
 
-      if (singleQubit) {
-        // single qubit gates can be added in any layer
-        layers.back().emplace_back(-1, target, gate.get());
-      } else {
-        qubitsInLayer.insert(*control);
-        qubitsInLayer.insert(target);
-
-        if (qubitsInLayer.size() <= 3) {
-          layers.back().emplace_back(*control, target, gate.get());
-        } else {
-          layers.emplace_back();
-          layers.back().emplace_back(*control, target, gate.get());
-          qubitsInLayer.clear();
-          qubitsInLayer.insert(*control);
-          qubitsInLayer.insert(target);
+      auto& lastSecond = lastLayer.at(*gate.second);
+      const auto last = std::max(lastFirst, lastSecond);
+      layer = last ? *last + 1 : 0;
+      if (blocks && last && lastFirst == lastSecond) {
+        const auto& pairs = layers.at(*last).interactions;
+        if (const auto it = pairs.find(gate.pair());
+            it != pairs.end() &&
+            (!directed || !gate.conflictsWith(it->first, it->second))) {
+          layer = *last;
         }
       }
+      lastFirst = lastSecond = layer;
       break;
     }
+    case Layering::OddGates:
+    case Layering::QubitTriangle: {
+      if (layers.empty()) {
+        break;
+      }
+      if (layering == Layering::OddGates && layers.back().gates.size() == 2) {
+        break;
+      }
+      if (gate.second) {
+        if (layering == Layering::QubitTriangle) {
+          const auto& used = layers.back().activeQubits2QGates;
+          const auto added =
+              static_cast<std::size_t>(!used.contains(gate.first)) +
+              static_cast<std::size_t>(!used.contains(*gate.second));
+          if (used.size() + added > 3) {
+            break;
+          }
+        }
+        if (directed && std::ranges::any_of(layers.back().interactions,
+                                            [&](const auto& entry) {
+                                              return gate.conflictsWith(
+                                                  entry.first, entry.second);
+                                            })) {
+          break;
+        }
+      }
+      --layer;
+      break;
+    }
+    }
+
+    if (layer == layers.size()) {
+      layers.emplace_back();
+    }
+    layers[layer].add(gate);
   }
   results.input.layers = layers.size();
+}
 
-  // compute qubit gate multiplicities
-  singleQubitMultiplicities = std::vector<SingleQubitMultiplicity>(
-      layers.size(), SingleQubitMultiplicity(architecture->getNqubits(), 0));
-  twoQubitMultiplicities =
-      std::vector<TwoQubitMultiplicity>(layers.size(), TwoQubitMultiplicity{});
-  activeQubits = std::vector<std::set<std::uint16_t>>(
-      layers.size(), std::set<std::uint16_t>{});
-  activeQubits1QGates = std::vector<std::set<std::uint16_t>>(
-      layers.size(), std::set<std::uint16_t>{});
-  activeQubits2QGates = std::vector<std::set<std::uint16_t>>(
-      layers.size(), std::set<std::uint16_t>{});
-
-  for (std::size_t i = 0; i < layers.size(); ++i) {
-    for (const auto& gate : layers[i]) {
-      if (gate.singleQubit()) {
-        activeQubits[i].emplace(gate.target);
-        activeQubits1QGates[i].emplace(gate.target);
-        ++singleQubitMultiplicities[i][gate.target];
-      } else {
-        activeQubits[i].emplace(gate.control);
-        activeQubits[i].emplace(gate.target);
-        activeQubits2QGates[i].emplace(gate.control);
-        activeQubits2QGates[i].emplace(gate.target);
-        if (std::cmp_greater_equal(gate.control, gate.target)) {
-          const auto edge =
-              std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
-          if (!twoQubitMultiplicities[i].contains(edge)) {
-            twoQubitMultiplicities[i][edge] = {0, 1};
-          } else {
-            twoQubitMultiplicities[i][edge].second++;
-          }
-        } else {
-          const auto edge =
-              std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
-          if (!twoQubitMultiplicities[i].contains(edge)) {
-            twoQubitMultiplicities[i][edge] = {1, 0};
-          } else {
-            twoQubitMultiplicities[i][edge].first++;
-          }
-        }
-      }
-    }
+void Mapper::Layer::add(const Gate& gate) {
+  gates.push_back(gate);
+  activeQubits.insert(gate.first);
+  if (!gate.second) {
+    return;
+  }
+  activeQubits.insert(*gate.second);
+  activeQubits2QGates.insert(gate.first);
+  activeQubits2QGates.insert(*gate.second);
+  auto& counts = interactions[gate.pair()];
+  auto& direction =
+      gate.first < *gate.second ? counts.forward : counts.backward;
+  if (gate.reversal == Reversal::CNOT) {
+    ++direction.cnots;
+  } else if (gate.reversal == Reversal::None) {
+    direction.requiresOrder = true;
   }
 }
 
 bool Mapper::isLayerSplittable(std::size_t index) {
-  if (twoQubitMultiplicities.at(index).size() > 1) {
-    return true;
-  }
-  if (activeQubits1QGates.at(index).size() > 2) {
-    return true;
-  }
-  if (twoQubitMultiplicities.at(index).empty()) {
-    return false;
-  }
-  // check if there is a 1Q gate on a qubit that is not part of the 2Q gate
-  return std::any_of(activeQubits1QGates.at(index).begin(),
-                     activeQubits1QGates.at(index).end(),
-                     [this, index](auto q) {
-                       return activeQubits2QGates.at(index).find(q) ==
-                              activeQubits2QGates.at(index).end();
-                     });
+  return layers.at(index).activeQubits.size() > 2;
 }
 
-void Mapper::splitLayer(std::size_t index, Architecture& arch) {
-  const SingleQubitMultiplicity& singleQubitMultiplicity =
-      singleQubitMultiplicities.at(index);
-  const TwoQubitMultiplicity& twoQubitMultiplicity =
-      twoQubitMultiplicities.at(index);
-  std::vector<Gate> layer0{};
-  std::vector<Gate> layer1{};
-  SingleQubitMultiplicity singleQubitMultiplicity0(arch.getNqubits(), 0);
-  SingleQubitMultiplicity singleQubitMultiplicity1(arch.getNqubits(), 0);
-  TwoQubitMultiplicity twoQubitMultiplicity0{};
-  TwoQubitMultiplicity twoQubitMultiplicity1{};
-  std::set<std::uint16_t> activeQubits0{};
-  std::set<std::uint16_t> activeQubits1QGates0{};
-  std::set<std::uint16_t> activeQubits2QGates0{};
-  std::set<std::uint16_t> activeQubits1{};
-  std::set<std::uint16_t> activeQubits1QGates1{};
-  std::set<std::uint16_t> activeQubits2QGates1{};
-
-  // 2Q-gates
-  bool even = false;
-  for (const auto& edge : twoQubitMultiplicity) {
-    if (even) {
-      twoQubitMultiplicity0.insert(edge);
-      activeQubits0.emplace(edge.first.first);
-      activeQubits0.emplace(edge.first.second);
-      activeQubits2QGates0.emplace(edge.first.first);
-      activeQubits2QGates0.emplace(edge.first.second);
-    } else {
-      twoQubitMultiplicity1.insert(edge);
-      activeQubits1.emplace(edge.first.first);
-      activeQubits1.emplace(edge.first.second);
-      activeQubits2QGates1.emplace(edge.first.first);
-      activeQubits2QGates1.emplace(edge.first.second);
+void Mapper::splitLayer(std::size_t index) {
+  auto& layer = layers.at(index);
+  std::set<std::uint16_t> firstHalf;
+  bool take = false;
+  for (const auto& [pair, counts] : layer.interactions) {
+    if (take) {
+      firstHalf.insert(pair.first);
+      firstHalf.insert(pair.second);
     }
-    even = !even;
+    take = !take;
   }
-
-  // 1Q-gates
-  even = true;
-  for (std::size_t q = 0; q < singleQubitMultiplicity.size(); ++q) {
-    if (singleQubitMultiplicity[q] == 0) {
-      continue;
-    }
-    // if a qubit is also acted on by a 2Q-gate, put it on the same layer as
-    // the 2Q-gate
-    if (activeQubits2QGates0.contains(static_cast<std::uint16_t>(q))) {
-      singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
-      activeQubits0.emplace(static_cast<std::uint16_t>(q));
-      activeQubits1QGates0.emplace(static_cast<std::uint16_t>(q));
-      continue;
-    }
-    if (activeQubits2QGates1.contains(static_cast<std::uint16_t>(q))) {
-      singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
-      activeQubits1.emplace(static_cast<std::uint16_t>(q));
-      activeQubits1QGates1.emplace(static_cast<std::uint16_t>(q));
-      continue;
-    }
-
-    if (even) {
-      singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
-      activeQubits0.emplace(q);
-      activeQubits1QGates0.emplace(q);
-    } else {
-      singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
-      activeQubits1.emplace(q);
-      activeQubits1QGates1.emplace(q);
-    }
-    even = !even;
-  }
-
-  for (const auto& gate : layers[index]) {
-    if (gate.singleQubit()) {
-      if (singleQubitMultiplicity0[gate.target] > 0) {
-        layer0.emplace_back(gate);
-      } else {
-        layer1.emplace_back(gate);
+  take = true;
+  for (const auto qubit : layer.activeQubits) {
+    if (!layer.activeQubits2QGates.contains(qubit)) {
+      if (take) {
+        firstHalf.insert(qubit);
       }
-    } else {
-      if (activeQubits2QGates0.contains(gate.target)) {
-        layer0.emplace_back(gate);
-      } else {
-        layer1.emplace_back(gate);
-      }
+      take = !take;
     }
   }
+  const auto second =
+      std::ranges::stable_partition(layer.gates, [&](const Gate& gate) {
+        return firstHalf.contains(gate.first);
+      });
+  splitLayerAt(index,
+               static_cast<std::size_t>(second.begin() - layer.gates.begin()));
+}
 
-  // insert new layers
-  layers[index] = layer0;
-  layers.insert(
-      layers.begin() +
-          static_cast<std::vector<std::vector<Mapper::Gate>>::difference_type>(
-              index) +
-          1,
-      layer1);
-  singleQubitMultiplicities[index] = singleQubitMultiplicity0;
-  singleQubitMultiplicities.insert(
-      singleQubitMultiplicities.begin() +
-          static_cast<std::vector<SingleQubitMultiplicity>::difference_type>(
-              index) +
-          1,
-      singleQubitMultiplicity1);
-  twoQubitMultiplicities[index] = twoQubitMultiplicity0;
-  twoQubitMultiplicities.insert(
-      twoQubitMultiplicities.begin() +
-          static_cast<std::vector<TwoQubitMultiplicity>::difference_type>(
-              index) +
-          1,
-      twoQubitMultiplicity1);
-  activeQubits[index] = activeQubits0;
-  activeQubits.insert(
-      activeQubits.begin() +
-          static_cast<std::vector<std::set<std::uint16_t>>::difference_type>(
-              index) +
-          1,
-      activeQubits1);
-  activeQubits1QGates[index] = activeQubits1QGates0;
-  activeQubits1QGates.insert(
-      activeQubits1QGates.begin() +
-          static_cast<std::vector<std::set<std::uint16_t>>::difference_type>(
-              index) +
-          1,
-      activeQubits1QGates1);
-  activeQubits2QGates[index] = activeQubits2QGates0;
-  activeQubits2QGates.insert(
-      activeQubits2QGates.begin() +
-          static_cast<std::vector<std::set<std::uint16_t>>::difference_type>(
-              index) +
-          1,
-      activeQubits2QGates1);
+void Mapper::splitLayerAt(std::size_t index, std::size_t offset) {
+  auto gates = std::move(layers.at(index).gates);
+  layers.at(index) = Layer{};
+  layers.emplace(layers.begin() + static_cast<std::ptrdiff_t>(index + 1));
+  for (std::size_t i = 0; i < gates.size(); ++i) {
+    auto& layer = i < offset ? layers[index] : layers[index + 1];
+    layer.add(gates[i]);
+  }
   results.input.layers = layers.size();
 }
 
 std::size_t Mapper::getNextLayer(std::size_t idx) {
-  auto next = idx + 1;
-  while (next < layers.size()) {
-    for (const auto& gate : layers.at(next)) {
-      if (!gate.singleQubit()) {
-        return next;
-      }
+  for (auto next = idx + 1; next < layers.size(); ++next) {
+    if (!layers[next].interactions.empty()) {
+      return next;
     }
-    next++;
   }
   return std::numeric_limits<std::size_t>::max();
 }
@@ -551,56 +476,89 @@ void Mapper::postMappingOptimizations(const Configuration& config) {
   }
 
   // try to cancel adjacent CNOT gates
-  qmap::cancelCNOTs(qcMapped);
+  qmap::cancelCNOTs(qcMapped, [this](const qc::Qubit q0, const qc::Qubit q1) {
+    return !fidelityAwareHeur && architecture->isEdgeBidirectional({q0, q1});
+  });
 }
 
 void Mapper::countGates(decltype(qcMapped.cbegin()) it,
                         const decltype(qcMapped.cend())& end,
-                        MappingResults::CircuitInfo& info) {
+                        MappingResults::CircuitInfo& info, const bool mapped) {
+  const auto& properties = std::as_const(*architecture).getProperties();
+  const auto cnotCalibrated = architecture->isFidelityAvailable();
+  const auto calibrated = !properties.twoQubitErrorRate.empty() ||
+                          !properties.singleQubitErrorRate.empty();
+  constexpr auto unavailable = std::numeric_limits<double>::quiet_NaN();
+  const auto addCost = [&](const double cost) {
+    info.totalLogFidelity += std::isfinite(cost) ? cost : unavailable;
+  };
   for (; it != end; ++it) {
     const auto& g = *it;
-    if (g->isStandardOperation()) {
-      if (g->getType() == qc::SWAP) {
-        auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        auto q2 = static_cast<std::uint16_t>(g->getTargets()[1]);
-        if (architecture->isFidelityAvailable()) {
-          info.totalLogFidelity += architecture->getSwapFidelityCost(q1, q2);
-        }
-        if (architecture->getCouplingMap().contains({q1, q2}) &&
-            architecture->getCouplingMap().contains({q2, q1})) {
-          // bidirectional edge
-          info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
-          info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
-        } else {
-          // unidirectional edge
-          info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
-          info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
-          info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
-        }
-      } else if (g->getControls().empty()) {
+    if (g->getType() == qc::Barrier) {
+      continue;
+    }
+    if (g->isStandardOperation() || g->isSymbolicOperation()) {
+      if (g->getNtargets() == 1 && !g->isControlled()) {
         ++info.singleQubitGates;
         ++info.gates;
-        auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        if (architecture->isFidelityAvailable()) {
-          info.totalLogFidelity += architecture->getSingleQubitFidelityCost(q1);
+        const auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
+        if (mapped && calibrated) {
+          addCost(architecture->singleQubitCost(g->getType(), q1,
+                                                assumeIdealSingleQubits));
+        } else if (!mapped && cnotCalibrated) {
+          addCost(architecture->getSingleQubitFidelityCost(q1));
+        }
+        continue;
+      }
+      if (g->getNqubits() != 2 || g->getNtargets() == 0) {
+        continue;
+      }
+
+      const auto controlled = g->isControlled();
+      const auto q1 = static_cast<std::uint16_t>(
+          controlled ? g->getControls().begin()->qubit : g->getTargets()[0]);
+      const auto q2 = static_cast<std::uint16_t>(
+          controlled ? g->getTargets()[0] : g->getTargets()[1]);
+      const auto cnot = qmap::isCNOT(*g);
+      const auto swap = !controlled && g->getType() == qc::SWAP;
+      if (swap) {
+        info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+        info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
+        if (mapped && !architecture->isEdgeBidirectional({q1, q2})) {
+          info.gates += GATES_OF_DIRECTION_REVERSE;
+          info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
         }
       } else {
-        assert(g->getType() == qc::X);
-        ++info.cnots;
         ++info.gates;
-        auto q1 = static_cast<std::uint16_t>((*g->getControls().begin()).qubit);
-        auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        if (architecture->isFidelityAvailable()) {
-          info.totalLogFidelity +=
-              architecture->getTwoQubitFidelityCost(q1, q2);
+        if (cnot) {
+          ++info.cnots;
         }
+      }
+
+      if (mapped && calibrated) {
+        if (controlled &&
+            g->getControls().begin()->type == qc::Control::Type::Neg) {
+          info.totalLogFidelity = unavailable;
+        } else {
+          const auto cost =
+              architecture->nativeTwoQubitCost(g->getType(), {q1, q2});
+          addCost(swap && !std::isfinite(cost)
+                      ? architecture
+                            ->swapFidelity({q1, q2}, assumeIdealSingleQubits)
+                            .cost
+                      : cost);
+        }
+      } else if (!mapped && cnot && cnotCalibrated) {
+        addCost(architecture->getTwoQubitFidelityCost(q1, q2));
+      } else if (calibrated && !cnot) {
+        info.totalLogFidelity = unavailable;
       }
       continue;
     }
 
     if (const auto& cg = dynamic_cast<const qc::CompoundOperation*>(g.get());
         cg != nullptr) {
-      countGates(cg->cbegin(), cg->cend(), info);
+      countGates(cg->cbegin(), cg->cend(), info, mapped);
     }
   }
   info.totalFidelity = std::pow(2, -info.totalLogFidelity);
