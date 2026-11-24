@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 nox.needs_version = ">=2025.10.16"
 nox.options.default_venv_backend = "uv"
 
-PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
+PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
@@ -116,7 +116,7 @@ def tests(session: nox.Session) -> None:
     _run_tests(session)
 
 
-@nox.session(reuse_venv=True, venv_backend="uv", default=False)
+@nox.session(python="3.14", reuse_venv=True, venv_backend="uv", default=False)
 def evaluation(session: nox.Session) -> None:
     """Run the photonic paper-evaluation tests in eval/ph/tests.
 

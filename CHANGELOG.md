@@ -10,6 +10,10 @@ releases may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- 👷 Enable testing on Python 3.15 ([#1236]) ([**@denialhaag**])
+
 ### Changed
 
 - ⬆️ Require Python 3.11.5 or newer ([#1226]) ([**@denialhaag**])
@@ -364,6 +368,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1236]: https://github.com/munich-quantum-toolkit/qmap/pull/1236
 [#1234]: https://github.com/munich-quantum-toolkit/qmap/pull/1234
 [#1226]: https://github.com/munich-quantum-toolkit/qmap/pull/1226
 [#1217]: https://github.com/munich-quantum-toolkit/qmap/pull/1217

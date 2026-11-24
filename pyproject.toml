@@ -85,6 +85,7 @@ visualization = [
 photonics = [
   "torch!=2.14,!=2.14.1; sys_platform=='linux' and platform_machine=='aarch64'",
   "torch>=2.9",
+  "torch>=2.15; python_version>='3.15'",
 ]
 
 [project.urls]
@@ -112,6 +113,7 @@ test = [
   "pytest-xdist>=3.8",
   "torch!=2.14,!=2.14.1; sys_platform=='linux' and platform_machine=='aarch64'",
   "torch>=2.9",
+  "torch>=2.15; python_version>='3.15'",
   "walkerlayout>=1.0.2",
 ]
 docs = [
@@ -131,6 +133,7 @@ docs = [
   "sphinxext-opengraph>=0.13",
   "torch!=2.14,!=2.14.1; sys_platform=='linux' and platform_machine=='aarch64'",
   "torch>=2.9",
+  "torch>=2.15; python_version>='3.15'",
   "walkerlayout>=1.0.2",
 ]
 build = [
@@ -224,6 +227,9 @@ cache-keys = [
   { file = "bindings/**/*.cpp" },
 ]
 
+[tool.uv.dependency-groups]
+evaluation = { requires-python = "<3.15" }
+
 [tool.uv.sources]
 mqt-qmap = { workspace = true }
 
@@ -268,7 +274,7 @@ repair-wheel-command = """\
   """
 
 [[tool.cibuildwheel.overrides]]
-select = [ "cp*-win_arm64", "cp315*" ]
+select = [ "cp*-win_arm64" ]
 test-command = ""
 
 

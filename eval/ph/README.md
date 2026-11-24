@@ -47,7 +47,7 @@ The evaluation dependencies are declared as the `evaluation`
 — together with a build of the compiler — with:
 
 ```console
-uv sync --group evaluation
+uv sync --python 3.14 --group evaluation
 ```
 
 ## Running the evaluation tests
