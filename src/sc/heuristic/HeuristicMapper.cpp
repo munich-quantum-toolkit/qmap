@@ -294,9 +294,15 @@ void HeuristicMapper::createInitialMapping() {
 }
 
 void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
-  for (const auto& [logEdge, counts] : layers.at(layer).interactions) {
-    const auto& [q1, q2] = logEdge;
-
+  const auto& current = layers.at(layer);
+  if (std::ranges::all_of(current.activeQubits2QGates, [this](const auto q) {
+        return locations.at(q) != DEFAULT_POSITION;
+      })) {
+    return;
+  }
+  for (const auto& pair : current.sortedPairs()) {
+    const auto [q1, q2] = pair;
+    const auto& counts = current.interactions.at(pair);
     const auto q1Location = locations.at(q1);
     const auto q2Location = locations.at(q2);
 

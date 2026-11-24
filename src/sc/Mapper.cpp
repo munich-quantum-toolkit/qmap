@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <string>
 #include <utility>
@@ -355,6 +356,13 @@ void Mapper::Layer::add(const Gate& gate) {
   }
 }
 
+std::vector<Edge> Mapper::Layer::sortedPairs() const {
+  const auto keys = std::views::keys(interactions);
+  std::vector<Edge> pairs(keys.begin(), keys.end());
+  std::ranges::sort(pairs);
+  return pairs;
+}
+
 bool Mapper::isLayerSplittable(std::size_t index) {
   return layers.at(index).activeQubits.size() > 2;
 }
@@ -363,7 +371,7 @@ void Mapper::splitLayer(std::size_t index) {
   auto& layer = layers.at(index);
   std::set<std::uint16_t> firstHalf;
   bool take = false;
-  for (const auto& [pair, counts] : layer.interactions) {
+  for (const auto& pair : layer.sortedPairs()) {
     if (take) {
       firstHalf.insert(pair.first);
       firstHalf.insert(pair.second);

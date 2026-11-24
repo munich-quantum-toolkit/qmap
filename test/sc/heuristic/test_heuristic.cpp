@@ -1456,6 +1456,24 @@ TEST(Functionality, earlyTermination) {
       results.layerHeuristicBenchmark[0].solutionNodesAfterOptimalSolution, 4);
 }
 
+TEST(Functionality, IndependentPairPlacementAndSplitting) {
+  Architecture arch{4, {{0, 1}, {1, 2}, {2, 3}}};
+  const auto map = [&](const qc::Qubit first, const qc::Qubit second) {
+    qc::QuantumComputation circuit{4};
+    circuit.cx(first, first + 1);
+    circuit.cx(second, second + 1);
+    HeuristicMapper mapper(circuit, arch);
+    Configuration config{};
+    config.layering = Layering::Disjoint2qBlocks;
+    config.automaticLayerSplitsNodeLimit = 0;
+    mapper.map(config);
+    EXPECT_EQ(mapper.getResults().input.layers, 2);
+    return mapper.moveMappedCircuit();
+  };
+
+  EXPECT_EQ(map(0, 2), map(2, 0));
+}
+
 TEST(Functionality, InitialLayoutDump) {
   // queko's BNTF/16QBT_05CYC_TFL_9.qasm
   qc::QuantumComputation qc{16U};

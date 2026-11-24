@@ -27,6 +27,9 @@ the `max_nodes` limit.
 
 ### Superconducting mapping
 
+The gate-count heuristic assigns free qubits in ascending order of logical qubit
+pairs. Automatic layer splitting alternates pairs in the same order.
+
 When the input circuit fits the device, the heuristic and exact mappers keep
 idle qubits in both layouts. If you request final measurements, each input qubit
 gets a classical bit. On narrower devices, both mappers remove idle qubits and
