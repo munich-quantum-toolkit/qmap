@@ -10,6 +10,10 @@ releases may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- 👷 Enable testing on Python 3.15 ([#1236]) ([**@denialhaag**])
+
 ### Changed
 
 - ⚡️ Reuse exact-mapper transitions across layers and avoid rebuilding the
@@ -373,6 +377,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#1237]: https://github.com/munich-quantum-toolkit/qmap/pull/1237
+[#1236]: https://github.com/munich-quantum-toolkit/qmap/pull/1236
 [#1235]: https://github.com/munich-quantum-toolkit/qmap/pull/1235
 [#1234]: https://github.com/munich-quantum-toolkit/qmap/pull/1234
 [#1226]: https://github.com/munich-quantum-toolkit/qmap/pull/1226
