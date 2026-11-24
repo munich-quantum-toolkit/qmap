@@ -242,7 +242,7 @@ TEST(HeuristicPlacerTest, NoSolution) {
           std::vector<std::unordered_set<qc::Qubit>>{}),
       std::runtime_error);
 }
-TEST(HeuristicPlacerTest, LimitSpace) {
+TEST(HeuristicPlacerTest, QueuedNodeLimit) {
   Architecture architecture(Architecture::fromJSONString(architectureJson));
   HeuristicPlacer placer(architecture, R"({
   "useWindow": true,
@@ -257,12 +257,13 @@ TEST(HeuristicPlacerTest, LimitSpace) {
   "maxNodes": 2
 })"_json);
   constexpr size_t nQubits = 8;
-  EXPECT_THROW(std::ignore = placer.place(
-                   nQubits,
-                   std::vector<std::vector<std::array<qc::Qubit, 2>>>{
-                       {{0U, 1U}, {2U, 3U}, {4U, 5U}, {6U, 7U}}},
-                   std::vector<std::unordered_set<qc::Qubit>>{}),
-               std::runtime_error);
+  EXPECT_THAT(
+      [&] {
+        std::ignore = placer.place(
+            nQubits, {{{0U, 1U}, {2U, 3U}, {4U, 5U}, {6U, 7U}}}, {});
+      },
+      ::testing::ThrowsMessage<std::runtime_error>(
+          ::testing::HasSubstr("queued nodes")));
 }
 TEST(HeuristicPlacerTest, WindowExpansion) {
   Architecture architecture(Architecture::fromJSONString(architectureJson));

@@ -28,6 +28,8 @@ releases may include breaking changes.
 - 🐛 Select the nearest free storage column in constant time during zoned
   neutral-atom placement, including on arrays that share column coordinates
   ([#1238]) ([**@burgholzer**])
+- 🐛 Clarify when the zoned neutral-atom A* placer reaches its queue limit
+  ([#1237]) ([**@burgholzer**])
 - 🐛 Preserve controlled and native two-qubit gates in both superconducting
   mappers. Use either operand order for symmetric gates and use gate-specific
   error rates in fidelity-aware routing ([#1235]) ([**@burgholzer**])
@@ -378,6 +380,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 <!-- PR links -->
 
 [#1238]: https://github.com/munich-quantum-toolkit/qmap/pull/1238
+[#1237]: https://github.com/munich-quantum-toolkit/qmap/pull/1237
 [#1236]: https://github.com/munich-quantum-toolkit/qmap/pull/1236
 [#1235]: https://github.com/munich-quantum-toolkit/qmap/pull/1235
 [#1234]: https://github.com/munich-quantum-toolkit/qmap/pull/1234
