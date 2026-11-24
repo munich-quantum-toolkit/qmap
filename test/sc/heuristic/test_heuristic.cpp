@@ -1354,6 +1354,8 @@ TEST(Functionality, earlyTermination) {
   qc::QuantumComputation qc{7, 7};
   qc.x(0);
   qc.cx(1, 2);
+  qc.x(3);
+  qc.x(4);
   for (std::size_t i = 0; i < 7; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -1838,6 +1840,32 @@ TEST_P(HeuristicTestFidelity, NoFidelity) {
   settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   EXPECT_THROW(nonFidelityMapper->map(settings), QMAPException);
+}
+
+TEST(HeuristicTestFidelity, JointInitialPlacementWithoutSwapCalibration) {
+  const CouplingMap edges{{0, 1}, {1, 0}, {1, 2}, {2, 1}, {0, 3}, {3, 0}};
+  Architecture::Properties properties;
+  properties.setTwoQubitErrorRate(0, 1, 0.05, "cz");
+  properties.setTwoQubitErrorRate(1, 2, 0.2, "cz");
+  properties.setTwoQubitErrorRate(0, 1, 0.05, "rxx");
+  properties.setTwoQubitErrorRate(0, 3, 0.25, "rxx");
+  Architecture architecture(4, edges, properties);
+
+  qc::QuantumComputation circuit(4);
+  circuit.cz(0, 1);
+  circuit.rxx(0.37, 2, 3);
+  Configuration config;
+  config.heuristic = Heuristic::FidelityBestLocation;
+  config.lookaheadHeuristic = LookaheadHeuristic::None;
+  config.layering = Layering::DisjointQubits;
+  config.initialLayout = InitialLayout::Dynamic;
+
+  HeuristicMapper mapper(circuit, architecture);
+  mapper.map(config);
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.input.layers, 1);
+  EXPECT_EQ(results.output.swaps, 0);
+  EXPECT_NEAR(results.output.totalLogFidelity, -std::log2(0.8 * 0.75), 1e-6);
 }
 
 TEST(HeuristicTestFidelity, RemapSingleQubit) {

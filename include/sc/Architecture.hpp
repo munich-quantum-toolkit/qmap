@@ -41,6 +41,12 @@ constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
 class Architecture {
 public:
+  /// Calibrated gate cost and operand order relative to the requested order.
+  struct GateFidelity {
+    double cost;
+    bool reversed;
+  };
+
   class Properties {
   protected:
     template <class KeyType, class ValueType> class Property {
@@ -239,6 +245,7 @@ public:
   void setCouplingMap(const CouplingMap& cm) {
     couplingMap = cm;
     createDistanceTable();
+    createFidelityTable();
   }
 
   [[nodiscard]] bool
@@ -273,6 +280,16 @@ public:
   }
 
   [[nodiscard]] bool isFidelityAvailable() const { return fidelityAvailable; }
+
+  /// Native gate costs use negative log2 fidelity. Missing costs are infinite.
+  [[nodiscard]] double singleQubitCost(qc::OpType type,
+                                       std::uint16_t qubit) const;
+  [[nodiscard]] double nativeTwoQubitCost(qc::OpType type, std::uint16_t first,
+                                          std::uint16_t second) const;
+
+  /// Select a calibrated native SWAP or a calibrated CX decomposition.
+  [[nodiscard]] GateFidelity swapFidelity(std::uint16_t first,
+                                          std::uint16_t second) const;
 
   [[nodiscard]] const std::vector<Matrix>& getFidelityDistanceTables() const {
     if (!fidelityAvailable) {
