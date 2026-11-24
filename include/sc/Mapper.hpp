@@ -91,6 +91,9 @@ protected:
   qc::QuantumComputation qcMapped;
   struct Layer {
     void add(const Gate& gate);
+    /// Return logical pairs in the order used for greedy placement and
+    /// splitting.
+    [[nodiscard]] std::vector<Edge> sortedPairs() const;
 
     std::vector<Gate> gates;
     std::map<Edge, TwoQubitGateCounts> interactions;
