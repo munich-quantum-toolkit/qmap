@@ -25,6 +25,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/ir/OpenQASMSerializer.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
@@ -47,22 +48,22 @@ class HybridSynthesisMapper : public NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
   qc::QuantumComputation synthesizedQc;
-  qc::QuantumComputation bufferedQc;
+  std::size_t mappedOps = 0; ///< Length of the logical prefix already routed.
   uint32_t bufferSize;
-  Mapping originalMapping;
   bool initialized = false;
 
-  /**
-   * @brief Evaluate a single proposed synthesis step.
-   * @details Effort considers swaps/shuttling and execution time estimated by
-   * the mapper.
-   * @param qc Proposed synthesis subcircuit.
-   * @param completeRemap If `true`, evaluate by completely remapping the whole
-   * circuit; if `false`, preserve the current mapping state.
-   * @return Scalar cost/effort score for mapping qc.
-   */
+  /// Map the pending operations up to the given end index.
+  void mapPending(std::size_t end);
+
+  /// Route the logical circuit up to end from the initial placement.
+  void mapFromStart(std::size_t end);
+
+  /// Keep at most bufferSize pending operations after an append.
+  [[nodiscard]] std::size_t bufferStart(std::size_t size) const;
+
+  /// Score a candidate with the same buffering and routing as an append.
   qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc,
-                               bool completeRemap = false) const;
+                               bool completeRemap) const;
 
 public:
   // Constructors
@@ -83,101 +84,36 @@ public:
       const uint32_t bufferSize = 0)
       : NeutralAtomMapper(arch, params), bufferSize(bufferSize) {}
 
-  // Functions
+  /// Remap the committed prefix with new parameters and retain pending
+  /// operations.
+  void setParameters(const MapperParameters& p) override;
 
-  /**
-   * @brief Initialize internal circuits and mapping state for a given number of
-   * logical qubits.
-   *
-   * Sets up the synthesized and buffered quantum computations, the mapped
-   * circuit storage, the logical-to-physical mapping, and records the original
-   * mapping; marks the mapper as initialized.
-   *
-   * @param nQubits Number of logical qubits to prepare.
-   * @throws std::runtime_error if `nQubits` exceeds the architecture's
-   * available positions.
-   */
-  void initMapping(const size_t nQubits) {
-    if (nQubits > arch->getNpositions()) {
-      throw std::runtime_error("Not enough qubits in architecture.");
-    }
-    mappedQc = qc::QuantumComputation(arch->getNpositions());
-    synthesizedQc = qc::QuantumComputation(nQubits);
-    bufferedQc = qc::QuantumComputation(nQubits);
-    mapping = Mapping(nQubits);
-    initialized = true;
-    originalMapping = mapping;
+  /// Discard the logical and routed circuits.
+  void reset() override {
+    *this = HybridSynthesisMapper(*arch, parameters, bufferSize);
   }
 
-  /**
-   * @brief Remap the synthesized circuit onto the stored original hardware
-   * mapping.
-   *
-   * If `includeBuffer` is true, the remap uses the combined
-   * synthesized-plus-buffered circuit returned by getSynthesizedQc(); otherwise
-   * it remaps only the internal synthesizedQc (excluding buffered operations).
-   * The result is mapped into originalMapping.
-   *
-   * @param includeBuffer When true, include buffered operations in the remap.
-   */
-  void completeRemap(const bool includeBuffer = true) {
-    if (includeBuffer) {
-      auto copyQC = getSynthesizedQc();
-      map(copyQC, originalMapping);
-    } else {
-      auto temp = synthesizedQc;
-      map(temp, originalMapping);
-    }
+  /// Start a new synthesis session with an identity logical mapping.
+  void initMapping(std::size_t nQubits);
+
+  /// Remap from the initial placement. Include pending operations by default.
+  void completeRemap(bool includeBuffer = true) {
+    NeutralAtomMapper::reset();
+    mapFromStart(includeBuffer ? synthesizedQc.size() : mappedOps);
   }
 
-  /**
-   * @brief Appends buffered operations into the synthesized circuit, maps them,
-   * and schedules the mapped circuit.
-   *
-   * Appends all operations currently held in the internal buffer to the
-   * synthesized circuit, applies mapping for those appended operations, clears
-   * the buffer, and then performs the scheduling pass using the base mapper.
-   *
-   * @param verboseArg Enable verbose scheduling output when true.
-   * @param createAnimationCsv Emit scheduling animation CSV when true.
-   * @param shuttlingSpeedFactor Factor to scale shuttling durations during
-   * scheduling (1.0 = nominal speed).
-   * @return SchedulerResults Results produced by the scheduling pass (timing
-   * and placement outcomes).
-   */
+  /// Map any pending operations and schedule the resulting native circuit.
   [[nodiscard]] SchedulerResults
   schedule(const bool verboseArg = false, const bool createAnimationCsv = false,
            const qc::fp shuttlingSpeedFactor = 1.0) {
-    for (const auto& op : bufferedQc) {
-      synthesizedQc.emplace_back(op->clone());
-    }
-    mapAppend(bufferedQc, this->mapping);
-    bufferedQc.clear();
+    mapPending(synthesizedQc.size());
     return NeutralAtomMapper::schedule(verboseArg, createAnimationCsv,
                                        shuttlingSpeedFactor);
   }
 
-  /**
-   * @brief Return a combined view of the synthesized and buffered (unmapped)
-   * circuit.
-   *
-   * The returned QuantumComputation contains all operations from the mapper's
-   * synthesized circuit followed by any buffered operations, using the mapper's
-   * current qubit count.
-   *
-   * @return qc::QuantumComputation A new QuantumComputation with synthesized
-   * operations then buffered operations.
-   */
+  /// Return the logical circuit, including operations still in the buffer.
   [[nodiscard]] qc::QuantumComputation getSynthesizedQc() const {
-    qc::QuantumComputation qc(synthesizedQc.getNqubits());
-    qc.reserve(synthesizedQc.size() + bufferedQc.size());
-    for (const auto& op : synthesizedQc) {
-      qc.emplace_back(op->clone());
-    }
-    for (const auto& op : bufferedQc) {
-      qc.emplace_back(op->clone());
-    }
-    return qc;
+    return synthesizedQc;
   }
 
   /**
@@ -191,8 +127,7 @@ public:
    */
   [[nodiscard]] [[maybe_unused]] std::string getSynthesizedQcQASM() const {
     std::stringstream ss;
-    const auto copyQC = getSynthesizedQc();
-    serializeOpenQASM(copyQC, ss);
+    serializeOpenQASM(synthesizedQc, ss);
     return ss.str();
   }
 
@@ -205,9 +140,7 @@ public:
    */
   [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) const {
     std::ofstream ofs(filename);
-    const auto copyQC = getSynthesizedQc();
-    serializeOpenQASM(copyQC, ofs);
-    ofs.close();
+    serializeOpenQASM(synthesizedQc, ofs);
   }
 
   /**

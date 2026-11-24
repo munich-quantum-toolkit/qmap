@@ -329,21 +329,18 @@ protected:
   };
 
   const NeutralAtomArchitecture& arch;
-  qc::QuantumComputation scheduledCircuit;
   std::vector<MoveGroup> moveGroups;
-  const HardwareQubits& hardwareQubits;
   AncillaAtoms ancillas;
 
   AtomMove convertOperationToMove(const qc::Operation& operation) const;
 
-  void initFlyingAncillas();
+  void initFlyingAncillas(qc::QuantumComputation& circuit) const;
 
   /**
    * @brief Partition moves into groups that can execute in parallel.
    * @param circuit Quantum circuit to schedule.
    */
-  void initMoveGroups(
-      qc::QuantumComputation& circuit); //, qc::Permutation& hwToCoordIdx);
+  void initMoveGroups(const qc::QuantumComputation& circuit);
   /**
    * @brief Convert move groups into concrete AOD operations.
    * @details Uses activation/deactivation builders to emit load/move/unload
@@ -364,16 +361,11 @@ public:
   MoveToAodConverter() = delete;
   MoveToAodConverter(const MoveToAodConverter&) = delete;
   MoveToAodConverter(MoveToAodConverter&&) = delete;
-  explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg,
-                              const HardwareQubits& hardwareQubitsArg,
-                              const HardwareQubits& flyingAncillas)
-      : arch(archArg), scheduledCircuit(arch.getNpositions()),
-        hardwareQubits(hardwareQubitsArg) {
-    scheduledCircuit.addAncillaryRegister(arch.getNpositions());
-    scheduledCircuit.addAncillaryRegister(arch.getNpositions(), "fa");
-    for (std::uint32_t i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
-      const auto coord =
-          flyingAncillas.getInitHwPos().at(i) + (2 * arch.getNpositions());
+  MoveToAodConverter(const NeutralAtomArchitecture& archArg,
+                     const std::map<HwQubit, CoordIndex>& initialAncillas)
+      : arch(archArg) {
+    for (const auto& [i, position] : initialAncillas) {
+      const auto coord = position + (2 * arch.getNpositions());
       const auto col = coord % arch.getNcolumns();
       const auto row = coord / arch.getNcolumns();
       const AncillaAtom ancillaAtom({col, row}, {i + 1, i + 1});
@@ -381,12 +373,17 @@ public:
     }
   }
 
+  MoveToAodConverter(const NeutralAtomArchitecture& architecture,
+                     const HardwareQubits& /*hardwareQubits*/,
+                     const HardwareQubits& flyingAncillas)
+      : MoveToAodConverter(architecture, flyingAncillas.getInitHwPos()) {}
+
   /**
    * @brief Schedule a circuit: replace abstract moves by AOD load/move/unload.
    * @param circuit Quantum circuit to schedule.
    * @return New circuit containing AOD operations.
    */
-  qc::QuantumComputation schedule(qc::QuantumComputation& circuit);
+  qc::QuantumComputation schedule(qc::QuantumComputation circuit);
 
   /**
    * @brief Get number of constructed move groups.

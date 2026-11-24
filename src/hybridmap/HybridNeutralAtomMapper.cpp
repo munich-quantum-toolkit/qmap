@@ -11,8 +11,10 @@
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
 #include "datastructures/CircuitOptimizations.hpp"
+#include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
+#include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
@@ -34,6 +36,7 @@
 #include <limits>
 #include <memory>
 #include <queue>
+#include <random>
 #include <ranges>
 #include <set>
 #include <spdlog/spdlog.h>
@@ -44,8 +47,33 @@
 #include <vector>
 
 namespace na {
-void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
-                                  const Mapping& initialMapping) {
+NeutralAtomMapper::NeutralAtomMapper(
+    const NeutralAtomArchitecture* architecture, const MapperParameters& p)
+    : arch(architecture), mappedQc(arch->getNpositions()), scheduler(*arch),
+      parameters(p) {
+  if (arch->getNpositions() <= arch->getNqubits() && p.shuttlingWeight > 0) {
+    throw std::runtime_error("No free coordinates for shuttling but shuttling "
+                             "weight is greater than 0.");
+  }
+  if (p.numFlyingAncillas > 1 || p.numFlyingAncillas > arch->getNqubits()) {
+    throw std::runtime_error("Only one flying ancilla is supported for now.");
+  }
+  if (p.initialCoordMapping == Random && p.seed == 0) {
+    // Keep the sampled placement across remaps and candidate evaluations.
+    std::random_device rd;
+    parameters.seed = std::uniform_int_distribution<uint32_t>(1)(rd);
+  }
+  hardwareQubits =
+      HardwareQubits(*arch, arch->getNqubits() - p.numFlyingAncillas,
+                     p.initialCoordMapping, parameters.seed);
+  flyingAncillas = HardwareQubits(*arch, p.numFlyingAncillas);
+  for (auto i = arch->getNcolumns(); i > 0; --i) {
+    decayWeights.emplace_back(std::exp(-p.decay * i));
+  }
+}
+
+void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc) {
+  mappedQcAOD.reset();
   // remove barriers and measurements
   qc.removeFinalMeasurements();
   // check if multi-qubit gates are present
@@ -75,8 +103,6 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   qc.removeFinalMeasurements();
 
   const auto dag = constructDAG(qc);
-
-  mapping = initialMapping;
 
   if (this->parameters.verbose) {
     spdlog::info("* Init Coord Mapping w/ [row:{} X col:{}] hardware",
@@ -167,21 +193,21 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
   }
 }
 
-qc::QuantumComputation NeutralAtomMapper::convertToAod() {
-  // decompose SWAP gates
-  qmap::decomposeSWAP(mappedQc, false);
-  // decompose bridge gates
-  decomposeBridgeGates(mappedQc);
-  qmap::replaceMCXWithMCZ(mappedQc);
-  qmap::singleQubitGateFusion(mappedQc);
-  mappedQc.flattenOperations();
-  // decompose AOD moves
-  MoveToAodConverter aodScheduler(*arch, hardwareQubits, flyingAncillas);
-  mappedQcAOD = aodScheduler.schedule(mappedQc);
-  if (this->parameters.verbose) {
-    spdlog::info("nMoveGroups: {}", aodScheduler.getNMoveGroups());
+const qc::QuantumComputation& NeutralAtomMapper::nativeCircuit() {
+  if (!mappedQcAOD) {
+    auto circuit = mappedQc;
+    qmap::decomposeSWAP(circuit, false);
+    decomposeBridgeGates(circuit);
+    qmap::replaceMCXWithMCZ(circuit);
+    qmap::singleQubitGateFusion(circuit);
+    circuit.flattenOperations();
+    MoveToAodConverter converter(*arch, flyingAncillas.getInitHwPos());
+    mappedQcAOD = converter.schedule(std::move(circuit));
+    if (parameters.verbose) {
+      spdlog::info("nMoveGroups: {}", converter.getNMoveGroups());
+    }
   }
-  return mappedQcAOD;
+  return *mappedQcAOD;
 }
 
 void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
@@ -212,16 +238,15 @@ void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
       *itC = passBy.target + arch->getNpositions();
     }
   }
-  const auto opCopy = pbComb.op->clone();
+  auto opCopy = pbComb.op->clone();
   opCopy->setTargets(targetCoords);
   qc::Controls controls;
   for (const auto& control : controlCoords) {
     controls.emplace(control);
   }
   opCopy->setControls(controls);
-  mappedQc.emplace_back(opCopy->clone());
+  mappedQc.emplace_back(std::move(opCopy));
 
-  // mapGate(faComb.op);
   for (const auto& passBy : pbComb.moves) {
     mappedQc.emplace_back(makeMoveOperation(
         passBy.target + arch->getNpositions(), passBy.origin));
@@ -274,11 +299,10 @@ void NeutralAtomMapper::mapGate(const qc::Operation* op) {
     }
   }
   // convert circuit qubits to CoordIndex and append to mappedQc
-  const auto opCopyUnique = op->clone();
-  auto* opCopy = opCopyUnique.get();
-  this->mapping.mapToHwQubits(opCopy);
-  this->hardwareQubits.mapToCoordIdx(opCopy);
-  this->mappedQc.emplace_back(opCopy->clone());
+  auto mapped = op->clone();
+  mapping.mapToHwQubits(mapped.get());
+  hardwareQubits.mapToCoordIdx(mapped.get());
+  mappedQc.emplace_back(std::move(mapped));
 }
 
 bool NeutralAtomMapper::isExecutable(const qc::Operation* opPointer) {

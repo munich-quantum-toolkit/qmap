@@ -25,6 +25,10 @@ releases may include breaking changes.
 
 ### Fixed
 
+- 🐛 Restore the initial atom placement for each hybrid mapping run. Preserve
+  abstract routing operations during native conversion. Use the current atom
+  placement for synthesis adjacency and score buffered operations in circuit
+  order. A full remap commits each operation once ([#1243]) ([**@burgholzer**])
 - 🐛 Start exact Clifford gate-count and depth searches with small SAT instances
   and stop synthesis if Z3 returns `unknown` ([#1242]) ([**@burgholzer**])
 - 🐛 Make greedy placement and layer splitting in the superconducting heuristic
@@ -386,6 +390,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1243]: https://github.com/munich-quantum-toolkit/qmap/pull/1243
 [#1242]: https://github.com/munich-quantum-toolkit/qmap/pull/1242
 [#1241]: https://github.com/munich-quantum-toolkit/qmap/pull/1241
 [#1240]: https://github.com/munich-quantum-toolkit/qmap/pull/1240

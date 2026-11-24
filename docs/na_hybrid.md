@@ -175,9 +175,9 @@ results = mapper.schedule(verbose=False, create_animation_csv=False)
 results
 ```
 
-You can retrieve the mapped scheduled circuit (extended QASM2) and, if desired,
-the variant with explicit AOD movements equivalent to the operations done on the
-hardware.
+Mapping produces a circuit with abstract routing operations such as SWAP and
+MOVE. Scheduling uses a native circuit with gate decompositions and explicit AOD
+movements. You can export either circuit before or after scheduling.
 
 ```{code-cell} ipython3
 
@@ -280,8 +280,9 @@ fidelities = synth.evaluate_synthesis_steps([circ, circ], also_map = False)
 print("Fidelities of subcircuits:", fidelities )
 ```
 
-The fidelity return indicates how well the subcircuit can be appended to the
-circuit mapped to the hardware.
+By default, each score covers the pending operations and the candidate, routed
+from the current placement. With `complete_remap=True`, each score covers the
+whole logical circuit and the candidate, routed from the initial placement.
 
 You can then build up a larger program by appending fragments.
 
