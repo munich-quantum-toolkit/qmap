@@ -25,6 +25,8 @@ releases may include breaking changes.
 
 ### Fixed
 
+- 🐛 Start exact Clifford gate-count and depth searches with small SAT instances
+  and stop synthesis if Z3 returns `unknown` ([#1242]) ([**@burgholzer**])
 - 🐛 Make greedy placement and layer splitting in the superconducting heuristic
   mapper independent of the iteration order of the two-qubit gate counts
   ([#1241]) ([**@burgholzer**])
@@ -384,6 +386,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1242]: https://github.com/munich-quantum-toolkit/qmap/pull/1242
 [#1241]: https://github.com/munich-quantum-toolkit/qmap/pull/1241
 [#1240]: https://github.com/munich-quantum-toolkit/qmap/pull/1240
 [#1238]: https://github.com/munich-quantum-toolkit/qmap/pull/1238

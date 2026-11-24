@@ -77,7 +77,6 @@ protected:
     return metric == TargetMetric::Depth;
   }
 
-  void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
   void runMaxSAT(const EncoderConfig& config);
   Results callSolver(const EncoderConfig& config);

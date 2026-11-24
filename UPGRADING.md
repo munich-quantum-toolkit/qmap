@@ -10,6 +10,11 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Clifford synthesis
+
+If you set a Z3 timeout or resource limit, handle `RuntimeError` when the solver
+returns `unknown`. An interrupted search cannot certify optimality.
+
 ### Zoned neutral-atom compilation
 
 Regenerate compiled circuits that apply a Hadamard or another supported

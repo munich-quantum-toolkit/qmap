@@ -225,7 +225,7 @@ Result Z3LogicBlock::solve() {
     model = new Z3Model(ctx, std::make_shared<z3::model>(solver->get_model()));
     return Result::SAT;
   }
-  return Result::UNSAT;
+  return res == z3::unsat ? Result::UNSAT : Result::NDEF;
 }
 
 void Z3LogicBlock::internalReset() {
@@ -458,7 +458,7 @@ Result Z3LogicOptimizer::solve() {
         new Z3Model(ctx, std::make_shared<z3::model>(optimizer->get_model()));
     return Result::SAT;
   }
-  return Result::UNSAT;
+  return res == z3::unsat ? Result::UNSAT : Result::NDEF;
 }
 
 void Z3LogicOptimizer::internalReset() {
