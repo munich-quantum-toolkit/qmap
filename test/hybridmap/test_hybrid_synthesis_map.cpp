@@ -17,7 +17,9 @@
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomScheduler.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/ir/operations/NAStandardOperation.hpp"
 
 #include <filesystem>
@@ -181,6 +183,11 @@ TEST_F(TestHybridSynthesisMapper, BufferedRemapCommitsEachGateOnce) {
   base.reset();
   EXPECT_EQ(buffered.schedule().nCZs, 0U);
   EXPECT_TRUE(buffered.getSynthesizedQc().empty());
+  base.setParameters({});
+  EXPECT_THROW(static_cast<void>(buffered.getCircuitAdjacencyMatrix()),
+               std::runtime_error);
+  buffered.initMapping(0);
+  EXPECT_EQ(buffered.getCircuitAdjacencyMatrix().size(), 0U);
 }
 
 TEST(HybridSynthesisRouting, CandidateFidelityMatchesForwardSchedule) {
@@ -205,6 +212,31 @@ TEST(HybridSynthesisRouting, CandidateFidelityMatchesForwardSchedule) {
       EXPECT_DOUBLE_EQ(next.front(), mapper.schedule().totalFidelities);
     }
   }
+}
+
+TEST_F(TestHybridSynthesisMapper, IncrementalScoreUsesCommittedBridgeHistory) {
+  MapperParameters params;
+  params.shuttlingWeight = 0;
+  params.dynamicMappingWeight = 0;
+  HybridSynthesisMapper synth(arch, params);
+  qc::QuantumComputation prefix(6);
+  prefix.x(1);
+  synth.appendWithMapping(prefix);
+
+  std::vector candidates{qc::QuantumComputation(6)};
+  candidates.front().cz(0, 2);
+  candidates.front().h(2);
+  candidates.front().cz(0, 2);
+  const auto score =
+      synth.evaluateSynthesisSteps(candidates, false, true).front();
+
+  // Score only the appended gates, with the bridges chosen after the X gate.
+  auto suffix = synth.convertToAod();
+  ASSERT_EQ(suffix.front()->getType(), qc::X);
+  suffix.erase(suffix.begin());
+  EXPECT_DOUBLE_EQ(score, NeutralAtomScheduler(arch)
+                              .schedule(suffix, {}, {}, false)
+                              .totalFidelities);
 }
 
 TEST_F(TestHybridSynthesisMapper, Output) {

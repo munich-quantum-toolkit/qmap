@@ -26,8 +26,10 @@
 #include <deque>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -85,7 +87,22 @@ struct MapperStats {
  * to AOD level).
  */
 class NeutralAtomMapper {
+  using Operations = std::span<const std::unique_ptr<qc::Operation>>;
+  // Scoring borrows the committed gates for bridge selection.
+  Operations routingPrefix;
+
+  NeutralAtomMapper(const NeutralAtomMapper& source, Operations prefix);
+
 protected:
+  /// Start routing at the current placement with read-only access to the
+  /// previous gates.
+  [[nodiscard]] NeutralAtomMapper continuationMapper() const {
+    return {*this, mappedQc};
+  }
+  [[nodiscard]] NeutralAtomMapper initialMapper(const MapperParameters& p,
+                                                std::size_t width) const;
+  void setLogicalWidth(std::size_t width);
+
   MapperStats stats;
   // The considered architecture
   const NeutralAtomArchitecture* arch;
@@ -471,22 +488,7 @@ public:
   /// Start a circuit at the source mapper's current placement and routing
   /// history.
   void copyStateFrom(const NeutralAtomMapper& mapper) {
-    arch = mapper.arch;
-    parameters = mapper.parameters;
-    mapping = mapper.mapping;
-    hardwareQubits = mapper.hardwareQubits;
-    lastMoves = mapper.lastMoves;
-    lastBlockedQubits = mapper.lastBlockedQubits;
-    scheduler = NeutralAtomScheduler(*arch);
-    lastSwap = mapper.lastSwap;
-    twoQubitSwapWeight = mapper.twoQubitSwapWeight;
-    decayWeights = mapper.decayWeights;
-    flyingAncillas = mapper.flyingAncillas;
-    hardwareQubits.recordInitialPlacement();
-    flyingAncillas.recordInitialPlacement();
-    stats = {};
-    mappedQc = qc::QuantumComputation(arch->getNpositions());
-    mappedQcAOD.reset();
+    *this = NeutralAtomMapper(mapper, {});
   }
 
   /**

@@ -24,6 +24,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <memory>
+#include <span>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <utility>
@@ -31,49 +33,51 @@
 
 namespace na {
 
-void HybridSynthesisMapper::setParameters(const MapperParameters& p) {
-  HybridSynthesisMapper next(*arch, p, bufferSize);
-  if (initialized) {
-    next.initMapping(synthesizedQc.getNqubits());
-    next.synthesizedQc = synthesizedQc;
-    next.mapPending(mappedOps);
-  }
-  *this = std::move(next);
-}
-
-void HybridSynthesisMapper::initMapping(const std::size_t nQubits) {
-  if (nQubits > hardwareQubits.getNumQubits()) {
-    throw std::runtime_error("Not enough qubits in architecture.");
-  }
-  if (initialized || !mappedQc.empty()) {
-    NeutralAtomMapper::reset();
-  }
-  synthesizedQc = qc::QuantumComputation(nQubits);
-  mapping = Mapping(nQubits);
-  mappedOps = 0;
-  initialized = true;
-}
-
-void HybridSynthesisMapper::mapPending(const std::size_t end) {
-  if (end == mappedOps) {
+namespace {
+void routeRange(
+    NeutralAtomMapper& router, const qc::QuantumComputation& logical,
+    const std::size_t begin, const std::size_t end,
+    const std::span<const std::unique_ptr<qc::Operation>> candidate = {}) {
+  if (begin == end) {
     return;
   }
-  qc::QuantumComputation pending(synthesizedQc.getNqubits());
-  for (auto i = mappedOps; i < end; ++i) {
-    pending.emplace_back(synthesizedQc.at(i)->clone());
+  qc::QuantumComputation batch(logical.getNqubits());
+  batch.reserve(end - begin);
+  for (auto i = begin; i < end; ++i) {
+    const auto& op =
+        i < logical.size() ? logical.at(i) : candidate[i - logical.size()];
+    batch.emplace_back(op->clone());
   }
-  mapAppend(pending);
-  mappedOps = end;
+  router.mapAppend(batch);
+}
+} // namespace
+
+void HybridSynthesisMapper::initMapping(const std::size_t width) {
+  if (mappedOps || !mappedQc.empty()) {
+    NeutralAtomMapper::operator=(initialMapper(parameters, width));
+  } else {
+    setLogicalWidth(width);
+  }
+  synthesizedQc = qc::QuantumComputation(width);
+  mappedOps = 0;
 }
 
-void HybridSynthesisMapper::mapFromStart(const std::size_t end) {
-  mapping = Mapping(synthesizedQc.getNqubits());
-  mappedOps = 0;
-  mapPending(end);
+void HybridSynthesisMapper::mapPending(const std::size_t end,
+                                       const MapperParameters* restartWith) {
+  if (restartWith != nullptr) {
+    auto fresh = initialMapper(*restartWith, synthesizedQc.getNqubits());
+    routeRange(fresh, synthesizedQc, 0, end);
+    NeutralAtomMapper::operator=(std::move(fresh));
+  } else {
+    routeRange(*this, synthesizedQc, mappedOps.value_or(0), end);
+  }
+  if (mappedOps) {
+    mappedOps = end;
+  }
 }
 
 std::size_t HybridSynthesisMapper::bufferStart(const std::size_t size) const {
-  return size - std::min<std::size_t>(bufferSize, size - mappedOps);
+  return size - std::min<std::size_t>(bufferSize, size - *mappedOps);
 }
 
 std::vector<qc::fp> HybridSynthesisMapper::evaluateSynthesisSteps(
@@ -81,13 +85,22 @@ std::vector<qc::fp> HybridSynthesisMapper::evaluateSynthesisSteps(
   if (synthesisSteps.empty()) {
     return {};
   }
-  if (!initialized) {
+  if (!mappedOps) {
     initMapping(synthesisSteps.front().getNqubits());
   }
+  const auto start = completeRemap
+                         ? initialMapper(parameters, synthesizedQc.getNqubits())
+                         : continuationMapper();
+  const auto begin = completeRemap ? 0U : *mappedOps;
   std::vector<qc::fp> fidelities;
   fidelities.reserve(synthesisSteps.size());
-  for (auto& qc : synthesisSteps) {
-    fidelities.push_back(evaluateSynthesisStep(qc, completeRemap));
+  for (const auto& candidate : synthesisSteps) {
+    auto trial = start;
+    const auto end = synthesizedQc.size() + candidate.size();
+    const auto split = bufferStart(end);
+    routeRange(trial, synthesizedQc, begin, split, candidate);
+    routeRange(trial, synthesizedQc, split, end, candidate);
+    fidelities.push_back(trial.schedule().totalFidelities);
     if (parameters.verbose) {
       spdlog::info("Synthesis step {} fidelity: {}", fidelities.size() - 1,
                    fidelities.back());
@@ -102,54 +115,20 @@ std::vector<qc::fp> HybridSynthesisMapper::evaluateSynthesisSteps(
   return fidelities;
 }
 
-qc::fp
-HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
-                                             const bool completeRemap) const {
-  const auto width = synthesizedQc.getNqubits();
-  NeutralAtomMapper trial(*arch, parameters);
-  if (!completeRemap) {
-    trial.copyStateFrom(*this);
-  }
-  const auto accepted = synthesizedQc.size();
-  const auto size = accepted + qc.size();
-  const auto split = bufferStart(size);
-  // Use the same routing batches as appending the candidate and flushing it.
-  const auto fragment = [&](std::size_t begin, std::size_t end) {
-    qc::QuantumComputation batch(width);
-    for (auto i = begin; i < end; ++i) {
-      const auto& op = i < accepted ? synthesizedQc.at(i) : qc.at(i - accepted);
-      batch.emplace_back(op->clone());
-    }
-    return batch;
-  };
-  auto prefix = fragment(completeRemap ? 0 : mappedOps, split);
-  trial.mapAppend(prefix, completeRemap ? Mapping(width) : mapping);
-  if (split < size) {
-    auto pending = fragment(split, size);
-    trial.mapAppend(pending);
-  }
-  return trial.schedule().totalFidelities;
-}
-
 void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc,
                                               const bool completeRemap) {
-  if (!initialized) {
+  if (!mappedOps) {
     initMapping(qc.getNqubits());
   }
   for (const auto& op : qc) {
     synthesizedQc.emplace_back(op->clone());
   }
-  const auto end = bufferStart(synthesizedQc.size());
-  if (completeRemap) {
-    NeutralAtomMapper::reset();
-    mapFromStart(end);
-  } else {
-    mapPending(end);
-  }
+  mapPending(bufferStart(synthesizedQc.size()),
+             completeRemap ? &parameters : nullptr);
 }
 
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
-  if (!initialized) {
+  if (!mappedOps) {
     throw std::runtime_error(
         "Not yet initialized. Cannot get circuit adjacency matrix.");
   }

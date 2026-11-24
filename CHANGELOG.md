@@ -28,7 +28,8 @@ releases may include breaking changes.
 - 🐛 Restore the initial atom placement for each hybrid mapping run. Preserve
   abstract routing operations during native conversion. Use the current atom
   placement for synthesis adjacency and score buffered operations in circuit
-  order. A full remap commits each operation once ([#1243]) ([**@burgholzer**])
+  order, including the effect of earlier gates on bridge selection. A full remap
+  commits each operation once ([#1243]) ([**@burgholzer**])
 - 🐛 Start exact Clifford gate-count and depth searches with small SAT instances
   and stop synthesis if Z3 returns `unknown` ([#1242]) ([**@burgholzer**])
 - 🐛 Make greedy placement and layer splitting in the superconducting heuristic

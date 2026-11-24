@@ -28,6 +28,7 @@
 #include "na/ir/operations/NAStandardOperation.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -70,6 +71,34 @@ NeutralAtomMapper::NeutralAtomMapper(
   for (auto i = arch->getNcolumns(); i > 0; --i) {
     decayWeights.emplace_back(std::exp(-p.decay * i));
   }
+}
+
+NeutralAtomMapper::NeutralAtomMapper(const NeutralAtomMapper& source,
+                                     const Operations prefix)
+    : routingPrefix(prefix), arch(source.arch), mappedQc(arch->getNpositions()),
+      scheduler(*arch), twoQubitSwapWeight(source.twoQubitSwapWeight),
+      parameters(source.parameters),
+      lastBlockedQubits(source.lastBlockedQubits), lastSwap(source.lastSwap),
+      lastMoves(source.lastMoves), decayWeights(source.decayWeights),
+      hardwareQubits(source.hardwareQubits),
+      flyingAncillas(source.flyingAncillas), mapping(source.mapping) {
+  hardwareQubits.recordInitialPlacement();
+  flyingAncillas.recordInitialPlacement();
+}
+
+NeutralAtomMapper
+NeutralAtomMapper::initialMapper(const MapperParameters& p,
+                                 const std::size_t width) const {
+  NeutralAtomMapper fresh(arch, p);
+  fresh.setLogicalWidth(width);
+  return fresh;
+}
+
+void NeutralAtomMapper::setLogicalWidth(const std::size_t width) {
+  if (width > hardwareQubits.getNumQubits()) {
+    throw std::runtime_error("Not enough qubits in architecture.");
+  }
+  mapping = Mapping(width);
 }
 
 void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc) {
@@ -642,15 +671,14 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
       coordUsages[hardwareQubits.getCoordIndex(mapping.getHwQubit(qubit))]++;
     }
   }
-  // in mapped qc, go backwards same length as front layer
-  auto nFrontLayerGates = this->frontLayerGate.size();
-  auto it = this->mappedQc.rbegin();
-  while (it != this->mappedQc.rend() && nFrontLayerGates > 0) {
-    for (const auto coordIdx : (*it)->getUsedQubits()) {
-      coordUsages[coordIdx]++;
+  // Include one recent routed gate per gate in the front layer.
+  const std::array history{routingPrefix, Operations(mappedQc)};
+  const auto recent = history | std::views::join | std::views::reverse |
+                      std::views::take(std::ssize(frontLayerGate));
+  for (const auto& op : recent) {
+    for (const auto idx : op->getUsedQubits()) {
+      ++coordUsages[idx];
     }
-    ++it;
-    nFrontLayerGates--;
   }
   // add last blocked qubits
   if (this->lastBlockedQubits.empty()) {

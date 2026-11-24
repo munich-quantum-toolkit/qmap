@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -48,22 +49,16 @@ class HybridSynthesisMapper : public NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
   qc::QuantumComputation synthesizedQc;
-  std::size_t mappedOps = 0; ///< Length of the logical prefix already routed.
+  /// Length of the routed prefix in an initialized synthesis session.
+  std::optional<std::size_t> mappedOps;
   uint32_t bufferSize;
-  bool initialized = false;
 
-  /// Map the pending operations up to the given end index.
-  void mapPending(std::size_t end);
+  /// Route through end. Supplying parameters restarts at the initial placement.
+  void mapPending(std::size_t end,
+                  const MapperParameters* restartWith = nullptr);
 
-  /// Route the logical circuit up to end from the initial placement.
-  void mapFromStart(std::size_t end);
-
-  /// Keep at most bufferSize pending operations after an append.
+  /// Index of the first operation retained in the buffer after an append.
   [[nodiscard]] std::size_t bufferStart(std::size_t size) const;
-
-  /// Score a candidate with the same buffering and routing as an append.
-  qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc,
-                               bool completeRemap) const;
 
 public:
   // Constructors
@@ -86,7 +81,9 @@ public:
 
   /// Remap the committed prefix with new parameters and retain pending
   /// operations.
-  void setParameters(const MapperParameters& p) override;
+  void setParameters(const MapperParameters& p) override {
+    mapPending(mappedOps.value_or(0), &p);
+  }
 
   /// Discard the logical and routed circuits.
   void reset() override {
@@ -94,12 +91,12 @@ public:
   }
 
   /// Start a new synthesis session with an identity logical mapping.
-  void initMapping(std::size_t nQubits);
+  void initMapping(std::size_t width);
 
   /// Remap from the initial placement. Include pending operations by default.
   void completeRemap(bool includeBuffer = true) {
-    NeutralAtomMapper::reset();
-    mapFromStart(includeBuffer ? synthesizedQc.size() : mappedOps);
+    mapPending(includeBuffer ? synthesizedQc.size() : mappedOps.value_or(0),
+               &parameters);
   }
 
   /// Map any pending operations and schedule the resulting native circuit.
