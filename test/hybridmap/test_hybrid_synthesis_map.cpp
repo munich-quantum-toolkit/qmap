@@ -14,9 +14,12 @@
 // more information.
 //
 
+#include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomScheduler.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/ir/operations/NAStandardOperation.hpp"
 
 #include <filesystem>
@@ -143,6 +146,97 @@ TEST_F(TestHybridSynthesisMapper, MapAppend) {
   mapper.completeRemap(true);
   const auto mappedQc = mapper.getMappedQc();
   EXPECT_GE(mappedQc.getNops(), synthesizedQc.getNops());
+}
+
+TEST_F(TestHybridSynthesisMapper, MappingAndSchedulingUseSeparateCircuits) {
+  qc::QuantumComputation swap(3);
+  swap.swap(0, 1);
+  mapper.appendWithMapping(swap);
+  const auto abstract = mapper.getMappedQcQasm();
+  EXPECT_NE(mapper.getMappedQcAodQasm(), abstract);
+  EXPECT_EQ(mapper.getMappedQcQasm(), abstract);
+  EXPECT_EQ(mapper.schedule().nCZs, 3U);
+
+  qc::QuantumComputation cz(3);
+  cz.cz(0, 1);
+  mapper.appendWithMapping(cz);
+  EXPECT_EQ(mapper.schedule().nCZs, 4U);
+
+  mapper.initMapping(3);
+  EXPECT_EQ(mapper.getMappedQcAodQasm(), mapper.getMappedQcQasm());
+}
+
+TEST_F(TestHybridSynthesisMapper, BufferedRemapCommitsEachGateOnce) {
+  HybridSynthesisMapper buffered(arch, {}, 1);
+  qc::QuantumComputation gate(2);
+  gate.cz(0, 1);
+  buffered.appendWithMapping(gate);
+  buffered.completeRemap(false);
+  EXPECT_TRUE(buffered.getMappedQc().empty());
+  buffered.completeRemap();
+  EXPECT_EQ(buffered.schedule().nCZs, 1U);
+  buffered.appendWithMapping(gate);
+  NeutralAtomMapper& base = buffered;
+  base.setParameters({});
+  EXPECT_EQ(buffered.schedule().nCZs, 2U);
+  EXPECT_EQ(buffered.getSynthesizedQc().size(), 2U);
+  base.reset();
+  EXPECT_EQ(buffered.schedule().nCZs, 0U);
+  EXPECT_TRUE(buffered.getSynthesizedQc().empty());
+  base.setParameters({});
+  EXPECT_THROW(static_cast<void>(buffered.getCircuitAdjacencyMatrix()),
+               std::runtime_error);
+  buffered.initMapping(0);
+  EXPECT_EQ(buffered.getCircuitAdjacencyMatrix().size(), 0U);
+}
+
+TEST(HybridSynthesisRouting, CandidateFidelityMatchesForwardSchedule) {
+  const NeutralAtomArchitecture arch("architectures/rubidium_shuttling.json");
+  MapperParameters params;
+  params.gateWeight = 0;
+  params.usePassBy = false;
+
+  qc::QuantumComputation prefix(4);
+  prefix.cz(0, 1);
+  std::vector<qc::QuantumComputation> candidates{qc::QuantumComputation(4)};
+  candidates.front().x(0);
+  candidates.front().cz(0, 3);
+  for (const bool full : {false, true}) {
+    HybridSynthesisMapper mapper(arch, params, 3);
+    mapper.appendWithMapping(prefix);
+    const auto scores = mapper.evaluateSynthesisSteps(candidates, full, true);
+    EXPECT_DOUBLE_EQ(scores.front(), mapper.schedule().totalFidelities);
+    EXPECT_EQ(mapper.getCircuitAdjacencyMatrix()(0, 3), 1U);
+    if (full) {
+      const auto next = mapper.evaluateSynthesisSteps(candidates, true, true);
+      EXPECT_DOUBLE_EQ(next.front(), mapper.schedule().totalFidelities);
+    }
+  }
+}
+
+TEST_F(TestHybridSynthesisMapper, IncrementalScoreUsesCommittedBridgeHistory) {
+  MapperParameters params;
+  params.shuttlingWeight = 0;
+  params.dynamicMappingWeight = 0;
+  HybridSynthesisMapper synth(arch, params);
+  qc::QuantumComputation prefix(6);
+  prefix.x(1);
+  synth.appendWithMapping(prefix);
+
+  std::vector candidates{qc::QuantumComputation(6)};
+  candidates.front().cz(0, 2);
+  candidates.front().h(2);
+  candidates.front().cz(0, 2);
+  const auto score =
+      synth.evaluateSynthesisSteps(candidates, false, true).front();
+
+  // Score only the appended gates, with the bridges chosen after the X gate.
+  auto suffix = synth.convertToAod();
+  ASSERT_EQ(suffix.front()->getType(), qc::X);
+  suffix.erase(suffix.begin());
+  EXPECT_DOUBLE_EQ(score, NeutralAtomScheduler(arch)
+                              .schedule(suffix, {}, {}, false)
+                              .totalFidelities);
 }
 
 TEST_F(TestHybridSynthesisMapper, Output) {

@@ -142,6 +142,9 @@ public:
     initialHwPos = hwToCoordIdx;
   }
 
+  /// Use the current atom coordinates as the start of a new circuit.
+  void recordInitialPlacement() { initialHwPos = hwToCoordIdx; }
+
   /**
    * @brief Enumerate all minimal-length paths between two qubits.
    * @details BFS builds predecessor layers; all shortest sequences q1->...->q2

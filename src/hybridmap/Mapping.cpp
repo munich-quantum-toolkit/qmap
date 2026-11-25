@@ -10,7 +10,9 @@
 
 #include "hybridmap/Mapping.hpp"
 
+#include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomLayer.hpp"
 #include "ir/Definitions.hpp"
 
 #include <algorithm>
@@ -41,7 +43,8 @@ void Mapping::applySwap(const Swap& swap) {
   }
 }
 
-std::vector<HwQubit> Mapping::graphMatching() {
+std::vector<HwQubit> Mapping::graphMatching(const CircuitDAG& dag,
+                                            HardwareQubits hwQubits) {
   constexpr auto invalidHw = std::numeric_limits<HwQubit>::max();
   constexpr auto invalidCirc = std::numeric_limits<qc::Qubit>::max();
   if (dag.size() > hwQubits.getNumQubits()) {
@@ -57,7 +60,7 @@ std::vector<HwQubit> Mapping::graphMatching() {
     hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
   for (auto& neighbors : hwGraph | std::views::values) {
-    std::ranges::sort(neighbors, [this](const HwQubit a, const HwQubit b) {
+    std::ranges::sort(neighbors, [&hwQubits](const HwQubit a, const HwQubit b) {
       return hwQubits.getNearbyQubits(a).size() >
              hwQubits.getNearbyQubits(b).size();
     });

@@ -10,6 +10,16 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Hybrid neutral-atom mapping
+
+Each call to `map` starts from the initial atom placement. Use
+`HybridSynthesisMapper.append_with_mapping` to continue routing from the current
+placement. To export native operations, use `get_mapped_qc_aod_qasm`. The
+abstract circuit returned by `get_mapped_qc_qasm` retains its SWAP and MOVE
+operations after scheduling. Incremental synthesis scores use the preceding
+routed gates to choose bridges and report the fidelity of the appended fragment
+and any pending operations.
+
 ### Clifford synthesis
 
 If you set a Z3 timeout or resource limit, handle `RuntimeError` when the solver

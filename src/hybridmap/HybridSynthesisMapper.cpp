@@ -20,9 +20,12 @@
 #include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <ranges>
+#include <iterator>
+#include <memory>
+#include <span>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <utility>
@@ -30,153 +33,102 @@
 
 namespace na {
 
-/**
- * @brief Evaluates a set of synthesis candidate circuits and optionally applies
- * the best candidate to the mapper.
- *
- * @param synthesisSteps Vector of candidate QuantumComputation objects to
- * evaluate.
- * @param completeRemap If `true`, use a full remapping when applying the
- * selected candidate; if `false`, update mapping incrementally.
- * @param alsoMap If `true`, append and map the highest-fidelity candidate into
- * the internal mapped/buffered circuit state.
- * @return std::vector<qc::fp> A vector of fidelities where each element is the
- * total fidelity computed for the corresponding entry in `synthesisSteps`.
- */
+namespace {
+void routeRange(
+    NeutralAtomMapper& router, const qc::QuantumComputation& logical,
+    const std::size_t begin, const std::size_t end,
+    const std::span<const std::unique_ptr<qc::Operation>> candidate = {}) {
+  if (begin == end) {
+    return;
+  }
+  qc::QuantumComputation batch(logical.getNqubits());
+  batch.reserve(end - begin);
+  for (auto i = begin; i < end; ++i) {
+    const auto& op =
+        i < logical.size() ? logical.at(i) : candidate[i - logical.size()];
+    batch.emplace_back(op->clone());
+  }
+  router.mapAppend(batch);
+}
+} // namespace
+
+void HybridSynthesisMapper::initMapping(const std::size_t width) {
+  if (mappedOps || !mappedQc.empty()) {
+    NeutralAtomMapper::operator=(initialMapper(parameters, width));
+  } else {
+    setLogicalWidth(width);
+  }
+  synthesizedQc = qc::QuantumComputation(width);
+  mappedOps = 0;
+}
+
+void HybridSynthesisMapper::mapPending(const std::size_t end,
+                                       const MapperParameters* restartWith) {
+  if (restartWith != nullptr) {
+    auto fresh = initialMapper(*restartWith, synthesizedQc.getNqubits());
+    routeRange(fresh, synthesizedQc, 0, end);
+    NeutralAtomMapper::operator=(std::move(fresh));
+  } else {
+    routeRange(*this, synthesizedQc, mappedOps.value_or(0), end);
+  }
+  if (mappedOps) {
+    mappedOps = end;
+  }
+}
+
+std::size_t HybridSynthesisMapper::bufferStart(const std::size_t size) const {
+  return size - std::min<std::size_t>(bufferSize, size - *mappedOps);
+}
+
 std::vector<qc::fp> HybridSynthesisMapper::evaluateSynthesisSteps(
     qcs& synthesisSteps, const bool completeRemap, const bool alsoMap) {
   if (synthesisSteps.empty()) {
     return {};
   }
-  if (!initialized) {
-    initMapping(synthesisSteps[0].getNqubits());
-    initialized = true;
+  if (!mappedOps) {
+    initMapping(synthesisSteps.front().getNqubits());
   }
-  std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
-  size_t qcIndex = 0;
-  for (auto& qc : synthesisSteps) {
-    if (parameters.verbose) {
-      spdlog::info("Evaluating synthesis step number {}", qcIndex);
-    }
-    const auto fidelity = evaluateSynthesisStep(qc, completeRemap);
-    candidates.emplace_back(qc, fidelity);
-    if (parameters.verbose) {
-      spdlog::info("Fidelity: {}", fidelity);
-    }
-    ++qcIndex;
-  }
+  const auto start = completeRemap
+                         ? initialMapper(parameters, synthesizedQc.getNqubits())
+                         : continuationMapper();
+  const auto begin = completeRemap ? 0U : *mappedOps;
   std::vector<qc::fp> fidelities;
-  size_t bestIndex = 0;
-  qc::fp bestFidelity = 0;
-  for (size_t i = 0; i < candidates.size(); ++i) {
-    fidelities.push_back(candidates[i].second);
-    if (candidates[i].second > bestFidelity) {
-      bestFidelity = candidates[i].second;
-      bestIndex = i;
+  fidelities.reserve(synthesisSteps.size());
+  for (const auto& candidate : synthesisSteps) {
+    auto trial = start;
+    const auto end = synthesizedQc.size() + candidate.size();
+    const auto split = bufferStart(end);
+    routeRange(trial, synthesizedQc, begin, split, candidate);
+    routeRange(trial, synthesizedQc, split, end, candidate);
+    fidelities.push_back(trial.schedule().totalFidelities);
+    if (parameters.verbose) {
+      spdlog::info("Synthesis step {} fidelity: {}", fidelities.size() - 1,
+                   fidelities.back());
     }
   }
-  if (alsoMap && !candidates.empty()) {
-    appendWithMapping(candidates[bestIndex].first, completeRemap);
+  if (alsoMap) {
+    const auto best = std::ranges::max_element(fidelities);
+    appendWithMapping(
+        *(synthesisSteps.begin() + std::distance(fidelities.begin(), best)),
+        completeRemap);
   }
   return fidelities;
 }
 
-/**
- * @brief Evaluates the fidelity of mapping a synthesis step while accounting
- * for buffered operations.
- *
- * @param qc Quantum computation to evaluate; the input is not modified.
- * @param completeRemap If `false`, preserve the mapper's current state when
- * evaluating the step; if `true`, evaluate using a fresh mapping.
- * @return qc::fp Total fidelity computed for the mapped and scheduled circuit.
- */
-qc::fp
-HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc,
-                                             const bool completeRemap) const {
-  NeutralAtomMapper tempMapper(arch, parameters);
-  if (!completeRemap) {
-    tempMapper.copyStateFrom(*this);
-  }
-
-  auto qcCopy = qc;
-  qcCopy.reverse();
-  // insert buffered operations
-  for (const auto& opPointer : std::ranges::reverse_view(bufferedQc)) {
-    qcCopy.emplace_back(opPointer->clone());
-  }
-
-  // Make a copy of qc to avoid modifying the original
-  const auto mappedQc = tempMapper.map(qcCopy, mapping);
-  tempMapper.convertToAod();
-  const auto results = tempMapper.schedule();
-  return results.totalFidelities;
-}
-
-/**
- * @brief Buffers an incoming quantum computation, promotes overflowing buffered
- * operations into the synthesized circuit, and updates the current mapping.
- *
- * Appends a clone of each operation from `qc` into the internal buffer. If the
- * buffer grows larger than `bufferSize`, the oldest buffered operations are
- * moved (cloned) into `synthesizedQc` and the set of operations to be mapped.
- * If there is no existing mapping state, initializes mapping based on `qc`'s
- * qubit count. Finally, either performs a full remap (when `completeRemap`
- * is true) or increments the mapping by appending the to-be-mapped operations
- * with the current mapping.
- *
- * @param qc Quantum computation whose operations will be buffered and (if
- * necessary) promoted to the synthesized circuit. Operations are cloned when
- * stored.
- * @param completeRemap When true, trigger a complete remap after promoting
- * buffered operations; when false, update mapping incrementally via append.
- */
 void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc,
                                               const bool completeRemap) {
-  if (mappedQc.empty() and bufferedQc.empty()) {
+  if (!mappedOps) {
     initMapping(qc.getNqubits());
   }
-
-  // add circuit to buffer
   for (const auto& op : qc) {
-    this->bufferedQc.emplace_back(op->clone());
+    synthesizedQc.emplace_back(op->clone());
   }
-  qc::QuantumComputation toBeMappedQc(qc.getNqubits());
-  if (bufferedQc.size() > bufferSize) {
-    // move beginning of buffer to synthesized circuit
-    for (auto opPointer = bufferedQc.begin();
-         opPointer < bufferedQc.end() - bufferSize; ++opPointer) {
-      synthesizedQc.emplace_back((*opPointer)->clone());
-      toBeMappedQc.emplace_back((*opPointer)->clone());
-    }
-    // remove the operations from the buffer
-    bufferedQc.erase(bufferedQc.begin(),
-                     bufferedQc.end() - static_cast<int64_t>(bufferSize));
-  }
-
-  if (completeRemap) {
-    this->completeRemap(false);
-  } else {
-    mapAppend(toBeMappedQc, this->mapping);
-  }
+  mapPending(bufferStart(synthesizedQc.size()),
+             completeRemap ? &parameters : nullptr);
 }
 
-/**
- * Compute the circuit adjacency matrix using the current logical-to-hardware
- * mapping.
- *
- * The matrix has size equal to the number of qubits in the synthesized circuit.
- * For circuit qubits i and j, the matrix entry (i, j) is 1 when the hardware
- * qubits mapped to i and j have swap distance 0 on the target architecture;
- * otherwise the entry is 0. Diagonal entries are set to 0.
- *
- * @return AdjacencyMatrix Matrix where (i, j) == 1 indicates direct adjacency
- *         (zero swap distance) between the hardware qubits mapped from circuit
- *         qubits i and j, and 0 otherwise.
- *
- * @throws std::runtime_error If the mapper has not been initialized.
- */
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
-  if (!initialized) {
+  if (!mappedOps) {
     throw std::runtime_error(
         "Not yet initialized. Cannot get circuit adjacency matrix.");
   }
@@ -184,20 +136,11 @@ AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
   AdjacencyMatrix adjMatrix(numCircQubits);
 
   for (uint32_t i = 0; i < numCircQubits; ++i) {
-    for (uint32_t j = 0; j < numCircQubits; ++j) {
-      if (i == j) {
-        adjMatrix(i, j) = 0;
-        continue;
-      }
-      const auto mappedI = mapping.getHwQubit(i);
-      if (const auto mappedJ = mapping.getHwQubit(j);
-          arch->getSwapDistance(mappedI, mappedJ) == 0) {
-        adjMatrix(i, j) = 1;
-        adjMatrix(j, i) = 1;
-      } else {
-        adjMatrix(i, j) = 0;
-        adjMatrix(j, i) = 0;
-      }
+    const auto neighbors =
+        hardwareQubits.getNearbyQubits(mapping.getHwQubit(i));
+    for (uint32_t j = 0; j < i; ++j) {
+      adjMatrix(i, j) =
+          static_cast<uint8_t>(neighbors.contains(mapping.getHwQubit(j)));
     }
   }
   return adjMatrix;

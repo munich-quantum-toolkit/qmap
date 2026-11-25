@@ -21,13 +21,15 @@
 #include "ir/QuantumComputation.hpp"
 #include "na/ir/OpenQASMSerializer.hpp"
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <fstream>
 #include <map>
+#include <memory>
+#include <optional>
 #include <set>
+#include <span>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -85,14 +87,30 @@ struct MapperStats {
  * to AOD level).
  */
 class NeutralAtomMapper {
+  using Operations = std::span<const std::unique_ptr<qc::Operation>>;
+  // Scoring borrows the committed gates for bridge selection.
+  Operations routingPrefix;
+
+  NeutralAtomMapper(const NeutralAtomMapper& source, Operations prefix);
+
 protected:
+  /// Start routing at the current placement with read-only access to the
+  /// previous gates.
+  [[nodiscard]] NeutralAtomMapper continuationMapper() const {
+    return {*this, mappedQc};
+  }
+  [[nodiscard]] NeutralAtomMapper initialMapper(const MapperParameters& p,
+                                                std::size_t width) const;
+  void setLogicalWidth(std::size_t width);
+
   MapperStats stats;
   // The considered architecture
   const NeutralAtomArchitecture* arch;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
   // The mapped quantum circuit converted to AOD movements
-  qc::QuantumComputation mappedQcAOD;
+  std::optional<qc::QuantumComputation> mappedQcAOD;
+  const qc::QuantumComputation& nativeCircuit();
   // The scheduler to schedule the mapped quantum circuit
   NeutralAtomScheduler scheduler;
   // Gates in the front layer to be executed with swap gates
@@ -446,30 +464,16 @@ public:
   // Constructors
   NeutralAtomMapper() = delete;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
-                             const MapperParameters& p)
-      : arch(architecture), scheduler(*architecture), parameters(p),
-        hardwareQubits(*arch, arch->getNqubits() - p.numFlyingAncillas,
-                       p.initialCoordMapping, p.seed),
-        flyingAncillas(*arch, p.numFlyingAncillas, Trivial, p.seed) {
-    const auto nPositions = static_cast<int>(arch->getNpositions());
-    const auto nQubits = static_cast<int>(arch->getNqubits());
-    if (nPositions - nQubits < 1 && p.shuttlingWeight > 0) {
-      throw std::runtime_error(
-          "No free coordinates for shuttling but shuttling "
-          "weight is greater than 0.");
-    }
-    if (parameters.numFlyingAncillas > 1) {
-      throw std::runtime_error("Only one flying ancilla is supported for now.");
-    }
-    //   precompute exponential decay weights
-    decayWeights.reserve(arch->getNcolumns());
-    for (uint32_t i = arch->getNcolumns(); i > 0; --i) {
-      decayWeights.emplace_back(std::exp(-parameters.decay * i));
-    }
-  }
+                             const MapperParameters& p);
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
       : NeutralAtomMapper(&architecture, p) {}
+
+  virtual ~NeutralAtomMapper() = default;
+  NeutralAtomMapper(const NeutralAtomMapper&) = default;
+  NeutralAtomMapper(NeutralAtomMapper&&) noexcept = default;
+  NeutralAtomMapper& operator=(const NeutralAtomMapper&) = default;
+  NeutralAtomMapper& operator=(NeutralAtomMapper&&) noexcept = default;
 
   /**
    * @brief Set/replace runtime parameters and reset internal state.
@@ -477,49 +481,21 @@ public:
    * @throw std::runtime_error If shuttling weight >0 but no free coordinates or
    * unsupported number of flying ancillas.
    */
-  void setParameters(const MapperParameters& p) {
-    parameters = p;
-    const auto nPositions = static_cast<int>(arch->getNpositions());
-    const auto nQubits = static_cast<int>(arch->getNqubits());
-    if (nPositions - nQubits < 1 && p.shuttlingWeight > 0) {
-      throw std::runtime_error(
-          "No free coordinates for shuttling but shuttling "
-          "weight is greater than 0.");
-    }
-    if (parameters.numFlyingAncillas > 1) {
-      throw std::runtime_error("Only one flying ancilla is supported for now.");
-    }
-    reset();
+  virtual void setParameters(const MapperParameters& p) {
+    *this = NeutralAtomMapper(arch, p);
   }
 
-  /**
-   * @brief Shallow copy of architecture, parameters, mapping, placement and
-   * scheduler state.
-   * @param mapper Source mapper.
-   */
+  /// Start a circuit at the source mapper's current placement and routing
+  /// history.
   void copyStateFrom(const NeutralAtomMapper& mapper) {
-    arch = mapper.arch;
-    parameters = mapper.parameters;
-    mapping = mapper.mapping;
-    hardwareQubits = mapper.hardwareQubits;
-    lastMoves = mapper.lastMoves;
-    lastBlockedQubits = mapper.lastBlockedQubits;
-    scheduler = mapper.scheduler;
-    decayWeights = mapper.decayWeights;
-    flyingAncillas = mapper.flyingAncillas;
+    *this = NeutralAtomMapper(mapper, {});
   }
 
   /**
    * @brief Reset mapping and hardware placement (reinitialize qubits &
    * ancillas).
    */
-  void reset() {
-    hardwareQubits =
-        HardwareQubits(*arch, arch->getNqubits() - parameters.numFlyingAncillas,
-                       parameters.initialCoordMapping, parameters.seed);
-    flyingAncillas = HardwareQubits(*arch, parameters.numFlyingAncillas,
-                                    Trivial, parameters.seed);
-  }
+  virtual void reset() { NeutralAtomMapper::setParameters(parameters); }
 
   // Methods
   /**
@@ -548,18 +524,16 @@ public:
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              const Mapping& initialMapping) {
-    stats = MapperStats();
-    mappedQc = qc::QuantumComputation(arch->getNpositions());
-    mappedQcAOD = qc::QuantumComputation(arch->getNpositions());
+    reset();
     mapAppend(qc, initialMapping);
     return mappedQc;
   }
 
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              const InitialMapping initialMapping) {
-    const auto actualMapping =
-        Mapping(qc.getNqubits(), initialMapping, qc, hardwareQubits);
-    return map(qc, actualMapping);
+    reset();
+    mapAppend(qc, Mapping(qc.getNqubits(), initialMapping, qc, hardwareQubits));
+    return mappedQc;
   }
 
   /**
@@ -568,7 +542,14 @@ public:
    * @param qc Circuit to extend mapping with.
    * @param initialMapping Initial mapping state.
    */
-  void mapAppend(qc::QuantumComputation& qc, const Mapping& initialMapping);
+  void mapAppend(qc::QuantumComputation& qc, const Mapping& initialMapping) {
+    mapping = initialMapping;
+    mapAppend(qc);
+  }
+
+  /// Continue routing a circuit fragment from the current mapping and
+  /// placement.
+  void mapAppend(qc::QuantumComputation& qc);
 
   /**
    * @brief Retrieve accumulated mapping statistics.
@@ -619,11 +600,8 @@ public:
    * @return OpenQASM string (AOD-native).
    */
   [[maybe_unused]] std::string getMappedQcAodQasm() {
-    if (mappedQcAOD.empty()) {
-      convertToAod();
-    }
     std::stringstream ss;
-    serializeOpenQASM(mappedQcAOD, ss);
+    serializeOpenQASM(nativeCircuit(), ss);
     return ss.str();
   }
 
@@ -632,14 +610,11 @@ public:
    * @param filename Output file path.
    */
   [[maybe_unused]] void saveMappedQcAodQasm(const std::string& filename) {
-    if (mappedQcAOD.empty()) {
-      convertToAod();
-    }
     std::ofstream ofs(filename);
     if (!ofs) {
       throw std::runtime_error("Failed to open file: " + filename);
     }
-    serializeOpenQASM(mappedQcAOD, ofs);
+    serializeOpenQASM(nativeCircuit(), ofs);
   }
 
   /**
@@ -654,10 +629,7 @@ public:
   [[maybe_unused]] SchedulerResults
   schedule(const bool verboseArg = false, const bool createAnimationCsv = false,
            const qc::fp shuttlingSpeedFactor = 1.0) {
-    if (mappedQcAOD.empty()) {
-      convertToAod();
-    }
-    return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitHwPos(),
+    return scheduler.schedule(nativeCircuit(), hardwareQubits.getInitHwPos(),
                               flyingAncillas.getInitHwPos(), verboseArg,
                               createAnimationCsv, shuttlingSpeedFactor);
   }
@@ -687,7 +659,7 @@ public:
    * instructions.
    * @return Converted quantum computation object.
    */
-  qc::QuantumComputation convertToAod();
+  qc::QuantumComputation convertToAod() { return nativeCircuit(); }
 
   /**
    * @brief Initial hardware placement map (delegated from HardwareQubits).

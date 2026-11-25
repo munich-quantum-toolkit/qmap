@@ -33,19 +33,23 @@
 namespace na {
 
 qc::QuantumComputation
-MoveToAodConverter::schedule(qc::QuantumComputation& circuit) {
-  initFlyingAncillas();
+MoveToAodConverter::schedule(qc::QuantumComputation circuit) {
+  moveGroups.clear();
   initMoveGroups(circuit);
   if (moveGroups.empty()) {
     return circuit;
   }
   processMoveGroups();
+  qc::QuantumComputation scheduledCircuit(arch.getNpositions());
+  scheduledCircuit.addAncillaryRegister(arch.getNpositions());
+  scheduledCircuit.addAncillaryRegister(arch.getNpositions(), "fa");
+  initFlyingAncillas(scheduledCircuit);
 
   // create new quantum circuit and insert AOD operations at the correct
   // indices
   auto groupIt = moveGroups.begin();
   uint32_t circuitIndex = 0;
-  for (const auto& operation : circuit) {
+  for (auto& operation : circuit) {
     if (groupIt != moveGroups.end() &&
         circuitIndex == groupIt->getFirstCircuitIndex()) {
       // add move group
@@ -61,7 +65,7 @@ MoveToAodConverter::schedule(qc::QuantumComputation& circuit) {
       }
       ++groupIt;
     } else if (!hasNAOpType(*operation, NAOpType::Move)) {
-      scheduledCircuit.emplace_back(operation->clone());
+      scheduledCircuit.emplace_back(std::move(operation));
     }
     ++circuitIndex;
   }
@@ -88,7 +92,8 @@ AtomMove MoveToAodConverter::convertOperationToMove(
       .requiresStore = requiresStore,
   };
 }
-void MoveToAodConverter::initFlyingAncillas() {
+void MoveToAodConverter::initFlyingAncillas(
+    qc::QuantumComputation& circuit) const {
   if (ancillas.empty()) {
     return;
   }
@@ -121,11 +126,10 @@ void MoveToAodConverter::initFlyingAncillas() {
   }
   const AodOperation initialAodOperation(NAOpType::AodActivate, coords,
                                          dimensions, starts, ends);
-  scheduledCircuit.emplace_back(
-      std::make_unique<AodOperation>(initialAodOperation));
+  circuit.emplace_back(std::make_unique<AodOperation>(initialAodOperation));
 }
 
-void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& circuit) {
+void MoveToAodConverter::initMoveGroups(const qc::QuantumComputation& circuit) {
   MoveGroup currentMoveGroup;
   uint32_t circuitIndex = 0;
   for (const auto& operation : circuit) {
