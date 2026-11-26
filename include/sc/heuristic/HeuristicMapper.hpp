@@ -17,9 +17,11 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <set>
+#include <utility>
 #include <vector>
 
 #pragma once
@@ -70,6 +72,8 @@ public:
      *    cost of all validly mapped gates at their current position
      */
     double costFixed = 0.;
+    /// Cost of the routing SWAPs in this node for fidelity-aware search.
+    double swapFidelityCost = 0.;
     /** current fixed cost of reversals (only for non-fidelity-aware mapping
      * and only in goal nodes)*/
     double costFixedReversals = 0.;
@@ -148,7 +152,33 @@ protected:
   std::size_t nextNodeId = 0;
   bool principallyAdmissibleHeur = true;
   bool tightHeur = true;
-  bool fidelityAwareHeur = false;
+  struct CalibratedInteraction {
+    Edge logical;
+    std::map<Edge, double> placements;
+    double minExecutionCost;
+  };
+
+  std::vector<CalibratedInteraction> calibratedInteractions;
+  std::vector<std::pair<Edge, double>> routingSwaps;
+  Matrix calibratedSwapDistances;
+  double minLayerExecutionCost = 0.;
+
+  /// Prepare the available SWAP transitions and their costs.
+  void prepareRoutingSwaps();
+  /// Compute execution costs for one layer. Return false if a group has no
+  /// legal placement.
+  [[nodiscard]] bool prepareCalibratedInteractions(const Layer& layer);
+  /// Place new logical qubits in or near an eligible calibrated location.
+  [[nodiscard]] bool mapUnmappedCalibratedGates(std::size_t index = 0);
+  /// Lower bound on the cost to move and execute one interaction.
+  [[nodiscard]] double
+  calibratedInteractionBound(const CalibratedInteraction& interaction,
+                             const Edge& current) const;
+  /// Mark valid calibrated placements and update actual cost and estimated
+  /// savings.
+  void updateFidelityCosts(Node& node) const;
+  /// Assign all remaining logical qubits when the initial placement is static.
+  void finishStaticInitialMapping();
 
   /**
    * @brief check the `results.config` for any invalid settings
@@ -169,15 +199,9 @@ protected:
    */
   virtual void staticInitialMapping();
 
-  /**
-   * @brief map the logical qubit `target` to a free physical qubit, that is
-   * nearest to the physical qubit `source` is mapped to
-   *
-   * @param source an already mapped logical qubit, which should be mapped near
-   * to `target`
-   * @param target an unmapped logical qubit
-   */
-  virtual void mapToMinDistance(std::uint16_t source, std::uint16_t target);
+  /// Place the unmapped qubit near its partner in a two-qubit gate.
+  void mapToMinDistance(std::uint16_t mapped, std::uint16_t unmapped,
+                        const TwoQubitGateCounts& counts);
 
   /**
    * @brief maps any yet unmapped qubits, which are acted on in a given layer,
@@ -226,10 +250,8 @@ protected:
    * @param layer the layer for which to get the considered qubits
    */
   const std::set<std::uint16_t>& getConsideredQubits(std::size_t layer) const {
-    if (fidelityAwareHeur) {
-      return activeQubits.at(layer);
-    }
-    return activeQubits2QGates.at(layer);
+    return fidelityAwareHeur ? layers.at(layer).activeQubits
+                             : layers.at(layer).activeQubits2QGates;
   }
 
   /**
@@ -250,7 +272,8 @@ protected:
    * @param node current search node
    * @param layer index of current circuit layer
    */
-  void expandNodeAddOneSwap(const Edge& swap, Node& node, std::size_t layer);
+  void expandNodeAddOneSwap(const Edge& swap, const Node& node,
+                            std::size_t layer, double swapCost);
 
   /**
    * @brief applies an in-place swap of 2 virtual qubits in the given node and
@@ -260,7 +283,8 @@ protected:
    * @param layer index of current circuit layer
    * @param node search node in which to apply the swap
    */
-  void applySWAP(const Edge& swap, std::size_t layer, Node& node);
+  void applySWAP(const Edge& swap, std::size_t layer, Node& node,
+                 double swapCost);
 
   /**
    * @brief increments `node.sharedSwaps` if the given swap is shared with
@@ -280,23 +304,6 @@ protected:
    * @param node search node for which to recalculate the fixed cost
    */
   void recalculateFixedCost(std::size_t layer, Node& node);
-
-  /**
-   * @brief recalculates the fidelity-aware fixed cost of the node from the
-   * current mapping and swaps
-   *
-   * @param layer index of current circuit layer
-   * @param node search node for which to recalculate the fixed cost
-   */
-  void recalculateFixedCostFidelity(std::size_t layer, Node& node);
-
-  /**
-   * @brief recalculates the gate-count-optimizing fixed cost of the node from
-   * the current mapping and swaps
-   *
-   * @param node search node for which to recalculate the fixed cost
-   */
-  void recalculateFixedCostNonFidelity(Node& node);
 
   /**
    * @brief recalculates the gate-count-optimizing fixed cost of all reversals
@@ -364,17 +371,6 @@ protected:
                                                              Node& node);
 
   /**
-   * @brief calculates the heuristic using
-   * `Heuristic::FidelityBestLocation`
-   *
-   * @param layer index of current circuit layer
-   * @param node search node for which to calculate the heuristic cost
-   *
-   * @return heuristic cost
-   */
-  double heuristicFidelityBestLocation(std::size_t layer, Node& node);
-
-  /**
    * @brief calculates an estimation of the heuristic cost for the following
    * layers (depreciated by a constant factor growing with each layer) and
    * saves it in the node as `Node::lookaheadPenalty`
@@ -384,29 +380,9 @@ protected:
    */
   void updateLookaheadPenalty(std::size_t layer, Node& node);
 
-  /**
-   * @brief calculates the lookahead penalty for one layer using
-   * `LookaheadHeuristic::GateCountMaxDistance`
-   *
-   * @param layer index of the circuit layer for which to calculate the
-   * lookahead penalty
-   * @param node search node for which to calculate the heuristic cost
-   *
-   * @return lookahead penalty
-   */
-  double lookaheadGateCountMaxDistance(std::size_t layer, Node& node);
-
-  /**
-   * @brief calculates the lookahead penalty for one layer using
-   * `LookaheadHeuristic::GateCountSumDistance`
-   *
-   * @param layer index of the circuit layer for which to calculate the
-   * lookahead penalty
-   * @param node search node for which to calculate the heuristic cost
-   *
-   * @return lookahead penalty
-   */
-  double lookaheadGateCountSumDistance(std::size_t layer, Node& node);
+  /// Estimate the distance to the next layer, using a sum or a maximum.
+  double lookaheadGateCountDistance(std::size_t layer, const Node& node,
+                                    bool sum);
 
   static double computeEffectiveBranchingRate(std::size_t nodesProcessed,
                                               const std::size_t solutionDepth) {

@@ -166,6 +166,22 @@ protected:
   }
 };
 
+TEST_F(NeutralAtomMapperTest, MapRestoresPlacementAfterShuttling) {
+  na::MapperParameters params;
+  params.gateWeight = 0;
+  params.usePassBy = false;
+  mapper.setParameters(params);
+  qc::QuantumComputation circuit(4);
+  circuit.cz(0, 3);
+  mapper.map(circuit, na::Identity);
+  ASSERT_GT(mapper.getStats().nMoves, 0U);
+  const auto routed = mapper.getMappedQcQasm();
+
+  mapper.map(circuit, na::Identity);
+  EXPECT_EQ(mapper.getMappedQcQasm(), routed);
+  EXPECT_EQ(mapper.schedule(false, true).nCZs, 1U);
+}
+
 TEST_F(NeutralAtomMapperTest, Output) {
   const auto qcMapped = mapper.map(qc, initialMapping);
   // write to file

@@ -78,18 +78,21 @@ auto HeuristicPlacer::discretizePlacementOfAtoms(
 
 auto HeuristicPlacer::discretizeNonOccupiedStorageSites(
     const SiteSet& occupiedSites) const
-    -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
-  std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>> rows;
-  std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>>
-      columns;
+    -> std::pair<RowColumnMap<uint8_t>, SLMMap<StorageColumns>> {
+  using Lines =
+      std::vector<std::pair<std::reference_wrapper<const SLM>, size_t>>;
+  std::map<size_t, Lines> rows;
+  std::map<size_t, Lines> columns;
+  SLMMap<StorageColumns> columnIndices;
   for (const auto& slm : architecture_.get().storageZones) {
+    columnIndices[*slm].nearest.reserve(slm->nCols);
     // find rows with free sites
     for (size_t r = 0; r < slm->nRows; ++r) {
       for (size_t c = 0; c < slm->nCols; ++c) {
         if (!occupiedSites.contains(std::tie(*slm, r, c))) {
           // free site in row r found at column c
-          rows.emplace(slm->location.second + (slm->siteSeparation.second * r),
-                       std::pair{std::cref(*slm), r});
+          rows[slm->location.second + slm->siteSeparation.second * r]
+              .emplace_back(*slm, r);
           break;
         }
       }
@@ -99,8 +102,8 @@ auto HeuristicPlacer::discretizeNonOccupiedStorageSites(
       for (size_t r = 0; r < slm->nRows; ++r) {
         if (!occupiedSites.contains(std::tie(*slm, r, c))) {
           // free site in column c found at row r
-          columns.emplace(slm->location.first + (slm->siteSeparation.first * c),
-                          std::pair{std::cref(*slm), c});
+          columns[slm->location.first + slm->siteSeparation.first * c]
+              .emplace_back(*slm, c);
           break;
         }
       }
@@ -108,15 +111,35 @@ auto HeuristicPlacer::discretizeNonOccupiedStorageSites(
   }
   RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
-  for (const auto& site : rows | std::views::values) {
-    rowIndices.emplace(site, rowIndex++);
+  for (const auto& lines : rows | std::views::values) {
+    for (const auto& row : lines) {
+      rowIndices.emplace(row, rowIndex);
+    }
+    ++rowIndex;
   }
-  RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
-  for (const auto& site : columns | std::views::values) {
-    columnIndices.emplace(site, columnIndex++);
+  for (const auto& lines : columns | std::views::values) {
+    for (const auto& [slm, column] : lines) {
+      columnIndices.at(slm).add(column, columnIndex);
+    }
+    ++columnIndex;
   }
-  return std::pair{rowIndices, columnIndices};
+  for (auto& [slm, indices] : columnIndices) {
+    const auto last =
+        indices.nearest.empty() ? uint8_t{0} : indices.nearest.back();
+    indices.nearest.resize(slm.get().nCols, last);
+  }
+  return {std::move(rowIndices), std::move(columnIndices)};
+}
+
+void HeuristicPlacer::StorageColumns::add(const size_t column,
+                                          const uint8_t index) {
+  if (!free.empty()) {
+    // The lower free column wins ties at the midpoint of a gap.
+    nearest.resize(std::midpoint(free.back(), column) + 1, nearest.back());
+  }
+  nearest.resize(column + 1, index);
+  free.push_back(column);
 }
 
 auto HeuristicPlacer::discretizeNonOccupiedEntanglementSites(
@@ -730,17 +753,18 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   // Discretize the free sites for the atoms to be placed
   //===------------------------------------------------------------------===//
-  const auto& [discreteTargetRows, discreteTargetColumns] =
+  const auto& [discreteTargetRows, columnsBySLM] =
       discretizeNonOccupiedStorageSites(occupiedStorageSites);
   std::unordered_map<uint8_t, std::unordered_map<uint8_t, Site>> targetSites;
+  uint8_t maxDiscreteTargetColumn = 0;
   for (const auto& [row, r] : discreteTargetRows) {
     const SLM& slm = row.first.get();
     auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
-    for (const auto& [column, c] : discreteTargetColumns) {
-      if (&slm == &column.first.get()) {
-        targetSitesForThisRow.emplace(c,
-                                      std::tie(slm, row.second, column.second));
-      }
+    const auto& columns = columnsBySLM.at(slm);
+    for (const auto column : columns.free) {
+      const auto c = columns.nearest[column];
+      maxDiscreteTargetColumn = std::max(maxDiscreteTargetColumn, c);
+      targetSitesForThisRow.emplace(c, std::tie(slm, row.second, column));
     }
   }
   assert(!targetSites.empty());
@@ -763,27 +787,8 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
     const auto& [nearestSLM, nearestRow, nearestCol] =
         architecture_.get().nearestStorageSite(previousSLM, previousRow,
                                                previousCol);
-    uint8_t discreteColumnOfNearestSite = 0;
-    const auto& it = discreteTargetColumns.find(
-        std::pair{std::cref(nearestSLM), nearestCol});
-    if (it != discreteTargetColumns.end()) {
-      discreteColumnOfNearestSite = it->second;
-    } else {
-      // distance of the actual (occupied) nearest column and a column with free
-      // sites
-      int64_t minDistance = std::numeric_limits<int64_t>::max();
-      for (const auto& [SlmColumn, discreteColumn] : discreteTargetColumns) {
-        const auto& [slm, column] = SlmColumn;
-        if (slm.get() == nearestSLM.get()) {
-          if (const auto currentDistance =
-                  std::abs(static_cast<int64_t>(column) -
-                           static_cast<int64_t>(nearestCol)) < minDistance) {
-            discreteColumnOfNearestSite = discreteColumn;
-            minDistance = currentDistance;
-          }
-        }
-      }
-    }
+    const auto& columnIndices = columnsBySLM.at(nearestSLM).nearest;
+    const auto discreteColumnOfNearestSite = columnIndices.at(nearestCol);
     minDiscreteColumnOfNearestSite =
         std::min(minDiscreteColumnOfNearestSite, discreteColumnOfNearestSite);
     maxDiscreteColumnOfNearestSite =
@@ -821,7 +826,7 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
               previousSLM, previousRow, previousCol, nearestSLM, r, c));
           job.options.emplace_back(AtomJob::Option{
               {discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
-               discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
+               columnIndices.at(c)},
               false,
               distance});
         }
@@ -867,12 +872,12 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
                 static_cast<float>(architecture_.get().distance(
                     previousSLM, previousRow, previousCol, nearestSLM, rLowNew,
                     c));
-            job.options.emplace_back(AtomJob::Option{
-                {discreteTargetRows.at(
-                     std::pair{std::cref(nearestSLM), rLowNew}),
-                 discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
-                false,
-                distance});
+            job.options.emplace_back(
+                AtomJob::Option{{discreteTargetRows.at(
+                                     std::pair{std::cref(nearestSLM), rLowNew}),
+                                 columnIndices.at(c)},
+                                false,
+                                distance});
           }
         }
       }
@@ -887,7 +892,7 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
                     c));
             job.options.emplace_back(AtomJob::Option{
                 {discreteTargetRows.at(std::pair{std::cref(nearestSLM), rHigh}),
-                 discreteTargetColumns.at(std::pair{std::cref(nearestSLM), c})},
+                 columnIndices.at(c)},
                 false,
                 distance});
           }
@@ -904,8 +909,7 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
                     cLowNew));
             job.options.emplace_back(AtomJob::Option{
                 {discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
-                 discreteTargetColumns.at(
-                     std::pair{std::cref(nearestSLM), cLowNew})},
+                 columnIndices.at(cLowNew)},
                 false,
                 distance});
           }
@@ -922,8 +926,7 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
                     cHigh));
             job.options.emplace_back(AtomJob::Option{
                 {discreteTargetRows.at(std::pair{std::cref(nearestSLM), r}),
-                 discreteTargetColumns.at(
-                     std::pair{std::cref(nearestSLM), cHigh})},
+                 columnIndices.at(cHigh)},
                 false,
                 distance});
           }
@@ -1002,14 +1005,6 @@ auto HeuristicPlacer::placeAtomsInStorageZone(
   const uint8_t maxDiscreteTargetRow =
       std::ranges::max_element(discreteTargetRows, [](const auto& lhs,
                                                       const auto& rhs) {
-        return lhs.second < rhs.second;
-      })->second;
-  assert(!discreteTargetColumns
-              .empty()); // ==> the following std::max_element does not
-  // return a nullptr
-  const uint8_t maxDiscreteTargetColumn =
-      std::ranges::max_element(discreteTargetColumns, [](const auto& lhs,
-                                                         const auto& rhs) {
         return lhs.second < rhs.second;
       })->second;
   const std::array<float, 2> scaleFactors{

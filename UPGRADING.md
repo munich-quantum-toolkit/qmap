@@ -10,6 +10,65 @@ This release updates the minimum required `mqt-core` version to 3.12.0. Rebuild
 C++ libraries and Python extensions against the MQT Core 3.12 shared-library
 ABI.
 
+### Hybrid neutral-atom mapping
+
+Each call to `map` starts from the initial atom placement. Use
+`HybridSynthesisMapper.append_with_mapping` to continue routing from the current
+placement. To export native operations, use `get_mapped_qc_aod_qasm`. The
+abstract circuit returned by `get_mapped_qc_qasm` retains its SWAP and MOVE
+operations after scheduling. Incremental synthesis scores use the preceding
+routed gates to choose bridges and report the fidelity of the appended fragment
+and any pending operations.
+
+### Clifford synthesis
+
+If you set a Z3 timeout or resource limit, handle `RuntimeError` when the solver
+returns `unknown`. An interrupted search cannot certify optimality.
+
+### Zoned neutral-atom compilation
+
+Regenerate compiled circuits that apply a Hadamard or another supported
+single-qubit gate to every atom in a custom gate. MQT QMAP emits a global Y
+rotation for Y and RY, and local RZ or U3 operations for the other gates.
+
+### Zoned neutral-atom placement
+
+When a preferred storage column is full, the routing-aware placer uses the
+nearest column with a free site on the same array to estimate movement. It uses
+the lower column number in a tie. This can change the placement of a circuit.
+
+If you match the A* placement error by message, use `queued nodes` to identify
+the `max_nodes` limit.
+
+### Superconducting mapping
+
+The gate-count heuristic assigns free qubits in ascending order of logical qubit
+pairs. Automatic layer splitting alternates pairs in the same order.
+
+When the input circuit fits the device, the heuristic and exact mappers keep
+idle qubits in both layouts. If you request final measurements, each input qubit
+gets a classical bit. On narrower devices, both mappers remove idle qubits and
+number the remaining logical qubits consecutively.
+
+The exact and heuristic mappers accept singly controlled one-target gates and
+all 13 two-target gates in MQT Core 3.12. Both mappers can exchange the operands
+of symmetric gates such as CZ, RXX, RYY, and RZZ to use a one-way coupling. For
+XX+YY, exchanging the operands negates the phase parameter. Ordered gates such
+as RZX, ECR, and controlled RZ require a coupling in the specified order.
+
+Gate-count routing uses the coupling map for all two-qubit gates. Fidelity-aware
+routing also checks the gate's error rate on each candidate coupling. A device
+can supply RXX or RZZ rates without any CNOT rates. Routing a SWAP requires a
+native SWAP calibration or a calibrated CNOT decomposition. Two-qubit error
+rates for controlled gates describe positive controls.
+
+Both mappers estimate output fidelity from the emitted gates. A calibrated
+device with a missing gate cost gives an unknown estimate. For single-qubit
+gates, the mappers prefer the gate's own error rate, then the qubit's average.
+With full CNOT calibration, a qubit with no single-qubit rates retains its ideal
+single-qubit fidelity. The `cnots` count includes each positive-control X and
+three CNOTs per SWAP.
+
 ### QDMI 1.4.0
 
 Rebuild QDMI device libraries against QDMI 1.4.0. QDMI 1.3 device libraries are

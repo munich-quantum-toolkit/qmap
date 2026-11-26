@@ -25,7 +25,7 @@ from mqt.nox import common, cpp
 nox.needs_version = ">=2026.10.20"
 nox.options.default_venv_backend = "uv"
 
-PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
+PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 
 @nox.session(reuse_venv=True, default=True)
@@ -40,7 +40,7 @@ def tests(session: nox.Session) -> None:
     cpp.tests(session, package="mqt-qmap")
 
 
-@nox.session(reuse_venv=True, venv_backend="uv", default=False)
+@nox.session(python="3.14", reuse_venv=True, venv_backend="uv", default=False)
 def evaluation(session: nox.Session) -> None:
     """Run the photonic paper-evaluation tests in eval/ph/tests.
 

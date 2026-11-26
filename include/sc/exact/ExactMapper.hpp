@@ -15,7 +15,6 @@
 #include "sc/configuration/Configuration.hpp"
 #include "sc/utils.hpp"
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <set>
@@ -31,14 +30,13 @@ class ExactMapper : public Mapper {
   using Mapper::Mapper;
 
 protected:
-  // inputs
   std::vector<std::size_t> reducedLayerIndices;
-  std::vector<Swaps> mappingSwaps;
   void coreMappingRoutine(const QubitChoice& qubitChoice,
+                          const QubitChoice& logicalQubits,
                           const CouplingMap& rcm, MappingResults& choiceResults,
                           std::vector<Swaps>& swaps, std::size_t limit,
                           std::size_t timeout);
 
 public:
-  void map(const Configuration& settings) override;
+  void map(const Configuration& config) override;
 };

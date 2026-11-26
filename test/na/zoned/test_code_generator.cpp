@@ -12,8 +12,13 @@
 #include "ir/operations/NonUnitaryOperation.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "ir/operations/SymbolicOperation.hpp"
+#include "na/ir/NAComputation.hpp"
+#include "na/ir/operations/NAComputationLoadOperation.hpp"
+#include "na/ir/operations/NAComputationStoreOperation.hpp"
+#include "na/zoned/Types.hpp"
 #include "na/zoned/code_generator/CodeGenerator.hpp"
 
+#include <cstddef>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -140,6 +145,19 @@ TEST_F(CodeGeneratorGenerateTest, GlobalCompoundYGate) {
           .toString(),
       "atom (0.000, 0.000) atom0\n"
       "@+ ry 3.14159 global\n");
+}
+TEST_F(CodeGeneratorGenerateTest, RepeatedTargetInCompound) {
+  const auto& slm = *architecture.storageZones.front();
+  qc::CompoundOperation gates;
+  for (const auto qubit : {0U, 1U, 0U}) {
+    gates.emplace_back<qc::StandardOperation>(qubit, qc::S);
+  }
+  const auto code = codeGenerator.generate(
+      makeSingleOpLayer<qc::CompoundOperation>(std::move(gates)),
+      {Placement{{slm, 0, 0}, {slm, 0, 1}}}, {});
+  EXPECT_THAT(code.toString(), ::testing::EndsWith("@+ rz 1.57080 atom0\n"
+                                                   "@+ rz 1.57080 atom1\n"
+                                                   "@+ rz 1.57080 atom0\n"));
 }
 TEST_F(CodeGeneratorGenerateTest, RZGate) {
   const auto& slm = *architecture.storageZones.front();
@@ -559,6 +577,19 @@ atom (3.000, 57.000) atom3
 ]
 )");
 }
+template <typename Operation>
+auto shuttlingBatchSizes(const NAComputation& code)
+    -> std::vector<std::size_t> {
+  std::vector<std::size_t> sizes;
+  for (const auto& operation : code) {
+    if (const auto* shuttling =
+            dynamic_cast<const Operation*>(operation.get())) {
+      sizes.emplace_back(shuttling->getAtoms().size());
+    }
+  }
+  return sizes;
+}
+
 TEST_F(CodeGeneratorGenerateTest, ColumnByColumn) {
   // STORAGE     ...         │ ...         │ ...
   //         17  0 1 o o ... │ o o o o ... │ 0 1 o o ...
@@ -576,34 +607,50 @@ TEST_F(CodeGeneratorGenerateTest, ColumnByColumn) {
   const auto& entanglementRight =
       architecture.entanglementZones.front()->back();
   const std::vector<SingleQubitGateLayer> layers(2);
-  EXPECT_TRUE(
-      codeGenerator
-          .generate(layers,
-                    std::vector<std::vector<std::tuple<
-                        std::reference_wrapper<const SLM>, size_t, size_t>>>{
-                        {{storage, 17, 0},
-                         {storage, 17, 1},
-                         {storage, 18, 0},
-                         {storage, 18, 1},
-                         {storage, 19, 0},
-                         {storage, 19, 1}},
-                        {{entanglementLeft, 0, 0},
-                         {entanglementRight, 0, 0},
-                         {entanglementLeft, 1, 0},
-                         {entanglementRight, 1, 0},
-                         {entanglementLeft, 2, 0},
-                         {entanglementRight, 2, 0}},
-                        {{storage, 17, 0},
-                         {storage, 17, 1},
-                         {storage, 18, 0},
-                         {storage, 18, 1},
-                         {storage, 19, 0},
-                         {storage, 19, 1}}},
-                    std::vector<std::vector<std::vector<qc::Qubit>>>{
-                        {{0U, 1U, 2U, 3U, 4U, 5U}}, {{0U, 1U, 2U, 3U, 4U, 5U}}})
-          .validate()
-          .first);
+  const Placement initial{{storage, 17, 0}, {storage, 17, 1}, {storage, 18, 0},
+                          {storage, 18, 1}, {storage, 19, 0}, {storage, 19, 1}};
+  const Placement execution{
+      {entanglementLeft, 0, 0}, {entanglementRight, 0, 0},
+      {entanglementLeft, 1, 0}, {entanglementRight, 1, 0},
+      {entanglementLeft, 2, 0}, {entanglementRight, 2, 0}};
+  const Routing routing{{0U, 1U, 2U, 3U, 4U, 5U}};
+  const auto code = codeGenerator.generate(
+      layers, {initial, execution, initial}, {routing, routing});
+
+  const auto [valid, error] = code.validate();
+  EXPECT_TRUE(valid) << error;
+  EXPECT_THAT(shuttlingBatchSizes<NAComputationLoadOperation>(code),
+              ::testing::ElementsAre(6, 6));
+  EXPECT_THAT(shuttlingBatchSizes<NAComputationStoreOperation>(code),
+              ::testing::ElementsAre(6, 6));
 }
+
+TEST_F(CodeGeneratorGenerateTest, PackCompatibleRows) {
+  const auto& storage = *architecture.storageZones.front();
+  const auto& entanglementLeft =
+      architecture.entanglementZones.front()->front();
+  const auto& entanglementRight =
+      architecture.entanglementZones.front()->back();
+  const std::vector<SingleQubitGateLayer> layers(2);
+  // The first and last rows share columns. The middle row uses other columns.
+  const Placement initial{{storage, 17, 0}, {storage, 17, 1}, {storage, 18, 2},
+                          {storage, 18, 3}, {storage, 19, 0}, {storage, 19, 1}};
+  const Placement execution{
+      {entanglementLeft, 0, 0}, {entanglementRight, 0, 0},
+      {entanglementLeft, 1, 1}, {entanglementRight, 1, 1},
+      {entanglementLeft, 2, 0}, {entanglementRight, 2, 0}};
+  const Routing routing{{0U, 1U, 2U, 3U, 4U, 5U}};
+  const auto code = codeGenerator.generate(
+      layers, {initial, execution, initial}, {routing, routing});
+
+  const auto [valid, error] = code.validate();
+  EXPECT_TRUE(valid) << error;
+  EXPECT_THAT(shuttlingBatchSizes<NAComputationLoadOperation>(code),
+              ::testing::ElementsAre(4, 2, 4, 2));
+  EXPECT_THAT(shuttlingBatchSizes<NAComputationStoreOperation>(code),
+              ::testing::ElementsAre(4, 2, 4, 2));
+}
+
 TEST_F(CodeGeneratorGenerateTest, RelaxedRouting) {
   // STORAGE     ...         │ ...         │ ...
   //         18  0 1 o o ... │ o o o o ... │ 0 1 o o ...
@@ -619,26 +666,44 @@ TEST_F(CodeGeneratorGenerateTest, RelaxedRouting) {
   const auto& entanglementRight =
       architecture.entanglementZones.front()->back();
   const std::vector<SingleQubitGateLayer> layers(2);
-  EXPECT_TRUE(
-      codeGenerator
-          .generate(layers,
-                    std::vector<std::vector<std::tuple<
-                        std::reference_wrapper<const SLM>, size_t, size_t>>>{
-                        {{storage, 18, 0},
-                         {storage, 18, 1},
-                         {storage, 19, 0},
-                         {storage, 19, 1}},
-                        {{entanglementRight, 1, 0},
-                         {entanglementLeft, 1, 0},
-                         {entanglementRight, 0, 0},
-                         {entanglementLeft, 0, 0}},
-                        {{storage, 18, 0},
-                         {storage, 18, 1},
-                         {storage, 19, 0},
-                         {storage, 19, 1}}},
-                    std::vector<std::vector<std::vector<qc::Qubit>>>{
-                        {{0U, 1U, 2U, 3U}}, {{0U, 1U, 2U, 3U}}})
-          .validate()
-          .first);
+  const Placement initial{
+      {storage, 18, 0}, {storage, 18, 1}, {storage, 19, 0}, {storage, 19, 1}};
+  const Placement execution{{entanglementRight, 1, 0},
+                            {entanglementLeft, 1, 0},
+                            {entanglementRight, 0, 0},
+                            {entanglementLeft, 0, 0}};
+  const Routing routing{{0U, 1U, 2U, 3U}};
+  const auto code = codeGenerator.generate(
+      layers, {initial, execution, initial}, {routing, routing});
+
+  const auto [valid, error] = code.validate();
+  EXPECT_TRUE(valid) << error;
+  // Loading the next row moves the previously loaded row out of the way.
+  const auto output = code.toString();
+  EXPECT_THAT(output, ::testing::HasSubstr(R"(@+ move [
+    (1.000, 61.000) atom0
+    (4.000, 61.000) atom1
+]
+)"));
+  EXPECT_THAT(output, ::testing::HasSubstr(R"(@+ move [
+    (10.000, 85.000) atom2
+    (2.000, 85.000) atom3
+]
+)"));
+  // Storing the first column displaces the column that remains loaded.
+  EXPECT_THAT(output, ::testing::HasSubstr(R"(@+ move [
+    (-2.000, 80.000) atom0
+    (5.000, 80.000) atom1
+    (-2.000, 70.000) atom2
+    (5.000, 70.000) atom3
+]
+)"));
+  EXPECT_THAT(output, ::testing::HasSubstr(R"(@+ move [
+    (0.000, 54.000) atom0
+    (-2.000, 54.000) atom1
+    (0.000, 57.000) atom2
+    (-2.000, 57.000) atom3
+]
+)"));
 }
 } // namespace na::zoned

@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <fstream>
 #include <future>
+#include <limits>
 #include <memory>
 #include <plog/Appenders/ConsoleAppender.h>
 #include <plog/Formatters/TxtFormatter.h>
@@ -75,16 +76,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     return;
   }
 
-  // First, determine an initial guess for the number of timesteps. This can
-  // either be specified as a configuration parameter or starts at 1.
-  determineInitialTimestepLimit(encoderConfig);
-
   encoderConfig.minimalTimesteps = config.minimalTimesteps;
-
-  // Then, determine an upper bound for the number of timesteps by solving the
-  // SAT problem repeatedly with increasing timestep limits until a satisfying
-  // assignment is found. This uses the general SAT encoding without any
-  // objective function regardless of the configuration.
   std::size_t lower = configuration.minimalTimesteps;
   std::size_t upper = configuration.initialTimestepLimit;
 
@@ -92,35 +84,25 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     const auto [lowerBin, upperBin] = determineUpperBound(encoderConfig);
     lower = lowerBin;
     upper = upperBin;
-
-    // if the upper bound is 0, the solution does not require any gates and the
-    // synthesis is done.
-    if (upper == 0U) {
-      PLOG_INFO << "No gates required.";
-      return;
-    }
   }
-  // Otherwise, the determined upper bound is used as an initial timestep
-  // limit.
+
   encoderConfig.timestepLimit = upper;
-  // Once a valid upper bound is found, the SAT problem is solved again with
-  // the objective function encoded.
-  switch (config.target) {
-  case TargetMetric::Gates:
-    gateOptimalSynthesis(encoderConfig, lower, upper);
-    break;
-  case TargetMetric::Depth:
-    if (configuration.heuristic) {
-      depthHeuristicSynthesis();
-    } else {
+  if (!configuration.linearSearch && upper == 0U) {
+    PLOG_INFO << "No gates required.";
+  } else {
+    switch (config.target) {
+    case TargetMetric::Gates:
+      gateOptimalSynthesis(encoderConfig, lower, upper);
+      break;
+    case TargetMetric::Depth:
       depthOptimalSynthesis(encoderConfig, lower, upper);
+      break;
+    case TargetMetric::TwoQubitGates:
+      twoQubitGateOptimalSynthesis(encoderConfig, 0U,
+                                   results.getTwoQubitGates());
+      break;
     }
-    break;
-  case TargetMetric::TwoQubitGates:
-    twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
-    break;
   }
-
   results.setSolverCalls(solverCalls);
 
   const auto end = std::chrono::high_resolution_clock::now();
@@ -146,74 +128,45 @@ Tableau& CliffordSynthesizer::getResultTableau() {
   return resultTableau;
 }
 
-void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
-  if (config.timestepLimit != 0U) {
-    PLOG_INFO << "Using configured initial timestep limit: "
-              << config.timestepLimit;
-    return;
-  }
-
-  // in case no circuit was provided as input, the best guess is to start low
-  // and increase the limit geometrically until a solution is found.
-  if (!results.sat()) {
-    config.timestepLimit = 1U;
-    PLOG_INFO
-        << "No initial circuit specified. Using initial timestep limit of 1.";
-    return;
-  }
-
-  // If an initial circuit is specified, there already is a satisfying result.
-  // We can use its gates or depth as a starting point for the number of
-  // timesteps. Furthermore, no upper bound needs to be determined.
-  if (requiresMultiGateEncoding(config.targetMetric)) {
-    config.timestepLimit = results.getDepth();
-    PLOG_INFO << "Using initial circuit's depth as initial timestep limit: "
-              << config.timestepLimit;
-  } else {
-    config.timestepLimit = results.getGates();
-    PLOG_INFO
-        << "Using initial circuit's gate count as initial timestep limit: "
-        << config.timestepLimit;
-  }
-}
-
 std::pair<std::size_t, std::size_t>
 CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
-  // In case the synthesis was started with a circuit, the upper bound is
-  // inherently given by the circuit and does not need to be computed here.
-  config.timestepLimit =
-      std::max(config.timestepLimit, config.minimalTimesteps);
-  std::size_t lowerBound = config.minimalTimesteps;
-  std::size_t upperBound = config.timestepLimit;
-
+  auto lower = config.minimalTimesteps;
+  const auto timesteps = [&](const Results& circuit) {
+    return config.useMultiGateEncoding ? circuit.getDepth()
+                                       : circuit.getGates();
+  };
+  auto limit = std::numeric_limits<std::size_t>::max();
   if (results.sat()) {
-    return {lowerBound, upperBound};
-  }
-
-  PLOG_INFO << "Searching for upper bound for the number of timesteps starting "
-            << "with " << upperBound;
-
-  config.useMaxSAT = false;
-  while (!results.sat()) {
-    results = callSolver(config);
-    if (!results.sat()) {
-      lowerBound = upperBound + 1U;
-      upperBound *= 2U;
-      PLOG_INFO << "No solution found for " << config.timestepLimit
-                << " timestep(s). Doubling timestep limit to " << upperBound;
-      config.timestepLimit = upperBound;
+    limit = std::max(lower, config.timestepLimit == 0 ? timesteps(results)
+                                                      : config.timestepLimit);
+    if (config.timestepLimit != 0 || config.useMaxSAT ||
+        config.targetMetric == TargetMetric::TwoQubitGates) {
+      return {lower, limit};
     }
   }
 
-  if (config.targetMetric == TargetMetric::Gates ||
-      config.targetMetric == TargetMetric::TwoQubitGates) {
-    upperBound = std::min(upperBound, results.getGates());
-  } else if (config.targetMetric == TargetMetric::Depth) {
-    upperBound = std::min(upperBound, results.getDepth());
+  // A long input circuit can implement a shallow Clifford. Probe small SAT
+  // instances first and keep the input circuit as a feasible upper bound.
+  config.useMaxSAT = false;
+  config.timestepLimit =
+      std::max({std::size_t{1}, lower, config.timestepLimit});
+  while (config.timestepLimit < limit) {
+    PLOG_INFO << "Trying a timestep limit of " << config.timestepLimit;
+    const auto candidate = callSolver(config);
+    if (candidate.sat()) {
+      results = candidate;
+      return {lower,
+              std::clamp(timesteps(results), lower, config.timestepLimit)};
+    }
+    lower = config.timestepLimit + 1U;
+    config.timestepLimit +=
+        std::min(config.timestepLimit, limit - config.timestepLimit);
   }
-
-  PLOG_INFO << "Found upper bound for the number of timesteps: " << upperBound;
-  return {lowerBound, upperBound};
+  if (!results.sat()) {
+    throw std::overflow_error(
+        "Clifford synthesis exhausted the timestep range.");
+  }
+  return {lower, limit};
 }
 
 void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig config,
@@ -426,6 +379,11 @@ Results CliffordSynthesizer::callSolver(const EncoderConfig& config) {
   ++solverCalls;
   auto encoder = encoding::SATEncoder(config);
   const auto res = encoder.run();
+  if (!res.sat() && !res.unsat()) {
+    throw std::runtime_error("Clifford synthesis stopped at timestep limit " +
+                             std::to_string(config.timestepLimit) +
+                             " because Z3 returned unknown.");
+  }
   if (configuration.dumpIntermediateResults && res.sat()) {
     const auto filename = configuration.intermediateResultsPath +
                           "intermediate_" + std::to_string(solverCalls) +

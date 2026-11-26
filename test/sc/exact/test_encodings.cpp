@@ -46,6 +46,8 @@ INSTANTIATE_TEST_SUITE_P(
                     std::pair{Encoding::Commander, CommanderGrouping::Halves},
                     std::pair{Encoding::Commander, CommanderGrouping::Fixed2},
                     std::pair{Encoding::Commander, CommanderGrouping::Fixed3},
+                    std::pair{Encoding::Commander,
+                              CommanderGrouping::Logarithm},
                     std::pair{Encoding::Bimander, CommanderGrouping::Halves},
                     std::pair{Encoding::Bimander, CommanderGrouping::Fixed2},
                     std::pair{Encoding::Bimander, CommanderGrouping::Fixed3}));

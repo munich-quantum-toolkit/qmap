@@ -48,6 +48,7 @@ using RowColumnSet =
  */
 class HeuristicPlacer : public PlacerBase {
   friend class HeuristicPlacerTest_AStarSearch_Test;
+  friend class AStarPlacerPlaceTest_NearestFreeStorageColumn_Test;
   using DiscreteSite = std::array<uint8_t, 2>;
   using CompatibilityGroup = std::array<std::map<uint8_t, uint8_t>, 2>;
 
@@ -151,12 +152,7 @@ public:
      * this option over the non-reuse options.
      */
     float reuseLevel = 5.0F;
-    /**
-     * @brief The maximum number of nodes that are allowed to be visited in the
-     * A* search tree.
-     * @detsils If this number is exceeded, the search is aborted and an error
-     * is raised.
-     */
+    /// A* stops if an expansion leaves at least this many nodes in the queue.
     size_t maxNodes = 10'000'000;
     /**
      * @brief The number of trials determines the number of restarts during IDS.
@@ -792,9 +788,9 @@ private:
       }
       if (openSet.size() >= maxNodes) {
         throw std::runtime_error(
-            "Maximum number of nodes reached. Increase max_nodes or increase "
-            "deepening_value and deepening_factor to reduce the number of "
-            "explored nodes.");
+            "A* placement reached the limit on queued nodes. "
+            "Increase max_nodes or try larger deepening_value and "
+            "deepening_factor settings.");
       }
     }
     throw std::runtime_error(
@@ -817,16 +813,20 @@ private:
                              const std::vector<qc::Qubit>& atoms) const
       -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>>;
 
-  /**
-   * @brief This function discretizes the storage zone of the architecture and
-   * returns two maps from concrete columns and rows to their discrete indices.
-   * @param occupiedSites is a set of occupied sites in the storage zone
-   * @return a pair of two maps, the first one maps rows to their discrete
-   * indices and the second one maps columns to their discrete indices
-   */
+  struct StorageColumns {
+    /// Physical column numbers with at least one free site on this SLM.
+    std::vector<size_t> free;
+    /// Discrete index of the nearest free column for each physical column.
+    std::vector<uint8_t> nearest;
+
+    /// Add a free column in increasing order of physical column number.
+    void add(size_t column, uint8_t index);
+  };
+
+  /// Assign a discrete index to each free storage row and column coordinate.
   [[nodiscard]] auto
   discretizeNonOccupiedStorageSites(const SiteSet& occupiedSites) const
-      -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>>;
+      -> std::pair<RowColumnMap<uint8_t>, SLMMap<StorageColumns>>;
 
   /**
    * @brief This function discretizes the entanglement zone of the architecture

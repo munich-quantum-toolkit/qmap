@@ -25,7 +25,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <utility>
+#include <vector>
 
 namespace na {
 
@@ -39,8 +39,6 @@ namespace na {
 class Mapping {
 protected:
   qc::Permutation circToHw;
-  HardwareQubits hwQubits;
-  CircuitDAG dag;
 
   /**
    * @brief Compute an initial mapping via (heuristic) graph matching.
@@ -50,7 +48,8 @@ protected:
    * qubit index i.
    */
   [[nodiscard]]
-  std::vector<HwQubit> graphMatching();
+  static std::vector<HwQubit> graphMatching(const CircuitDAG& dag,
+                                            HardwareQubits hwQubits);
 
 public:
   /**
@@ -71,14 +70,13 @@ public:
    * @param nQubits Number of logical qubits to map.
    * @param initialMapping Initialization strategy (Identity or Graph).
    * @param qc Circuit used to derive structure for graph-based initialization.
-   * @param hwQubitsArg Target hardware description (capacity/topology
+   * @param hwQubits Target hardware description (capacity/topology
    * constraints).
    * @throw std::runtime_error If the circuit has more qubits than available
    * hardware qubits.
    */
   Mapping(const size_t nQubits, const InitialMapping initialMapping,
-          qc::QuantumComputation& qc, HardwareQubits hwQubitsArg)
-      : hwQubits(std::move(hwQubitsArg)), dag(constructDAG(qc)) {
+          qc::QuantumComputation& qc, const HardwareQubits& hwQubits) {
 
     if (qc.getNqubits() > hwQubits.getNumQubits()) {
       throw std::runtime_error("Not enough qubits in architecture for circuit");
@@ -95,7 +93,7 @@ public:
       }
       break;
     case Graph:
-      const auto qubitIndices = graphMatching();
+      const auto qubitIndices = graphMatching(constructDAG(qc), hwQubits);
       for (size_t i = 0; i < nQubits; i++) {
         circToHw.emplace(i, qubitIndices[i]);
       }

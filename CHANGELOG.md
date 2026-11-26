@@ -10,11 +10,44 @@ releases may include breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- 👷 Enable testing on Python 3.15 ([#1236]) ([**@denialhaag**])
+
 ### Changed
 
+- ⚡️ Reuse exact-mapper transitions across layers and avoid rebuilding the
+  heuristic search queue when a better placement is found ([#1235])
+  ([**@burgholzer**])
 - ⬆️ Require Python 3.11.5 or newer ([#1226]) ([**@denialhaag**])
 - ⬆️ Update `mqt-core` to version 3.12.0 ([#1217]) ([**@denialhaag**])
 - ⬆️ Update QDMI to version 1.4.0 ([#1217]) ([**@denialhaag**])
+
+### Fixed
+
+- 🐛 Restore the initial atom placement for each hybrid mapping run. Preserve
+  abstract routing operations during native conversion. Use the current atom
+  placement for synthesis adjacency and score buffered operations in circuit
+  order, including the effect of earlier gates on bridge selection. A full remap
+  commits each operation once ([#1243]) ([**@burgholzer**])
+- 🐛 Start exact Clifford gate-count and depth searches with small SAT instances
+  and stop synthesis if Z3 returns `unknown` ([#1242]) ([**@burgholzer**])
+- 🐛 Make greedy placement and layer splitting in the superconducting heuristic
+  mapper independent of the iteration order of the two-qubit gate counts
+  ([#1241]) ([**@burgholzer**])
+- 🐛 Preserve global Hadamards and other supported single-qubit gates in zoned
+  neutral-atom compilation ([#1240]) ([**@burgholzer**])
+- 🐛 Select the nearest free storage column in constant time during zoned
+  neutral-atom placement, including on arrays that share column coordinates
+  ([#1238]) ([**@burgholzer**])
+- 🐛 Clarify when the zoned neutral-atom A* placer reaches its queue limit
+  ([#1237]) ([**@burgholzer**])
+- 🐛 Preserve controlled and native two-qubit gates in both superconducting
+  mappers. Use either operand order for symmetric gates and use gate-specific
+  error rates in fidelity-aware routing ([#1235]) ([**@burgholzer**])
+- 🐛 Preserve idle input qubits in the initial layout and output permutation of
+  both superconducting mappers when the circuit fits the device ([#1234])
+  ([**@burgholzer**])
 
 ## [3.11.0] - 2026-10-12
 
@@ -358,6 +391,15 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1243]: https://github.com/munich-quantum-toolkit/qmap/pull/1243
+[#1242]: https://github.com/munich-quantum-toolkit/qmap/pull/1242
+[#1241]: https://github.com/munich-quantum-toolkit/qmap/pull/1241
+[#1240]: https://github.com/munich-quantum-toolkit/qmap/pull/1240
+[#1238]: https://github.com/munich-quantum-toolkit/qmap/pull/1238
+[#1237]: https://github.com/munich-quantum-toolkit/qmap/pull/1237
+[#1236]: https://github.com/munich-quantum-toolkit/qmap/pull/1236
+[#1235]: https://github.com/munich-quantum-toolkit/qmap/pull/1235
+[#1234]: https://github.com/munich-quantum-toolkit/qmap/pull/1234
 [#1226]: https://github.com/munich-quantum-toolkit/qmap/pull/1226
 [#1217]: https://github.com/munich-quantum-toolkit/qmap/pull/1217
 [#1188]: https://github.com/munich-quantum-toolkit/qmap/pull/1188

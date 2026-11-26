@@ -22,6 +22,7 @@
 #include "sc/configuration/LookaheadHeuristic.hpp"
 #include "sc/configuration/Method.hpp"
 #include "sc/heuristic/HeuristicMapper.hpp"
+#include "sc/heuristic/UniquePriorityQueue.hpp"
 #include "sc/utils.hpp"
 
 #include <algorithm>
@@ -472,13 +473,13 @@ TEST_P(TestHeuristics, HeuristicProperties) {
           {
               "4gt11_84",
               {
-                  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                  {2, 1, 0, 3, 4},  {0, 1, 2, -1, 4}, {0, 1, 2, -1, 4},
-                  {1, 0, 2, -1, 4}, {1, 2, 0, -1, 4}, {2, 1, 0, -1, 4},
-                  {2, 0, 1, -1, 4}, {4, 2, 1, 0, 3},  {0, 1, 2, -1, 4},
-                  {0, 1, 2, -1, 4}, {0, 2, 1, -1, 4}, {0, 2, 1, -1, 4},
-                  {2, 0, 1, -1, 4}, {2, 0, 1, -1, 4}, {2, 1, 0, 3, 4},
+                  {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4},
+                  {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4},
+                  {2, 1, 0, 3, 4}, {0, 1, 2, 3, 4}, {0, 1, 2, 3, 4},
+                  {1, 0, 2, 3, 4}, {1, 2, 0, 3, 4}, {2, 1, 0, 3, 4},
+                  {2, 0, 1, 3, 4}, {3, 2, 1, 0, 4}, {0, 1, 2, 3, 4},
+                  {0, 1, 2, 3, 4}, {0, 2, 1, 3, 4}, {0, 2, 1, 3, 4},
+                  {2, 0, 1, 3, 4}, {2, 0, 1, 3, 4}, {2, 1, 3, 0, 4},
               },
           },
           {
@@ -810,6 +811,26 @@ TEST_P(TestHeuristics, HeuristicProperties) {
   }
 }
 
+TEST(SearchFrontier, ReplacesOnlyWithBetterNodes) {
+  const auto node = [](const std::int16_t first, const std::size_t id,
+                       const double cost) {
+    HeuristicMapper::Node candidate(2, id);
+    candidate.qubits = {first, static_cast<std::int16_t>(1 - first)};
+    candidate.costFixed = cost;
+    return candidate;
+  };
+  UniquePriorityQueue<HeuristicMapper::Node> frontier;
+  ASSERT_TRUE(frontier.push(node(0, 0, 1.0)));
+  for (std::size_t id = 1; id <= 8; ++id) {
+    EXPECT_TRUE(frontier.push(node(1, id, static_cast<double>(10 - id))));
+  }
+  EXPECT_FALSE(frontier.push(node(1, 9, 2.0)));
+  EXPECT_EQ(frontier.size(), 2);
+  EXPECT_EQ(frontier.takeTop().id, 0);
+  EXPECT_EQ(frontier.takeTop().id, 8);
+  EXPECT_TRUE(frontier.empty());
+}
+
 TEST(Functionality, HeuristicBenchmark) {
   /*
       3
@@ -989,10 +1010,9 @@ TEST(Functionality, NoMeasurementsAdded) {
 TEST(Functionality, MeasurementsFollowOutputPermutation) {
   using namespace qc::literals;
   qc::QuantumComputation qc{3U};
-  qc.cx(0_pc, 1);
-  qc.cx(1_pc, 2);
+  qc.cx(0_pc, 2);
 
-  Architecture arch{3U, {{0, 1}, {1, 2}}};
+  Architecture arch{4U, {{0, 1}, {1, 2}, {2, 3}}};
   HeuristicMapper mapper(qc, arch);
   Configuration config{};
   config.initialLayout = InitialLayout::Identity;
@@ -1000,6 +1020,7 @@ TEST(Functionality, MeasurementsFollowOutputPermutation) {
   mapper.map(config);
 
   const auto mapped = mapper.moveMappedCircuit();
+  EXPECT_EQ(mapped.getNcbits(), qc.getNqubits());
   EXPECT_EQ(mapped.getNcbits(), mapped.outputPermutation.size());
   EXPECT_EQ(
       std::ranges::count_if(
@@ -1354,6 +1375,8 @@ TEST(Functionality, earlyTermination) {
   qc::QuantumComputation qc{7, 7};
   qc.x(0);
   qc.cx(1, 2);
+  qc.x(3);
+  qc.x(4);
   for (std::size_t i = 0; i < 7; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -1431,6 +1454,24 @@ TEST(Functionality, earlyTermination) {
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
   EXPECT_EQ(
       results.layerHeuristicBenchmark[0].solutionNodesAfterOptimalSolution, 4);
+}
+
+TEST(Functionality, IndependentPairPlacementAndSplitting) {
+  Architecture arch{4, {{0, 1}, {1, 2}, {2, 3}}};
+  const auto map = [&](const qc::Qubit first, const qc::Qubit second) {
+    qc::QuantumComputation circuit{4};
+    circuit.cx(first, first + 1);
+    circuit.cx(second, second + 1);
+    HeuristicMapper mapper(circuit, arch);
+    Configuration config{};
+    config.layering = Layering::Disjoint2qBlocks;
+    config.automaticLayerSplitsNodeLimit = 0;
+    mapper.map(config);
+    EXPECT_EQ(mapper.getResults().input.layers, 2);
+    return mapper.moveMappedCircuit();
+  };
+
+  EXPECT_EQ(map(0, 2), map(2, 0));
 }
 
 TEST(Functionality, InitialLayoutDump) {
@@ -1838,6 +1879,32 @@ TEST_P(HeuristicTestFidelity, NoFidelity) {
   settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   EXPECT_THROW(nonFidelityMapper->map(settings), QMAPException);
+}
+
+TEST(HeuristicTestFidelity, JointInitialPlacementWithoutSwapCalibration) {
+  const CouplingMap edges{{0, 1}, {1, 0}, {1, 2}, {2, 1}, {0, 3}, {3, 0}};
+  Architecture::Properties properties;
+  properties.setTwoQubitErrorRate(0, 1, 0.05, "cz");
+  properties.setTwoQubitErrorRate(1, 2, 0.2, "cz");
+  properties.setTwoQubitErrorRate(0, 1, 0.05, "rxx");
+  properties.setTwoQubitErrorRate(0, 3, 0.25, "rxx");
+  Architecture architecture(4, edges, properties);
+
+  qc::QuantumComputation circuit(4);
+  circuit.cz(0, 1);
+  circuit.rxx(0.37, 2, 3);
+  Configuration config;
+  config.heuristic = Heuristic::FidelityBestLocation;
+  config.lookaheadHeuristic = LookaheadHeuristic::None;
+  config.layering = Layering::DisjointQubits;
+  config.initialLayout = InitialLayout::Dynamic;
+
+  HeuristicMapper mapper(circuit, architecture);
+  mapper.map(config);
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.input.layers, 1);
+  EXPECT_EQ(results.output.swaps, 0);
+  EXPECT_NEAR(results.output.totalLogFidelity, -std::log2(0.8 * 0.75), 1e-6);
 }
 
 TEST(HeuristicTestFidelity, RemapSingleQubit) {
