@@ -10,15 +10,13 @@
 # /// script
 # dependencies = [
 #   "nox>=2026.10.20",
-#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@aa3af05513ba6522453c8f59f0db2623acbe2146",
+#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@072be263e33c02b74549d26e99e9a898b1da4ec4",
 # ]
 # ///
 
 """Nox sessions."""
 
 from __future__ import annotations
-
-from pathlib import Path
 
 import nox
 from mqt.nox import common, cpp
@@ -38,7 +36,7 @@ def lint(session: nox.Session) -> None:
 @nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, default=True)
 def tests(session: nox.Session) -> None:
     """Run the test suite."""
-    cpp.tests(session, package="mqt-qmap")
+    cpp.tests(session)
 
 
 @nox.session(python="3.14", reuse_venv=True, venv_backend="uv", default=False)
@@ -51,26 +49,26 @@ def evaluation(session: nox.Session) -> None:
     compiler's contract, so it runs on demand (``nox -s evaluation``) rather than
     in the default CI matrix.
     """
-    cpp.install(session, package="mqt-qmap", groups=["test", "evaluation"])
+    cpp.install(session, groups=["test", "evaluation"])
     common.run_pytest(session, pytest_args=["eval/ph/tests"])
 
 
 @nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, venv_backend="uv", default=True)
 def minimums(session: nox.Session) -> None:
     """Test the minimum versions of dependencies."""
-    cpp.minimums(session, package="mqt-qmap")
+    cpp.minimums(session)
 
 
 @nox.session(reuse_venv=True, venv_backend="uv", python=PYTHON_ALL_VERSIONS)
 def qiskit(session: nox.Session) -> None:
     """Tests against the latest version of Qiskit."""
-    cpp.qiskit(session, package="mqt-qmap")
+    cpp.qiskit(session)
 
 
 @nox.session(python="3.14", reuse_venv=True)
 def docs(session: nox.Session) -> None:
     """Build the docs. Use "--non-interactive" to avoid serving. Pass "-b linkcheck" to check links."""
-    cpp.docs(session, package="mqt-qmap")
+    cpp.docs(session)
 
 
 @nox.session(reuse_venv=True, venv_backend="uv")
@@ -78,9 +76,7 @@ def stubs(session: nox.Session) -> None:
     """Generate type stubs for Python bindings using nanobind."""
     cpp.stubs(
         session,
-        package="mqt-qmap",
         modules=["mqt.qmap.na", "mqt.qmap.clifford_synthesis", "mqt.qmap.hybrid_mapper", "mqt.qmap.sc"],
-        output_dir=Path(__file__).parent / "python" / "mqt" / "qmap",
     )
 
 
