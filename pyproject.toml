@@ -274,7 +274,7 @@ repair-wheel-command = """\
   """
 
 [[tool.cibuildwheel.overrides]]
-select = [ "cp*-win_arm64" ]
+select = [ "cp*-win_arm64", "cp315t-*" ]
 test-command = ""
 
 
