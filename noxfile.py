@@ -10,7 +10,7 @@
 # /// script
 # dependencies = [
 #   "nox>=2026.10.20",
-#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@d5bcbc5fcc695856af8d7ef2634414b5b65d03bc",
+#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@c9a12fd836c5952abf4c563ef425cc936d9fb410",
 # ]
 # ///
 
@@ -19,10 +19,9 @@
 from __future__ import annotations
 
 import nox
-from mqt.nox import common, cpp
+from mqt.nox import common, cpp_python
 
 nox.needs_version = ">=2026.10.20"
-nox.options.default_venv_backend = "uv"
 
 PYTHON_ALL_VERSIONS = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
@@ -36,10 +35,10 @@ def lint(session: nox.Session) -> None:
 @nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, default=True)
 def tests(session: nox.Session) -> None:
     """Run the test suite."""
-    cpp.tests(session)
+    cpp_python.tests(session)
 
 
-@nox.session(python="3.14", reuse_venv=True, venv_backend="uv", default=False)
+@nox.session(python="3.14", reuse_venv=True, default=False)
 def evaluation(session: nox.Session) -> None:
     """Run the photonic paper-evaluation tests in eval/ph/tests.
 
@@ -47,20 +46,20 @@ def evaluation(session: nox.Session) -> None:
     Deliberately not a default session: the Perceval-based evaluation is paper-reproduction work, not the shipped
     compiler's contract, so it runs on demand (``nox -s evaluation``) rather than in the default CI matrix.
     """
-    cpp.install(session, groups=["test", "evaluation"])
+    cpp_python.install(session, groups=["test", "evaluation"])
     common.run_pytest(session, pytest_args=["eval/ph/tests"])
 
 
-@nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, venv_backend="uv", default=True)
+@nox.session(python=PYTHON_ALL_VERSIONS, reuse_venv=True, default=True)
 def minimums(session: nox.Session) -> None:
     """Test the minimum versions of dependencies."""
-    cpp.minimums(session)
+    cpp_python.minimums(session)
 
 
-@nox.session(reuse_venv=True, venv_backend="uv", python=PYTHON_ALL_VERSIONS)
+@nox.session(reuse_venv=True, python=PYTHON_ALL_VERSIONS)
 def qiskit(session: nox.Session) -> None:
     """Test against Qiskit's main branch."""
-    cpp.qiskit(session)
+    cpp_python.qiskit(session)
 
 
 @nox.session(python="3.14", reuse_venv=True)
@@ -69,13 +68,13 @@ def docs(session: nox.Session) -> None:
 
     Use "--non-interactive" to avoid serving. Pass "-b linkcheck" to check links.
     """
-    cpp.docs(session)
+    cpp_python.docs(session)
 
 
-@nox.session(reuse_venv=True, venv_backend="uv")
+@nox.session(reuse_venv=True)
 def stubs(session: nox.Session) -> None:
     """Generate type stubs for Python bindings using nanobind."""
-    cpp.stubs(
+    cpp_python.stubs(
         session,
         modules=["mqt.qmap.na", "mqt.qmap.clifford_synthesis", "mqt.qmap.hybrid_mapper", "mqt.qmap.sc"],
     )
