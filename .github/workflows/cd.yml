@@ -1,43 +1,106 @@
 name: CD 🚀
 on:
-  release:
-    types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (X.Y.Z)
+        required: true
+        type: string
 
 permissions: {}
 
+concurrency:
+  group: release
+  queue: max
+  cancel-in-progress: false
+
 jobs:
-  package:
-    name: 🐍 Packaging
+  check-release:
+    name: 🔍 Check release
+    permissions:
+      contents: read
+    runs-on: ubuntu-slim
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: false
+
+      - name: Check branch and project version
+        id: version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          version=$(uv version --short)
+          if [[ ! "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ || "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Release requires a stable X.Y.Z version on main." >&2
+            exit 1
+          fi
+          if [[ "$RELEASE_VERSION" != "$version" ]]; then
+            echo "Requested version $RELEASE_VERSION does not match project version $version." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build-python:
+    name: 📦 Package Python distributions
+    needs: check-release
+    permissions:
+      contents: read
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-cibuildwheel.yml@85eef7c1358086e8669ceda13b27d1a9caf095c1
     with:
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
       z3-version: 4.12.6
-    permissions:
-      contents: read
 
-  # Downloads the previously generated artifacts and deploys to PyPI on published releases.
-  deploy:
-    if: github.event_name == 'release' && github.event.action == 'published'
-    name: 🚀 Deploy to PyPI
+  approve-release:
+    name: 🔐 Approve release
+    needs: build-python
+    runs-on: ubuntu-slim
+    environment: release
+    steps:
+      - run: echo "Release approved."
+
+  publish-github:
+    name: 🚀 Publish to GitHub
+    needs: [check-release, approve-release]
+    permissions:
+      contents: write
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-github-release.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    secrets:
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+    with:
+      version: ${{ needs.check-release.outputs.version }}
+      has-upgrade-guide: true
+      release-name: MQT QMAP ${{ needs.check-release.outputs.version }} Release
+
+  publish-pypi:
+    name: 🚀 Publish to PyPI
+    needs: [build-python, publish-github]
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/mqt.qmap
-    needs: package
-    permissions:
-      attestations: write # Needed to attest the built artifacts
-      contents: read
-      id-token: write # Needed to attest and to publish to PyPI
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: cibw-*
           path: dist
           merge-multiple: true
-      - name: Generate artifact attestation for sdist and wheel(s)
+
+      - name: Generate artifact attestation for sdist and wheels
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: dist/*
+
       - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
