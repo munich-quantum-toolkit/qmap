@@ -18,8 +18,23 @@ jobs:
   change-detection:
     name: 🔍 Change
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@85eef7c1358086e8669ceda13b27d1a9caf095c1
+    with:
+      additional-docs-files: >-
+        ["{CHANGELOG,UPGRADING}.md", ".github/SUPPORT.md", "json/na/**"]
     permissions:
       pull-requests: read
+
+  docs:
+    name: 📚 Docs
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-docs)
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-docs.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    with:
+      apt-packages: libz3-dev
+    permissions:
+      actions: read # Shared publisher downloads docs artifacts
+      contents: read
+      pull-requests: read # Shared publisher verifies preview commits
 
   cpp-tests-ubuntu:
     name: 🇨 Test 🐧
@@ -173,6 +188,7 @@ jobs:
     if: always()
     needs:
       - change-detection
+      - docs
       - cpp-tests-ubuntu
       - cpp-tests-macos
       - cpp-tests-windows
@@ -187,6 +203,7 @@ jobs:
         uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           allowed-skips: >-
+            ${{ !fromJSON(needs.change-detection.outputs.run-docs) && 'docs,' || '' }}
             ${{
               !fromJSON(needs.change-detection.outputs.run-cpp-tests)
               && 'cpp-tests-ubuntu,cpp-tests-macos,cpp-tests-windows,' || ''

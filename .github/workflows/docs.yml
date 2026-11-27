@@ -1,0 +1,16 @@
+name: Documentation
+on:
+  push:
+    tags: ["v*"]
+
+permissions: {}
+
+jobs:
+  docs:
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-docs.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    with:
+      apt-packages: libz3-dev
+    permissions:
+      actions: read # Shared publisher downloads docs artifacts
+      contents: read
+      pull-requests: read # Shared publisher verifies preview commits
