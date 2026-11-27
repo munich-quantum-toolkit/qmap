@@ -52,7 +52,7 @@ jobs:
     needs: check-release
     permissions:
       contents: read
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-cibuildwheel.yml@85eef7c1358086e8669ceda13b27d1a9caf095c1
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-cibuildwheel.yml@39381a969e9f5753cb113b04e3e3008e95267273
     with:
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
