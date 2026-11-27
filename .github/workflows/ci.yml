@@ -170,8 +170,8 @@ jobs:
     permissions:
       contents: read
 
-  package:
-    name: 🚀 CD
+  packaging:
+    name: 🐍 Packaging
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-cibuildwheel.yml@39381a969e9f5753cb113b04e3e3008e95267273
@@ -196,7 +196,7 @@ jobs:
       - cpp-linter
       - python-tests
       - python-linter
-      - package
+      - packaging
     runs-on: ubuntu-slim
     steps:
       - name: Decide whether the needed jobs succeeded or failed
@@ -226,6 +226,6 @@ jobs:
             }}
             ${{
               !fromJSON(needs.change-detection.outputs.run-cd)
-              && 'package' || ''
+              && 'packaging' || ''
             }}
           jobs: ${{ toJSON(needs) }}
