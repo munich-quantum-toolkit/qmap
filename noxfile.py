@@ -10,7 +10,7 @@
 # /// script
 # dependencies = [
 #   "nox>=2026.10.20",
-#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@cdd19440398f0efffdc99bd6ccb87090e157d99c",
+#   "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@d5bcbc5fcc695856af8d7ef2634414b5b65d03bc",
 # ]
 # ///
 
