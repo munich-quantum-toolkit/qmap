@@ -17,7 +17,7 @@ permissions: {}
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       additional-docs-files: >-
         ["{CHANGELOG,UPGRADING}.md", ".github/SUPPORT.md", "json/na/**"]
@@ -28,7 +28,7 @@ jobs:
     name: 📚 Docs
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-docs)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-docs.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-docs.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       apt-packages: libz3-dev
     permissions:
@@ -50,7 +50,7 @@ jobs:
           - runs-on: ubuntu-26.04
             preset: debug
             run-on-draft: true
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-ubuntu.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-ubuntu.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
@@ -73,7 +73,7 @@ jobs:
           - runs-on: macos-26
             preset: debug
             run-on-draft: true
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-macos.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
@@ -96,7 +96,7 @@ jobs:
           - runs-on: windows-2025
             preset: debug
             run-on-draft: true
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-windows.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-tests-windows.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
@@ -109,7 +109,7 @@ jobs:
     name: 🇨 Coverage
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       setup-z3: true
     permissions:
@@ -120,7 +120,7 @@ jobs:
     name: 🇨 Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       files-changed-only: true
       install-pkgs: "nanobind==3.1.0"
@@ -138,7 +138,7 @@ jobs:
       fail-fast: false
       matrix:
         runs-on: [ubuntu-26.04, ubuntu-26.04-arm, macos-26, windows-2025]
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       runs-on: ${{ matrix.runs-on }}
       setup-z3: true
@@ -149,7 +149,7 @@ jobs:
     name: 🐍 Coverage
     needs: [change-detection, python-tests]
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-coverage.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-coverage.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     permissions:
       contents: read
       id-token: write
@@ -158,7 +158,7 @@ jobs:
     name: 🐍 Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-linter)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       check-stubs: true
       enable-mypy: false
@@ -174,7 +174,7 @@ jobs:
     name: 🐍 Packaging
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-cibuildwheel.yml@39381a969e9f5753cb113b04e3e3008e95267273
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-cibuildwheel.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
     with:
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
