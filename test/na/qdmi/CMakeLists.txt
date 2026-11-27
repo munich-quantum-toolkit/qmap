@@ -23,14 +23,9 @@ if(TARGET MQT::QMapNAQDMIDeviceConfig AND TARGET MQT::QMapNAQDMIDevice)
   target_link_libraries(${TARGET_NAME} PRIVATE MQT::QMapNAQDMIClient MQT::QMapNAQDMIDeviceConfig
                                                MQT::CoreQDMIDriver nlohmann_json::nlohmann_json)
 
-  if(DEFINED SKBUILD_PROJECT_VERSION)
-    set(MQT_QMAP_DEVICE_VERSION "${SKBUILD_PROJECT_VERSION}")
-  else()
-    set(MQT_QMAP_DEVICE_VERSION "0.0.0")
-  endif()
   target_compile_definitions(
     ${TARGET_NAME}
-    PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}"
+    PRIVATE MQT_QMAP_VERSION="${PROJECT_VERSION_FULL}"
             NA_DEVICE_LIBRARY="$<TARGET_FILE:MQT::QMapNAQDMIDevice>"
             NA_DEVICE_JSON="${PROJECT_SOURCE_DIR}/json/na/mqt-qmap-qdmi-na-device.json")
 

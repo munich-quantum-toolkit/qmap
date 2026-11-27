@@ -12,7 +12,18 @@ cmake_minimum_required(VERSION 3.28...4.4)
 project(
   mqt-qmap
   LANGUAGES C CXX
+  VERSION 3.11.1
   DESCRIPTION "MQT QMAP - A library for mapping of quantum circuits to quantum architectures")
+
+set(PROJECT_VERSION_PRERELEASE ".dev0")
+set(PROJECT_VERSION_FULL "${PROJECT_VERSION}${PROJECT_VERSION_PRERELEASE}")
+
+if(SKBUILD AND NOT PROJECT_VERSION_FULL STREQUAL SKBUILD_PROJECT_VERSION_FULL)
+  message(
+    FATAL_ERROR
+      "CMake version ${PROJECT_VERSION_FULL} differs from Python version ${SKBUILD_PROJECT_VERSION_FULL}"
+  )
+endif()
 
 # Add path for custom modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import sys
+from importlib.metadata import version
 
 # On Windows, add MQT Core's DLL directory to the search path.
 if sys.platform == "win32":  # ruff:ignore[non-empty-init-module] This is actually required on Windows
@@ -44,7 +45,7 @@ if sys.platform == "win32":  # ruff:ignore[non-empty-init-module] This is actual
     del _dll_patch
 
 
-from ._version import version as __version__
+__version__ = version("mqt-qmap")
 
 __all__ = [
     "__version__",

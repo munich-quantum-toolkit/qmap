@@ -211,13 +211,6 @@ py-api = "cp311"
 # Only install the Python package component
 components = [ "mqt-qmap_Python" ]
 
-[[tool.scikit-build.generate]]
-path = "mqt/qmap/_version.py"
-template = '''
-__version__ = version = "${version}"
-__version_tuple__ = version_tuple = tuple(int(part) if part.isdecimal() else part for part in version.split("."))
-'''
-
 [[tool.scikit-build.overrides]]
 if.python-version = ">=3.15"
 if.abi-flags = "t"
