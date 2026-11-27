@@ -12,12 +12,12 @@ requires = [
   "mqt-core~=3.12.0",
   "nanobind~=3.1.0",
   "scikit-build-core>=1.1",
-  "vcs-versioning>=2.3",
 ]
 
 
 [project]
 name = "mqt-qmap"
+version = "3.11.1.dev0"
 description = "A tool for Quantum Circuit Mapping"
 readme = "README.md"
 keywords = [ "clifford-synthesis", "compiler", "design-automation", "MQT", "quantum-computing" ]
@@ -46,7 +46,7 @@ classifiers = [
   "Topic :: Software Development :: Compilers",
   "Typing :: Typed",
 ]
-dynamic = [ "import-names", "import-namespaces", "version" ]
+dynamic = [ "import-names", "import-namespaces" ]
 dependencies = [
   "mqt-core~=3.12.0",
   "nanobind-backend>=1",
@@ -141,7 +141,6 @@ build = [
   "mqt-core~=3.12.0",
   "nanobind~=3.1.0",
   "scikit-build-core>=1.1",
-  "vcs-versioning>=2.3",
 ]
 evaluation = [
   "numpy>=1.26",
@@ -185,7 +184,6 @@ ENABLE_IPO = "ON"
 version = ">=1.10"
 
 [tool.scikit-build.sdist]
-include = [ "python/mqt/qmap/_version.py" ]
 exclude = [
   "**/.github",
   "**/doc",
@@ -213,6 +211,13 @@ py-api = "cp311"
 # Only install the Python package component
 components = [ "mqt-qmap_Python" ]
 
+[[tool.scikit-build.generate]]
+path = "mqt/qmap/_version.py"
+template = '''
+__version__ = version = "${version}"
+__version_tuple__ = version_tuple = tuple(int(part) if part.isdecimal() else part for part in version.split("."))
+'''
+
 [[tool.scikit-build.overrides]]
 if.python-version = ">=3.15"
 if.abi-flags = "t"
@@ -223,7 +228,7 @@ wheel.py-api = "cp315t"
 required-version = ">=0.13.4"
 cache-keys = [
   { file = "pyproject.toml" },
-  { git = { commit = true, tags = true } },
+  { git = { commit = true } },
   { file = "bindings/**/*.cpp" },
 ]
 
@@ -369,7 +374,6 @@ PC170 = "We do not use rST files anymore"
 
 
 [tool.check-sdist]
-sdist-only = [ "python/mqt/qmap/_version.py" ]
 git-only = [
   "docs/*",
   "eval/*",
@@ -462,11 +466,3 @@ exclude_also = [
   "raise AssertionError",
   "raise NotImplementedError"
 ]
-
-
-[[tool.dynamic-metadata]]
-provider = "vcs_versioning"
-
-
-[tool.vcs-versioning]
-write_to = "python/mqt/qmap/_version.py"
