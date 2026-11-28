@@ -1784,7 +1784,7 @@ wheels = [
 [[package]]
 name = "mqt-nox"
 version = "0.1.0"
-source = { git = "https://github.com/munich-quantum-toolkit/nox.git?rev=35ea528d591b8d1af1fac5a5820c36192f1a7139#35ea528d591b8d1af1fac5a5820c36192f1a7139" }
+source = { git = "https://github.com/munich-quantum-toolkit/nox.git?rev=23dc034f43cb0f2e75c09b4796f33a0cf7158d14#23dc034f43cb0f2e75c09b4796f33a0cf7158d14" }
 dependencies = [
     { name = "nox" },
 ]
@@ -1940,7 +1940,7 @@ dev = [
     { name = "distinctipy", specifier = ">=1.3.4" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "mqt-core", specifier = "~=3.12.0" },
-    { name = "mqt-nox", git = "https://github.com/munich-quantum-toolkit/nox.git?rev=35ea528d591b8d1af1fac5a5820c36192f1a7139" },
+    { name = "mqt-nox", git = "https://github.com/munich-quantum-toolkit/nox.git?rev=23dc034f43cb0f2e75c09b4796f33a0cf7158d14" },
     { name = "mqt-qcec", specifier = ">=3.12" },
     { name = "nanobind", specifier = "~=3.1.0" },
     { name = "networkx", specifier = ">=3.2.1" },

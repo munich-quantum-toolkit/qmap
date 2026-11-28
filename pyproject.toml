@@ -99,7 +99,7 @@ Discussions = "https://github.com/munich-quantum-toolkit/qmap/discussions"
 dev = [
   { include-group = "build" },
   { include-group = "test" },
-  "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@35ea528d591b8d1af1fac5a5820c36192f1a7139",
+  "mqt-nox @ git+https://github.com/munich-quantum-toolkit/nox.git@23dc034f43cb0f2e75c09b4796f33a0cf7158d14",
 ]
 test = [
   "distinctipy>=1.3.4",
