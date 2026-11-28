@@ -1807,6 +1807,7 @@ wheels = [
 
 [[package]]
 name = "mqt-qmap"
+version = "3.11.1.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "mqt-core" },
@@ -1834,7 +1835,6 @@ build = [
     { name = "mqt-core" },
     { name = "nanobind" },
     { name = "scikit-build-core" },
-    { name = "vcs-versioning" },
 ]
 dev = [
     { name = "cmake" },
@@ -1853,7 +1853,6 @@ dev = [
     { name = "pytest-xdist" },
     { name = "scikit-build-core" },
     { name = "torch" },
-    { name = "vcs-versioning" },
     { name = "walkerlayout" },
 ]
 docs = [
@@ -1925,7 +1924,6 @@ build = [
     { name = "mqt-core", specifier = "~=3.12.0" },
     { name = "nanobind", specifier = "~=3.1.0" },
     { name = "scikit-build-core", specifier = ">=1.1" },
-    { name = "vcs-versioning", specifier = ">=2.3" },
 ]
 dev = [
     { name = "cmake", specifier = ">=4.4.1" },
@@ -1945,7 +1943,6 @@ dev = [
     { name = "torch", specifier = ">=2.9" },
     { name = "torch", marker = "python_full_version >= '3.15'", specifier = ">=2.15" },
     { name = "torch", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", specifier = "!=2.14,!=2.14.1" },
-    { name = "vcs-versioning", specifier = ">=2.3" },
     { name = "walkerlayout", specifier = ">=1.0.2" },
 ]
 docs = [
@@ -4252,18 +4249,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e3/05/b17359e1cefb4f909b5e40b1b90a496d987258916dbbf88e842c729f510e/urllib3-2.8.0.tar.gz", hash = "sha256:63bf2ead4c879426ebf22ef2a781eeb4aa3b4ae798a0435506f8687fd5bb9b63", size = 458972, upload-time = "2026-09-15T19:29:36.253Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl", hash = "sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3", size = 135717, upload-time = "2026-09-15T19:29:34.577Z" },
-]
-
-[[package]]
-name = "vcs-versioning"
-version = "2.6.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/e7/2a691db7d076b75d099fdba1a14cd966931f2aeb591e77f6d22f15097326/vcs_versioning-2.6.0.tar.gz", hash = "sha256:22e9159288e2d8bca2fa6f6c31c34c9c66aec157f60e9e526f5d160d2516d60f", size = 166800, upload-time = "2026-10-06T22:21:55.024Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/1d/ad4064bf12f4503bf61e65d74c93c523672776d25ee0a06aaf42ae09ef3f/vcs_versioning-2.6.0-py3-none-any.whl", hash = "sha256:f8bebd1302ebc12e67ceb30fc7dd698ec969414b6fa43b30c3f14ac9b1e72c41", size = 123154, upload-time = "2026-10-06T22:21:53.267Z" },
 ]
 
 [[package]]

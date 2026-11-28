@@ -60,14 +60,7 @@ if(NOT TARGET ${TARGET_NAME})
   target_link_libraries(${TARGET_NAME} PRIVATE MQT::CoreQDMICommon MQT::QMapNAQDMIDeviceConfig
                                                MQT::ProjectOptions MQT::ProjectWarnings)
 
-  # The device reports its own version. Wheel builds get it from scikit-build-core; plain CMake
-  # builds have no project version to report.
-  if(DEFINED SKBUILD_PROJECT_VERSION)
-    set(MQT_QMAP_DEVICE_VERSION "${SKBUILD_PROJECT_VERSION}")
-  else()
-    set(MQT_QMAP_DEVICE_VERSION "0.0.0")
-  endif()
-  target_compile_definitions(${TARGET_NAME} PRIVATE MQT_QMAP_VERSION="${MQT_QMAP_DEVICE_VERSION}")
+  target_compile_definitions(${TARGET_NAME} PRIVATE MQT_QMAP_VERSION="${PROJECT_VERSION_FULL}")
 
   # The device reads its bundled description from beside the shared module. Core copies runtime
   # files into the build tree and exposes them to `mqt_copy_qdmi_runtime` consumers.

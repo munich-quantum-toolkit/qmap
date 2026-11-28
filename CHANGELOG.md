@@ -16,6 +16,8 @@ releases may include breaking changes.
 
 ### Changed
 
+- ⬆️ Update [munich-quantum-toolkit/workflows] to `v3.0.0` ([#1244])
+  ([**@denialhaag**])
 - ⚡️ Reuse exact-mapper transitions across layers and avoid rebuilding the
   heuristic search queue when a better placement is found ([#1235])
   ([**@burgholzer**])
@@ -152,7 +154,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#370)._
 
 ### Changed
 
-- ⬆️ Update [munich-quantum-toolkit/workflows] to version `v2.0.1` ([#1020])
+- ⬆️ Update [munich-quantum-toolkit/workflows] to `v2.0.1` ([#1020])
   ([**@denialhaag**])
 - 🎨 Add two-qubit gate layer to decomposer interface in zoned neutral atom
   compiler ([#976]) ([**@ystade**])
@@ -201,7 +203,7 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md#350)._
 - 👷 Stop testing with `clang-19` and start testing with `clang-21` ([#874])
   ([**@denialhaag**])
 - 👷 Fix macOS tests with Homebrew Clang via new
-  `munich-quantum-toolkit/workflows` version ([#874]) ([**@denialhaag**])
+  [munich-quantum-toolkit/workflows] version ([#874]) ([**@denialhaag**])
 - 👷 Re-enable macOS tests with GCC by disabling module scanning ([#874])
   ([**@denialhaag**])
 - ✨ Enable code generation for relaxed routing constraints ([#848])
@@ -391,6 +393,7 @@ _📚 Refer to the [GitHub Release Notes] for previous changelogs._
 
 <!-- PR links -->
 
+[#1244]: https://github.com/munich-quantum-toolkit/qmap/pull/1244
 [#1243]: https://github.com/munich-quantum-toolkit/qmap/pull/1243
 [#1242]: https://github.com/munich-quantum-toolkit/qmap/pull/1242
 [#1241]: https://github.com/munich-quantum-toolkit/qmap/pull/1241

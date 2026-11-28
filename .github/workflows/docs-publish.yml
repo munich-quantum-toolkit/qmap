@@ -1,0 +1,21 @@
+name: Publish documentation
+on:
+  # The shared publisher handles static artifacts without executing PR code.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: [CI, Documentation]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  publish:
+    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-docs.yml@ffe0f2765a034310f50e3e17715e744daf9789b1 # v3.0.0
+    with:
+      project-slug: mqtqmap
+      build-workflows: '[".github/workflows/ci.yml", ".github/workflows/docs.yml"]'
+    secrets:
+      READTHEDOCS_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}
+    permissions:
+      actions: read # Download the triggering run's docs artifact
+      contents: read
+      pull-requests: read # Verify the current preview source

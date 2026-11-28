@@ -713,7 +713,7 @@ TEST_F(NaQDMISpecificationTest, QueryDeviceVersion) {
           session, QDMI_DEVICE_PROPERTY_VERSION, size, value.data(), nullptr),
       QDMI_SUCCESS)
       << "Devices must provide a version";
-  EXPECT_FALSE(value.empty()) << "Devices must provide a version";
+  EXPECT_EQ(value, MQT_QMAP_VERSION);
 }
 
 TEST_F(NaQDMISpecificationTest, QueryDeviceLibraryVersion) {
