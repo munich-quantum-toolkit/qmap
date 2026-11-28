@@ -9,8 +9,8 @@
 
 # /// script
 # dependencies = [
-#   "mqt.bench==2.1.0",
-#   "mqt.qmap==3.5.0",
+#   "mqt.bench==2.4.0",
+#   "mqt.qmap==3.11.0",
 # ]
 # [tool.uv]
 # exclude-newer = "2025-12-16T12:59:59Z"
