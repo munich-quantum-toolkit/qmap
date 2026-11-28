@@ -49,7 +49,8 @@ else()
       CACHE STRING "Minimum QDMI version")
   set(QDMI_VERSION 1.4.0
       CACHE STRING "QDMI version")
-  set(QDMI_REV "6db03d83ad602aaa9fe928b5c3fc5cce84b10061" # v1.4.0
+  # renovate: datasource=github-tags depName=Munich-Quantum-Software-Stack/QDMI
+  set(QDMI_REV "6db03d83ad602aaa9fe928b5c3fc5cce84b10061" # tag=v1.4.0
       CACHE STRING "QDMI identifier (tag, branch or commit hash)")
   set(QDMI_REPO_OWNER "Munich-Quantum-Software-Stack"
       CACHE STRING "QDMI repository owner (change when using a fork)")
@@ -70,7 +71,8 @@ set(MQT_CORE_MINIMUM_VERSION 3.12.0
     CACHE STRING "MQT Core minimum version")
 set(MQT_CORE_VERSION 3.12.0
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "4012aa9c4e497561d56bea678e532fd38c24c421"
+# renovate: datasource=github-tags depName=munich-quantum-toolkit/core
+set(MQT_CORE_REV "4012aa9c4e497561d56bea678e532fd38c24c421" # tag=v3.12.0
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 set(MQT_CORE_REPO_OWNER "munich-quantum-toolkit"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
@@ -82,18 +84,24 @@ FetchContent_Declare(
   SYSTEM EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS ${MQT_CORE_MINIMUM_VERSION})
 list(APPEND FETCH_PACKAGES mqt-core)
 
-set(JSON_VERSION
-    3.12.0
-    CACHE STRING "nlohmann_json version")
-set(JSON_URL https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/json.tar.xz)
 cmake_dependent_option(JSON_Install "Install nlohmann_json library" ON "MQT_QMAP_INSTALL" OFF)
-FetchContent_Declare(nlohmann_json URL ${JSON_URL} SYSTEM FIND_PACKAGE_ARGS ${JSON_VERSION})
+# cmake-format: off
+# renovate: datasource=github-releases depName=nlohmann/json
+set(JSON_TAG v3.12.0)
+string(REGEX REPLACE "^v" "" JSON_VERSION "${JSON_TAG}")
+FetchContent_Declare(
+  nlohmann_json
+  URL https://github.com/nlohmann/json/releases/download/${JSON_TAG}/json.tar.xz
+      FIND_PACKAGE_ARGS ${JSON_VERSION})
+set(JSON_SystemInclude
+    ON
+    CACHE INTERNAL "Treat JSON headers as system headers")
 list(APPEND FETCH_PACKAGES nlohmann_json)
+# cmake-format: on
 
 set(PLOG_REV
     "94899e0b926ac1b0f4750bfbd495167b4a6ae9ef"
     CACHE STRING "Plog revision")
-set(PLOG_URL https://github.com/SergiusTheBest/plog/archive/refs/tags/${PLOG_VERSION}.tar.gz)
 FetchContent_Declare(
   plog
   GIT_REPOSITORY https://github.com/SergiusTheBest/plog.git
@@ -101,14 +109,14 @@ FetchContent_Declare(
   SYSTEM FIND_PACKAGE_ARGS)
 list(APPEND FETCH_PACKAGES plog)
 
-set(SPDLOG_VERSION
-    1.17.0
-    CACHE STRING "spdlog version")
-set(SPDLOG_URL https://github.com/gabime/spdlog/archive/refs/tags/v${SPDLOG_VERSION}.tar.gz)
+# renovate: datasource=github-releases depName=gabime/spdlog
+set(SPDLOG_TAG v1.17.0)
+string(REGEX REPLACE "^v" "" SPDLOG_VERSION "${SPDLOG_TAG}")
 # Add position independent code for spdlog, this is required for python bindings on linux
 set(SPDLOG_BUILD_PIC ON)
-FetchContent_Declare(spdlog URL ${SPDLOG_URL} SYSTEM EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS
-                                ${SPDLOG_VERSION})
+FetchContent_Declare(
+  spdlog URL https://github.com/gabime/spdlog/archive/refs/tags/${SPDLOG_TAG}.tar.gz SYSTEM
+             EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS ${SPDLOG_VERSION})
 list(APPEND FETCH_PACKAGES spdlog)
 
 if(BUILD_MQT_QMAP_TESTS)
@@ -116,10 +124,15 @@ if(BUILD_MQT_QMAP_TESTS)
       ON
       CACHE BOOL "" FORCE)
   set(GTEST_VERSION
-      1.17.0
-      CACHE STRING "Google Test version")
-  set(GTEST_URL https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz)
-  FetchContent_Declare(googletest URL ${GTEST_URL} FIND_PACKAGE_ARGS ${GTEST_VERSION} NAMES GTest)
+      1.18.0
+      CACHE STRING "Minimum installed GoogleTest version")
+  # renovate: datasource=github-tags depName=google/googletest
+  set(GTEST_REV
+      "063de7e9578f82b369302001269680b4b1553359" # tag=v1.18.0
+      CACHE STRING "GoogleTest source revision")
+  FetchContent_Declare(
+    googletest URL https://github.com/google/googletest/archive/${GTEST_REV}.tar.gz
+                   EXCLUDE_FROM_ALL FIND_PACKAGE_ARGS ${GTEST_VERSION} NAMES GTest)
   list(APPEND FETCH_PACKAGES googletest)
 endif()
 
